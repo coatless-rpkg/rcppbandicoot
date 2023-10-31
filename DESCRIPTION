@@ -1,0 +1,28 @@
+Package: RcppBandicoot
+Title: 'Rcpp' Integration for the `Bandicoot` Header-Only C++ GPU Accelerated Linear Algebra Library
+Version: 0.1.11.1.9000
+Authors@R: 
+    c(
+      person("James Joseph", "Balamuta", email = "balamut2@illinois.edu", 
+             role = c("aut", "cre", "cph"), 
+             comment = c(ORCID = "0000-0003-2826-8458"))
+     )
+Description: 'Bandicoot' is a templated C++ GPU Linear Algebra library 
+ (by the 'Armadillo' team) that provides a simple set of abstractions for writing 
+ high performant code for graphics processing units.
+ The 'RcppBandicoot' package includes the header files from the 'Bandicoot' library.
+ Therefore, users do not need to install 'Bandicoot' to use 'RcppBandicoot'.
+ Note that the 'Bandicoot' library is licensed under Apache License version 2.0 and
+ 'RcppBandicoot' (the 'Rcpp' bindings/bridge to 'Bandicoot') is licensed under 
+ the GNU GPL version 2 or later. Note that 'Bandicoot' requires a compiler that 
+ supports 'C++11' and 'OpenCL' or 'CUDA' 9.800 or later.
+License: GPL (>= 2)
+Depends: 
+    R (>= 4.3)
+LinkingTo: 
+    Rcpp (>= 1.0.11)
+Imports: 
+    Rcpp (>= 1.0.11)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
