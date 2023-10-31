@@ -1,0 +1,231 @@
+// Copyright 2023 Ryan Curtin (http://www.ratml.org)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ------------------------------------------------------------------------
+
+// This file contains source code adapted from
+// clMAGMA 1.3 (2014-11-14) and/or MAGMA 2.7 (2022-11-09).
+// clMAGMA 1.3 and MAGMA 2.7 are distributed under a
+// 3-clause BSD license as follows:
+//
+//  -- Innovative Computing Laboratory
+//  -- Electrical Engineering and Computer Science Department
+//  -- University of Tennessee
+//  -- (C) Copyright 2009-2015
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions
+//  are met:
+//
+//  * Redistributions of source code must retain the above copyright
+//    notice, this list of conditions and the following disclaimer.
+//  * Redistributions in binary form must reproduce the above copyright
+//    notice, this list of conditions and the following disclaimer in the
+//    documentation and/or other materials provided with the distribution.
+//  * Neither the name of the University of Tennessee, Knoxville nor the
+//    names of its contributors may be used to endorse or promote products
+//    derived from this software without specific prior written permission.
+//
+//  This software is provided by the copyright holders and contributors
+//  ``as is'' and any express or implied warranties, including, but not
+//  limited to, the implied warranties of merchantability and fitness for
+//  a particular purpose are disclaimed. In no event shall the copyright
+//  holders or contributors be liable for any direct, indirect, incidental,
+//  special, exemplary, or consequential damages (including, but not
+//  limited to, procurement of substitute goods or services; loss of use,
+//  data, or profits; or business interruption) however caused and on any
+//  theory of liability, whether in contract, strict liability, or tort
+//  (including negligence or otherwise) arising in any way out of the use
+//  of this software, even if advised of the possibility of such damage.
+
+
+
+// SORMQR overwrites the general real M-by-N matrix C with
+//                           SIDE = MagmaLeft   SIDE = MagmaRight
+// TRANS = MagmaNoTrans:     Q * C              C * Q
+// TRANS = MagmaTrans:  Q**H * C           C * Q**H
+//
+// where Q is a real orthogonal matrix defined as the product of k
+// elementary reflectors
+//
+//     Q = H(1) H(2) . . . H(k)
+//
+// as returned by DGEQRF. Q is of order M if SIDE = MagmaLeft and of order N
+// if SIDE = MagmaRight.
+
+
+
+inline
+magma_int_t
+magma_sormbr
+  (
+  magma_vect_t vect, magma_side_t side, magma_trans_t trans,
+  magma_int_t m, magma_int_t n, magma_int_t k,
+  float *A, magma_int_t lda,
+  float *tau,
+  float *C, magma_int_t ldc,
+  float *work, magma_int_t lwork,
+  magma_int_t *info
+  )
+  {
+  magma_int_t i1, i2, nb, mi, ni, nq, minwrk, iinfo, lwkopt;
+  magma_int_t left, notran, applyq, lquery;
+  magma_trans_t transt;
+
+  *info = 0;
+  applyq = (vect  == MagmaQ);
+  left   = (side  == MagmaLeft);
+  notran = (trans == MagmaNoTrans);
+  lquery = (lwork == -1);
+
+  /* NQ is the order of Q or P and MINWRK (previously "nw") is the minimum dimension of WORK */
+  if (left)
+    {
+    nq = m;
+    minwrk = n;
+    }
+  else
+    {
+    nq = n;
+    minwrk = m;
+    }
+  if (m == 0 || n == 0)
+    {
+    minwrk = 0;
+    }
+
+  /* check arguments */
+  if (!applyq && vect != MagmaP)
+    *info = -1;
+  else if (!left && side != MagmaRight)
+    *info = -2;
+  else if (!notran && trans != MagmaTrans)
+    *info = -3;
+  else if (m < 0)
+    *info = -4;
+  else if (n < 0)
+    *info = -5;
+  else if (k < 0)
+    *info = -6;
+  else if ( (  applyq && lda < std::max(1, nq)                ) ||
+            ( !applyq && lda < std::max(1, std::min(nq, k)) ) )
+    *info = -8;
+  else if (ldc < std::max(1, m))
+    *info = -11;
+  else if (lwork < std::max(1, minwrk) && !lquery)
+    *info = -13;
+
+  if (*info == 0)
+    {
+    if (minwrk > 0)
+      {
+      // TODO have get_sormqr_nb and get_sormlq_nb routines? see original LAPACK sormbr.
+      // TODO make them dependent on m, n, and k?
+      nb = magma_get_sgebrd_nb( m, n );
+      lwkopt = std::max(1, minwrk*nb);
+      }
+    else
+      {
+      lwkopt = 1;
+      }
+    work[0] = magma_smake_lwork( lwkopt );
+    }
+
+  if (*info != 0)
+    {
+    //magma_xerbla( __func__, -(*info) );
+    return *info;
+    }
+  else if (lquery)
+    {
+    return *info;
+    }
+
+  /* Quick return if possible */
+  if (m == 0 || n == 0)
+    {
+    return *info;
+    }
+
+  if (applyq)
+    {
+    /* Apply Q */
+    if (nq >= k)
+      {
+      /* Q was determined by a call to SGEBRD with nq >= k */
+      magma_sormqr( side, trans,
+                    m, n, k, A, lda, tau, C, ldc, work, lwork, &iinfo);
+      }
+    else if (nq > 1)
+      {
+      /* Q was determined by a call to SGEBRD with nq < k */
+      if (left)
+        {
+        mi = m - 1;
+        ni = n;
+        i1 = 1;
+        i2 = 0;
+        }
+      else
+        {
+        mi = m;
+        ni = n - 1;
+        i1 = 0;
+        i2 = 1;
+        }
+
+      magma_sormqr( side, trans,
+                    mi, ni, nq-1, &A[1], lda, tau, &C[i1 + i2 * ldc], ldc, work, lwork, &iinfo);
+      }
+    }
+  else
+    {
+    /* Apply P */
+    if (notran)
+      {
+      transt = MagmaTrans;
+      }
+    else
+      {
+      transt = MagmaNoTrans;
+      }
+    if (nq > k)
+      {
+      /* P was determined by a call to SGEBRD with nq > k */
+      magma_sormlq( side, transt,
+                    m, n, k, A, lda, tau, C, ldc, work, lwork, &iinfo);
+      }
+    else if (nq > 1)
+      {
+      /* P was determined by a call to SGEBRD with nq <= k */
+      if (left)
+        {
+        mi = m - 1;
+        ni = n;
+        i1 = 1;
+        i2 = 0;
+        }
+      else
+        {
+        mi = m;
+        ni = n - 1;
+        i1 = 0;
+        i2 = 1;
+        }
+
+      magma_sormlq( side, transt,
+                    mi, ni, nq-1, &A[lda], lda, tau, &C[i1 + i2 * ldc], ldc, work, lwork, &iinfo);
+      }
+    }
+  work[0] = magma_smake_lwork( lwkopt );
+  return *info;
+  } /* magma_sormbr */

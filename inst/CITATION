@@ -1,0 +1,26 @@
+citHeader("To cite the 'RcppBandicoot' R package and 'Bandicoot' libray in publications, please use:")
+
+bibentry(bibtype = "Manual",
+         title        = "{RcppBandicoot: 'Rcpp' Integration for the `Bandicoot` Header-Only C++ GPU Accelerated Linear Algebra Library}",
+         author       = c(as.person("James Joseph Balamuta")),
+         year         = 2023,
+         textVersion  = paste("Balamuta, J.J. (2023)",
+                              "RcppBandicoot: 'Rcpp' Integration for the `Bandicoot` Header-Only C++ GPU Accelerated Linear Algebra Library.",
+                              "URL https://cran.r-project.org/package=RcppBandicoot.")
+)
+
+bibentry(bibtype = "Article",
+         title        = "{ensmallen: a flexible C++ library for efficient function optimization}",
+         author       = c(as.person("Shikhar Bhardwaj"),
+                          as.person("Ryan R. Curtin"),
+                          as.person("Marcus Edel"),
+                          as.person("Yannis Mentekidis"),
+                          as.person("Conrad Sanderson")),
+           journal = "Workshop on Systems for ML and Open Source Software at NIPS",
+           year = "2018",
+           month = "dec",
+         textVersion  = paste("S. Bhardwaj, R. Curtin, M. Edel, Y. Mentekidis, and C. Sanderson (2018).",
+                              "ensmallen: a flexible C++ library for efficient function optimization.",
+                              "Workshop on Systems for ML and Open Source Software at NIPS 2018.",
+                              "URL http://www.ensmallen.org/files/ensmallen_2018.pdf.")
+)

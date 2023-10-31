@@ -1,0 +1,12 @@
+Bandicoot is written by a team of talented developers listed in the COPYRIGHTS.txt
+file:
+
+  ensmallen: a flexible C++ library for efficient function optimization.
+  Copyright 2017-2023, Ryan Curtin <ryan@ratml.org>
+  Copyright 2017-2023, Marcus Edel <marcus.edel@fu-berlin.de>
+  Copyright 2017-2023, Conrad Sanderson
+
+The RcppBandicoot package provides an integration of Bandicoot and its dependencies
+into R. RcppBandicoot accomplishes this by linking into Rcpp,
+establishing plugins, examples, and more. The R implementation was done by James
+Joseph Balamuta with additional contributions by contributors listed in the ChangeLog.

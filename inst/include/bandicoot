@@ -1,0 +1,645 @@
+// SPDX-License-Identifier: Apache-2.0
+// 
+// Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
+// Copyright 2008-2023 Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2008-2016 National ICT Australia (NICTA)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ------------------------------------------------------------------------
+
+
+#ifndef BANDICOOT_INCLUDES
+#define BANDICOOT_INCLUDES
+
+#include <cassert>  // TODO: remove this after all of the code has been adapted
+
+#undef  CL_USE_DEPRECATED_OPENCL_1_2_APIS
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+
+
+#include "bandicoot_bits/compiler_check.hpp"
+#include "bandicoot_bits/config.hpp"
+#include "bandicoot_bits/compiler_setup.hpp"
+#include "bandicoot_bits/include_opencl.hpp"
+#include "bandicoot_bits/include_cuda.hpp"
+
+#if defined(COOT_USE_OPENMP)
+  #if defined(__has_include)
+    #if __has_include(<omp.h>)
+      #include <omp.h>
+    #else
+      #undef COOT_USE_OPENMP
+      #pragma message ("WARNING: use of OpenMP disabled; omp.h header not found")
+    #endif
+  #else
+    #include <omp.h>
+  #endif
+#endif
+
+
+#include <mutex>
+#include <cerrno>
+#include <iomanip>
+#include <climits>
+#include <limits>
+#include <cfloat>
+#include <iostream>
+#include <fstream>
+#include <complex>
+#include <vector>
+#include <random>
+#include <cstring>
+
+#if ( defined(__unix__) || defined(__unix) || defined(_POSIX_C_SOURCE) || (defined(__APPLE__) && defined(__MACH__)) ) && !defined(_WIN32)
+  #define COOT_HAS_POSIX_FILE_FUNCTIONS
+
+  #include <unistd.h>
+  #include <pwd.h>
+  #include <sys/stat.h>
+#endif
+
+// For compatibility with Armadillo, if Bandicoot was included first.
+// Note that if Armadillo is never included, it's okay.
+#if !defined(COOT_HAVE_ARMA)
+  #include "bandicoot_bits/arma_forward.hpp"
+#endif
+
+// namespace for bandicoot classes and functions
+namespace coot
+  {
+
+  // preliminaries
+
+  #include "bandicoot_bits/typedef_missing.hpp"
+  #include "bandicoot_bits/coot_forward.hpp"
+  #include "bandicoot_bits/coot_static_check.hpp"
+  #include "bandicoot_bits/typedef_elem.hpp"
+  #include "bandicoot_bits/typedef_mat.hpp"
+  #include "bandicoot_bits/coot_str.hpp"
+  #include "bandicoot_bits/coot_version.hpp"
+  #include "bandicoot_bits/coot_config.hpp"
+  #include "bandicoot_bits/traits.hpp"
+  #include "bandicoot_bits/op_traits.hpp"
+  #include "bandicoot_bits/glue_traits.hpp"
+  #include "bandicoot_bits/promote_type.hpp"
+  #include "bandicoot_bits/uint_type.hpp"
+  #include "bandicoot_bits/upgrade_val.hpp"
+  #include "bandicoot_bits/restrictors.hpp"
+  #include "bandicoot_bits/access.hpp"
+  #include "bandicoot_bits/span.hpp"
+  #include "bandicoot_bits/constants.hpp"
+  #include "bandicoot_bits/dev_mem_t.hpp"
+  #include "bandicoot_bits/distr_param.hpp"
+  #include "bandicoot_bits/fill.hpp"
+
+
+
+  //
+  // low-level debugging and memory handling functions
+
+  #include "bandicoot_bits/debug.hpp"
+  #include "bandicoot_bits/cpu_memory.hpp"
+
+
+
+  //
+  // runtime
+
+  #include "bandicoot_bits/kernel_id.hpp"
+
+  namespace cache
+    {
+    #include "bandicoot_bits/cache_bones.hpp"
+    }
+
+  namespace rt_common
+    {
+    #include "bandicoot_bits/rt_common/kernels_t.hpp"
+    #include "bandicoot_bits/rt_common/kernel_utils_bones.hpp"
+    }
+
+  #if defined(COOT_USE_OPENCL)
+
+  #include "bandicoot_bits/opencl/def_opencl.hpp"
+  #include "bandicoot_bits/opencl/def_clblas.hpp"
+
+  namespace opencl
+    {
+    #include "bandicoot_bits/opencl/magma_kernel_id.hpp"
+    #include "bandicoot_bits/opencl/runtime_bones.hpp"
+    #include "bandicoot_bits/opencl/error.hpp"
+    #include "bandicoot_bits/opencl/type_to_dev_string.hpp"
+    #include "bandicoot_bits/opencl/random_bones.hpp"
+    #include "bandicoot_bits/opencl/copy_bones.hpp"
+    #include "bandicoot_bits/opencl/generic_reduce_bones.hpp"
+    #include "bandicoot_bits/opencl/opencl_misc.hpp"
+    }
+
+  #include "bandicoot_bits/opencl/magma/magma_types.hpp"
+  #include "bandicoot_bits/opencl/magma/magmablas_bones.hpp"
+
+  namespace magma
+    {
+    #include "bandicoot_bits/opencl/magma.hpp"
+    }
+
+  namespace opencl
+    {
+    #include "bandicoot_bits/opencl/debug.hpp"
+    #include "bandicoot_bits/opencl/kernel_src.hpp"
+    }
+
+  #endif
+
+  #if defined(COOT_USE_CUDA)
+
+  #include "bandicoot_bits/cuda/def_cuda.hpp"
+  #include "bandicoot_bits/cuda/def_nvrtc.hpp"
+  #include "bandicoot_bits/cuda/def_cublas.hpp"
+  #include "bandicoot_bits/cuda/def_curand.hpp"
+  #include "bandicoot_bits/cuda/def_cusolver.hpp"
+
+  namespace cuda
+    {
+    #include "bandicoot_bits/cuda/runtime_bones.hpp"
+    #include "bandicoot_bits/cuda/kernel_src.hpp"
+    #include "bandicoot_bits/cuda/error.hpp"
+    #include "bandicoot_bits/cuda/type_to_dev_string.hpp"
+    #include "bandicoot_bits/cuda/cuda_data_type.hpp"
+    #include "bandicoot_bits/cuda/copy_bones.hpp"
+    #include "bandicoot_bits/cuda/generic_reduce_bones.hpp"
+    }
+  #endif
+
+  #include "bandicoot_bits/coot_rt_bones.hpp"
+  #include "bandicoot_bits/coot_init.hpp"
+  #include "bandicoot_bits/coot_synchronise.hpp"
+
+  //
+  // class prototypes
+
+  #include "bandicoot_bits/cond_rel_bones.hpp"
+
+  #include "bandicoot_bits/Base_bones.hpp"
+
+  #include "bandicoot_bits/MatValProxy_bones.hpp"
+  #include "bandicoot_bits/Mat_bones.hpp"
+  #include "bandicoot_bits/Row_bones.hpp"
+  #include "bandicoot_bits/Col_bones.hpp"
+  #include "bandicoot_bits/SizeMat_bones.hpp"
+  #include "bandicoot_bits/subview_bones.hpp"
+  #include "bandicoot_bits/diagview_bones.hpp"
+
+  #include "bandicoot_bits/eOp_bones.hpp"
+  #include "bandicoot_bits/eGlue_bones.hpp"
+  #include "bandicoot_bits/eop_core_bones.hpp"
+  #include "bandicoot_bits/eglue_core_bones.hpp"
+  #include "bandicoot_bits/mtOp_bones.hpp"
+  #include "bandicoot_bits/Op_bones.hpp"
+  #include "bandicoot_bits/Glue_bones.hpp"
+  #include "bandicoot_bits/mtGlue_bones.hpp"
+  #include "bandicoot_bits/coot_rng_bones.hpp"
+
+  #include "bandicoot_bits/op_sum_bones.hpp"
+  #include "bandicoot_bits/op_htrans_bones.hpp"
+  #include "bandicoot_bits/op_strans_bones.hpp"
+  #include "bandicoot_bits/op_min_bones.hpp"
+  #include "bandicoot_bits/op_max_bones.hpp"
+  #include "bandicoot_bits/op_repmat_bones.hpp"
+  #include "bandicoot_bits/op_resize_bones.hpp"
+  #include "bandicoot_bits/op_reshape_bones.hpp"
+  #include "bandicoot_bits/op_vectorise_bones.hpp"
+  #include "bandicoot_bits/op_clamp_bones.hpp"
+  #include "bandicoot_bits/op_norm_bones.hpp"
+  #include "bandicoot_bits/op_diagmat_bones.hpp"
+  #include "bandicoot_bits/op_diagvec_bones.hpp"
+  #include "bandicoot_bits/op_normalise_bones.hpp"
+  #include "bandicoot_bits/op_mean_bones.hpp"
+  #include "bandicoot_bits/op_median_bones.hpp"
+  #include "bandicoot_bits/op_var_bones.hpp"
+  #include "bandicoot_bits/op_stddev_bones.hpp"
+  #include "bandicoot_bits/op_range_bones.hpp"
+  #include "bandicoot_bits/op_cov_bones.hpp"
+  #include "bandicoot_bits/op_cor_bones.hpp"
+  #include "bandicoot_bits/op_sort_bones.hpp"
+  #include "bandicoot_bits/op_symmat_bones.hpp"
+  #include "bandicoot_bits/op_det_bones.hpp"
+  #include "bandicoot_bits/op_pinv_bones.hpp"
+
+  #include "bandicoot_bits/mtop_conv_to_bones.hpp"
+  #include "bandicoot_bits/mtop_all_bones.hpp"
+  #include "bandicoot_bits/mtop_any_bones.hpp"
+  #include "bandicoot_bits/mtop_relational_bones.hpp"
+  #include "bandicoot_bits/mtop_sort_index_bones.hpp"
+  #include "bandicoot_bits/mtop_find_bones.hpp"
+  #include "bandicoot_bits/mtop_find_finite_bones.hpp"
+  #include "bandicoot_bits/mtop_find_nonfinite_bones.hpp"
+  #include "bandicoot_bits/mtop_find_nan_bones.hpp"
+
+  #include "bandicoot_bits/glue_times_bones.hpp"
+  #include "bandicoot_bits/glue_cov_bones.hpp"
+  #include "bandicoot_bits/glue_cor_bones.hpp"
+  #include "bandicoot_bits/glue_join_cols_bones.hpp"
+  #include "bandicoot_bits/glue_join_rows_bones.hpp"
+  #include "bandicoot_bits/glue_cross_bones.hpp"
+  #include "bandicoot_bits/glue_conv_bones.hpp"
+  #include "bandicoot_bits/glue_conv2_bones.hpp"
+  #include "bandicoot_bits/glue_solve_bones.hpp"
+  #include "bandicoot_bits/glue_min_bones.hpp"
+  #include "bandicoot_bits/glue_max_bones.hpp"
+
+  #include "bandicoot_bits/mtglue_relational_bones.hpp"
+
+  #include "bandicoot_bits/wall_clock_bones.hpp"
+
+
+
+  //
+  // wrappers for various cmath functions
+
+  #include "bandicoot_bits/coot_cmath.hpp"
+
+  // definitions for LAPACK and BLAS functions
+  #include "bandicoot_bits/def_blas.hpp"
+  #include "bandicoot_bits/def_lapack.hpp"
+  #include "bandicoot_bits/translate_blas.hpp"
+  #include "bandicoot_bits/translate_lapack.hpp"
+
+  //
+  // runtime
+
+  namespace cache
+    {
+    #include "bandicoot_bits/cache_meat.hpp"
+    }
+
+  namespace rt_common
+    {
+    #include "bandicoot_bits/rt_common/kernel_utils_meat.hpp"
+    }
+
+  #if defined(COOT_USE_OPENCL)
+
+    //
+    // include ported magma functionality
+    // NOTE: magma uses rather dubious coding techniques
+    //
+
+    #include "bandicoot_bits/opencl/magma/magma_support.hpp"
+
+    #include "bandicoot_bits/opencl/magma/spanel_to_q.hpp"
+    #include "bandicoot_bits/opencl/magma/dpanel_to_q.hpp"
+    #include "bandicoot_bits/opencl/magma/magmablas_meat.hpp"
+
+    #include "bandicoot_bits/opencl/magma/slarfb.hpp"
+    #include "bandicoot_bits/opencl/magma/sorgqr.hpp"
+    #include "bandicoot_bits/opencl/magma/slabrd.hpp"
+    #include "bandicoot_bits/opencl/magma/sgebrd.hpp"
+    #include "bandicoot_bits/opencl/magma/sgeqrf.hpp"
+    #include "bandicoot_bits/opencl/magma/sgeqrf2.hpp"
+    #include "bandicoot_bits/opencl/magma/sorglq.hpp"
+    #include "bandicoot_bits/opencl/magma/sgelqf.hpp"
+    #include "bandicoot_bits/opencl/magma/sorgqr2.hpp"
+    #include "bandicoot_bits/opencl/magma/sorgbr.hpp"
+    #include "bandicoot_bits/opencl/magma/sormqr.hpp"
+    #include "bandicoot_bits/opencl/magma/sormlq.hpp"
+    #include "bandicoot_bits/opencl/magma/sormbr.hpp"
+    #include "bandicoot_bits/opencl/magma/sgesvd.hpp"
+    #include "bandicoot_bits/opencl/magma/spotrf.hpp"
+    #include "bandicoot_bits/opencl/magma/sgetrf.hpp"
+    #include "bandicoot_bits/opencl/magma/sormql2.hpp"
+    #include "bandicoot_bits/opencl/magma/sormqr2.hpp"
+    #include "bandicoot_bits/opencl/magma/sormtr.hpp"
+    #include "bandicoot_bits/opencl/magma/slaex3.hpp"
+    #include "bandicoot_bits/opencl/magma/slaex1.hpp"
+    #include "bandicoot_bits/opencl/magma/slaex0.hpp"
+    #include "bandicoot_bits/opencl/magma/sstedx.hpp"
+    #include "bandicoot_bits/opencl/magma/slatrd2.hpp"
+    #include "bandicoot_bits/opencl/magma/ssytrd2.hpp"
+    #include "bandicoot_bits/opencl/magma/ssyevd.hpp"
+    #include "bandicoot_bits/opencl/magma/sgetrs.hpp"
+
+    #include "bandicoot_bits/opencl/magma/dlarfb.hpp"
+    #include "bandicoot_bits/opencl/magma/dorgqr.hpp"
+    #include "bandicoot_bits/opencl/magma/dlabrd.hpp"
+    #include "bandicoot_bits/opencl/magma/dgebrd.hpp"
+    #include "bandicoot_bits/opencl/magma/dgeqrf.hpp"
+    #include "bandicoot_bits/opencl/magma/dgeqrf2.hpp"
+    #include "bandicoot_bits/opencl/magma/dorglq.hpp"
+    #include "bandicoot_bits/opencl/magma/dgelqf.hpp"
+    #include "bandicoot_bits/opencl/magma/dorgqr2.hpp"
+    #include "bandicoot_bits/opencl/magma/dorgbr.hpp"
+    #include "bandicoot_bits/opencl/magma/dormqr.hpp"
+    #include "bandicoot_bits/opencl/magma/dormlq.hpp"
+    #include "bandicoot_bits/opencl/magma/dormbr.hpp"
+    #include "bandicoot_bits/opencl/magma/dgesvd.hpp"
+    #include "bandicoot_bits/opencl/magma/dpotrf.hpp"
+    #include "bandicoot_bits/opencl/magma/dgetrf.hpp"
+    #include "bandicoot_bits/opencl/magma/dormql2.hpp"
+    #include "bandicoot_bits/opencl/magma/dormqr2.hpp"
+    #include "bandicoot_bits/opencl/magma/dormtr.hpp"
+    #include "bandicoot_bits/opencl/magma/dlaex3.hpp"
+    #include "bandicoot_bits/opencl/magma/dlaex1.hpp"
+    #include "bandicoot_bits/opencl/magma/dlaex0.hpp"
+    #include "bandicoot_bits/opencl/magma/dstedx.hpp"
+    #include "bandicoot_bits/opencl/magma/dlatrd2.hpp"
+    #include "bandicoot_bits/opencl/magma/dsytrd2.hpp"
+    #include "bandicoot_bits/opencl/magma/dsyevd.hpp"
+    #include "bandicoot_bits/opencl/magma/dgetrs.hpp"
+
+    namespace opencl
+      {
+      #include "bandicoot_bits/opencl/runtime_meat.hpp"
+      #include "bandicoot_bits/opencl/generic_reduce_meat.hpp"
+      #include "bandicoot_bits/opencl/fill.hpp"
+      #include "bandicoot_bits/opencl/eop.hpp"
+      #include "bandicoot_bits/opencl/mat_val_proxy.hpp"
+      #include "bandicoot_bits/opencl/random_meat.hpp"
+      #include "bandicoot_bits/opencl/accu.hpp"
+      #include "bandicoot_bits/opencl/chol.hpp"
+      #include "bandicoot_bits/opencl/copy_meat.hpp"
+      #include "bandicoot_bits/opencl/trace.hpp"
+      #include "bandicoot_bits/opencl/eye.hpp"
+      #include "bandicoot_bits/opencl/gemm.hpp"
+      #include "bandicoot_bits/opencl/gemv.hpp"
+      #include "bandicoot_bits/opencl/sum.hpp"
+      #include "bandicoot_bits/opencl/dot.hpp"
+      #include "bandicoot_bits/opencl/min.hpp"
+      #include "bandicoot_bits/opencl/max.hpp"
+      #include "bandicoot_bits/opencl/max_abs.hpp"
+      #include "bandicoot_bits/opencl/repmat.hpp"
+      #include "bandicoot_bits/opencl/linspace.hpp"
+      #include "bandicoot_bits/opencl/trans.hpp"
+      #include "bandicoot_bits/opencl/clamp.hpp"
+      #include "bandicoot_bits/opencl/norm.hpp"
+      #include "bandicoot_bits/opencl/mul_diag.hpp"
+      #include "bandicoot_bits/opencl/all.hpp"
+      #include "bandicoot_bits/opencl/any.hpp"
+      #include "bandicoot_bits/opencl/relational.hpp"
+      #include "bandicoot_bits/opencl/svd.hpp"
+      #include "bandicoot_bits/opencl/sort.hpp"
+      #include "bandicoot_bits/opencl/sort_index.hpp"
+      #include "bandicoot_bits/opencl/mean.hpp"
+      #include "bandicoot_bits/opencl/median.hpp"
+      #include "bandicoot_bits/opencl/var.hpp"
+      #include "bandicoot_bits/opencl/join_cols.hpp"
+      #include "bandicoot_bits/opencl/join_rows.hpp"
+      #include "bandicoot_bits/opencl/find.hpp"
+      #include "bandicoot_bits/opencl/symmat.hpp"
+      #include "bandicoot_bits/opencl/lu.hpp"
+      #include "bandicoot_bits/opencl/eig_sym.hpp"
+      #include "bandicoot_bits/opencl/prod.hpp"
+      #include "bandicoot_bits/opencl/det.hpp"
+      #include "bandicoot_bits/opencl/replace.hpp"
+      #include "bandicoot_bits/opencl/reorder_cols.hpp"
+      #include "bandicoot_bits/opencl/cross.hpp"
+      #include "bandicoot_bits/opencl/rotate_180.hpp"
+      #include "bandicoot_bits/opencl/solve.hpp"
+      }
+  #endif
+
+  #if defined(COOT_USE_CUDA)
+  namespace cuda
+    {
+    #include "bandicoot_bits/cuda/debug.hpp"
+    #include "bandicoot_bits/cuda/kernel_misc.hpp"
+    #include "bandicoot_bits/cuda/runtime_meat.hpp"
+    #include "bandicoot_bits/cuda/copy_meat.hpp"
+    #include "bandicoot_bits/cuda/generic_reduce_meat.hpp"
+    #include "bandicoot_bits/cuda/fill.hpp"
+    #include "bandicoot_bits/cuda/eop.hpp"
+    #include "bandicoot_bits/cuda/mat_val_proxy.hpp"
+    #include "bandicoot_bits/cuda/random_meat.hpp"
+    #include "bandicoot_bits/cuda/accu.hpp"
+    #include "bandicoot_bits/cuda/chol.hpp"
+    #include "bandicoot_bits/cuda/trace.hpp"
+    #include "bandicoot_bits/cuda/eye.hpp"
+    #include "bandicoot_bits/cuda/gemm.hpp"
+    #include "bandicoot_bits/cuda/gemv.hpp"
+    #include "bandicoot_bits/cuda/sum.hpp"
+    #include "bandicoot_bits/cuda/dot.hpp"
+    #include "bandicoot_bits/cuda/min.hpp"
+    #include "bandicoot_bits/cuda/max.hpp"
+    #include "bandicoot_bits/cuda/max_abs.hpp"
+    #include "bandicoot_bits/cuda/repmat.hpp"
+    #include "bandicoot_bits/cuda/linspace.hpp"
+    #include "bandicoot_bits/cuda/trans.hpp"
+    #include "bandicoot_bits/cuda/clamp.hpp"
+    #include "bandicoot_bits/cuda/norm.hpp"
+    #include "bandicoot_bits/cuda/mul_diag.hpp"
+    #include "bandicoot_bits/cuda/all.hpp"
+    #include "bandicoot_bits/cuda/any.hpp"
+    #include "bandicoot_bits/cuda/relational.hpp"
+    #include "bandicoot_bits/cuda/svd.hpp"
+    #include "bandicoot_bits/cuda/sort.hpp"
+    #include "bandicoot_bits/cuda/sort_index.hpp"
+    #include "bandicoot_bits/cuda/mean.hpp"
+    #include "bandicoot_bits/cuda/median.hpp"
+    #include "bandicoot_bits/cuda/var.hpp"
+    #include "bandicoot_bits/cuda/join_cols.hpp"
+    #include "bandicoot_bits/cuda/join_rows.hpp"
+    #include "bandicoot_bits/cuda/find.hpp"
+    #include "bandicoot_bits/cuda/symmat.hpp"
+    #include "bandicoot_bits/cuda/lu.hpp"
+    #include "bandicoot_bits/cuda/eig_sym.hpp"
+    #include "bandicoot_bits/cuda/prod.hpp"
+    #include "bandicoot_bits/cuda/det.hpp"
+    #include "bandicoot_bits/cuda/replace.hpp"
+    #include "bandicoot_bits/cuda/reorder_cols.hpp"
+    #include "bandicoot_bits/cuda/cross.hpp"
+    #include "bandicoot_bits/cuda/rotate_180.hpp"
+    #include "bandicoot_bits/cuda/solve.hpp"
+    }
+  #endif
+
+  #include "bandicoot_bits/coot_rt_meat.hpp"
+
+  //
+  // classes that underlay metaprogramming
+
+  #include "bandicoot_bits/unwrap.hpp"
+  #include "bandicoot_bits/no_conv_unwrap.hpp"
+  #include "bandicoot_bits/special_cor_cov_unwrap.hpp"
+  #include "bandicoot_bits/SizeProxy.hpp"
+  #include "bandicoot_bits/strip.hpp"
+  #include "bandicoot_bits/extract_subview.hpp"
+  #include "bandicoot_bits/copy_alias.hpp"
+  #include "bandicoot_bits/steal_or_copy_mem.hpp"
+
+
+
+  //
+  // ostream
+
+  #include "bandicoot_bits/coot_ostream_bones.hpp"
+  #include "bandicoot_bits/coot_ostream_meat.hpp"
+
+
+
+  //
+  // operators
+
+  #include "bandicoot_bits/operator_times.hpp"
+  #include "bandicoot_bits/operator_plus.hpp"
+  #include "bandicoot_bits/operator_minus.hpp"
+  #include "bandicoot_bits/operator_schur.hpp"
+  #include "bandicoot_bits/operator_div.hpp"
+  #include "bandicoot_bits/operator_relational.hpp"
+  #include "bandicoot_bits/operator_ostream.hpp"
+
+
+
+  //
+  // user accessible functions
+
+  // the order of the fn_*.hpp include files matters,
+  // as some files require functionality given in preceding files
+
+  #include "bandicoot_bits/fn_as_scalar.hpp"
+  #include "bandicoot_bits/fn_elem.hpp"
+  #include "bandicoot_bits/fn_trace.hpp"
+  #include "bandicoot_bits/fn_accu.hpp"
+  #include "bandicoot_bits/fn_sum.hpp"
+  #include "bandicoot_bits/fn_trans.hpp"
+  #include "bandicoot_bits/fn_strans.hpp"
+  #include "bandicoot_bits/fn_chol.hpp"
+  #include "bandicoot_bits/fn_dot.hpp"
+  #include "bandicoot_bits/fn_conv_to.hpp"
+  #include "bandicoot_bits/fn_min.hpp"
+  #include "bandicoot_bits/fn_max.hpp"
+  #include "bandicoot_bits/fn_eye.hpp"
+  #include "bandicoot_bits/fn_zeros.hpp"
+  #include "bandicoot_bits/fn_ones.hpp"
+  #include "bandicoot_bits/fn_randu.hpp"
+  #include "bandicoot_bits/fn_randn.hpp"
+  #include "bandicoot_bits/fn_randi.hpp"
+  #include "bandicoot_bits/fn_repmat.hpp"
+  #include "bandicoot_bits/fn_resize.hpp"
+  #include "bandicoot_bits/fn_reshape.hpp"
+  #include "bandicoot_bits/fn_linspace.hpp"
+  #include "bandicoot_bits/fn_vectorise.hpp"
+  #include "bandicoot_bits/fn_clamp.hpp"
+  #include "bandicoot_bits/fn_size.hpp"
+  #include "bandicoot_bits/fn_norm.hpp"
+  #include "bandicoot_bits/fn_all.hpp"
+  #include "bandicoot_bits/fn_any.hpp"
+  #include "bandicoot_bits/fn_svd.hpp"
+  #include "bandicoot_bits/fn_diagmat.hpp"
+  #include "bandicoot_bits/fn_diagvec.hpp"
+  #include "bandicoot_bits/fn_normalise.hpp"
+  #include "bandicoot_bits/fn_mean.hpp"
+  #include "bandicoot_bits/fn_median.hpp"
+  #include "bandicoot_bits/fn_stddev.hpp"
+  #include "bandicoot_bits/fn_var.hpp"
+  #include "bandicoot_bits/fn_range.hpp"
+  #include "bandicoot_bits/fn_cov.hpp"
+  #include "bandicoot_bits/fn_cor.hpp"
+  #include "bandicoot_bits/fn_join.hpp"
+  #include "bandicoot_bits/fn_sort.hpp"
+  #include "bandicoot_bits/fn_sort_index.hpp"
+  #include "bandicoot_bits/fn_find.hpp"
+  #include "bandicoot_bits/fn_symmat.hpp"
+  #include "bandicoot_bits/fn_lu.hpp"
+  #include "bandicoot_bits/fn_eig_sym.hpp"
+  #include "bandicoot_bits/fn_det.hpp"
+  #include "bandicoot_bits/fn_pinv.hpp"
+  #include "bandicoot_bits/fn_cross.hpp"
+  #include "bandicoot_bits/fn_conv.hpp"
+  #include "bandicoot_bits/fn_solve.hpp"
+
+
+  //
+  // class meat
+
+  #include "bandicoot_bits/mul_gemv.hpp"
+  #include "bandicoot_bits/mul_gemm.hpp"
+
+  #include "bandicoot_bits/cond_rel_meat.hpp"
+
+  #include "bandicoot_bits/Base_meat.hpp"
+
+  #include "bandicoot_bits/MatValProxy_meat.hpp"
+  #include "bandicoot_bits/Mat_meat.hpp"
+  #include "bandicoot_bits/Row_meat.hpp"
+  #include "bandicoot_bits/Col_meat.hpp"
+  #include "bandicoot_bits/SizeMat_meat.hpp"
+  #include "bandicoot_bits/subview_meat.hpp"
+  #include "bandicoot_bits/diagview_meat.hpp"
+
+  #include "bandicoot_bits/eOp_meat.hpp"
+  #include "bandicoot_bits/eGlue_meat.hpp"
+  #include "bandicoot_bits/eop_core_meat.hpp"
+  #include "bandicoot_bits/eglue_core_meat.hpp"
+  #include "bandicoot_bits/mtOp_meat.hpp"
+  #include "bandicoot_bits/Op_meat.hpp"
+  #include "bandicoot_bits/Glue_meat.hpp"
+  #include "bandicoot_bits/mtGlue_meat.hpp"
+  #include "bandicoot_bits/coot_rng_meat.hpp"
+
+  #include "bandicoot_bits/op_sum_meat.hpp"
+  #include "bandicoot_bits/op_htrans_meat.hpp"
+  #include "bandicoot_bits/op_strans_meat.hpp"
+  #include "bandicoot_bits/op_min_meat.hpp"
+  #include "bandicoot_bits/op_max_meat.hpp"
+  #include "bandicoot_bits/op_repmat_meat.hpp"
+  #include "bandicoot_bits/op_resize_meat.hpp"
+  #include "bandicoot_bits/op_reshape_meat.hpp"
+  #include "bandicoot_bits/op_vectorise_meat.hpp"
+  #include "bandicoot_bits/op_clamp_meat.hpp"
+  #include "bandicoot_bits/op_norm_meat.hpp"
+  #include "bandicoot_bits/op_diagmat_meat.hpp"
+  #include "bandicoot_bits/op_diagvec_meat.hpp"
+  #include "bandicoot_bits/op_normalise_meat.hpp"
+  #include "bandicoot_bits/op_mean_meat.hpp"
+  #include "bandicoot_bits/op_median_meat.hpp"
+  #include "bandicoot_bits/op_var_meat.hpp"
+  #include "bandicoot_bits/op_stddev_meat.hpp"
+  #include "bandicoot_bits/op_range_meat.hpp"
+  #include "bandicoot_bits/op_cov_meat.hpp"
+  #include "bandicoot_bits/op_cor_meat.hpp"
+  #include "bandicoot_bits/op_sort_meat.hpp"
+  #include "bandicoot_bits/op_symmat_meat.hpp"
+  #include "bandicoot_bits/op_det_meat.hpp"
+  #include "bandicoot_bits/op_pinv_meat.hpp"
+
+  #include "bandicoot_bits/mtop_conv_to_meat.hpp"
+  #include "bandicoot_bits/mtop_all_meat.hpp"
+  #include "bandicoot_bits/mtop_any_meat.hpp"
+  #include "bandicoot_bits/mtop_relational_meat.hpp"
+  #include "bandicoot_bits/mtop_sort_index_meat.hpp"
+  #include "bandicoot_bits/mtop_find_meat.hpp"
+  #include "bandicoot_bits/mtop_find_finite_meat.hpp"
+  #include "bandicoot_bits/mtop_find_nonfinite_meat.hpp"
+  #include "bandicoot_bits/mtop_find_nan_meat.hpp"
+
+  #include "bandicoot_bits/glue_times_meat.hpp"
+  #include "bandicoot_bits/glue_cov_meat.hpp"
+  #include "bandicoot_bits/glue_cor_meat.hpp"
+  #include "bandicoot_bits/glue_join_cols_meat.hpp"
+  #include "bandicoot_bits/glue_join_rows_meat.hpp"
+  #include "bandicoot_bits/glue_cross_meat.hpp"
+  #include "bandicoot_bits/glue_conv_meat.hpp"
+  #include "bandicoot_bits/glue_conv2_meat.hpp"
+  #include "bandicoot_bits/glue_solve_meat.hpp"
+  #include "bandicoot_bits/glue_min_meat.hpp"
+  #include "bandicoot_bits/glue_max_meat.hpp"
+
+  #include "bandicoot_bits/mtglue_relational_meat.hpp"
+
+  #include "bandicoot_bits/wall_clock_meat.hpp"
+  }
+
+
+
+#include "bandicoot_bits/compiler_setup_post.hpp"
+
+#endif
