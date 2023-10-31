@@ -1,0 +1,4 @@
+Procedure for updating the Bandicoot library:
+
+- Download Bandicoot from upstream
+- Copy and replace the bandicoot.hpp and bandicoot_bits found in this directory
