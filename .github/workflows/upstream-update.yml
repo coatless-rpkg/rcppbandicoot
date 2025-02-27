@@ -71,11 +71,11 @@ jobs:
           # Create temporary directory
           mkdir -p temp_download
           
-          # Download the release tarball
-          curl -L "${{ steps.get-version.outputs.download_url }}" -o temp_download/release.tar.gz
+          # Download the zip file
+          curl -L "${{ steps.get-version.outputs.download_url }}" -o temp_download/release.zip
           
-          # Extract the release tarball
-          tar -xzf temp_download/release.tar.gz -C temp_download
+          # Extract the zip file
+          unzip temp_download/release.zip -d temp_download
           
           # Create destination directory if it doesn't exist
           mkdir -p inst/include
