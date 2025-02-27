@@ -77,11 +77,29 @@ jobs:
           # Extract the zip file
           unzip temp_download/release.zip -d temp_download
           
-          # Create destination directory if it doesn't exist
-          mkdir -p inst/include
+          # Find the bandicoot directory
+          BANDICOOT_DIR=$(find temp_download -name "bandicoot-code-*" -type d | head -1)
+          echo "Found Bandicoot directory: $BANDICOOT_DIR"
           
-          # Find and copy the include directory contents
-          find temp_download -name "include" -type d -exec cp -r {}/* inst/include/ \;
+          # Check if include directory exists
+          if [ -d "$BANDICOOT_DIR/include" ]; then
+            echo "Found include directory at $BANDICOOT_DIR/include"
+            
+            # Create destination directory if it doesn't exist
+            mkdir -p inst/include
+            
+            # Copy the include directory contents
+            cp -r $BANDICOOT_DIR/include/* inst/include/
+            
+            # List copied files for verification
+            echo "Copied files to inst/include:"
+            ls -la inst/include/
+          else
+            echo "Error: include directory not found in $BANDICOOT_DIR"
+            echo "Directory contents:"
+            ls -la $BANDICOOT_DIR
+            exit 1
+          fi
           
           # Clean up
           rm -rf temp_download
@@ -92,7 +110,7 @@ jobs:
           
       - name: Create Pull Request
         if: steps.check-update.outputs.update_needed == 'true'
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Update to Bandicoot release ${{ steps.get-version.outputs.version }}"
