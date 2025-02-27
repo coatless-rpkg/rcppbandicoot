@@ -21,7 +21,7 @@
 
 struct kernel_src
   {
-  static inline const std::string&  get_src_preamble(const bool has_float64, const bool has_subgroups, const size_t subgroup_size, const bool must_synchronise_subgroups);
+  static inline const std::string&  get_src_preamble(const bool has_float64, const bool has_subgroups, const size_t subgroup_size, const bool must_synchronise_subgroups, const bool need_subgroup_extension);
 
   static inline const std::string&  get_zeroway_source();
   static inline       std::string  init_zeroway_source();
@@ -51,7 +51,7 @@ struct kernel_src
 
 inline
 const std::string&
-kernel_src::get_src_preamble(const bool has_float64, const bool has_subgroups, const size_t subgroup_size, const bool must_synchronise_subgroups)
+kernel_src::get_src_preamble(const bool has_float64, const bool has_subgroups, const size_t subgroup_size, const bool must_synchronise_subgroups, const bool need_subgroup_extension)
   {
   char u32_max[32];
   char u64_max[32];
@@ -84,13 +84,23 @@ kernel_src::get_src_preamble(const bool has_float64, const bool has_subgroups, c
   "#endif \n"
   "#ifdef cl_intel_pragma_unroll \n"
   "#pragma OPENCL EXTENSION cl_intel_pragma_unroll : enable \n"
-  "#endif \n"
+  "#endif \n" +
+  ((need_subgroup_extension) ?
+      std::string("#pragma OPENCL EXTENSION cl_khr_subgroups : enable \n") :
+      std::string("")) +
   "\n"
   "#define COOT_FN2(ARG1,ARG2)  ARG1 ## ARG2 \n"
   "#define COOT_FN(ARG1,ARG2) COOT_FN2(ARG1,ARG2) \n"
   "\n"
   "#define COOT_FN_3_2(ARG1,ARG2,ARG3) ARG1 ## ARG2 ## ARG3 \n"
-  "#define COOT_FN_3(ARG1,ARG2,ARG3) COOT_FN_3_2(ARG1,ARG2,ARG3) \n"
+  "#define COOT_FN_3(ARG1,ARG2,ARG3) COOT_FN_3_2(ARG1,ARG2,ARG3) \n" +
+  ((has_float64) ?
+      std::string("#define COOT_HAS_FP64 \n") :
+      std::string("")) +
+  "\n"
+  // Define cx_float and cx_double in the same way that clMAGMA does.
+  "typedef float2 cx_float; \n" +
+  ((has_float64) ? "typedef double2 cx_double; \n" : "") +
   "\n"
   // Utility functions to return the correct min/max value for a given type.
   "inline uint coot_type_min_uint() { return 0; } \n"
@@ -126,6 +136,15 @@ kernel_src::get_src_preamble(const bool has_float64, const bool has_subgroups, c
   "inline bool coot_is_signed_float() { return true; } \n" +
   ((has_float64) ?
       std::string("inline bool coot_is_signed_double() { return true; } \n") :
+      std::string("")) +
+  "\n"
+  "inline bool coot_isnan_uint(const uint x)     { return false;    } \n"
+  "inline bool coot_isnan_int(const int x)       { return false;    } \n"
+  "inline bool coot_isnan_ulong(const ulong x)   { return false;    } \n"
+  "inline bool coot_isnan_long(const long x)     { return false;    } \n"
+  "inline bool coot_isnan_float(const float x)   { return isnan(x); } \n" +
+  ((has_float64) ?
+      std::string("inline bool coot_isnan_double(const double x) { return isnan(x); } \n") :
       std::string("")) +
   "\n"
   // MAGMA-specific macros.
@@ -223,7 +242,10 @@ kernel_src::init_zeroway_source()
 
   std::vector<std::string> aux_function_filenames = {
       "xorwow_rng.cl",
-      "philox_rng.cl"
+      "philox_rng.cl",
+      "absdiff.cl",
+      "var_philox.cl",
+      "conj.cl"
   };
 
   std::string source = "";
@@ -277,6 +299,8 @@ kernel_src::init_oneway_source()
       "accu_subgroup_reduce.cl",
       "min_subgroup_reduce.cl",
       "max_subgroup_reduce.cl",
+      "index_min_subgroup_reduce.cl",
+      "index_max_subgroup_reduce.cl",
       "prod_subgroup_reduce.cl"
   };
 

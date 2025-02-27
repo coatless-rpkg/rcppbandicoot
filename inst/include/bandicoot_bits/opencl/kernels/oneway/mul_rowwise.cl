@@ -16,8 +16,11 @@
 __kernel
 void
 COOT_FN(PREFIX,mul_rowwise)(__global eT1* out,
+                            const UWORD out_offset,
                             __global const eT1* A, // expected to have length n_rows
+                            const UWORD A_offset,
                             __global const eT1* in,
+                            const UWORD in_offset,
                             const eT1 alpha,
                             const UWORD n_rows,
                             const UWORD n_cols)
@@ -25,13 +28,13 @@ COOT_FN(PREFIX,mul_rowwise)(__global eT1* out,
   const UWORD row = get_global_id(0);
   if(row < n_rows)
     {
-    const eT1 val = alpha * A[row];
+    const eT1 val = alpha * A[A_offset + row];
 
     #pragma unroll
     for(UWORD i = 0; i < n_cols; ++i)
       {
       const UWORD offset = i * n_rows + row;
-      out[offset] = val * in[offset];
+      out[out_offset + offset] = val * in[in_offset + offset];
       }
     }
   }

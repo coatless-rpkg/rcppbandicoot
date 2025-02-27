@@ -42,8 +42,8 @@ eop_scalar(const twoway_kernel_id::enum_id num,
   // Get kernel.
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(num);
 
-  const uword src_offset = src_row_offset + src_col_offset * src_M_n_rows;
-  const uword dest_offset = dest_row_offset + dest_col_offset * dest_M_n_rows;
+  const uword src_offset = src.cl_mem_ptr.offset + src_row_offset + src_col_offset * src_M_n_rows;
+  const uword dest_offset = dest.cl_mem_ptr.offset + dest_row_offset + dest_col_offset * dest_M_n_rows;
 
   runtime_t::cq_guard guard;
   runtime_t::adapt_uword cl_n_rows(n_rows);
@@ -55,9 +55,9 @@ eop_scalar(const twoway_kernel_id::enum_id num,
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),        &dest.cl_mem_ptr     );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),        &dest.cl_mem_ptr.ptr );
   status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_dest_offset.size,   cl_dest_offset.addr  );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),        &src.cl_mem_ptr      );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),        &src.cl_mem_ptr.ptr  );
   status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_src_offset.size,    cl_src_offset.addr   );
   status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(eT1),           &aux_val_pre         );
   status |= coot_wrapper(clSetKernelArg)(kernel, 5, sizeof(eT2),           &aux_val_post        );
@@ -110,9 +110,9 @@ eop_mat(const threeway_kernel_id::enum_id num,
   // Get kernel.
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT3, eT2, eT1>(num);
 
-  const uword src_A_offset = src_A_row_offset + src_A_col_offset * src_A_M_n_rows;
-  const uword src_B_offset = src_B_row_offset + src_B_col_offset * src_B_M_n_rows;
-  const uword dest_offset  =  dest_row_offset +  dest_col_offset * dest_M_n_rows;
+  const uword src_A_offset = src_A.cl_mem_ptr.offset + src_A_row_offset + src_A_col_offset * src_A_M_n_rows;
+  const uword src_B_offset = src_B.cl_mem_ptr.offset + src_B_row_offset + src_B_col_offset * src_B_M_n_rows;
+  const uword dest_offset  =  dest.cl_mem_ptr.offset +  dest_row_offset +  dest_col_offset * dest_M_n_rows;
 
   runtime_t::cq_guard guard;
 
@@ -127,17 +127,17 @@ eop_mat(const threeway_kernel_id::enum_id num,
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel,  0,         sizeof(cl_mem), &( dest.cl_mem_ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  1,    cl_dest_offset.size, cl_dest_offset.addr   );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  2,         sizeof(cl_mem), &(src_A.cl_mem_ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  3,   cl_src_A_offset.size, cl_src_A_offset.addr  );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  4,         sizeof(cl_mem), &(src_B.cl_mem_ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  5,   cl_src_B_offset.size, cl_src_B_offset.addr  );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  6,         cl_n_rows.size, cl_n_rows.addr        );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  7,         cl_n_cols.size, cl_n_cols.addr        );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  8,  cl_dest_M_n_rows.size, cl_dest_M_n_rows.addr );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  9, cl_src_A_M_n_rows.size, cl_src_A_M_n_rows.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 10, cl_src_B_M_n_rows.size, cl_src_B_M_n_rows.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel,  0,         sizeof(cl_mem), &( dest.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel,  1,    cl_dest_offset.size, cl_dest_offset.addr    );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  2,         sizeof(cl_mem), &(src_A.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel,  3,   cl_src_A_offset.size, cl_src_A_offset.addr   );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  4,         sizeof(cl_mem), &(src_B.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel,  5,   cl_src_B_offset.size, cl_src_B_offset.addr   );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  6,         cl_n_rows.size, cl_n_rows.addr         );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  7,         cl_n_cols.size, cl_n_cols.addr         );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  8,  cl_dest_M_n_rows.size, cl_dest_M_n_rows.addr  );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  9, cl_src_A_M_n_rows.size, cl_src_A_M_n_rows.addr );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 10, cl_src_B_M_n_rows.size, cl_src_B_M_n_rows.addr );
 
   const size_t global_work_size[2] = { size_t(n_rows), size_t(n_cols) };
 

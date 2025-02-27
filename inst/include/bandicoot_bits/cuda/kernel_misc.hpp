@@ -14,14 +14,6 @@
 
 
 
-// stores: grid_size[0], grid_size[1], grid_size[2], block_size[0], block_size[1], block_size[2]
-struct kernel_dims
-  {
-  int d[6];
-  };
-
-
-
 inline kernel_dims create_kernel_dims()
   {
   kernel_dims k = {{1, 1, 1, 1, 1, 1}};
@@ -81,8 +73,8 @@ inline kernel_dims two_dimensional_grid_dims(const uword n_rows, const uword n_c
     {
     // We can't fit everything in a single block, so we'll process multiple columns in each block.
     result.d[3] = rows;           // blockSize[0]
-    result.d[4] = mtpb / rows;  // blockSize[1]
-    result.d[1] = (cols + result.d[1] - 1) / result.d[1]; // gridSize[1]
+    result.d[4] = mtpb / rows;    // blockSize[1] ; fit as many columns as we can
+    result.d[1] = ((cols + result.d[4] - 1) / result.d[4]); // gridSize[1]
     }
 
   return result;

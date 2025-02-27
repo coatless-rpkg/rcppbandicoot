@@ -15,8 +15,10 @@
 __kernel
 void
 COOT_FN(PREFIX,submat_var_small)(__global const eT1* in_mem,
+                                 const UWORD in_mem_offset,
                                  const UWORD n_elem,
                                  __global eT1* out_mem,
+                                 const UWORD out_mem_offset,
                                  __local volatile eT1* aux_mem,
                                  const eT1 mean_val,
                                  const UWORD in_n_rows,
@@ -41,8 +43,8 @@ COOT_FN(PREFIX,submat_var_small)(__global const eT1* in_mem,
     const UWORD index1 = (col1 + start_col) * in_n_rows + (row1 + start_row);
     const UWORD index2 = (col2 + start_col) * in_n_rows + (row2 + start_row);
 
-    const eT1 val1 = (in_mem[index1] - mean_val);
-    const eT1 val2 = (in_mem[index2] - mean_val);
+    const eT1 val1 = (in_mem[in_mem_offset + index1] - mean_val);
+    const eT1 val2 = (in_mem[in_mem_offset + index2] - mean_val);
     aux_mem[tid] += (val1 * val1) + (val2 * val2);
     i += grid_size;
     }
@@ -52,7 +54,7 @@ COOT_FN(PREFIX,submat_var_small)(__global const eT1* in_mem,
     const UWORD row = i % sub_n_rows;
     const UWORD index = (col + start_col) * in_n_rows + (row + start_row);
 
-    const eT1 val = (in_mem[index] - mean_val);
+    const eT1 val = (in_mem[in_mem_offset + index] - mean_val);
     aux_mem[tid] += (val * val);
     }
 
@@ -68,6 +70,6 @@ COOT_FN(PREFIX,submat_var_small)(__global const eT1* in_mem,
 
   if (tid == 0)
     {
-    out_mem[get_group_id(0)] = aux_mem[0];
+    out_mem[out_mem_offset + get_group_id(0)] = aux_mem[0];
     }
   }

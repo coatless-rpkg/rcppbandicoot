@@ -29,12 +29,12 @@ copy_from_dev_mem(eT* dest,
 
   runtime_t::cq_guard guard;
 
-  const size_t buffer_origin[3] = { sizeof(eT) * src_row_offset, src_col_offset, 0 };
-  const size_t host_origin[3]   = { 0,                           0,              0 };
-  const size_t region[3]        = { sizeof(eT) * n_rows,         n_cols,         1 };
+  const size_t buffer_origin[3] = { sizeof(eT) * src_row_offset + src.cl_mem_ptr.offset, src_col_offset, 0 };
+  const size_t host_origin[3]   = { 0,                                                   0,              0 };
+  const size_t region[3]        = { sizeof(eT) * n_rows,                                 n_cols,         1 };
   // use a blocking call
   const cl_int status = coot_wrapper(clEnqueueReadBufferRect)(get_rt().cl_rt.get_cq(),
-                                                              src.cl_mem_ptr,
+                                                              src.cl_mem_ptr.ptr,
                                                               CL_TRUE,
                                                               buffer_origin,
                                                               host_origin,
@@ -63,7 +63,7 @@ copy_into_dev_mem(dev_mem_t<eT> dest, const eT* src, const uword N)
   runtime_t::cq_guard guard;
 
   // use a blocking call
-  cl_int status = coot_wrapper(clEnqueueWriteBuffer)(get_rt().cl_rt.get_cq(), dest.cl_mem_ptr, CL_TRUE, 0, sizeof(eT)*N, src, 0, NULL, NULL);
+  cl_int status = coot_wrapper(clEnqueueWriteBuffer)(get_rt().cl_rt.get_cq(), dest.cl_mem_ptr.ptr, CL_TRUE, dest.cl_mem_ptr.offset, sizeof(eT)*N, src, 0, NULL, NULL);
 
   coot_check_cl_error(status, "Mat::write_dev_mem(): couldn't access device memory" );
   }
@@ -97,8 +97,8 @@ copy_mat(dev_mem_t<eT2> dest,
   // Get kernel.
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(twoway_kernel_id::convert_type);
 
-  const uword dest_offset = dest_row_offset + dest_col_offset * dest_M_n_rows;
-  const uword  src_offset =  src_row_offset +  src_col_offset * src_M_n_rows;
+  const uword dest_offset = dest.cl_mem_ptr.offset + dest_row_offset + dest_col_offset * dest_M_n_rows;
+  const uword  src_offset =  src.cl_mem_ptr.offset +  src_row_offset +  src_col_offset * src_M_n_rows;
 
   runtime_t::cq_guard guard;
 
@@ -111,14 +111,14 @@ copy_mat(dev_mem_t<eT2> dest,
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),        &(dest.cl_mem_ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_dest_offset.size,   cl_dest_offset.addr  );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),        &( src.cl_mem_ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_src_offset.size,    cl_src_offset.addr   );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_n_rows.size,        cl_n_rows.addr       );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_n_cols.size,        cl_n_cols.addr       );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 6, cl_dest_M_n_rows.size, cl_dest_M_n_rows.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 7, cl_src_M_n_rows.size,  cl_src_M_n_rows.addr );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),        &(dest.cl_mem_ptr.ptr)   );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_dest_offset.size,   cl_dest_offset.addr      );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),        &( src.cl_mem_ptr.ptr)   );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_src_offset.size,    cl_src_offset.addr       );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_n_rows.size,        cl_n_rows.addr           );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_n_cols.size,        cl_n_cols.addr           );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 6, cl_dest_M_n_rows.size, cl_dest_M_n_rows.addr    );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 7, cl_src_M_n_rows.size,  cl_src_M_n_rows.addr     );
 
   const size_t global_work_size[2] = { size_t(n_rows), size_t(n_cols) };
 

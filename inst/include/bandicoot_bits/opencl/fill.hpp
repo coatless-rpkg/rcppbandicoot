@@ -38,7 +38,7 @@ fill(dev_mem_t<eT> dest,
 
   runtime_t::cq_guard guard;
 
-  const uword out_offset = row_offset + col_offset * M_n_rows;
+  const uword out_offset = dest.cl_mem_ptr.offset + row_offset + col_offset * M_n_rows;
   runtime_t::adapt_uword cl_out_offset(out_offset);
   runtime_t::adapt_uword cl_n_rows(n_rows);
   runtime_t::adapt_uword cl_n_cols(n_cols);
@@ -46,12 +46,12 @@ fill(dev_mem_t<eT> dest,
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),     &(dest.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_out_offset.size, cl_out_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(eT),         &val              );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_n_rows.size,     cl_n_rows.addr    );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_n_cols.size,     cl_n_cols.addr    );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_M_n_rows.size,   cl_M_n_rows.addr  );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),     &(dest.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_out_offset.size, cl_out_offset.addr    );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(eT),         &val                  );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_n_rows.size,     cl_n_rows.addr        );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_n_cols.size,     cl_n_cols.addr        );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_M_n_rows.size,   cl_M_n_rows.addr      );
   coot_check_cl_error(status, "coot::opencl::fill(): couldn't set kernel arguments");
 
   const size_t global_work_size[2] = { size_t(n_rows), size_t(n_cols) };

@@ -1666,14 +1666,14 @@ magma_isamax(magma_int_t n, magmaFloat_const_ptr dx, size_t dx_offset, magma_int
     }
 
   // need to initialize one GPU unsigned int to store the result...
-  cl_mem out = get_rt().cl_rt.acquire_memory<unsigned int>(1);
-  cl_mem dwork = get_rt().cl_rt.acquire_memory<float>(2 * n);
+  coot_cl_mem out = get_rt().cl_rt.acquire_memory<unsigned int>(1);
+  coot_cl_mem dwork = get_rt().cl_rt.acquire_memory<float>(2 * n);
 
-  cl_int status = coot_wrapper(clblasiSamax)(n, out, 0, dx, dx_offset, incx, dwork, 1, &queue, 0, NULL, get_g_event() );
+  cl_int status = coot_wrapper(clblasiSamax)(n, out.ptr, 0, dx, dx_offset, incx, dwork.ptr, 1, &queue, 0, NULL, get_g_event() );
   opencl::coot_check_cl_error(status, "coot::opencl::magma_isamax(): call to clblasiSamax() failed");
 
   int result = 0;
-  status = coot_wrapper(clEnqueueReadBuffer)(queue, out, CL_TRUE, 0, sizeof(unsigned int), &result, 0, NULL, NULL);
+  status = coot_wrapper(clEnqueueReadBuffer)(queue, out.ptr, CL_TRUE, 0, sizeof(unsigned int), &result, 0, NULL, NULL);
   opencl::coot_check_cl_error(status, "coot::opencl::magma_isamax(): getting result from device memory failed");
 
   get_rt().cl_rt.release_memory(out);
@@ -1694,14 +1694,14 @@ magma_idamax(magma_int_t n, magmaDouble_const_ptr dx, size_t dx_offset, magma_in
     }
 
   // need to initialize one GPU unsigned int to store the result...
-  cl_mem out = get_rt().cl_rt.acquire_memory<unsigned int>(1);
-  cl_mem dwork = get_rt().cl_rt.acquire_memory<double>(2 * n);
+  coot_cl_mem out = get_rt().cl_rt.acquire_memory<unsigned int>(1);
+  coot_cl_mem dwork = get_rt().cl_rt.acquire_memory<double>(2 * n);
 
-  cl_int status = coot_wrapper(clblasiDamax)(n, out, 0, dx, dx_offset, incx, dwork, 1, &queue, 0, NULL, get_g_event() );
+  cl_int status = coot_wrapper(clblasiDamax)(n, out.ptr, 0, dx, dx_offset, incx, dwork.ptr, 1, &queue, 0, NULL, get_g_event() );
   opencl::coot_check_cl_error(status, "coot::opencl::magma_isamax(): call to clblasiSamax() failed");
 
   int result = 0;
-  status = coot_wrapper(clEnqueueReadBuffer)(queue, out, CL_TRUE, 0, sizeof(unsigned int), &result, 0, NULL, NULL);
+  status = coot_wrapper(clEnqueueReadBuffer)(queue, out.ptr, CL_TRUE, 0, sizeof(unsigned int), &result, 0, NULL, NULL);
   opencl::coot_check_cl_error(status, "coot::opencl::magma_isamax(): getting result from device memory failed");
 
   get_rt().cl_rt.release_memory(out);

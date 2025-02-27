@@ -41,7 +41,7 @@ Mat<eT>::Mat()
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
   }
@@ -57,7 +57,7 @@ Mat<eT>::Mat(const uword in_n_rows, const uword in_n_cols)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -76,7 +76,7 @@ Mat<eT>::Mat(const SizeMat& s)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -96,12 +96,12 @@ Mat<eT>::Mat(const uword in_n_rows, const uword in_n_cols, const fill::fill_clas
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
-  
+
   init(in_n_rows, in_n_cols);
-  
+
   (*this).fill(f);
   }
 
@@ -116,12 +116,12 @@ Mat<eT>::Mat(const SizeMat& s, const fill::fill_class<fill_type>& f)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
-  
+
   init(s.n_rows, s.n_cols);
-  
+
   (*this).fill(f);
   }
 
@@ -151,7 +151,8 @@ Mat<eT>::Mat(cl_mem aux_dev_mem, const uword in_n_rows, const uword in_n_cols)
   , vec_state (0)
   , mem_state (1)
   {
-  this->dev_mem.cl_mem_ptr = aux_dev_mem;
+  this->dev_mem.cl_mem_ptr.ptr = aux_dev_mem;
+  this->dev_mem.cl_mem_ptr.offset = 0;
 
   coot_debug_check( get_rt().backend != CL_BACKEND, "Mat(): cannot wrap OpenCL memory when not using OpenCL backend");
 
@@ -298,12 +299,13 @@ Mat<eT>::cleanup()
   {
   coot_extra_debug_sigprint();
 
-  if((dev_mem.cl_mem_ptr != NULL) && (mem_state == 0) && (n_elem > 0))
+  if((dev_mem.cl_mem_ptr.ptr != NULL) && (mem_state == 0) && (n_elem > 0))
     {
     get_rt().release_memory(dev_mem);
     }
 
-  dev_mem.cl_mem_ptr = NULL;  // for paranoia
+  dev_mem.cl_mem_ptr.ptr = NULL;  // for paranoia
+  dev_mem.cl_mem_ptr.offset = 0;
   }
 
 
@@ -659,6 +661,8 @@ Mat<eT>::steal_mem(Mat<eT>& X)
 
   if(this != &X)
     {
+    reset(); // clear any existing memory
+
     access::rw(n_rows)    = X.n_rows;
     access::rw(n_cols)    = X.n_cols;
     access::rw(n_elem)    = X.n_elem;
@@ -671,7 +675,7 @@ Mat<eT>::steal_mem(Mat<eT>& X)
     access::rw(X.n_elem)             = 0;
     access::rw(X.vec_state)          = 0;
     access::rw(X.mem_state)          = 0;
-    access::rw(X.dev_mem.cl_mem_ptr) = NULL;
+    access::rw(X.dev_mem.cl_mem_ptr) = { NULL, 0 };
     }
   }
 
@@ -685,7 +689,7 @@ Mat<eT>::Mat(const subview<eT>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -2129,6 +2133,94 @@ Mat<eT>::resize(const SizeMat& s)
 
 template<typename eT>
 inline
+eT
+Mat<eT>::min() const
+  {
+  coot_extra_debug_sigprint();
+
+  return coot_rt_t::min_vec(dev_mem, n_elem);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+Mat<eT>::max() const
+  {
+  coot_extra_debug_sigprint();
+
+  return coot_rt_t::max_vec(dev_mem, n_elem);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+Mat<eT>::min(uword& index_of_min_val) const
+  {
+  coot_extra_debug_sigprint();
+
+  eT result = eT(0);
+  index_of_min_val = coot_rt_t::index_min_vec(dev_mem, n_elem, &result);
+  return result;
+  }
+
+
+
+template<typename eT>
+inline
+eT
+Mat<eT>::max(uword& index_of_max_val) const
+  {
+  coot_extra_debug_sigprint();
+
+  eT result = eT(0);
+  index_of_max_val = coot_rt_t::index_max_vec(dev_mem, n_elem, &result);
+  return result;
+  }
+
+
+
+template<typename eT>
+inline
+eT
+Mat<eT>::min(uword& row_of_min_val, uword& col_of_min_val) const
+  {
+  coot_extra_debug_sigprint();
+
+  eT result = eT(0);
+  uword index = coot_rt_t::index_min_vec(dev_mem, n_elem, &result);
+
+  row_of_min_val = index % n_rows;
+  col_of_min_val = index / n_rows;
+
+  return result;
+  }
+
+
+
+template<typename eT>
+inline
+eT
+Mat<eT>::max(uword& row_of_max_val, uword& col_of_max_val) const
+  {
+  coot_extra_debug_sigprint();
+
+  eT result = eT(0);
+  uword index = coot_rt_t::index_max_vec(dev_mem, n_elem, &result);
+
+  row_of_max_val = index % n_rows;
+  col_of_max_val = index / n_rows;
+
+  return result;
+  }
+
+
+
+template<typename eT>
+inline
 bool
 Mat<eT>::is_vec() const
   {
@@ -2173,6 +2265,63 @@ bool
 Mat<eT>::is_empty() const
   {
   return (n_elem == 0);
+  }
+
+
+
+//! resets this matrix to an empty matrix
+template<typename eT>
+inline
+void
+Mat<eT>::clear()
+  {
+  reset();
+  }
+
+
+
+//! returns true if the matrix has no elements
+template<typename eT>
+inline
+bool
+Mat<eT>::empty() const
+  {
+  return (n_elem == 0);
+  }
+
+
+
+//! return the number of elements in the matrix
+template<typename eT>
+inline
+uword
+Mat<eT>::size() const
+  {
+  return n_elem;
+  }
+
+
+
+template<typename eT>
+inline
+eT
+Mat<eT>::front() const
+  {
+  coot_debug_check( (n_elem == 0), "Mat::front(): matrix is empty" );
+
+  return at(0);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+Mat<eT>::back() const
+  {
+  coot_debug_check( (n_elem == 0), "Mat::back(): matrix is empty" );
+
+  return at(n_elem - 1);
   }
 
 

@@ -293,3 +293,112 @@ Base_trans_default<derived>::st() const
   {
   return Op<derived, op_htrans>( static_cast<const derived&>(*this) );
   }
+
+
+
+template<typename elem_type, typename derived>
+inline
+elem_type
+Base<elem_type,derived>::min() const
+  {
+  return op_min::apply_direct( (*this).get_ref() );
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+elem_type
+Base<elem_type,derived>::max() const
+  {
+  return op_max::apply_direct( (*this).get_ref() );
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+elem_type
+Base<elem_type,derived>::min(uword& index_of_min_val) const
+  {
+  // We have to actually unwrap and evaluate.
+  const unwrap<derived> U( (*this).get_ref() );
+
+  index_of_min_val = mtop_index_min::apply_direct(U.M);
+
+  return U.M.at(index_of_min_val);
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+elem_type
+Base<elem_type,derived>::max(uword& index_of_max_val) const
+  {
+  // We have to actually unwrap and evaluate.
+  const unwrap<derived> U( (*this).get_ref() );
+
+  index_of_max_val = mtop_index_max::apply_direct(U.M);
+
+  return U.M.at(index_of_max_val);
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+elem_type
+Base<elem_type,derived>::min(uword& row_of_min_val, uword& col_of_min_val) const
+  {
+  const unwrap<derived> U( (*this).get_ref() );
+
+  uword index = mtop_index_min::apply_direct(U.M);
+
+  const uword local_n_rows = U.M.n_rows;
+
+  row_of_min_val = index % local_n_rows;
+  col_of_min_val = index / local_n_rows;
+
+  return U.M.at(index);
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+elem_type
+Base<elem_type,derived>::max(uword& row_of_max_val, uword& col_of_max_val) const
+  {
+
+  const unwrap<derived> U( (*this).get_ref() );
+
+  uword index = mtop_index_max::apply_direct(U.M);
+
+  const uword local_n_rows = U.M.n_rows;
+
+  row_of_max_val = index % local_n_rows;
+  col_of_max_val = index / local_n_rows;
+
+  return U.M.at(index);
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+uword
+Base<elem_type,derived>::index_min() const
+  {
+  return mtop_index_min::apply_direct( (*this).get_ref() );
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+uword
+Base<elem_type,derived>::index_max() const
+  {
+  return mtop_index_max::apply_direct( (*this).get_ref() );
+  }

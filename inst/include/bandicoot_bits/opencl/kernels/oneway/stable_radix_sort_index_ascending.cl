@@ -17,7 +17,9 @@
 __kernel
 void
 COOT_FN(PREFIX,stable_radix_sort_index_ascending)(__global eT1* A,
+                                                  const UWORD A_offset,
                                                   __global UWORD* A_index,
+                                                  const UWORD A_index_offset,
                                                   __global eT1* tmp_mem,
                                                   __global UWORD* tmp_mem_index,
                                                   const UWORD n_elem,
@@ -51,10 +53,10 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(__global eT1* A,
 
   UWORD local_counts[4];
 
-  __global eT1* unsorted_memptr = A;
+  __global eT1* unsorted_memptr = A + A_offset;
   __global UWORD* unsorted_index_memptr = tmp_mem_index;
   __global eT1* sorted_memptr = tmp_mem;
-  __global UWORD* sorted_index_memptr = A_index;
+  __global UWORD* sorted_index_memptr = A_index + A_index_offset;
 
   const UWORD last_bit = 8 * sizeof(eT1) - 1;
   uint_eT1 sign_mask = (((uint_eT1) 1) << last_bit);

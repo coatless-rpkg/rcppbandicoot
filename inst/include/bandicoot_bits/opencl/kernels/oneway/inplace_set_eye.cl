@@ -15,6 +15,7 @@
 __kernel
 void
 COOT_FN(PREFIX,inplace_set_eye)(__global eT1* out,
+                                const UWORD out_offset,
                                 const UWORD n_rows,
                                 const UWORD n_cols)
   {
@@ -22,7 +23,7 @@ COOT_FN(PREFIX,inplace_set_eye)(__global eT1* out,
   const UWORD col = get_global_id(1);
   if( (row < n_rows) && (col < n_cols) )
     {
-    const UWORD offset = row + col*n_rows;
+    const UWORD offset = row + col*n_rows + out_offset;
     out[offset] = (row == col) ? (eT1)(1) : (eT1)(0);
     }
   }

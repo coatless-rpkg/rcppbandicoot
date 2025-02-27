@@ -91,6 +91,16 @@
 #endif
 
 
+#if defined(__APPLE__) || defined(__apple_build_version__)
+  // NOTE: The Apple Accelerate framework uses a different convention for
+  // linking FORTRAN functions, and so functions that return a float value
+  // instead return a double.  We simply avoid using those functions (e.g.,
+  // slange(), clange(), slanst(), slamc3()).
+  #undef  COOT_FORTRAN_FLOAT_WORKAROUND
+  #define COOT_FORTRAN_FLOAT_WORKAROUND
+#endif
+
+
 #if defined(__MINGW32__) || defined(__CYGWIN__) || defined(_MSC_VER)
   #undef COOT_HAVE_POSIX_MEMALIGN
 #endif

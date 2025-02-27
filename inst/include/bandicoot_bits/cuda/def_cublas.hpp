@@ -144,6 +144,38 @@ extern "C"
 
 
 
+  extern cublasStatus_t coot_wrapper(cublasCgeam)(cublasHandle_t handle,
+                                                  cublasOperation_t transa,
+                                                  cublasOperation_t transb,
+                                                  int m,
+                                                  int n,
+                                                  const cuComplex* alpha,
+                                                  const cuComplex* A,
+                                                  int lda,
+                                                  const cuComplex* beta,
+                                                  const cuComplex* B,
+                                                  int ldb,
+                                                  cuComplex* C,
+                                                  int ldc);
+
+
+
+  extern cublasStatus_t coot_wrapper(cublasZgeam)(cublasHandle_t handle,
+                                                  cublasOperation_t transa,
+                                                  cublasOperation_t transb,
+                                                  int m,
+                                                  int n,
+                                                  const cuDoubleComplex* alpha,
+                                                  const cuDoubleComplex* A,
+                                                  int lda,
+                                                  const cuDoubleComplex* beta,
+                                                  const cuDoubleComplex* B,
+                                                  int ldb,
+                                                  cuDoubleComplex* C,
+                                                  int ldc);
+
+
+
   //
   // compute Euclidean norm
   //

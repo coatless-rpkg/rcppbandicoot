@@ -79,9 +79,9 @@ struct gemv
     const size_t cl_incx = size_t(x_mem_incr);
     const size_t cl_incy = size_t(y_mem_incr);
 
-    const size_t cl_y_offset = size_t(y_offset);
-    const size_t cl_A_offset = size_t(A_row_offset + A_col_offset * A_M_n_rows);
-    const size_t cl_x_offset = size_t(x_offset);
+    const size_t cl_y_offset = y_mem.cl_mem_ptr.offset + size_t(y_offset);
+    const size_t cl_A_offset = A_mem.cl_mem_ptr.offset + size_t(A_row_offset + A_col_offset * A_M_n_rows);
+    const size_t cl_x_offset = x_mem.cl_mem_ptr.offset + size_t(x_offset);
 
     cl_command_queue queue = get_rt().cl_rt.get_cq();
 
@@ -92,14 +92,14 @@ struct gemv
                                         M,
                                         N,
                                         alpha,
-                                        A_mem.cl_mem_ptr,
+                                        A_mem.cl_mem_ptr.ptr,
                                         cl_A_offset,
                                         cl_lda,
-                                        x_mem.cl_mem_ptr,
+                                        x_mem.cl_mem_ptr.ptr,
                                         cl_x_offset,
                                         cl_incx,
                                         beta,
-                                        y_mem.cl_mem_ptr,
+                                        y_mem.cl_mem_ptr.ptr,
                                         cl_y_offset,
                                         cl_incy,
                                         1,
@@ -147,9 +147,9 @@ struct gemv
     const size_t cl_incx = size_t(x_mem_incr);
     const size_t cl_incy = size_t(y_mem_incr);
 
-    const size_t cl_y_offset = size_t(y_offset);
-    const size_t cl_A_offset = size_t(A_row_offset + A_col_offset * A_M_n_rows);
-    const size_t cl_x_offset = size_t(x_offset);
+    const size_t cl_y_offset = y_mem.cl_mem_ptr.offset + size_t(y_offset);
+    const size_t cl_A_offset = A_mem.cl_mem_ptr.offset + size_t(A_row_offset + A_col_offset * A_M_n_rows);
+    const size_t cl_x_offset = x_mem.cl_mem_ptr.offset + size_t(x_offset);
 
     cl_command_queue queue = get_rt().cl_rt.get_cq();
 
@@ -160,14 +160,14 @@ struct gemv
                                         M,
                                         N,
                                         alpha,
-                                        A_mem.cl_mem_ptr,
+                                        A_mem.cl_mem_ptr.ptr,
                                         cl_A_offset,
                                         cl_lda,
-                                        x_mem.cl_mem_ptr,
+                                        x_mem.cl_mem_ptr.ptr,
                                         cl_x_offset,
                                         cl_incx,
                                         beta,
-                                        y_mem.cl_mem_ptr,
+                                        y_mem.cl_mem_ptr.ptr,
                                         cl_y_offset,
                                         cl_incy,
                                         1,

@@ -110,9 +110,15 @@ struct Base
   inline void raw_print(                           const std::string extra_text = "") const;
   inline void raw_print(std::ostream& user_stream, const std::string extra_text = "") const;
 
-  // coot_warn_unused inline elem_type min() const;
-  // coot_warn_unused inline elem_type max() const;
-  // 
-  // coot_warn_unused inline uword index_min() const;
-  // coot_warn_unused inline uword index_max() const;
+  coot_warn_unused inline elem_type min() const;
+  coot_warn_unused inline elem_type max() const;
+
+  inline elem_type min(uword& index_of_min_val) const;
+  inline elem_type max(uword& index_of_max_val) const;
+
+  inline elem_type min(uword& row_of_min_val, uword& col_of_min_val) const;
+  inline elem_type max(uword& row_of_max_val, uword& col_of_max_val) const;
+
+  coot_warn_unused inline uword index_min() const;
+  coot_warn_unused inline uword index_max() const;
   };

@@ -17,7 +17,9 @@
 __kernel
 void
 COOT_FN(PREFIX,symmatl)(__global eT2* out,
+                        const UWORD out_offset,
                         __global const eT1* A,
+                        const UWORD A_offset,
                         const UWORD size)
   {
   const UWORD row = get_global_id(0);
@@ -25,9 +27,9 @@ COOT_FN(PREFIX,symmatl)(__global eT2* out,
 
   if (row < size && col < size && row >= col)
     {
-    const eT2 val = (eT2) A[row + size * col];
+    const eT2 val = (eT2) A[A_offset + row + size * col];
 
-    out[row + size * col] = val;
-    out[col + size * row] = val;
+    out[out_offset + row + size * col] = val;
+    out[out_offset + col + size * row] = val;
     }
   }

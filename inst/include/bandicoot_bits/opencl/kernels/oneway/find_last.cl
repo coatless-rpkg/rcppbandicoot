@@ -17,8 +17,10 @@
 __kernel
 void
 COOT_FN(PREFIX,find_last)(__global const eT1* A,
+                          const UWORD A_offset,
                           __global const UWORD* thread_counts,
                           __global UWORD* out,
+                          const UWORD out_offset,
                           const UWORD m,
                           const UWORD n_elem)
   {
@@ -49,20 +51,20 @@ COOT_FN(PREFIX,find_last)(__global const eT1* A,
     {
     while (i + 1 < end_elem)
       {
-      if (A[i] != (eT1) 0)
+      if (A[A_offset + i] != (eT1) 0)
         {
         if (out_index >= m)
           {
-          out[out_index - m] = i;
+          out[out_offset + out_index - m] = i;
           }
 
         ++out_index;
         }
-      if (A[i + 1] != (eT1) 0)
+      if (A[A_offset + i + 1] != (eT1) 0)
         {
         if (out_index >= m)
           {
-          out[out_index - m] = (i + 1);
+          out[out_offset + out_index - m] = (i + 1);
           }
 
         ++out_index;
@@ -73,11 +75,11 @@ COOT_FN(PREFIX,find_last)(__global const eT1* A,
 
     if (i < end_elem)
       {
-      if (A[i] != (eT1) 0)
+      if (A[A_offset + i] != (eT1) 0)
         {
         if (out_index >= m)
           {
-          out[out_index - m] = i;
+          out[out_offset + out_index - m] = i;
           }
 
         ++out_index;

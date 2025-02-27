@@ -17,6 +17,7 @@
 __kernel
 void
 COOT_FN(PREFIX,radix_sort_ascending)(__global eT1* A,
+                                     const UWORD A_offset,
                                      __global eT1* tmp_mem,
                                      const UWORD n_elem,
                                      __local volatile uint_eT1* aux_mem)
@@ -30,7 +31,7 @@ COOT_FN(PREFIX,radix_sort_ascending)(__global eT1* A,
 
   UWORD local_counts[2];
 
-  __global eT1* unsorted_memptr = A;
+  __global eT1* unsorted_memptr = A + A_offset;
   __global eT1* sorted_memptr = tmp_mem;
 
   // If the type is unsigned, all the work will be done the same way.

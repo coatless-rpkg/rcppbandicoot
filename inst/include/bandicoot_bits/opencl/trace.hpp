@@ -36,15 +36,17 @@ trace(dev_mem_t<eT> mem, const uword n_rows, const uword n_cols)
 
   dev_mem_t<eT> tmp_mem = tmp.get_dev_mem(false);
 
-  runtime_t::adapt_uword cl_n_rows(n_rows);
-  runtime_t::adapt_uword         N(diag_len);
+  runtime_t::adapt_uword  cl_n_rows(n_rows);
+  runtime_t::adapt_uword          N(diag_len);
+  runtime_t::adapt_uword mem_offset(mem.cl_mem_ptr.offset);
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),  &(tmp_mem.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem),  &(mem.cl_mem_ptr)    );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, cl_n_rows.size,  cl_n_rows.addr       );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, N.size,          N.addr               );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),  &(tmp_mem.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem),  &(mem.cl_mem_ptr.ptr)    );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, mem_offset.size, mem_offset.addr          );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_n_rows.size,  cl_n_rows.addr           );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, N.size,          N.addr                   );
 
   const size_t global_work_size[1] = { size_t(1) };
 

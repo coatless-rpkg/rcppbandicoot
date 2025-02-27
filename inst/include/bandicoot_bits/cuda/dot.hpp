@@ -52,7 +52,7 @@ dot(dev_mem_t<eT1> mem1, dev_mem_t<eT2> mem2, const uword n_elem)
     CUfunction k_small = get_rt().cuda_rt.get_kernel<eT2, eT1>(twoway_kernel_id::dot_small);
 
     // Compute grid size; ideally we want to use the maximum possible number of threads per block.
-    kernel_dims dims = one_dimensional_grid_dims(std::ceil(n_elem / (2 * std::ceil(std::log2(n_elem)))));
+    kernel_dims dims = one_dimensional_grid_dims(std::ceil(n_elem / (2 * std::ceil(std::log2(std::max((double) n_elem, 2.0))))));
 
     // Create auxiliary memory, with size equal to the number of blocks.
     Mat<promoted_eT> aux(dims.d[0], 1);
@@ -61,7 +61,7 @@ dot(dev_mem_t<eT1> mem1, dev_mem_t<eT2> mem2, const uword n_elem)
     // We'll only run once with the dot kernel, and if this still needs further reduction, we can use accu().
 
     // Ensure we always use a power of 2 for the number of threads.
-    const uword num_threads = (uword) std::pow(2.0f, std::ceil(std::log2((float) dims.d[3])));
+    const uword num_threads = next_pow2(dims.d[3]);
 
     const void* args[] = {
         &(aux_mem.cuda_mem_ptr),

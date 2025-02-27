@@ -333,4 +333,14 @@ extern "C"
 
 
 
+  //
+  // internal utility functions that depend on compilation parameters of the wrapper library
+  //
+
+
+
+  extern cl_int wrapper_coot_sub_group_size_helper(cl_kernel kernel, cl_device_id dev_id, const size_t input_size, size_t& subgroup_size);
+
+
+
   }

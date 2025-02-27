@@ -17,7 +17,9 @@
 __kernel
 void
 COOT_FN(PREFIX,radix_sort_index_descending)(__global eT1* A,
+                                            const UWORD A_offset,
                                             __global UWORD* A_index,
+                                            const UWORD A_index_offset,
                                             __global eT1* tmp_mem,
                                             __global UWORD* tmp_mem_index,
                                             const UWORD n_elem,
@@ -34,21 +36,21 @@ COOT_FN(PREFIX,radix_sort_index_descending)(__global eT1* A,
   UWORD i = start_elem;
   while (i + 1 < end_elem)
     {
-    A_index[i] = i;
-    A_index[i + 1] = i + 1;
+    A_index[A_index_offset + i] = i;
+    A_index[A_index_offset + i + 1] = i + 1;
     i += 2;
     }
   if (i < end_elem)
     {
-    A_index[i] = i;
+    A_index[A_index_offset + i] = i;
     }
 
   barrier(CLK_LOCAL_MEM_FENCE);
 
   UWORD local_counts[2];
 
-  __global eT1* unsorted_memptr = A;
-  __global UWORD* unsorted_index_memptr = A_index;
+  __global eT1* unsorted_memptr = A + A_offset;
+  __global UWORD* unsorted_index_memptr = A_index + A_index_offset;
   __global eT1* sorted_memptr = tmp_mem;
   __global UWORD* sorted_index_memptr = tmp_mem_index;
 

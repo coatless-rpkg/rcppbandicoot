@@ -599,3 +599,69 @@ lgamma(const T1& A)
 
   return eOp<T1, eop_lgamma>(A);
   }
+
+
+
+//
+// real
+
+template<typename T1>
+coot_warn_unused
+inline
+typename enable_if2< is_coot_type<T1>::value && is_cx<typename T1::elem_type>::no, const T1& >::result
+real(const T1& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return A;
+  }
+
+
+
+// NOTE: complex elements are not officially supported!  This will only work
+// with the CUDA backend.
+template<typename T1>
+coot_warn_unused
+inline
+typename enable_if2< is_coot_type<T1>::value && is_cx<typename T1::elem_type>::yes, const mtOp<typename T1::pod_type, T1, mtop_real> >::result
+real(const T1& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return mtOp<typename T1::pod_type, T1, mtop_real>(A);
+  }
+
+
+//
+// imag
+
+template<typename T1>
+coot_warn_unused
+inline
+typename enable_if2< is_coot_type<T1>::value && is_cx<typename T1::elem_type>::no, Mat<typename T1::pod_type>& >::result
+imag(const T1& A)
+  {
+  coot_extra_debug_sigprint();
+
+  SizeProxy<T1> sp(A);
+
+  const uword n_rows = A.get_n_rows();
+  const uword n_cols = A.get_n_cols();
+
+  return Mat<typename T1::pod_type>(n_rows, n_cols, fill::zeros);
+  }
+
+
+
+// NOTE: complex elements are not officially supported!  This will only work
+// with the CUDA backend.
+template<typename T1>
+coot_warn_unused
+inline
+typename enable_if2< is_coot_type<T1>::value && is_cx<typename T1::elem_type>::yes, const mtOp<typename T1::pod_type, T1, mtop_imag> >::result
+imag(const T1& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return mtOp<typename T1::pod_type, T1, mtop_imag>(A);
+  }

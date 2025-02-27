@@ -19,6 +19,14 @@ extern "C"
 
 
 
+  extern nvrtcResult coot_wrapper(nvrtcGetNumSupportedArchs)(int* numArchs);
+
+
+
+  extern nvrtcResult coot_wrapper(nvrtcGetSupportedArchs)(int* supportedArchs);
+
+
+
   extern nvrtcResult coot_wrapper(nvrtcCreateProgram)(nvrtcProgram* prog,
                                                       const char* src,
                                                       const char* name,

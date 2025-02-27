@@ -18,6 +18,7 @@
 __kernel
 void
 COOT_FN(PREFIX,inplace_philox_randn)(__global eT1* mem,
+                                     const UWORD mem_offset,
                                      __global uint* philox_state,
                                      const UWORD n,
                                      const fp_eT1 mu,
@@ -47,20 +48,20 @@ COOT_FN(PREFIX,inplace_philox_randn)(__global eT1* mem,
     fp_eT1 sqrt_inner = -2 * log(COOT_FN(philox_get_elem_,uint_eT1)(local_philox_state, aux_mem, 0) / (fp_eT1) COOT_FN(coot_type_max_,uint_eT1)());
     fp_eT1 trig_inner = 2 * M_PI * (COOT_FN(philox_get_elem_,uint_eT1)(local_philox_state, aux_mem, 1) / (fp_eT1) COOT_FN(coot_type_max_,uint_eT1)());
 
-    mem[i] = (eT1) ((sqrt(sqrt_inner) * cos(trig_inner)) * sd + mu);
+    mem[mem_offset + i] = (eT1) ((sqrt(sqrt_inner) * cos(trig_inner)) * sd + mu);
     i += num_threads;
     if (i < n)
-      mem[i] = (eT1) ((sqrt(sqrt_inner) * sin(trig_inner)) * sd + mu);
+      mem[mem_offset + i] = (eT1) ((sqrt(sqrt_inner) * sin(trig_inner)) * sd + mu);
     i += num_threads;
 
     sqrt_inner = -2 * log(COOT_FN(philox_get_elem_,uint_eT1)(local_philox_state, aux_mem, 2) / (fp_eT1) COOT_FN(coot_type_max_,uint_eT1)());
     trig_inner = 2 * M_PI * (COOT_FN(philox_get_elem_,uint_eT1)(local_philox_state, aux_mem, 3) / (fp_eT1) COOT_FN(coot_type_max_,uint_eT1)());
 
     if (i < n)
-      mem[i] = (eT1) ((sqrt(sqrt_inner) * cos(trig_inner)) * sd + mu);
+      mem[mem_offset + i] = (eT1) ((sqrt(sqrt_inner) * cos(trig_inner)) * sd + mu);
     i += num_threads;
     if (i < n)
-      mem[i] = (eT1) ((sqrt(sqrt_inner) * sin(trig_inner)) * sd + mu);
+      mem[mem_offset + i] = (eT1) ((sqrt(sqrt_inner) * sin(trig_inner)) * sd + mu);
     }
 
   // Restore RNG state.

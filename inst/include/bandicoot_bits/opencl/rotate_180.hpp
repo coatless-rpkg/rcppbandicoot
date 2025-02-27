@@ -29,15 +29,19 @@ rotate_180(dev_mem_t<eT> out, const dev_mem_t<eT> in, const uword n_rows, const 
 
   runtime_t::adapt_uword local_n_rows(n_rows);
   runtime_t::adapt_uword local_n_cols(n_cols);
+  runtime_t::adapt_uword local_in_offset(in.cl_mem_ptr.offset);
+  runtime_t::adapt_uword local_out_offset(out.cl_mem_ptr.offset);
 
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::rotate_180);
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),    &(out.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem),    &(in.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, local_n_rows.size, local_n_rows.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, local_n_cols.size, local_n_cols.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),        &(out.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, local_in_offset.size,  local_in_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),        &(in.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, local_out_offset.size, local_out_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, local_n_rows.size,     local_n_rows.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, local_n_cols.size,     local_n_cols.addr);
 
   const size_t global_work_size[2] = { size_t(n_rows), size_t(n_cols) };
 

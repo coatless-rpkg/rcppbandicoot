@@ -15,14 +15,16 @@
 __kernel
 void
 COOT_FN(PREFIX,linspace)(__global eT1* out_mem,
-                        const eT1 start,
-                        const eT1 end,
-                        const eT1 step,
-                        const UWORD num)
+                         const UWORD out_mem_offset,
+                         const UWORD mem_incr,
+                         const eT1 start,
+                         const eT1 end,
+                         const eT1 step,
+                         const UWORD num)
   {
   const UWORD idx = get_global_id(0);
   if (idx < num)
     {
-    out_mem[idx] = (eT1) (start + step * idx);
+    out_mem[out_mem_offset + idx * mem_incr] = (eT1) (start + step * idx);
     }
   }

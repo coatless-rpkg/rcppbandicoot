@@ -15,19 +15,21 @@
 __kernel
 void
 COOT_FN(PREFIX,strans)(__global eT2* out,
+                       const UWORD out_offset,
                        __global const eT1* in,
+                       const UWORD in_offset,
                        const UWORD in_n_rows,
                        const UWORD in_n_cols)
   {
   // For a non-inplace transpose, we can use a pretty naive approach.
   const UWORD row = get_global_id(0);
   const UWORD col = get_global_id(1);
-  const UWORD in_offset = row + col * in_n_rows;
-  const UWORD out_offset = col + row * in_n_cols;
+  const UWORD in_total_offset = in_offset + row + col * in_n_rows;
+  const UWORD out_total_offset = out_offset + col + row * in_n_cols;
 
   if( (row < in_n_rows) && (col < in_n_cols) )
     {
-    const eT2 element = (eT2) in[in_offset];
-    out[out_offset] = element;
+    const eT2 element = (eT2) in[in_total_offset];
+    out[out_total_offset] = element;
     }
   }

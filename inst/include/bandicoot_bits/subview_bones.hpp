@@ -84,6 +84,21 @@ class subview : public Base<eT, subview<eT> >
   inline void ones();
   inline void eye(); // TODO
 
+  coot_warn_unused inline MatValProxy<eT> operator[] (const uword ii);
+  coot_warn_unused inline eT              operator[] (const uword ii) const;
+  coot_warn_unused inline MatValProxy<eT> at         (const uword ii);
+  coot_warn_unused inline eT              at         (const uword ii) const;
+  coot_warn_unused inline MatValProxy<eT> operator() (const uword ii);
+  coot_warn_unused inline eT              operator() (const uword ii) const;
+
+  coot_warn_unused inline MatValProxy<eT> at         (const uword in_row, const uword in_col);
+  coot_warn_unused inline eT              at         (const uword in_row, const uword in_col) const;
+  coot_warn_unused inline MatValProxy<eT> operator() (const uword in_row, const uword in_col);
+  coot_warn_unused inline eT              operator() (const uword in_row, const uword in_col) const;
+
+  coot_warn_unused inline eT front() const;
+  coot_warn_unused inline eT back() const;
+
   inline bool check_overlap(const subview<eT>& x) const;
 
   coot_warn_unused inline bool is_vec()    const;

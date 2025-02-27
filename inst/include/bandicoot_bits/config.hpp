@@ -81,12 +81,14 @@
 // #define COOT_LAPACK_NOEXCEPT
 //// Uncomment the above line if you require LAPACK functions to have the 'noexcept' specification
 
+#if !defined(COOT_USE_FORTRAN_HIDDEN_ARGS)
 #define COOT_USE_FORTRAN_HIDDEN_ARGS
 //// Comment out the above line to call BLAS and LAPACK functions without using so-called "hidden" arguments.
 //// FORTRAN functions (compiled without a BIND(C) declaration) that have char arguments
 //// (like many BLAS and LAPACK functions) also have associated "hidden" arguments.
 //// For each char argument, the corresponding "hidden" argument specifies the number of characters.
 //// These "hidden" arguments are typically tacked onto the end of function definitions.
+#endif
 
 // #define COOT_USE_MKL_TYPES
 //// Uncomment the above line if you want to use Intel MKL types for complex numbers.

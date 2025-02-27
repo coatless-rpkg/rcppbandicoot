@@ -155,10 +155,85 @@ namespace lapack
   // 1-norm
   template<typename eT>
   inline
-  eT
+  typename get_pod_type<eT>::result
   lange(const char norm, const blas_int m, const blas_int n, eT* a, const blas_int lda, typename get_pod_type<eT>::result* work)
     {
     coot_type_check((is_supported_blas_type<eT>::value == false));
+
+    #if defined(COOT_FORTRAN_FLOAT_WORKAROUND)
+    typedef typename get_pod_type<eT>::result out_eT;
+    if (is_float<eT>::value || is_cx_float<eT>::value)
+      {
+      // We can't call slange or clange, because we are on a system where they
+      // may return doubles instead of floats---and we have defined the
+      // prototype as returning a float.  Therefore, we have to use a by-hand
+      // implementation...
+      out_eT retval = out_eT(0);
+      if (norm == 'm' || norm == 'M')
+        {
+        // max-norm: maximum absolute valued element
+        for (uword c = 0; c < n; ++c)
+          {
+          for (uword r = 0; r < m; ++r)
+            {
+            retval = std::max(retval, std::abs(a[c * lda + r]));
+            }
+          }
+        }
+      else if (norm == '1' || norm == 'O' || norm == 'o')
+        {
+        // 1-norm: maximum column sum
+        for (uword c = 0; c < n; ++c)
+          {
+          out_eT colsum = out_eT(0);
+          for (uword r = 0; r < m; ++r)
+            {
+            colsum += std::abs(a[c * lda + r]);
+            }
+
+          retval = std::max(retval, colsum);
+          }
+        }
+      else if (norm == 'I' || norm == 'i')
+        {
+        // Inf-norm: maximum row sum
+        // We'll need to use the work array for this...
+
+        for (uword r = 0; r < m; ++r) { work[r] = out_eT(0); }
+
+        for (uword c = 0; c < n; ++c)
+          {
+          for (uword r = 0; r < m; ++r)
+            {
+            work[r] += std::abs(a[c * lda + r]);
+            }
+          }
+
+        // Now find the maximum row sum.
+        for (uword r = 0; r < m; ++r)
+          {
+          retval = std::max(retval, work[r]);
+          }
+        }
+      else if (norm == 'F' || norm == 'f' || norm == 'E' || norm == 'e')
+        {
+        // Frobenius norm: square root of sum of squares.
+        // (our implementation doesn't have the scaling checks that LAPACK typically does)
+        for (uword c = 0; c < n; ++c)
+          {
+          for (uword r = 0; r < m; ++r)
+            {
+            const out_eT tmp = std::abs(a[c * lda + r]);
+            retval += (tmp * tmp);
+            }
+          }
+
+        retval = std::sqrt(retval);
+        }
+
+      return retval;
+      }
+    #endif
 
     #if defined(COOT_USE_FORTRAN_HIDDEN_ARGS)
       {
@@ -494,6 +569,56 @@ namespace lapack
     {
     coot_type_check((is_supported_real_blas_type<eT>::value == false));
 
+    #if defined(COOT_FORTRAN_FLOAT_WORKAROUND)
+    if (is_float<eT>::value)
+      {
+      // We can't call slanst, because we are on a system where it may return
+      // double instead of float---and we have defined the prototype as
+      // returning a float.  Therefore, we have to use a by-hand
+      // implementation...
+      eT retval = eT(0);
+      if (norm == 'M' || norm == 'm')
+        {
+        // Max-abs value of matrix.
+        retval = std::abs(D[n - 1]);
+        for (uword i = 0; i < n - 1; ++i)
+          {
+          retval = std::max(retval, std::abs(D[i]));
+          retval = std::max(retval, std::abs(E[i]));
+          }
+        }
+      else if (norm == '1' || norm == 'O' || norm == 'o' || norm == 'I' || norm == 'i')
+        {
+        // 1-norm: maximum column sum, or Inf-norm: maximum row sum.
+        if (n == 1)
+          {
+          retval = std::abs(D[0]);
+          }
+        else
+          {
+          retval = std::max(std::abs(D[0]) + std::abs(E[0]),
+                            std::abs(E[n - 2]) + std::abs(D[n - 1]));
+          for (uword i = 1; i < n - 1; ++i)
+            {
+            retval = std::max(retval, std::abs(D[i]) + std::abs(E[i]) + std::abs(E[i - 1]));
+            }
+          }
+        }
+      else if (norm == 'F' || norm == 'f' || norm == 'E' || norm == 'e')
+        {
+        retval = (D[0] * D[0]);
+        for (uword i = 0; i < n - 1; ++i)
+          {
+          retval += (D[i + 1] * D[i + 1]);
+          retval += (E[i] * E[i]);
+          }
+        retval = std::sqrt(retval);
+        }
+
+      return retval;
+      }
+    #endif
+
     #if defined(COOT_USE_FORTRAN_HIDDEN_ARGS)
       {
       if     ( is_float<eT>::value) { return coot_fortran(coot_slanst)(&norm, &n,  (float*) D,  (float*) E, 1); }
@@ -539,6 +664,17 @@ namespace lapack
   lamc3(const eT* A, const eT* B)
     {
     coot_type_check((is_supported_real_blas_type<eT>::value == false));
+
+    #if defined(COOT_FORTRAN_FLOAT_WORKAROUND)
+    if (is_float<eT>::value || is_cx_float<eT>::value)
+      {
+      // We can't call slamc3, because we are on a system where it may return
+      // double instead of float---and we have defined the prototype as
+      // returning a float.  Therefore, we have to use a by-hand
+      // implementation...
+      return (*A) + (*B);
+      }
+    #endif
 
     // No hidden arguments.
     if     ( is_float<eT>::value) { return coot_fortran(coot_slamc3)( (float*) A,  (float*) B); }

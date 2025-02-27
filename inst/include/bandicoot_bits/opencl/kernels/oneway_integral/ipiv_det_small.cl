@@ -15,8 +15,10 @@
 __kernel
 void
 COOT_FN(PREFIX,ipiv_det_small)(__global const eT1* in_mem,
+                               const UWORD in_mem_offset,
                                const UWORD n_elem,
                                __global eT1* out_mem,
+                               const UWORD out_mem_offset,
                                __local volatile eT1* aux_mem)
   {
   // This kernel is not used by the OpenCL backend, so we leave it empty!

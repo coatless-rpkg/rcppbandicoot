@@ -54,7 +54,7 @@ accu_subview(dev_mem_t<eT> mem, const uword m_n_rows, const uword aux_row1, cons
   cl_int status = 0;
 
   const uword dest_offset = 0;
-  const uword  src_offset = aux_row1 + aux_col1 * m_n_rows;
+  const uword  src_offset = aux_row1 + aux_col1 * m_n_rows + mem.cl_mem_ptr.offset;
   const uword dest_mem_incr = 1;
 
   dev_mem_t<eT> tmp_mem = tmp.get_dev_mem(false);
@@ -66,9 +66,9 @@ accu_subview(dev_mem_t<eT> mem, const uword m_n_rows, const uword aux_row1, cons
   runtime_t::adapt_uword cl_dest_mem_incr(dest_mem_incr);
   runtime_t::adapt_uword cl_src_m_n_rows(m_n_rows);
 
-  status |= coot_wrapper(clSetKernelArg)(k1, 0, sizeof(cl_mem),        &(tmp_mem.cl_mem_ptr));
+  status |= coot_wrapper(clSetKernelArg)(k1, 0, sizeof(cl_mem),        &(tmp_mem.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(k1, 1, cl_dest_offset.size,   cl_dest_offset.addr  );
-  status |= coot_wrapper(clSetKernelArg)(k1, 2, sizeof(cl_mem),        &(mem.cl_mem_ptr)    );
+  status |= coot_wrapper(clSetKernelArg)(k1, 2, sizeof(cl_mem),        &(mem.cl_mem_ptr.ptr)    );
   status |= coot_wrapper(clSetKernelArg)(k1, 3, cl_src_offset.size,    cl_src_offset.addr   );
   status |= coot_wrapper(clSetKernelArg)(k1, 4, cl_n_rows.size,        cl_n_rows.addr       );
   status |= coot_wrapper(clSetKernelArg)(k1, 5, cl_n_cols.size,        cl_n_cols.addr       );
@@ -87,8 +87,8 @@ accu_subview(dev_mem_t<eT> mem, const uword m_n_rows, const uword aux_row1, cons
 
   cl_kernel k2 = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::accu_simple);
 
-  status |= coot_wrapper(clSetKernelArg)(k2, 0, sizeof(cl_mem), &(tmp_mem.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(k2, 1, sizeof(cl_mem), &(tmp_mem.cl_mem_ptr));
+  status |= coot_wrapper(clSetKernelArg)(k2, 0, sizeof(cl_mem), &(tmp_mem.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(k2, 1, sizeof(cl_mem), &(tmp_mem.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(k2, 2, cl_n_cols.size, cl_n_cols.addr       );
 
   const size_t k2_work_dim       = 1;

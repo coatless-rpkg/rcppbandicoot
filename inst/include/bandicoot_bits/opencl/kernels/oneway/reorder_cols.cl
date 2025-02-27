@@ -15,7 +15,9 @@
 __kernel
 void
 COOT_FN(PREFIX,reorder_cols)(__global eT1* out_mem,
+                             const UWORD out_mem_offset,
                              __global const eT1* in_mem,
+                             const UWORD in_mem_offset,
                              const UWORD n_rows,
                              __global const UWORD* ordering,
                              const UWORD out_n_cols)
@@ -25,8 +27,8 @@ COOT_FN(PREFIX,reorder_cols)(__global eT1* out_mem,
     {
     const UWORD in_col = ordering[out_col];
 
-          __global eT1* out_colptr = out_mem + (out_col * n_rows);
-    const __global eT1* in_colptr  = in_mem  + (in_col * n_rows);
+          __global eT1* out_colptr = out_mem + out_mem_offset + (out_col * n_rows);
+    const __global eT1* in_colptr  =  in_mem +  in_mem_offset + (in_col * n_rows);
 
     #pragma unroll
     for (UWORD i = 0; i < n_rows; ++i)

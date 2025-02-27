@@ -17,9 +17,9 @@
 
 
 #define COOT_VERSION_MAJOR 1
-#define COOT_VERSION_MINOR 11
-#define COOT_VERSION_PATCH 1
-#define COOT_VERSION_NOTE  "Mostly Obscured Forest Creature"
+#define COOT_VERSION_MINOR 16
+#define COOT_VERSION_PATCH 2
+#define COOT_VERSION_NOTE  "Printable Plastic Profusion"
 
 
 

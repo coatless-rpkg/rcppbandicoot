@@ -16,10 +16,21 @@
 
 
 
+// OpenCL kernels cannot use a cl_mem that is offset from an original cl_mem;
+// all aliases must be passed to a kernel as both a cl_mem and a size_t offset.
+// So unfortunately we have to hold two values for OpenCL memory.
+struct coot_cl_mem
+  {
+  cl_mem ptr;
+  size_t offset;
+  };
+
+
+
 // this can hold either CUDA memory or CL memory
 template<typename eT>
 union dev_mem_t
   {
-  cl_mem cl_mem_ptr;
+  coot_cl_mem cl_mem_ptr;
   eT* cuda_mem_ptr;
   };

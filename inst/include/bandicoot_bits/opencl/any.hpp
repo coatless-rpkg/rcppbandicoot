@@ -91,14 +91,18 @@ any(dev_mem_t<uword> out_mem, const dev_mem_t<eT1> in_mem, const uword n_rows, c
 
   cl_int status = 0;
 
+  runtime_t::adapt_uword out_offset(out_mem.cl_mem_ptr.offset);
+  runtime_t::adapt_uword A_offset(in_mem.cl_mem_ptr.offset);
   runtime_t::adapt_uword A_n_rows(n_rows);
   runtime_t::adapt_uword A_n_cols(n_cols);
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem), &(out_mem.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem), &(in_mem.cl_mem_ptr) );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(eT2),    &val                 );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, A_n_rows.size,  A_n_rows.addr        );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 4, A_n_cols.size,  A_n_cols.addr        );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),  &(out_mem.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, out_offset.size, out_offset.addr          );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),  &(in_mem.cl_mem_ptr.ptr) );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, A_offset.size,   A_offset.addr            );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(eT2),    &val                      );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, A_n_rows.size,  A_n_rows.addr             );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 6, A_n_cols.size,  A_n_cols.addr             );
   coot_check_cl_error(status, "coot::opencl::any(): failed to set kernel arguments");
 
   const size_t k1_work_dim       = 1;

@@ -15,6 +15,7 @@
 __kernel
 void
 COOT_FN(PREFIX,lu_extract_p)(__global eT1* P,
+                             const UWORD P_offset,
                              __global const UWORD* ipiv2,
                              const UWORD n_rows)
   {
@@ -23,6 +24,6 @@ COOT_FN(PREFIX,lu_extract_p)(__global eT1* P,
   if (row < n_rows)
     {
     const UWORD index = row + ipiv2[row] * n_rows;
-    P[index] = (eT1) 1;
+    P[P_offset + index] = (eT1) 1;
     }
   }

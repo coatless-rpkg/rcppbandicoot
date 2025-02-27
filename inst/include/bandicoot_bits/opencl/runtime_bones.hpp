@@ -18,16 +18,18 @@ struct runtime_dev_info
   {
   public:
 
-  coot_aligned bool  is_gpu;
-  coot_aligned bool  has_float64;
-  coot_aligned bool  has_sizet64;
-  coot_aligned bool  has_subgroups;
-  coot_aligned bool  must_synchronise_subgroups;
-  coot_aligned uword ptr_width;
-  coot_aligned uword n_units;
-  coot_aligned uword opencl_ver;
-  coot_aligned uword max_wg;
-  coot_aligned uword subgroup_size; // 0 if subgroups not supported
+  coot_aligned bool   is_gpu;
+  coot_aligned bool   has_float64;
+  coot_aligned bool   has_sizet64;
+  coot_aligned bool   has_subgroups;
+  coot_aligned bool   must_synchronise_subgroups;
+  coot_aligned uword  ptr_width;
+  coot_aligned uword  n_units;
+  coot_aligned uword  opencl_ver;
+  coot_aligned uword  max_wg;        // maximum total workgroup size (CL_DEVICE_MAX_WORK_GROUP_SIZE)
+  coot_aligned uword  subgroup_size; // 0 if subgroups not supported
+  coot_aligned uword  max_wg_ndims;  // maximum number of dimensions (CL_DEVICE_MAX_WORK_ITEM_DIMENSIONS)
+  coot_aligned uword* max_wg_dims;   // maximum work-items in each dimension (CL_DEVICE_MAX_WORK_ITEM_SIZES)
 
   inline
   void
@@ -42,9 +44,12 @@ struct runtime_dev_info
     opencl_ver     = 0;
     max_wg         = 0;
     subgroup_size  = 0;
+    max_wg_ndims   = 0;
+    delete[] max_wg_dims;
     }
 
-  inline runtime_dev_info()  { reset(); }
+  inline runtime_dev_info()  { max_wg_dims = NULL; reset(); }
+  inline ~runtime_dev_info() { delete[] max_wg_dims; }
   };
 
 
@@ -62,9 +67,11 @@ class runtime_t
                    runtime_t(const runtime_t&) = delete;
   runtime_t&       operator=(const runtime_t&) = delete;
 
-  inline uword get_n_units()        const;
-  inline uword get_max_wg()         const;
-  inline uword get_subgroup_size()  const;
+  inline uword get_n_units()                 const;
+  inline uword get_max_wg()                  const;
+  inline uword get_subgroup_size()           const;
+  inline uword get_max_wg_ndims()            const;
+  inline uword get_max_wg_dim(const uword i) const; // do not call with i >= get_max_wg_ndims()!
 
   inline bool is_valid()                   const;
   inline bool has_sizet64()                const;
@@ -73,9 +80,9 @@ class runtime_t
   inline bool must_synchronise_subgroups() const;
 
   template<typename eT>
-  inline cl_mem acquire_memory(const uword n_elem);
+  inline coot_cl_mem acquire_memory(const uword n_elem);
 
-  inline void release_memory(cl_mem dev_mem);
+  inline void release_memory(coot_cl_mem dev_mem);
 
   template<typename eT>
   inline constexpr bool is_supported_type(const typename enable_if<is_supported_kernel_elem_type<eT>::value && !is_double<eT>::value>::result* junk = 0) const { return true; }
@@ -119,8 +126,8 @@ class runtime_t
 
   // Get random number generator.
 
-  template<typename eT> cl_mem get_xorwow_state() const;
-  inline cl_mem get_philox_state() const;
+  template<typename eT> coot_cl_mem get_xorwow_state() const;
+  inline coot_cl_mem get_philox_state() const;
   inline size_t get_num_rng_threads() const;
 
   inline void set_rng_seed(const u64 seed);
@@ -153,10 +160,10 @@ class runtime_t
   coot_aligned rt_common::kernels_t<std::vector<cl_kernel>>                                             magma_real_kernels;
 
   // Internally-held RNG state.
-  coot_aligned cl_mem   xorwow32_state;
-  coot_aligned cl_mem   xorwow64_state;
-  coot_aligned cl_mem   philox_state;
-  coot_aligned size_t   num_rng_threads;
+  coot_aligned coot_cl_mem   xorwow32_state;
+  coot_aligned coot_cl_mem   xorwow64_state;
+  coot_aligned coot_cl_mem   philox_state;
+  coot_aligned size_t        num_rng_threads;
 
   coot_aligned std::recursive_mutex mutex;
 

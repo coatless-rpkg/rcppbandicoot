@@ -17,20 +17,23 @@
 __kernel
 void
 COOT_FN(PREFIX,cross)(__global eT2* out,
+                      const UWORD out_offset,
                       __global const eT1* A,
-                      __global const eT1* B) // A and B should have 3 elements
+                      const UWORD A_offset,
+                      __global const eT1* B,
+                      const UWORD B_offset) // A and B should have 3 elements
   {
   const UWORD idx = get_global_id(0);
 
   if (idx < 3)
     {
-    const UWORD a1_index = ((idx + 1) % 3);
-    const UWORD a2_index = ((idx + 2) % 3);
+    const UWORD a1_index = ((idx + 1) % 3) + A_offset;
+    const UWORD a2_index = ((idx + 2) % 3) + A_offset;
 
-    const UWORD b1_index = ((idx + 2) % 3);
-    const UWORD b2_index = ((idx + 1) % 3);
+    const UWORD b1_index = ((idx + 2) % 3) + B_offset;
+    const UWORD b2_index = ((idx + 1) % 3) + B_offset;
 
     const eT1 val = (A[a1_index] * B[b1_index]) - (A[a2_index] * B[b2_index]);
-    out[idx] = (eT2) val;
+    out[idx + out_offset] = (eT2) val;
     }
   }

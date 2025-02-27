@@ -21,6 +21,8 @@ struct zeroway_kernel_id
   {
   enum enum_id
     {
+    shuffle_large_compute_locs,
+    //
     invalid_kernel
     };
 
@@ -33,6 +35,8 @@ struct zeroway_kernel_id
     // NOTE: the order and names of kernels in "names" must match the order and names in the kernel_id enum
 
     std::vector<std::string> names;
+
+    names.push_back("shuffle_large_compute_locs");
 
     return names;
     };
@@ -65,6 +69,7 @@ struct oneway_kernel_id
     //
     inplace_set_eye,
     linspace,
+    logspace,
     //
     accu_simple,
     accu,
@@ -76,6 +81,14 @@ struct oneway_kernel_id
     max_small,
     max_abs,
     max_abs_small,
+    index_min,
+    index_min_small,
+    index_max,
+    index_max_small,
+    index_min_rowwise,
+    index_min_colwise,
+    index_max_rowwise,
+    index_max_colwise,
     //
     prod,
     prod_small,
@@ -87,6 +100,8 @@ struct oneway_kernel_id
     inplace_xorwow_randu,
     inplace_philox_randn,
     inplace_xorwow_randi,
+    shuffle,
+    shuffle_large,
     //
     var_colwise,
     var_rowwise,
@@ -105,6 +120,12 @@ struct oneway_kernel_id
     radix_sort_index_descending,
     stable_radix_sort_index_ascending,
     stable_radix_sort_index_descending,
+    shifted_prefix_sum_small,
+    shifted_prefix_sum_subgroups,
+    shifted_prefix_sum_add_offset,
+    radix_sort_multi_wg_bit_count,
+    radix_sort_multi_wg_shuffle,
+    radix_sort_index_multi_wg_shuffle,
     //
     count_nonzeros,
     find,
@@ -118,6 +139,9 @@ struct oneway_kernel_id
     reorder_cols,
     //
     rotate_180,
+    //
+    approx_equal,
+    approx_equal_small,
     //
     invalid_kernel
     };
@@ -141,6 +165,7 @@ struct oneway_kernel_id
 
     names.push_back("inplace_set_eye");
     names.push_back("linspace");
+    names.push_back("logspace");
 
     names.push_back("accu_simple");
     names.push_back("accu");
@@ -152,6 +177,14 @@ struct oneway_kernel_id
     names.push_back("max_small");
     names.push_back("max_abs");
     names.push_back("max_abs_small");
+    names.push_back("index_min");
+    names.push_back("index_min_small");
+    names.push_back("index_max");
+    names.push_back("index_max_small");
+    names.push_back("index_min_rowwise");
+    names.push_back("index_min_colwise");
+    names.push_back("index_max_rowwise");
+    names.push_back("index_max_colwise");
 
     names.push_back("prod");
     names.push_back("prod_small");
@@ -163,6 +196,8 @@ struct oneway_kernel_id
     names.push_back("inplace_xorwow_randu");
     names.push_back("inplace_philox_randn");
     names.push_back("inplace_xorwow_randi");
+    names.push_back("shuffle");
+    names.push_back("shuffle_large");
 
     names.push_back("var_colwise");
     names.push_back("var_rowwise");
@@ -181,6 +216,12 @@ struct oneway_kernel_id
     names.push_back("radix_sort_index_descending");
     names.push_back("stable_radix_sort_index_ascending");
     names.push_back("stable_radix_sort_index_descending");
+    names.push_back("shifted_prefix_sum_small");
+    names.push_back("shifted_prefix_sum_subgroups");
+    names.push_back("shifted_prefix_sum_add_offset");
+    names.push_back("radix_sort_multi_wg_bit_count");
+    names.push_back("radix_sort_multi_wg_shuffle");
+    names.push_back("radix_sort_index_multi_wg_shuffle");
 
     names.push_back("count_nonzeros");
     names.push_back("find");
@@ -194,6 +235,9 @@ struct oneway_kernel_id
     names.push_back("reorder_cols");
 
     names.push_back("rotate_180");
+
+    names.push_back("approx_equal");
+    names.push_back("approx_equal_small");
 
     return names;
     }
@@ -242,6 +286,8 @@ struct oneway_real_kernel_id
     diag_prod,
     diag_prod_small,
     //
+    extract_cx,
+    //
     invalid_kernel
     };
 
@@ -278,6 +324,8 @@ struct oneway_real_kernel_id
 
     names.push_back("diag_prod");
     names.push_back("diag_prod_small");
+
+    names.push_back("extract_cx");
 
     return names;
     }

@@ -67,6 +67,7 @@ magma_dpotrf_gpu
   magma_uplo_t uplo,
   magma_int_t n,
   magmaDouble_ptr dA,
+  size_t dA_offset,
   magma_int_t ldda,
   magma_int_t *info
   )
@@ -113,9 +114,9 @@ magma_dpotrf_gpu
   if (nb <= 1 || nb >= n)
     {
     /* Use unblocked code. */
-    magma_dgetmatrix( n, n, dA, 0, ldda, work, n, queues[0] );
+    magma_dgetmatrix( n, n, dA, dA_offset, ldda, work, n, queues[0] );
     lapack::potrf(uplo_[0], n, work, n, info);
-    magma_dsetmatrix( n, n, work, n, dA, 0, ldda, queues[0] );
+    magma_dsetmatrix( n, n, work, n, dA, dA_offset, ldda, queues[0] );
     }
   else
     {
@@ -132,23 +133,23 @@ magma_dpotrf_gpu
         if (j > 0)
           {
           magma_dsyrk( MagmaUpper, MagmaConjTrans, jb, j,
-                       d_neg_one, dA, j * ldda,     ldda,
-                       d_one,     dA, j + j * ldda, ldda, queues[1] );
+                       d_neg_one, dA, dA_offset + j * ldda,     ldda,
+                       d_one,     dA, dA_offset + j + j * ldda, ldda, queues[1] );
           }
 
         magma_queue_sync( queues[1] );
         magma_dgetmatrix_async( jb, jb,
-                                dA, j + j * ldda, ldda,
-                                work,             jb, queues[0] );
+                                dA, dA_offset + j + j * ldda, ldda,
+                                work,                     jb, queues[0] );
 
         // apply all previous updates to block row right of diagonal block
         if (j+jb < n)
           {
           magma_dgemm( MagmaConjTrans, MagmaNoTrans,
                        jb, n-j-jb, j,
-                       c_neg_one, dA, j * ldda,            ldda,
-                                  dA, (j + jb) * ldda,     ldda,
-                       c_one,     dA, j + (j + jb) * ldda, ldda, queues[1] );
+                       c_neg_one, dA, dA_offset + j * ldda,            ldda,
+                                  dA, dA_offset + (j + jb) * ldda,     ldda,
+                       c_one,     dA, dA_offset + j + (j + jb) * ldda, ldda, queues[1] );
           }
 
         // simultaneous with above dgemm, transfer diagonal block,
@@ -157,8 +158,8 @@ magma_dpotrf_gpu
         lapack::potrf(MagmaUpperStr[0], jb, work, jb, info);
 
         magma_dsetmatrix_async( jb, jb,
-                                work,             jb,
-                                dA, j + j * ldda, ldda, queues[1] );
+                                work,                     jb,
+                                dA, dA_offset + j + j * ldda, ldda, queues[1] );
         if (*info != 0)
           {
           *info = *info + j;
@@ -170,8 +171,8 @@ magma_dpotrf_gpu
           {
           magma_dtrsm( MagmaLeft, MagmaUpper, MagmaConjTrans, MagmaNonUnit,
                        jb, n-j-jb,
-                       c_one, dA, j + j * ldda,        ldda,
-                              dA, j + (j + jb) * ldda, ldda, queues[1] );
+                       c_one, dA, dA_offset + j + j * ldda,        ldda,
+                              dA, dA_offset + j + (j + jb) * ldda, ldda, queues[1] );
           }
         }
       }
@@ -187,23 +188,23 @@ magma_dpotrf_gpu
         if (j > 0)
           {
           magma_dsyrk( MagmaLower, MagmaNoTrans, jb, j,
-                       d_neg_one, dA, j,            ldda,
-                       d_one,     dA, j + j * ldda, ldda, queues[1] );
+                       d_neg_one, dA, dA_offset + j,            ldda,
+                       d_one,     dA, dA_offset + j + j * ldda, ldda, queues[1] );
           }
 
         magma_queue_sync( queues[1] );
         magma_dgetmatrix_async( jb, jb,
-                                dA, j + j * ldda, ldda,
-                                work,             jb, queues[0] );
+                                dA, dA_offset + j + j * ldda, ldda,
+                                work,                     jb, queues[0] );
 
         // apply all previous updates to block column below diagonal block
         if (j+jb < n)
           {
           magma_dgemm( MagmaNoTrans, MagmaConjTrans,
                        n-j-jb, jb, j,
-                       c_neg_one, dA, j + jb,            ldda,
-                                  dA, j,                 ldda,
-                       c_one,     dA, j + jb + j * ldda, ldda, queues[1] );
+                       c_neg_one, dA, dA_offset + j + jb,            ldda,
+                                  dA, dA_offset + j,                 ldda,
+                       c_one,     dA, dA_offset + j + jb + j * ldda, ldda, queues[1] );
           }
 
         // simultaneous with above dgemm, transfer diagonal block,
@@ -211,8 +212,8 @@ magma_dpotrf_gpu
         magma_queue_sync( queues[0] );
         lapack::potrf(MagmaLowerStr[0], jb, work, jb, info);
         magma_dsetmatrix_async( jb, jb,
-                                work,             jb,
-                                dA, j + j * ldda, ldda, queues[1] );
+                                work,                     jb,
+                                dA, dA_offset + j + j * ldda, ldda, queues[1] );
         if (*info != 0)
           {
           *info = *info + j;
@@ -224,8 +225,8 @@ magma_dpotrf_gpu
           {
           magma_dtrsm( MagmaRight, MagmaLower, MagmaConjTrans, MagmaNonUnit,
                        n-j-jb, jb,
-                       c_one, dA, j + j * ldda,      ldda,
-                              dA, j + jb + j * ldda, ldda, queues[1] );
+                       c_one, dA, dA_offset + j + j * ldda,      ldda,
+                              dA, dA_offset + j + jb + j * ldda, ldda, queues[1] );
           }
         }
       }

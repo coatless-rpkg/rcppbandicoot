@@ -36,7 +36,7 @@ linspace
   out_type x;
   x.set_size(num);
 
-  coot_rt_t::linspace(x.get_dev_mem(false), start, end, num);
+  coot_rt_t::linspace(x.get_dev_mem(false), 1, start, end, num);
   return x;
   }
 

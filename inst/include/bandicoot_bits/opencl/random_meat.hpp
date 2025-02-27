@@ -22,7 +22,7 @@ template<> struct preferred_rng<u64> { typedef std::mt19937_64 result; };
 template<typename eT>
 inline
 void
-init_xorwow_state(cl_mem xorwow_state, const size_t num_rng_threads, const u64 seed)
+init_xorwow_state(coot_cl_mem xorwow_state, const size_t num_rng_threads, const u64 seed)
   {
   coot_extra_debug_sigprint();
 
@@ -50,7 +50,7 @@ init_xorwow_state(cl_mem xorwow_state, const size_t num_rng_threads, const u64 s
 
 inline
 void
-init_philox_state(cl_mem philox_state, const size_t num_rng_threads, const u64 seed)
+init_philox_state(coot_cl_mem philox_state, const size_t num_rng_threads, const u64 seed)
   {
   coot_extra_debug_sigprint();
 
@@ -91,14 +91,16 @@ fill_randu(dev_mem_t<eT> dest, const uword n)
 
   runtime_t::cq_guard guard;
   runtime_t::adapt_uword n_cl(n);
+  runtime_t::adapt_uword mem_offset(dest.cl_mem_ptr.offset);
 
   cl_int status = 0;
 
-  cl_mem xorwow_state = get_rt().cl_rt.get_xorwow_state<eT>();
+  coot_cl_mem xorwow_state = get_rt().cl_rt.get_xorwow_state<eT>();
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem), &(dest.cl_mem_ptr) );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem), &(xorwow_state) );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, n_cl.size,      n_cl.addr );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem), &(dest.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, mem_offset.size, mem_offset.addr      );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem), &(xorwow_state.ptr)   );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, n_cl.size,      n_cl.addr             );
 
   // Each thread will do as many elements as it can.
   // This avoids memory synchronization issues, since each RNG state will be local to only a single run of the kernel.
@@ -128,20 +130,22 @@ fill_randn(dev_mem_t<eT> dest, const uword n, const double mu, const double sd)
 
   runtime_t::cq_guard guard;
   runtime_t::adapt_uword n_cl(n);
+  runtime_t::adapt_uword mem_offset(dest.cl_mem_ptr.offset);
 
   cl_int status = 0;
 
-  cl_mem philox_state = get_rt().cl_rt.get_philox_state();
+  coot_cl_mem philox_state = get_rt().cl_rt.get_philox_state();
 
   typedef typename promote_type<eT, float>::result fp_eT1;
   fp_eT1 cl_mu(mu);
   fp_eT1 cl_sd(sd);
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem), &(dest.cl_mem_ptr) );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem), &(philox_state) );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, n_cl.size,      n_cl.addr );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, sizeof(cl_mu),  &(cl_mu) );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(cl_sd),  &(cl_sd) );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),  &(dest.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, mem_offset.size, mem_offset.addr       );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),  &(philox_state.ptr)   );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, n_cl.size,       n_cl.addr             );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(cl_mu),   &(cl_mu)              );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, sizeof(cl_sd),   &(cl_sd)              );
 
   // Each thread will do as many elements as it can.
   // This avoids memory synchronization issues, since each RNG state will be local to only a single run of the kernel.
@@ -169,10 +173,11 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi)
 
   runtime_t::cq_guard guard;
   runtime_t::adapt_uword n_cl(n);
+  runtime_t::adapt_uword mem_offset(dest.cl_mem_ptr.offset);
 
   cl_int status = 0;
 
-  cl_mem xorwow_state = get_rt().cl_rt.get_xorwow_state<eT>();
+  coot_cl_mem xorwow_state = get_rt().cl_rt.get_xorwow_state<eT>();
 
   typedef typename uint_type<eT>::result uint_eT;
   uint_eT range;
@@ -189,12 +194,13 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi)
   char needs_modulo = (range != std::numeric_limits<uint_eT>::max());
   eT cl_lo = eT(lo);
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),  &(dest.cl_mem_ptr) );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem),  &(xorwow_state) );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, n_cl.size,       n_cl.addr );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, sizeof(eT),      &cl_lo );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(uint_eT), &range );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 5, sizeof(char),    &needs_modulo );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),  &(dest.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, mem_offset.size, mem_offset.addr       );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),  &(xorwow_state.ptr)   );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, n_cl.size,       n_cl.addr             );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(eT),      &cl_lo                );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, sizeof(uint_eT), &range                );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 6, sizeof(char),    &needs_modulo         );
 
   // Each thread will do as many elements as it can.
   // This avoids memory synchronization issues, since each RNG state will be local to only a single run of the kernel.

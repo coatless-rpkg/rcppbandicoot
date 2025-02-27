@@ -15,6 +15,7 @@
 __kernel
 void
 COOT_FN(PREFIX,inplace_xorwow_randi)(__global eT1* mem,
+                                     const UWORD mem_offset,
                                      __global uint_eT1* xorwow_state,
                                      const UWORD n,
                                      const eT1 lo,
@@ -42,7 +43,7 @@ COOT_FN(PREFIX,inplace_xorwow_randi)(__global eT1* mem,
     if (needs_modulo == 1)
       t %= (range + 1);
     // Cast back to the correct type, and add lo to get the correct range.
-    mem[i] = ((eT1) t) + lo;
+    mem[mem_offset + i] = ((eT1) t) + lo;
     i += num_threads;
     }
 

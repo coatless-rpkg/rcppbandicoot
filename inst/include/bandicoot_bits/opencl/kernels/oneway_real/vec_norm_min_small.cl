@@ -15,8 +15,10 @@
 __kernel
 void
 COOT_FN(PREFIX,vec_norm_min_small)(__global const eT1* in_mem,
+                                   const UWORD in_mem_offset,
                                    const UWORD n_elem,
                                    __global eT1* out_mem,
+                                   const UWORD out_mem_offset,
                                    __local volatile eT1* aux_mem)
   {
   const UWORD tid = get_local_id(0);
@@ -29,24 +31,24 @@ COOT_FN(PREFIX,vec_norm_min_small)(__global const eT1* in_mem,
 
   if (i < n_elem)
     {
-    aux_mem[tid] = ET1_ABS(in_mem[i]);
+    aux_mem[tid] = ET1_ABS(in_mem[in_mem_offset + i]);
     }
   if (i + get_local_size(0) < n_elem)
     {
-    const eT1 v = ET1_ABS(in_mem[i + get_local_size(0)]);
+    const eT1 v = ET1_ABS(in_mem[in_mem_offset + i + get_local_size(0)]);
     aux_mem[tid] = min(aux_mem[tid], v);
     }
   i += grid_size;
 
   while (i + get_local_size(0) < n_elem)
     {
-    const eT1 v = min(ET1_ABS(in_mem[i]), ET1_ABS(in_mem[i + get_local_size(0)]));
+    const eT1 v = min(ET1_ABS(in_mem[in_mem_offset + i]), ET1_ABS(in_mem[in_mem_offset + i + get_local_size(0)]));
     aux_mem[tid] = min(aux_mem[tid], v);
     i += grid_size;
     }
   if (i < n_elem)
     {
-    aux_mem[tid] = min(aux_mem[tid], ET1_ABS(in_mem[i]));
+    aux_mem[tid] = min(aux_mem[tid], ET1_ABS(in_mem[in_mem_offset + i]));
     }
 
   for (UWORD s = get_local_size(0) / 2; s > 0; s >>= 1)
@@ -61,6 +63,6 @@ COOT_FN(PREFIX,vec_norm_min_small)(__global const eT1* in_mem,
 
   if (tid == 0)
     {
-    out_mem[get_group_id(0)] = aux_mem[0];
+    out_mem[out_mem_offset + get_group_id(0)] = aux_mem[0];
     }
   }

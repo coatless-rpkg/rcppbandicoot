@@ -17,6 +17,7 @@
 __kernel
 void
 COOT_FN(PREFIX,count_nonzeros)(__global const eT1* A,
+                               const UWORD A_offset,
                                __global UWORD* thread_counts,
                                const UWORD n_elem,
                                __local volatile uint_eT1* aux_mem)
@@ -37,11 +38,11 @@ COOT_FN(PREFIX,count_nonzeros)(__global const eT1* A,
   UWORD i = start_elem;
   while (i + 1 < end_elem)
     {
-    if (A[i] != (eT1) 0)
+    if (A[A_offset + i] != (eT1) 0)
       {
       ++local_count;
       }
-    if (A[i + 1] != (eT1) 0)
+    if (A[A_offset + i + 1] != (eT1) 0)
       {
       ++local_count;
       }
@@ -50,7 +51,7 @@ COOT_FN(PREFIX,count_nonzeros)(__global const eT1* A,
     }
   if (i < end_elem)
     {
-    if (A[i] != (eT1) 0)
+    if (A[A_offset + i] != (eT1) 0)
       {
       ++local_count;
       }
