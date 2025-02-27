@@ -17,13 +17,41 @@
 // OpenCL functions may not be present depending on what version of OpenCL is
 // being used.
 
+
+
+// Forward definition of helper function.
+inline
+cl_int
+coot_sub_group_size_helper(cl_kernel kernel, cl_device_id dev_id, const size_t input_size, size_t& subgroup_size);
+
+
+
+
 // coot_sub_group_size(k): get the subgroup size of a given kernel, if subgroups
 // are supported; otherwise return 0.
+inline
+cl_int
+coot_sub_group_size(cl_kernel kernel, cl_device_id dev_id, const size_t input_size, size_t& subgroup_size)
+  {
+  // If the wrapper is enabled, we must ensure that we call the right OpenCL functions,
+  // by using the version of coot_sub_group_size_helper() that was compiled with the same
+  // options as the wrapper.
+  //
+  // If the wrapper is not enabled, then this amounts to a direct call to any of the functions below.
+  return coot_wrapper(coot_sub_group_size_helper)(kernel, dev_id, input_size, subgroup_size);
+  }
+
+
+
+//
+// Implementations of coot_sub_group_size_helper(), dependent on the version of OpenCL.
+//
+
 #if defined(CL_VERSION_2_1) || defined(CL_VERSION_3_0)
 
 inline
 cl_int
-coot_sub_group_size(cl_kernel kernel, cl_device_id dev_id, const size_t input_size, size_t& subgroup_size)
+coot_sub_group_size_helper(cl_kernel kernel, cl_device_id dev_id, const size_t input_size, size_t& subgroup_size)
   {
   // OpenCL 2.0 moved this into the base specification, so the KHR suffix is
   // deprecated.
@@ -41,7 +69,7 @@ coot_sub_group_size(cl_kernel kernel, cl_device_id dev_id, const size_t input_si
 
 inline
 cl_int
-coot_sub_group_size(cl_kernel kernel, cl_device_id dev_id, const size_t input_size, size_t& subgroup_size)
+coot_sub_group_size_helper(cl_kernel kernel, cl_device_id dev_id, const size_t input_size, size_t& subgroup_size)
   {
   // This is a version of OpenCL where subgroups are available, but only as an
   // extension.
@@ -59,7 +87,7 @@ coot_sub_group_size(cl_kernel kernel, cl_device_id dev_id, const size_t input_si
 
 inline
 cl_int
-coot_sub_group_size(cl_kernel kernel, cl_device_id dev_id, const size_t input_size, size_t& subgroup_size)
+coot_sub_group_size_helper(cl_kernel kernel, cl_device_id dev_id, const size_t input_size, size_t& subgroup_size)
   {
   coot_ignore(kernel);
   coot_ignore(dev_id);

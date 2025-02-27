@@ -37,7 +37,8 @@ glue_conv::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_conv>& in)
 
   // We may need to make an alias of the output.
   Mat<out_eT> tmp;
-  Mat<out_eT>& out_ref = (UA.is_alias(out) || UB.is_alias(out)) ? tmp : out;
+  const bool is_alias = (UA.is_alias(out) || UB.is_alias(out));
+  Mat<out_eT>& out_ref = is_alias ? tmp : out;
 
   // Following Armadillo convention, if A is a column vector, then the result is a column vector.
   if (UA.M.n_cols == 1 || UA.M.is_col)
@@ -55,7 +56,7 @@ glue_conv::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_conv>& in)
     out_ref.steal_mem(out_tmp);
     }
 
-  if (UA.is_alias(out) || UB.is_alias(out))
+  if (is_alias)
     {
     out.set_size(tmp.n_rows, tmp.n_cols);
     out.steal_mem(tmp);

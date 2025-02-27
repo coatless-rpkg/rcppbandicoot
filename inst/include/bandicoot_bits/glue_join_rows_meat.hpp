@@ -52,7 +52,7 @@ glue_join_rows::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_join_rows>& glue
     return;
     }
 
-  if ((void_ptr(&out) == void_ptr(&U1.M)) || (void_ptr(&out) == void_ptr(&U2.M)))
+  if (is_alias(out, U1.M) || is_alias(out, U2.M))
     {
     Mat<out_eT> tmp(new_n_rows, new_n_cols);
     coot_rt_t::join_rows(tmp.get_dev_mem(false),
@@ -121,7 +121,7 @@ glue_join_rows::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const
     }
 
   // Ensure that the output is not an alias.
-  if ((void_ptr(&out) == void_ptr(&U1.M)) || (void_ptr(&out) == void_ptr(&U2.M)) || (void_ptr(&out) == void_ptr(&U3.M)))
+  if (is_alias(out, U1.M) || is_alias(out, U2.M) || is_alias(out, U3.M))
     {
     Mat<eT> tmp(out_n_rows, out_n_cols);
     coot_rt_t::join_rows(tmp.get_dev_mem(false),
@@ -194,7 +194,7 @@ glue_join_rows::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const
     }
 
   // Ensure that the output is not an alias.
-  if ((void_ptr(&out) == void_ptr(&U1.M)) || (void_ptr(&out) == void_ptr(&U2.M)) || (void_ptr(&out) == void_ptr(&U3.M)) || (void_ptr(&out) == void_ptr(&U4.M)))
+  if (is_alias(out, U1.M) || is_alias(out, U2.M) || is_alias(out, U3.M) || is_alias(out, U4.M))
     {
     Mat<eT> tmp(out_n_rows, out_n_cols);
     coot_rt_t::join_rows(tmp.get_dev_mem(false),

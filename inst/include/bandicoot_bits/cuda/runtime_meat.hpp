@@ -188,11 +188,33 @@ runtime_t::compile_kernels(const std::string& unique_host_device_id)
   coot_check_cuda_error(result2, "coot::cuda_rt.init(): cuDeviceGetAttribute() failed");
   result2 = coot_wrapper(cuDeviceGetAttribute)(&minor, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, cuDevice);
   coot_check_cuda_error(result2, "coot::cuda_rt.init(): cuDeviceGetAttribute() failed");
+  int card_arch = 10 * major + minor; // hopefully this does not change in future versions of the CUDA toolkit...
+
+  // Get the supported architectures.
+  int num_archs = 0;
+  result = coot_wrapper(nvrtcGetNumSupportedArchs)(&num_archs);
+  coot_check_nvrtc_error(result, "coot::cuda_rt.init(): nvrtcGetNumSupportedArchs() failed");
+  int* archs = new int[num_archs];
+  result = coot_wrapper(nvrtcGetSupportedArchs)(archs);
+  coot_check_nvrtc_error(result, "coot::cuda_rt.init(): nvrtcGetSupportedArchs() failed");
+
+  // We will use the maximum architecture supported by both NVRTC and the card.
+  // This is based on the assumption that all architectures are backwards-compatible;
+  // I can't seem to find this in writing in the NVIDIA documentation but it appears to be true.
+  int use_arch = archs[0];
+  for (size_t i = 0; i < num_archs; ++i)
+    {
+    if (archs[i] > use_arch && archs[i] <= card_arch)
+      {
+      use_arch = archs[i];
+      }
+    }
 
   std::stringstream gpu_arch_opt;
-  gpu_arch_opt << "--gpu-architecture=sm_" << major << minor;
+  gpu_arch_opt << "--gpu-architecture=sm_" << use_arch;
   const std::string& gpu_arch_opt_tmp = gpu_arch_opt.str();
   opts.push_back(gpu_arch_opt_tmp.c_str());
+  std::cout << "use gpu arch " << gpu_arch_opt_tmp << "\n";
 
   result = coot_wrapper(nvrtcCompileProgram)(prog,         // CUDA runtime compilation program
                                              opts.size(),  // number of compile options

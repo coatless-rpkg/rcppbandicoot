@@ -335,6 +335,38 @@ class coot_rt_t
   static inline eT max_vec(const dev_mem_t<eT> mem, const uword n_elem);
 
   template<typename eT>
+  static inline void index_min(dev_mem_t<uword> dest,
+                               const dev_mem_t<eT> src,
+                               const uword n_rows,
+                               const uword n_cols,
+                               const uword dim,
+                               // subview arguments
+                               const uword dest_offset,
+                               const uword dest_mem_incr,
+                               const uword src_row_offset,
+                               const uword src_col_offset,
+                               const uword src_M_n_rows);
+
+  template<typename eT>
+  static inline uword index_min_vec(const dev_mem_t<eT> mem, const uword n_elem, eT* min_val = nullptr);
+
+  template<typename eT>
+  static inline void index_max(dev_mem_t<uword> dest,
+                               const dev_mem_t<eT> src,
+                               const uword n_rows,
+                               const uword n_cols,
+                               const uword dim,
+                               // subview arguments
+                               const uword dest_offset,
+                               const uword dest_mem_incr,
+                               const uword src_row_offset,
+                               const uword src_col_offset,
+                               const uword src_M_n_rows);
+
+  template<typename eT>
+  static inline uword index_max_vec(const dev_mem_t<eT> mem, const uword n_elem, eT* max_val = nullptr);
+
+  template<typename eT>
   static inline eT trace(const dev_mem_t<eT> mem, const uword n_rows, const uword n_cols);
 
   template<typename eT1, typename eT2>
@@ -344,7 +376,18 @@ class coot_rt_t
   static inline void repmat(const dev_mem_t<eT1> src, dev_mem_t<eT2> dest, const uword n_rows, const uword n_cols, const uword copies_per_row, const uword copies_per_col);
 
   template<typename eT>
-  static inline void linspace(const dev_mem_t<eT> mem, const eT start, const eT end, const uword num);
+  static inline void linspace(dev_mem_t<eT> mem,
+                              const uword mem_incr,
+                              const eT start,
+                              const eT end,
+                              const uword num);
+
+  template<typename eT>
+  static inline void logspace(dev_mem_t<eT> mem,
+                              const uword mem_incr,
+                              const eT start,
+                              const eT end,
+                              const uword num);
 
   template<typename eT1, typename eT2>
   static inline void clamp(dev_mem_t<eT2> dest,
@@ -515,6 +558,47 @@ class coot_rt_t
 
   template<typename eT>
   static inline void rotate_180(dev_mem_t<eT> out, const dev_mem_t<eT> in, const uword n_rows, const uword n_cols);
+
+  template<typename eT>
+  static inline bool approx_equal(const dev_mem_t<eT> A,
+                                  const uword A_row_offset,
+                                  const uword A_col_offset,
+                                  const uword A_M_n_rows,
+                                  const dev_mem_t<eT> B,
+                                  const uword B_row_offset,
+                                  const uword B_col_offset,
+                                  const uword B_M_n_rows,
+                                  const uword n_rows,
+                                  const uword n_cols,
+                                  const char sig,
+                                  const eT abs_tol,
+                                  const eT rel_tol);
+
+  template<typename eT>
+  static inline void shuffle(dev_mem_t<eT> out,
+                             const uword out_row_offset,
+                             const uword out_col_offset,
+                             const uword out_M_n_rows,
+                             const dev_mem_t<eT> in,
+                             const uword in_row_offset,
+                             const uword in_col_offset,
+                             const uword in_M_n_rows,
+                             const uword n_rows,
+                             const uword n_cols,
+                             const uword dim);
+
+  template<typename eT1, typename eT2>
+  static inline void extract_cx(dev_mem_t<eT1> out_mem,
+                                const uword out_row_offset,
+                                const uword out_col_offset,
+                                const uword out_M_n_rows,
+                                const dev_mem_t<eT2> in_mem,
+                                const uword in_row_offset,
+                                const uword in_col_offset,
+                                const uword in_M_n_rows,
+                                const uword n_rows,
+                                const uword n_cols,
+                                const bool imag);
 
   static inline void synchronise();
 

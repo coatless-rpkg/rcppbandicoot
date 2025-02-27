@@ -41,10 +41,15 @@ clamp(dev_mem_t<eT2> dest,
 
   coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::clamp(): OpenCL runtime not valid" );
 
+  if (n_rows == 0 || n_cols == 0)
+    {
+    return;
+    }
+
   runtime_t::cq_guard guard;
 
-  const uword dest_offset = dest_row_offset + dest_col_offset * dest_M_n_rows;
-  const uword  src_offset =  src_row_offset +  src_col_offset * src_M_n_rows;
+  const uword dest_offset = dest.cl_mem_ptr.offset + dest_row_offset + dest_col_offset * dest_M_n_rows;
+  const uword  src_offset =  src.cl_mem_ptr.offset +  src_row_offset +  src_col_offset * src_M_n_rows;
 
   runtime_t::adapt_uword cl_dest_offset(dest_offset);
   runtime_t::adapt_uword cl_src_offset(src_offset);
@@ -57,9 +62,9 @@ clamp(dev_mem_t<eT2> dest,
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),        &(dest.cl_mem_ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),        &(dest.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_dest_offset.size,   cl_dest_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),        &(src.cl_mem_ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),        &(src.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_src_offset.size,    cl_src_offset.addr);
   status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(eT1),           &min_val);
   status |= coot_wrapper(clSetKernelArg)(kernel, 5, sizeof(eT1),           &max_val);

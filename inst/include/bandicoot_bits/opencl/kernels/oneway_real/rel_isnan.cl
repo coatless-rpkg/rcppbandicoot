@@ -15,13 +15,15 @@
 __kernel
 void
 COOT_FN(PREFIX,rel_isnan)(__global UWORD* out,
+                          const UWORD out_offset,
                           __global const eT1* X,
+                          const UWORD X_offset,
                           const UWORD n_elem)
   {
   const UWORD i = get_global_id(0);
   if (i < n_elem)
     {
-    const eT1 val1 = (eT1) X[i];
-    out[i] = isnan(val1);
+    const eT1 val1 = (eT1) X[X_offset + i];
+    out[out_offset + i] = isnan(val1);
     }
   }

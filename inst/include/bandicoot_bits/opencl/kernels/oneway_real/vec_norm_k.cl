@@ -17,8 +17,10 @@
 __kernel
 void
 COOT_FN(PREFIX,vec_norm_k)(__global const eT1* in_mem,
+                           const UWORD in_mem_offset,
                            const UWORD n_elem,
                            __global eT1* out_mem,
+                           const UWORD out_mem_offset,
                            __local volatile eT1* aux_mem,
                            const UWORD k)
   {
@@ -30,14 +32,14 @@ COOT_FN(PREFIX,vec_norm_k)(__global const eT1* in_mem,
 
   while (i + get_local_size(0) < n_elem)
     {
-    const eT1 v1 = pow(in_mem[i],                     (eT1) k);
-    const eT1 v2 = pow(in_mem[i + get_local_size(0)], (eT1) k);
+    const eT1 v1 = pow(in_mem[in_mem_offset + i],                     (eT1) k);
+    const eT1 v2 = pow(in_mem[in_mem_offset + i + get_local_size(0)], (eT1) k);
     aux_mem[tid] += v1 + v2;
     i += grid_size;
     }
   if (i < n_elem)
     {
-    const eT1 v1 = pow(in_mem[i], (eT1) k);
+    const eT1 v1 = pow(in_mem[in_mem_offset + i], (eT1) k);
     aux_mem[tid] += v1;
     }
   barrier(CLK_LOCAL_MEM_FENCE);
@@ -58,6 +60,6 @@ COOT_FN(PREFIX,vec_norm_k)(__global const eT1* in_mem,
 
   if (tid == 0)
     {
-    out_mem[get_group_id(0)] = aux_mem[0];
+    out_mem[out_mem_offset + get_group_id(0)] = aux_mem[0];
     }
   }

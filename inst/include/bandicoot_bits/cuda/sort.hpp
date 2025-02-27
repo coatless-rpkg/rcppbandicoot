@@ -98,9 +98,9 @@ sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
 
   // The kernel requires that all threads are in one block.
   const size_t mtpb = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsPerBlock;
-  const size_t num_threads = std::min(mtpb, size_t(std::ceil(n_elem / std::max(1.0, (2 * std::ceil(std::log2(n_elem)))))));
+  const size_t num_threads = std::min(mtpb, size_t(std::ceil(n_elem / std::max(1.0, (2 * std::ceil(std::log2(std::max((double) n_elem, 2.0))))))));
   // The number of threads needs to be a power of two.
-  const size_t pow2_num_threads = std::min(mtpb, (size_t) std::pow(2.0f, std::ceil(std::log2((float) num_threads))));
+  const size_t pow2_num_threads = std::min(mtpb, next_pow2(num_threads));
 
   // First, allocate temporary memory we will use during computation.
   dev_mem_t<eT> tmp_mem;

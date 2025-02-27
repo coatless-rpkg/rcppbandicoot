@@ -39,11 +39,11 @@ chol(dev_mem_t<eT> mem, const uword n_rows)
 
   if(is_float<eT>::value)
     {
-    status = magma_spotrf_gpu(MagmaUpper, n_rows, mem.cl_mem_ptr, n_rows, &info);
+    status = magma_spotrf_gpu(MagmaUpper, n_rows, mem.cl_mem_ptr.ptr, mem.cl_mem_ptr.offset, n_rows, &info);
     }
   else if(is_double<eT>::value)
     {
-    status = magma_dpotrf_gpu(MagmaUpper, n_rows, mem.cl_mem_ptr, n_rows, &info);
+    status = magma_dpotrf_gpu(MagmaUpper, n_rows, mem.cl_mem_ptr.ptr, mem.cl_mem_ptr.offset, n_rows, &info);
     }
   else
     {
@@ -77,11 +77,13 @@ chol(dev_mem_t<eT> mem, const uword n_rows)
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::ltri_set_zero);
 
   // n_rows == n_cols because the Cholesky decomposition requires square matrices.
+  runtime_t::adapt_uword dev_offset(mem.cl_mem_ptr.offset);
   runtime_t::adapt_uword dev_n_rows(n_rows);
 
-  status2 |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem), &(mem.cl_mem_ptr));
-  status2 |= coot_wrapper(clSetKernelArg)(kernel, 1, dev_n_rows.size, dev_n_rows.addr);
+  status2 |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem), &(mem.cl_mem_ptr.ptr));
+  status2 |= coot_wrapper(clSetKernelArg)(kernel, 1, dev_offset.size, dev_offset.addr);
   status2 |= coot_wrapper(clSetKernelArg)(kernel, 2, dev_n_rows.size, dev_n_rows.addr);
+  status2 |= coot_wrapper(clSetKernelArg)(kernel, 3, dev_n_rows.size, dev_n_rows.addr);
   if (status2 != CL_SUCCESS)
     {
     return std::make_tuple(false, "failed to set arguments for kernel ltri_set_zero: " + coot_cl_error::as_string(status2));

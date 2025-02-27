@@ -15,7 +15,9 @@
 __kernel
 void
 COOT_FN(PREFIX,rel_neq_scalar)(__global UWORD* out,
+                               const UWORD out_offset,
                                __global const eT1* X, // will be casted to eT2 before comparison
+                               const UWORD X_offset,
                                const UWORD n_elem,
                                const eT2 val)
   {
@@ -23,7 +25,7 @@ COOT_FN(PREFIX,rel_neq_scalar)(__global UWORD* out,
 
   if (i < n_elem)
     {
-    const eT2 val1 = (eT2) X[i];
-    out[i] = (val1 != val);
+    const eT2 val1 = (eT2) X[X_offset + i];
+    out[out_offset + i] = (val1 != val);
     }
   }

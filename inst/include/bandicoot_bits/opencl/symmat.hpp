@@ -34,6 +34,8 @@ symmat(dev_mem_t<eT2> out, const dev_mem_t<eT1> in, const uword size, const uwor
   cl_int status;
 
   runtime_t::adapt_uword cl_size(size);
+  runtime_t::adapt_uword out_mem_offset(out.cl_mem_ptr.offset);
+  runtime_t::adapt_uword in_mem_offset(in.cl_mem_ptr.offset);
 
   // If out == in, then we can avoid the copy of the input triangle.
   cl_kernel k;
@@ -41,16 +43,19 @@ symmat(dev_mem_t<eT2> out, const dev_mem_t<eT1> in, const uword size, const uwor
     {
     k = (lower == 1) ? get_rt().cl_rt.get_kernel<eT2>(oneway_kernel_id::symmatl_inplace) : get_rt().cl_rt.get_kernel<eT2>(oneway_kernel_id::symmatu_inplace);
 
-    status  = coot_wrapper(clSetKernelArg)(k, 0, sizeof(cl_mem), &(out.cl_mem_ptr));
-    status |= coot_wrapper(clSetKernelArg)(k, 1, cl_size.size,   cl_size.addr);
+    status  = coot_wrapper(clSetKernelArg)(k, 0, sizeof(cl_mem),      &(out.cl_mem_ptr.ptr));
+    status |= coot_wrapper(clSetKernelArg)(k, 1, out_mem_offset.size, out_mem_offset.addr);
+    status |= coot_wrapper(clSetKernelArg)(k, 2, cl_size.size,        cl_size.addr);
     }
   else
     {
     k = (lower == 1) ? get_rt().cl_rt.get_kernel<eT2, eT1>(twoway_kernel_id::symmatl) : get_rt().cl_rt.get_kernel<eT2, eT1>(twoway_kernel_id::symmatu);
 
-    status  = coot_wrapper(clSetKernelArg)(k, 0, sizeof(cl_mem), &(out.cl_mem_ptr));
-    status |= coot_wrapper(clSetKernelArg)(k, 1, sizeof(cl_mem), &(in.cl_mem_ptr));
-    status |= coot_wrapper(clSetKernelArg)(k, 2, cl_size.size,   cl_size.addr);
+    status  = coot_wrapper(clSetKernelArg)(k, 0, sizeof(cl_mem),      &(out.cl_mem_ptr.ptr));
+    status |= coot_wrapper(clSetKernelArg)(k, 1, out_mem_offset.size, out_mem_offset.addr);
+    status |= coot_wrapper(clSetKernelArg)(k, 2, sizeof(cl_mem),      &(in.cl_mem_ptr.ptr));
+    status |= coot_wrapper(clSetKernelArg)(k, 3, in_mem_offset.size,  in_mem_offset.addr);
+    status |= coot_wrapper(clSetKernelArg)(k, 4, cl_size.size,        cl_size.addr);
     }
 
   coot_check_cl_error(status, "coot::opencl::symmat(): could not set arguments for symmat kernel");

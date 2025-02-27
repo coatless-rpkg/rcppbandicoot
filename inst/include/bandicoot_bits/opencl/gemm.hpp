@@ -87,9 +87,9 @@ struct gemm
     const size_t ldb = size_t(B_M_n_rows);
     const size_t ldc = size_t(C_M_n_rows);
 
-    const size_t A_mem_offset = A_row_offset + A_col_offset * A_M_n_rows;
-    const size_t B_mem_offset = B_row_offset + B_col_offset * B_M_n_rows;
-    const size_t C_mem_offset = C_row_offset + C_col_offset * C_M_n_rows;
+    const size_t A_mem_offset = A_mem.cl_mem_ptr.offset + A_row_offset + A_col_offset * A_M_n_rows;
+    const size_t B_mem_offset = B_mem.cl_mem_ptr.offset + B_row_offset + B_col_offset * B_M_n_rows;
+    const size_t C_mem_offset = C_mem.cl_mem_ptr.offset + C_row_offset + C_col_offset * C_M_n_rows;
 
     cl_command_queue queue = get_rt().cl_rt.get_cq();
 
@@ -102,14 +102,14 @@ struct gemm
                                         N,
                                         K,
                                         alpha,
-                                        A_mem.cl_mem_ptr,
+                                        A_mem.cl_mem_ptr.ptr,
                                         A_mem_offset,
                                         lda,
-                                        B_mem.cl_mem_ptr,
+                                        B_mem.cl_mem_ptr.ptr,
                                         B_mem_offset,
                                         ldb,
                                         beta,
-                                        C_mem.cl_mem_ptr,
+                                        C_mem.cl_mem_ptr.ptr,
                                         C_mem_offset,
                                         ldc,
                                         1,
@@ -161,9 +161,9 @@ struct gemm
     const size_t ldb = size_t(B_M_n_rows);
     const size_t ldc = size_t(C_M_n_rows);
 
-    const size_t A_mem_offset = A_row_offset + A_col_offset * A_M_n_rows;
-    const size_t B_mem_offset = B_row_offset + B_col_offset * B_M_n_rows;
-    const size_t C_mem_offset = C_row_offset + C_col_offset * C_M_n_rows;
+    const size_t A_mem_offset = A_mem.cl_mem_ptr.offset + A_row_offset + A_col_offset * A_M_n_rows;
+    const size_t B_mem_offset = B_mem.cl_mem_ptr.offset + B_row_offset + B_col_offset * B_M_n_rows;
+    const size_t C_mem_offset = C_mem.cl_mem_ptr.offset + C_row_offset + C_col_offset * C_M_n_rows;
 
     cl_command_queue queue = get_rt().cl_rt.get_cq();
 
@@ -176,14 +176,14 @@ struct gemm
                                         N,
                                         K,
                                         alpha,
-                                        A_mem.cl_mem_ptr,
+                                        A_mem.cl_mem_ptr.ptr,
                                         A_mem_offset,
                                         lda,
-                                        B_mem.cl_mem_ptr,
+                                        B_mem.cl_mem_ptr.ptr,
                                         B_mem_offset,
                                         ldb,
                                         beta,
-                                        C_mem.cl_mem_ptr,
+                                        C_mem.cl_mem_ptr.ptr,
                                         C_mem_offset,
                                         ldc,
                                         1,

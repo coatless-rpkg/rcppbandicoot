@@ -55,9 +55,9 @@ struct unwrap
   Mat<eT> M;
 
   template<typename eT2>
-  constexpr bool is_alias(const Mat<eT2>&) const { return false; }
+  constexpr bool is_alias(const Mat<eT2>& X) const { return coot::is_alias(X, M); }
   template<typename eT2>
-  coot_inline bool is_alias(const subview<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X.m)); }
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   constexpr inline uword         get_row_offset()                    const { return 0; }
   constexpr inline uword         get_col_offset()                    const { return 0; }
@@ -82,9 +82,9 @@ struct unwrap< Mat<eT> >
   const Mat<eT>& M;
 
   template<typename eT2>
-  coot_inline bool is_alias(const Mat<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X)); }
+  coot_inline bool is_alias(const Mat<eT2>& X) const { return coot::is_alias(X, M); }
   template<typename eT2>
-  coot_inline bool is_alias(const subview<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X.m)); }
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   constexpr inline uword         get_row_offset()                    const { return 0; }
   constexpr inline uword         get_col_offset()                    const { return 0; }
@@ -109,9 +109,9 @@ struct unwrap< Row<eT> >
   const Row<eT>& M;
 
   template<typename eT2>
-  coot_inline bool is_alias(const Mat<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X)); }
+  coot_inline bool is_alias(const Mat<eT2>& X) const { return coot::is_alias(X, M); }
   template<typename eT2>
-  coot_inline bool is_alias(const subview<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X.m)); }
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   constexpr inline uword         get_row_offset()                    const { return 0; }
   constexpr inline uword         get_col_offset()                    const { return 0; }
@@ -136,9 +136,9 @@ struct unwrap< Col<eT> >
   const Col<eT>& M;
 
   template<typename eT2>
-  coot_inline bool is_alias(const Mat<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X)); }
+  coot_inline bool is_alias(const Mat<eT2>& X) const { return coot::is_alias(X, M); }
   template<typename eT2>
-  coot_inline bool is_alias(const subview<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X.m)); }
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   constexpr inline uword         get_row_offset()                    const { return 0; }
   constexpr inline uword         get_col_offset()                    const { return 0; }
@@ -163,9 +163,9 @@ struct unwrap< subview<eT> >
   const subview<eT>& M;
 
   template<typename eT2>
-  coot_inline bool is_alias(const Mat<eT2>& X) const { return (void_ptr(&M.m) == void_ptr(&X)); }
+  coot_inline bool is_alias(const Mat<eT2>& X) const { return coot::is_alias(X, M); }
   template<typename eT2>
-  coot_inline bool is_alias(const subview<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X)); }
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   inline uword get_row_offset() const { return M.aux_row1; }
   inline uword get_col_offset() const { return M.aux_col1; }
@@ -191,9 +191,9 @@ struct unwrap< mtOp<out_eT, T1, mtop_conv_to> >
   Mat<out_eT> M;
 
   template<typename eT2>
-  coot_inline bool is_alias(const Mat<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X)); }
+  coot_inline bool is_alias(const Mat<eT2>& X) const { return coot::is_alias(X, M); }
   template<typename eT2>
-  coot_inline bool is_alias(const subview<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X.m)); }
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   constexpr inline uword             get_row_offset()                    const { return 0; }
   constexpr inline uword             get_col_offset()                    const { return 0; }
@@ -218,9 +218,9 @@ struct unwrap< mtGlue<out_eT, T1, T2, mtglue_type> >
   Mat<out_eT> M;
 
   template<typename eT2>
-  coot_inline bool is_alias(const Mat<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X)); }
+  coot_inline bool is_alias(const Mat<eT2>& X) const { return coot::is_alias(X, M); }
   template<typename eT2>
-  coot_inline bool is_alias(const subview<eT2>& X) const { return (void_ptr(&M) == void_ptr(&X.m)); }
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   constexpr inline uword             get_row_offset()                    const { return 0; }
   constexpr inline uword             get_col_offset()                    const { return 0; }
@@ -251,8 +251,10 @@ struct partial_unwrap
 
   constexpr eT get_val() const { return eT(1); }
 
-  constexpr bool is_alias(const Mat<eT>&)     const { return false; }
-  constexpr bool is_alias(const subview<eT>&) const { return false; }
+  template<typename eT2>
+  constexpr bool is_alias(const Mat<eT2>&)     const { return false; }
+  template<typename eT2>
+  constexpr bool is_alias(const subview<eT2>&) const { return false; }
 
   static constexpr bool do_trans = false;
   static constexpr bool do_times = false;
@@ -276,8 +278,10 @@ struct partial_unwrap< Mat<eT> >
 
   constexpr eT get_val() const { return eT(1); }
 
-  coot_inline bool is_alias(const Mat<eT>& X)     const { return ((&X)   == (&M)); }
-  coot_inline bool is_alias(const subview<eT>& X) const { return ((&X.m) == (&M)); }
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X)     const { return coot::is_alias(X, M); }
+  template<typename eT2>
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   static constexpr bool do_trans = false;
   static constexpr bool do_times = false;
@@ -301,8 +305,10 @@ struct partial_unwrap< subview<eT> >
 
   constexpr eT get_val() const { return eT(1); }
 
-  coot_inline bool is_alias(const Mat<eT>& X)     const { return ((&X)   == (&M.m)); }
-  coot_inline bool is_alias(const subview<eT>& X) const { return ((&X.m) == (&M.m)); }
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X)     const { return coot::is_alias(X, M); }
+  template<typename eT2>
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   static constexpr bool do_trans = false;
   static constexpr bool do_times = false;
@@ -327,8 +333,10 @@ struct partial_unwrap< Op<T1, op_htrans> >
 
   constexpr eT get_val() const { return eT(1); }
 
-  constexpr bool is_alias(const Mat<eT>&)     const { return false; }
-  constexpr bool is_alias(const subview<eT>&) const { return false; }
+  template<typename eT2>
+  constexpr bool is_alias(const Mat<eT2>&)     const { return false; }
+  template<typename eT2>
+  constexpr bool is_alias(const subview<eT2>&) const { return false; }
 
   static constexpr bool do_trans = true;
   static constexpr bool do_times = false;
@@ -352,8 +360,10 @@ struct partial_unwrap< Op< Mat<eT>, op_htrans> >
 
   constexpr eT get_val() const { return eT(1); }
 
-  coot_inline bool is_alias(const Mat<eT>& X)     const { return (void_ptr(&X)   == void_ptr(&M)); }
-  coot_inline bool is_alias(const subview<eT>& X) const { return (void_ptr(&X.m) == void_ptr(&M)); }
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X)     const { return coot::is_alias(X, M); }
+  template<typename eT2>
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   static constexpr bool do_trans = true;
   static constexpr bool do_times = false;
@@ -377,8 +387,10 @@ struct partial_unwrap< Op< subview<eT>, op_htrans> >
 
   constexpr eT get_val() const { return eT(1); }
 
-  coot_inline bool is_alias(const Mat<eT>& X)     const { return (void_ptr(&X)   == void_ptr(&M.m)); }
-  coot_inline bool is_alias(const subview<eT>& X) const { return (void_ptr(&X.m) == void_ptr(&M.m)); }
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X)     const { return coot::is_alias(X, M); }
+  template<typename eT2>
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   static constexpr bool do_trans = true;
   static constexpr bool do_times = false;
@@ -404,8 +416,10 @@ struct partial_unwrap< Op<T1, op_htrans2> >
 
   coot_inline eT get_val() const { return val; }
 
-  constexpr bool is_alias(const Mat<eT>&)     const { return false; }
-  constexpr bool is_alias(const subview<eT>&) const { return false; }
+  template<typename eT2>
+  constexpr bool is_alias(const Mat<eT2>&)     const { return false; }
+  template<typename eT2>
+  constexpr bool is_alias(const subview<eT2>&) const { return false; }
 
   static constexpr bool do_trans = true;
   static constexpr bool do_times = true;
@@ -431,8 +445,10 @@ struct partial_unwrap< Op< Mat<eT>, op_htrans2> >
 
   coot_inline eT get_val() const { return val; }
 
-  coot_inline bool is_alias(const Mat<eT>& X)     const { return (void_ptr(&X)   == void_ptr(&M)); }
-  coot_inline bool is_alias(const subview<eT>& X) const { return (void_ptr(&X.m) == void_ptr(&M)); }
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X)     const { return coot::is_alias(X, M); }
+  template<typename eT2>
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   static constexpr bool do_trans = true;
   static constexpr bool do_times = true;
@@ -458,8 +474,10 @@ struct partial_unwrap< Op< subview<eT>, op_htrans2> >
 
   coot_inline eT get_val() const { return val; }
 
-  coot_inline bool is_alias(const Mat<eT>& X)     const { return (void_ptr(&X)   == void_ptr(&M.m)); }
-  coot_inline bool is_alias(const subview<eT>& X) const { return (void_ptr(&X.m) == void_ptr(&M.m)); }
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X)     const { return coot::is_alias(X, M); }
+  template<typename eT2>
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   static constexpr bool do_trans = true;
   static constexpr bool do_times = true;
@@ -485,8 +503,10 @@ struct partial_unwrap< eOp<Mat<eT>, eop_scalar_times> >
 
   coot_inline eT get_val() const { return val; }
 
-  coot_inline bool is_alias(const Mat<eT>& X)     const { return (void_ptr(&X)   == void_ptr(&M)); }
-  coot_inline bool is_alias(const subview<eT>& X) const { return (void_ptr(&X.m) == void_ptr(&M)); }
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X)     const { return coot::is_alias(X, M); }
+  template<typename eT2>
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   static constexpr bool do_trans = false;
   static constexpr bool do_times = true;
@@ -512,8 +532,10 @@ struct partial_unwrap< eOp<subview<eT>, eop_scalar_times> >
 
   coot_inline eT get_val() const { return val; }
 
-  coot_inline bool is_alias(const Mat<eT>& X)     const { return (void_ptr(&X)   == void_ptr(&M.m)); }
-  coot_inline bool is_alias(const subview<eT>& X) const { return (void_ptr(&X.m) == void_ptr(&M.m)); }
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X)     const { return coot::is_alias(X, M); }
+  template<typename eT2>
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   static constexpr bool do_trans = false;
   static constexpr bool do_times = true;
@@ -538,8 +560,10 @@ struct partial_unwrap< eOp<Mat<eT>, eop_neg> >
 
   constexpr eT get_val() const { return eT(-1); }
 
-  coot_inline bool is_alias(const Mat<eT>& X)     const { return (void_ptr(&X)   == void_ptr(&M)); }
-  coot_inline bool is_alias(const subview<eT>& X) const { return (void_ptr(&X.m) == void_ptr(&M)); }
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X)     const { return coot::is_alias(X, M); }
+  template<typename eT2>
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   static constexpr bool do_trans = false;
   static constexpr bool do_times = true;
@@ -563,8 +587,10 @@ struct partial_unwrap< eOp<subview<eT>, eop_neg> >
 
   constexpr eT get_val() const { return eT(-1); }
 
-  coot_inline bool is_alias(const Mat<eT>& X)     const { return (void_ptr(&X)   == void_ptr(&M.m)); }
-  coot_inline bool is_alias(const subview<eT>& X) const { return (void_ptr(&X.m) == void_ptr(&M.m)); }
+  template<typename eT2>
+  coot_inline bool is_alias(const Mat<eT2>& X)     const { return coot::is_alias(X, M); }
+  template<typename eT2>
+  coot_inline bool is_alias(const subview<eT2>& X) const { return coot::is_alias(X, M); }
 
   static constexpr bool do_trans = false;
   static constexpr bool do_times = true;
@@ -592,7 +618,10 @@ struct partial_unwrap< mtOp<eT, T1, mtop_type> >
 
   coot_inline eT get_val() const { return Q.get_val(); }
 
-  constexpr bool is_alias(const Mat<eT>&) const { return false; }
+  template<typename eT2>
+  constexpr bool is_alias(const Mat<eT2>&)     const { return false; }
+  template<typename eT2>
+  constexpr bool is_alias(const subview<eT2>&) const { return false; }
 
   static constexpr bool do_trans = partial_unwrap<T1>::do_trans;
   static constexpr bool do_times = partial_unwrap<T1>::do_times;

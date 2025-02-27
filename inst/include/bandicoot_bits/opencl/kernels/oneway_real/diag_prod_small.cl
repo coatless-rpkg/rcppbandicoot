@@ -16,8 +16,10 @@
 __kernel
 void
 COOT_FN(PREFIX,diag_prod_small)(__global const eT1* in_mem,
+                                const UWORD in_mem_offset,
                                 const UWORD n_rows,
                                 __global eT1* out_mem,
+                                const UWORD out_mem_offset,
                                 __local volatile eT1* aux_mem)
   {
   const UWORD tid = get_local_id(0);
@@ -29,16 +31,16 @@ COOT_FN(PREFIX,diag_prod_small)(__global const eT1* in_mem,
   while (i + get_local_size(0) < n_rows)
     {
     const UWORD index1 = i * n_rows + i;
-    const eT1 v1 = in_mem[index1];
+    const eT1 v1 = in_mem[in_mem_offset + index1];
     const UWORD index2 = (i + get_local_size(0)) * n_rows + (i + get_local_size(0));
-    const eT1 v2 = in_mem[index2];
+    const eT1 v2 = in_mem[in_mem_offset + index2];
     aux_mem[tid] *= v1 * v2;
     i += grid_size;
     }
   if (i < n_rows)
     {
     const UWORD index = i * n_rows + i;
-    const eT1 v = in_mem[index];
+    const eT1 v = in_mem[in_mem_offset + index];
     aux_mem[tid] *= v;
     }
 
@@ -54,6 +56,6 @@ COOT_FN(PREFIX,diag_prod_small)(__global const eT1* in_mem,
 
   if (tid == 0)
     {
-    out_mem[get_group_id(0)] = aux_mem[0];
+    out_mem[out_mem_offset + get_group_id(0)] = aux_mem[0];
     }
   }

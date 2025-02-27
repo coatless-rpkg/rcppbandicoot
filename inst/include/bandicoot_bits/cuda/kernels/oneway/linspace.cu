@@ -14,14 +14,15 @@
 __global__
 void
 COOT_FN(PREFIX,linspace)(eT1* out_mem,
-                        const eT1 start,
-                        const eT1 end,
-                        const eT1 step,
-                        const UWORD num)
+                         const UWORD mem_incr,
+                         const eT1 start,
+                         const eT1 end,
+                         const eT1 step,
+                         const UWORD num)
   {
   UWORD idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < num)
     {
-    out_mem[idx] = (eT1) (start + step * idx);
+    out_mem[idx * mem_incr] = (eT1) (start + step * idx);
     }
   }

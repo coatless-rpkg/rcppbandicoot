@@ -16,7 +16,6 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
-
 #ifndef BANDICOOT_INCLUDES
 #define BANDICOOT_INCLUDES
 
@@ -93,6 +92,7 @@ namespace coot
   #include "bandicoot_bits/promote_type.hpp"
   #include "bandicoot_bits/uint_type.hpp"
   #include "bandicoot_bits/upgrade_val.hpp"
+  #include "bandicoot_bits/next_pow2.hpp"
   #include "bandicoot_bits/restrictors.hpp"
   #include "bandicoot_bits/access.hpp"
   #include "bandicoot_bits/span.hpp"
@@ -141,6 +141,9 @@ namespace coot
     #include "bandicoot_bits/opencl/random_bones.hpp"
     #include "bandicoot_bits/opencl/copy_bones.hpp"
     #include "bandicoot_bits/opencl/generic_reduce_bones.hpp"
+    #include "bandicoot_bits/opencl/generic_reduce_uword_aux_bones.hpp"
+    #include "bandicoot_bits/opencl/shifted_prefix_sum_bones.hpp"
+    #include "bandicoot_bits/opencl/shuffle_bones.hpp"
     #include "bandicoot_bits/opencl/opencl_misc.hpp"
     }
 
@@ -172,17 +175,25 @@ namespace coot
     {
     #include "bandicoot_bits/cuda/runtime_bones.hpp"
     #include "bandicoot_bits/cuda/kernel_src.hpp"
+    #include "bandicoot_bits/cuda/kernel_dims.hpp"
     #include "bandicoot_bits/cuda/error.hpp"
     #include "bandicoot_bits/cuda/type_to_dev_string.hpp"
     #include "bandicoot_bits/cuda/cuda_data_type.hpp"
     #include "bandicoot_bits/cuda/copy_bones.hpp"
     #include "bandicoot_bits/cuda/generic_reduce_bones.hpp"
+    #include "bandicoot_bits/cuda/generic_reduce_uword_aux_bones.hpp"
+    #include "bandicoot_bits/cuda/shifted_prefix_sum_bones.hpp"
+    #include "bandicoot_bits/cuda/shuffle_bones.hpp"
     }
   #endif
 
   #include "bandicoot_bits/coot_rt_bones.hpp"
   #include "bandicoot_bits/coot_init.hpp"
   #include "bandicoot_bits/coot_synchronise.hpp"
+
+  #include "bandicoot_bits/dev_mem_t_operators.hpp"
+  #include "bandicoot_bits/memory_overlaps.hpp"
+  #include "bandicoot_bits/is_alias.hpp"
 
   //
   // class prototypes
@@ -234,6 +245,7 @@ namespace coot
   #include "bandicoot_bits/op_symmat_bones.hpp"
   #include "bandicoot_bits/op_det_bones.hpp"
   #include "bandicoot_bits/op_pinv_bones.hpp"
+  #include "bandicoot_bits/op_shuffle_bones.hpp"
 
   #include "bandicoot_bits/mtop_conv_to_bones.hpp"
   #include "bandicoot_bits/mtop_all_bones.hpp"
@@ -244,6 +256,10 @@ namespace coot
   #include "bandicoot_bits/mtop_find_finite_bones.hpp"
   #include "bandicoot_bits/mtop_find_nonfinite_bones.hpp"
   #include "bandicoot_bits/mtop_find_nan_bones.hpp"
+  #include "bandicoot_bits/mtop_index_min_bones.hpp"
+  #include "bandicoot_bits/mtop_index_max_bones.hpp"
+  #include "bandicoot_bits/mtop_real_bones.hpp"
+  #include "bandicoot_bits/mtop_imag_bones.hpp"
 
   #include "bandicoot_bits/glue_times_bones.hpp"
   #include "bandicoot_bits/glue_cov_bones.hpp"
@@ -358,11 +374,14 @@ namespace coot
 
     namespace opencl
       {
+      #include "bandicoot_bits/opencl/kernel_utils.hpp"
       #include "bandicoot_bits/opencl/runtime_meat.hpp"
       #include "bandicoot_bits/opencl/generic_reduce_meat.hpp"
+      #include "bandicoot_bits/opencl/generic_reduce_uword_aux_meat.hpp"
       #include "bandicoot_bits/opencl/fill.hpp"
       #include "bandicoot_bits/opencl/eop.hpp"
       #include "bandicoot_bits/opencl/mat_val_proxy.hpp"
+      #include "bandicoot_bits/opencl/shifted_prefix_sum_meat.hpp"
       #include "bandicoot_bits/opencl/random_meat.hpp"
       #include "bandicoot_bits/opencl/accu.hpp"
       #include "bandicoot_bits/opencl/chol.hpp"
@@ -378,6 +397,7 @@ namespace coot
       #include "bandicoot_bits/opencl/max_abs.hpp"
       #include "bandicoot_bits/opencl/repmat.hpp"
       #include "bandicoot_bits/opencl/linspace.hpp"
+      #include "bandicoot_bits/opencl/logspace.hpp"
       #include "bandicoot_bits/opencl/trans.hpp"
       #include "bandicoot_bits/opencl/clamp.hpp"
       #include "bandicoot_bits/opencl/norm.hpp"
@@ -404,6 +424,11 @@ namespace coot
       #include "bandicoot_bits/opencl/cross.hpp"
       #include "bandicoot_bits/opencl/rotate_180.hpp"
       #include "bandicoot_bits/opencl/solve.hpp"
+      #include "bandicoot_bits/opencl/approx_equal.hpp"
+      #include "bandicoot_bits/opencl/shuffle_meat.hpp"
+      #include "bandicoot_bits/opencl/index_min.hpp"
+      #include "bandicoot_bits/opencl/index_max.hpp"
+      #include "bandicoot_bits/opencl/extract_cx.hpp"
       }
   #endif
 
@@ -415,9 +440,11 @@ namespace coot
     #include "bandicoot_bits/cuda/runtime_meat.hpp"
     #include "bandicoot_bits/cuda/copy_meat.hpp"
     #include "bandicoot_bits/cuda/generic_reduce_meat.hpp"
+    #include "bandicoot_bits/cuda/generic_reduce_uword_aux_meat.hpp"
     #include "bandicoot_bits/cuda/fill.hpp"
     #include "bandicoot_bits/cuda/eop.hpp"
     #include "bandicoot_bits/cuda/mat_val_proxy.hpp"
+    #include "bandicoot_bits/cuda/shifted_prefix_sum_meat.hpp"
     #include "bandicoot_bits/cuda/random_meat.hpp"
     #include "bandicoot_bits/cuda/accu.hpp"
     #include "bandicoot_bits/cuda/chol.hpp"
@@ -432,6 +459,7 @@ namespace coot
     #include "bandicoot_bits/cuda/max_abs.hpp"
     #include "bandicoot_bits/cuda/repmat.hpp"
     #include "bandicoot_bits/cuda/linspace.hpp"
+    #include "bandicoot_bits/cuda/logspace.hpp"
     #include "bandicoot_bits/cuda/trans.hpp"
     #include "bandicoot_bits/cuda/clamp.hpp"
     #include "bandicoot_bits/cuda/norm.hpp"
@@ -458,6 +486,11 @@ namespace coot
     #include "bandicoot_bits/cuda/cross.hpp"
     #include "bandicoot_bits/cuda/rotate_180.hpp"
     #include "bandicoot_bits/cuda/solve.hpp"
+    #include "bandicoot_bits/cuda/approx_equal.hpp"
+    #include "bandicoot_bits/cuda/shuffle_meat.hpp"
+    #include "bandicoot_bits/cuda/index_min.hpp"
+    #include "bandicoot_bits/cuda/index_max.hpp"
+    #include "bandicoot_bits/cuda/extract_cx.hpp"
     }
   #endif
 
@@ -526,6 +559,7 @@ namespace coot
   #include "bandicoot_bits/fn_resize.hpp"
   #include "bandicoot_bits/fn_reshape.hpp"
   #include "bandicoot_bits/fn_linspace.hpp"
+  #include "bandicoot_bits/fn_logspace.hpp"
   #include "bandicoot_bits/fn_vectorise.hpp"
   #include "bandicoot_bits/fn_clamp.hpp"
   #include "bandicoot_bits/fn_size.hpp"
@@ -555,6 +589,10 @@ namespace coot
   #include "bandicoot_bits/fn_cross.hpp"
   #include "bandicoot_bits/fn_conv.hpp"
   #include "bandicoot_bits/fn_solve.hpp"
+  #include "bandicoot_bits/fn_approx_equal.hpp"
+  #include "bandicoot_bits/fn_shuffle.hpp"
+  #include "bandicoot_bits/fn_index_min.hpp"
+  #include "bandicoot_bits/fn_index_max.hpp"
 
 
   //
@@ -610,6 +648,7 @@ namespace coot
   #include "bandicoot_bits/op_symmat_meat.hpp"
   #include "bandicoot_bits/op_det_meat.hpp"
   #include "bandicoot_bits/op_pinv_meat.hpp"
+  #include "bandicoot_bits/op_shuffle_meat.hpp"
 
   #include "bandicoot_bits/mtop_conv_to_meat.hpp"
   #include "bandicoot_bits/mtop_all_meat.hpp"
@@ -620,6 +659,10 @@ namespace coot
   #include "bandicoot_bits/mtop_find_finite_meat.hpp"
   #include "bandicoot_bits/mtop_find_nonfinite_meat.hpp"
   #include "bandicoot_bits/mtop_find_nan_meat.hpp"
+  #include "bandicoot_bits/mtop_index_min_meat.hpp"
+  #include "bandicoot_bits/mtop_index_max_meat.hpp"
+  #include "bandicoot_bits/mtop_real_meat.hpp"
+  #include "bandicoot_bits/mtop_imag_meat.hpp"
 
   #include "bandicoot_bits/glue_times_meat.hpp"
   #include "bandicoot_bits/glue_cov_meat.hpp"

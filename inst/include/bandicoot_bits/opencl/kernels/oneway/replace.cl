@@ -15,6 +15,7 @@
 __kernel
 void
 COOT_FN(PREFIX,replace)(__global eT1* out,
+                        const UWORD out_offset,
                         const eT1 val_find,
                         const eT1 val_replace,
                         const UWORD N)
@@ -22,7 +23,7 @@ COOT_FN(PREFIX,replace)(__global eT1* out,
   const UWORD i = get_global_id(0);
   if(i < N)
     {
-    const eT1 val = out[i];
-    out[i] = (val == val_find) ? val_replace : val;
+    const eT1 val = out[out_offset + i];
+    out[out_offset + i] = (val == val_find) ? val_replace : val;
     }
   }

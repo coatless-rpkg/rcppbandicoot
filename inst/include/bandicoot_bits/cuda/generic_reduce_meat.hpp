@@ -38,7 +38,7 @@ generic_reduce(const dev_mem_t<eT> mem,
   {
   // Do first pass, hand off to appropriate smaller reduce if needed.
   // The first pass will use the first kernel; subsequent passes use the second kernel.
-  const size_t n_elem_per_thread = std::ceil(n_elem / std::max(1.0, (2 * std::ceil(std::log2(n_elem)))));
+  const size_t n_elem_per_thread = std::ceil(n_elem / std::max(1.0, (2 * std::ceil(std::log2(std::max((double) n_elem, 2.0))))));
   const size_t mtpb = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsPerBlock;
 
   // Compute size of auxiliary memory.
@@ -93,35 +93,35 @@ generic_reduce(const dev_mem_t<eT> mem,
 
 // unpack_args is a metaprogramming utility to recursively iterate over the extra arguments for a kernel
 
-template<size_t i, typename... Args>
+template<size_t i, size_t offset, typename... Args>
 struct
 unpack_args
   {
   inline static void apply(const void** args, const std::tuple<Args...>& args_tuple)
     {
-    args[3 + i] = &std::get<i - 1>(args_tuple);
-    unpack_args<i - 1, Args...>::apply(args, args_tuple);
+    args[offset + i] = &std::get<i - 1>(args_tuple);
+    unpack_args<i - 1, offset, Args...>::apply(args, args_tuple);
     }
   };
 
 
 
-template<typename... Args>
+template<size_t offset, typename... Args>
 struct
-unpack_args<1, Args...>
+unpack_args<1, offset, Args...>
   {
   inline static void apply(const void** args, const std::tuple<Args...>& args_tuple)
     {
     // This is the last iteration of the recursion.
-    args[3] = &std::get<0>(args_tuple);
+    args[offset] = &std::get<0>(args_tuple);
     }
   };
 
 
 
-template<typename... Args>
+template<size_t offset, typename... Args>
 struct
-unpack_args<0, Args...>
+unpack_args<0, offset, Args...>
   {
   inline static void apply(const void** args, const std::tuple<Args...>& args_tuple)
     {
@@ -149,7 +149,7 @@ generic_reduce_inner(const dev_mem_t<eT> mem,
                      dev_mem_t<aux_eT> second_aux_mem)
   {
   const size_t mtpb = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsPerBlock;
-  const size_t max_num_threads = std::ceil(n_elem / std::max(1.0, (2 * std::ceil(std::log2(n_elem)))));
+  const size_t max_num_threads = std::ceil(n_elem / std::max(1.0, (2 * std::ceil(std::log2(std::max((double) n_elem, 2.0))))));
 
   if (max_num_threads <= mtpb)
     {
@@ -173,7 +173,7 @@ generic_reduce_inner(const dev_mem_t<eT> mem,
     args[0] = &mem.cuda_mem_ptr;
     args[1] = &n_elem;
     args[2] = &aux_mem.cuda_mem_ptr;
-    unpack_args<sizeof...(A1), A1...>::apply(args, first_kernel_extra_args);
+    unpack_args<sizeof...(A1), 3, A1...>::apply(args, first_kernel_extra_args);
 
     CUresult result = coot_wrapper(cuLaunchKernel)(
         first_kernel,
@@ -216,14 +216,13 @@ generic_reduce_inner_small(const dev_mem_t<eT> mem,
                            CUfunction& kernel_small, // for 32 threads or fewer
                            const std::tuple<Args...>& kernel_extra_args)
   {
-  // TODO: can this be made more efficient?
-  const uword pow2_num_threads = (uword) std::pow(2.0f, std::ceil(std::log2((float) max_num_threads)));
+  const uword pow2_num_threads = next_pow2(max_num_threads);
 
   const void* args[3 + sizeof...(Args)];
   args[0] = &mem.cuda_mem_ptr;
   args[1] = &n_elem;
   args[2] = &aux_mem.cuda_mem_ptr;
-  unpack_args<sizeof...(Args), Args...>::apply(args, kernel_extra_args);
+  unpack_args<sizeof...(Args), 3, Args...>::apply(args, kernel_extra_args);
 
   CUresult result = coot_wrapper(cuLaunchKernel)(
       pow2_num_threads <= 32 ? kernel_small : kernel, // if we have fewer threads than a single warp, we can use a more optimized version of the kernel

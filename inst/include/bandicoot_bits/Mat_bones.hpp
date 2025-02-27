@@ -191,6 +191,15 @@ class Mat : public Base< eT, Mat<eT> >
   inline void  reshape(const uword new_n_rows, const uword new_n_cols);
   inline void  reshape(const SizeMat& s);
 
+  coot_warn_unused inline eT min() const;
+  coot_warn_unused inline eT max() const;
+
+  coot_warn_unused inline eT min(uword& index_of_min_val) const;
+  coot_warn_unused inline eT max(uword& index_of_max_val) const;
+
+  coot_warn_unused inline eT min(uword& row_of_min_val, uword& col_of_min_val) const;
+  coot_warn_unused inline eT max(uword& row_of_max_val, uword& col_of_max_val) const;
+
   coot_warn_unused inline bool is_vec()    const;
   coot_warn_unused inline bool is_colvec() const;
   coot_warn_unused inline bool is_rowvec() const;
@@ -267,6 +276,12 @@ class Mat : public Base< eT, Mat<eT> >
   inline       subview<eT> tail_cols(const uword N);
   inline const subview<eT> tail_cols(const uword N) const;
 
+  inline void  clear();
+  inline bool  empty() const;
+  inline uword size()  const;
+
+  coot_warn_unused inline eT front() const;
+  coot_warn_unused inline eT back() const;
 
   protected:
 

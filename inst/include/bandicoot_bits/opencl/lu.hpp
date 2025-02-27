@@ -40,11 +40,11 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
 
   if(is_float<eT>::value)
     {
-    status = magma_sgetrf_gpu(n_rows, n_cols, in.cl_mem_ptr, 0, n_rows, ipiv, &info);
+    status = magma_sgetrf_gpu(n_rows, n_cols, in.cl_mem_ptr.ptr, in.cl_mem_ptr.offset, n_rows, ipiv, &info);
     }
   else if (is_double<eT>::value)
     {
-    status = magma_dgetrf_gpu(n_rows, n_cols, in.cl_mem_ptr, 0, n_rows, ipiv, &info);
+    status = magma_dgetrf_gpu(n_rows, n_cols, in.cl_mem_ptr.ptr, in.cl_mem_ptr.offset, n_rows, ipiv, &info);
     }
   else
     {
@@ -102,15 +102,21 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
 
   runtime_t::adapt_uword dev_n_rows(n_rows);
   runtime_t::adapt_uword dev_n_cols(n_cols);
+  runtime_t::adapt_uword dev_L_offset(L.cl_mem_ptr.offset);
+  runtime_t::adapt_uword dev_U_offset(U.cl_mem_ptr.offset);
+  runtime_t::adapt_uword dev_in_offset(in.cl_mem_ptr.offset);
 
-  status2  = coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem), &(L.cl_mem_ptr));
-  status2 |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem), &(U.cl_mem_ptr));
-  status2 |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem), &(in.cl_mem_ptr));
-  status2 |= coot_wrapper(clSetKernelArg)(kernel, 3, dev_n_rows.size, dev_n_rows.addr);
-  status2 |= coot_wrapper(clSetKernelArg)(kernel, 4, dev_n_cols.size, dev_n_cols.addr);
+  status2  = coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),     &(L.cl_mem_ptr.ptr));
+  status2 |= coot_wrapper(clSetKernelArg)(kernel, 1, dev_L_offset.size,  dev_L_offset.addr);
+  status2 |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),     &(U.cl_mem_ptr.ptr));
+  status2 |= coot_wrapper(clSetKernelArg)(kernel, 3, dev_U_offset.size,  dev_U_offset.addr);
+  status2 |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(cl_mem),     &(in.cl_mem_ptr.ptr));
+  status2 |= coot_wrapper(clSetKernelArg)(kernel, 5, dev_in_offset.size, dev_in_offset.addr);
+  status2 |= coot_wrapper(clSetKernelArg)(kernel, 6, dev_n_rows.size,    dev_n_rows.addr);
+  status2 |= coot_wrapper(clSetKernelArg)(kernel, 7, dev_n_cols.size,    dev_n_cols.addr);
   if (!pivoting)
     {
-    status2 |= coot_wrapper(clSetKernelArg)(kernel, 5, sizeof(cl_mem), &(ipiv_gpu.cl_mem_ptr));
+    status2 |= coot_wrapper(clSetKernelArg)(kernel, 8, sizeof(cl_mem), &(ipiv_gpu.cl_mem_ptr.ptr));
     }
 
   if (status2 != CL_SUCCESS)
@@ -133,11 +139,14 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
   // If pivoting was allowed, extract the permutation matrix.
   if (pivoting)
     {
+    runtime_t::adapt_uword dev_P_offset(P.cl_mem_ptr.offset);
+
     kernel = get_rt().cl_rt.get_kernel<eT>(oneway_real_kernel_id::lu_extract_p);
 
-    status2  = coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),    &(P.cl_mem_ptr));
-    status2 |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem),    &(ipiv_gpu.cl_mem_ptr));
-    status2 |= coot_wrapper(clSetKernelArg)(kernel, 2, dev_n_rows.size,   dev_n_rows.addr);
+    status2  = coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),    &(P.cl_mem_ptr.ptr));
+    status2 |= coot_wrapper(clSetKernelArg)(kernel, 1, dev_P_offset.size, dev_P_offset.addr);
+    status2 |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),    &(ipiv_gpu.cl_mem_ptr.ptr));
+    status2 |= coot_wrapper(clSetKernelArg)(kernel, 3, dev_n_rows.size,   dev_n_rows.addr);
 
     if (status2 != CL_SUCCESS)
       {

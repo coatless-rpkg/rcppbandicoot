@@ -15,7 +15,9 @@
 __kernel
 void
 COOT_FN(PREFIX,rel_all_neq_colwise)(__global UWORD* out,
+                                    const UWORD out_offset,
                                     __global const eT1* A,
+                                    const UWORD A_offset,
                                     const eT2 val,
                                     const UWORD A_n_rows,
                                     const UWORD A_n_cols)
@@ -23,7 +25,7 @@ COOT_FN(PREFIX,rel_all_neq_colwise)(__global UWORD* out,
   const UWORD col = get_global_id(0);
   if(col < A_n_cols)
     {
-    __global const eT1* colptr = &(A[ col*A_n_rows ]);
+    __global const eT1* colptr = &(A[ col*A_n_rows + A_offset ]);
     UWORD result = 1;
     #pragma unroll
     for(UWORD i = 0; i < A_n_rows; ++i)
@@ -31,6 +33,6 @@ COOT_FN(PREFIX,rel_all_neq_colwise)(__global UWORD* out,
       const eT2 val1 = (eT2) colptr[i];
       result &= (val1 != val);
       }
-    out[col] = result;
+    out[col + out_offset] = result;
     }
   }

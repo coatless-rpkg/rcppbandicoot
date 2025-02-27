@@ -32,9 +32,16 @@ cross(dev_mem_t<eT2> out, const dev_mem_t<eT1> A, const dev_mem_t<eT1> B)
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem), &(out.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem), &(A.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem), &(B.cl_mem_ptr));
+  runtime_t::adapt_uword out_offset(out.cl_mem_ptr.offset);
+  runtime_t::adapt_uword A_offset(A.cl_mem_ptr.offset);
+  runtime_t::adapt_uword B_offset(B.cl_mem_ptr.offset);
+
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),  &(out.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, out_offset.size, out_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),  &(A.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, A_offset.size,   A_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(cl_mem),  &(B.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, B_offset.size,   B_offset.addr);
 
   const size_t global_work_size = 3;
 

@@ -42,8 +42,8 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
     {
     status = magma_sgetrf_gpu(n_rows,
                               n_rows,
-                              A.cl_mem_ptr,
-                              0,
+                              A.cl_mem_ptr.ptr,
+                              A.cl_mem_ptr.offset,
                               n_rows,
                               ipiv,
                               &info);
@@ -52,8 +52,8 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
     {
     status = magma_dgetrf_gpu(n_rows,
                               n_rows,
-                              A.cl_mem_ptr,
-                              0,
+                              A.cl_mem_ptr.ptr,
+                              A.cl_mem_ptr.offset,
                               n_rows,
                               ipiv,
                               &info);
@@ -88,10 +88,12 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
     status = magma_sgetrs_gpu((trans_A ? MagmaTrans : MagmaNoTrans),
                               n_rows,
                               n_cols,
-                              A.cl_mem_ptr,
+                              A.cl_mem_ptr.ptr,
+                              A.cl_mem_ptr.offset,
                               n_rows,
                               ipiv,
-                              B.cl_mem_ptr,
+                              B.cl_mem_ptr.ptr,
+                              B.cl_mem_ptr.offset,
                               n_rows,
                               &info);
     }
@@ -100,10 +102,12 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
     status = magma_dgetrs_gpu((trans_A ? MagmaTrans : MagmaNoTrans),
                               n_rows,
                               n_cols,
-                              A.cl_mem_ptr,
+                              A.cl_mem_ptr.ptr,
+                              A.cl_mem_ptr.offset,
                               n_rows,
                               ipiv,
-                              B.cl_mem_ptr,
+                              B.cl_mem_ptr.ptr,
+                              B.cl_mem_ptr.offset,
                               n_rows,
                               &info);
     }

@@ -15,8 +15,10 @@
 __kernel
 void
 COOT_FN(PREFIX,rel_any_nonfinite)(__global const eT1* X,
+                                  const UWORD X_offset,
                                   const UWORD n_elem,
                                   __global uint* out,
+                                  const UWORD out_offset,
                                   __local volatile uint* aux_mem,
                                   const eT1 val /* ignored */)
   {
@@ -28,8 +30,8 @@ COOT_FN(PREFIX,rel_any_nonfinite)(__global const eT1* X,
 
   while (i + get_local_size(0) < n_elem)
     {
-    const eT1 val1 = X[i];
-    const eT1 val2 = X[i + get_local_size(0)];
+    const eT1 val1 = X[X_offset + i];
+    const eT1 val2 = X[X_offset + i + get_local_size(0)];
 
     aux_mem[tid] |= isnan(val1);
     aux_mem[tid] |= isnan(val2);
@@ -40,7 +42,7 @@ COOT_FN(PREFIX,rel_any_nonfinite)(__global const eT1* X,
 
   if (i < n_elem && aux_mem[tid] == 0)
     {
-    const eT1 val1 = X[i];
+    const eT1 val1 = X[X_offset + i];
     aux_mem[tid] |= isnan(val1);
     }
   barrier(CLK_LOCAL_MEM_FENCE);
@@ -61,6 +63,6 @@ COOT_FN(PREFIX,rel_any_nonfinite)(__global const eT1* X,
 
   if (tid == 0)
     {
-    out[get_group_id(0)] = aux_mem[0];
+    out[out_offset + get_group_id(0)] = aux_mem[0];
     }
   }

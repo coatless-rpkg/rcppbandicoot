@@ -82,11 +82,11 @@ eig_sym(dev_mem_t<eT> mem, const uword n_rows, const bool eigenvectors, dev_mem_
 
   if (is_float<eT>::value)
     {
-    status = magma_ssyevd_gpu(jobz, MagmaUpper, n_rows, mem.cl_mem_ptr, 0, n_rows, (float*) eigenvalues_cpu, (float*) wA_mem, n_rows, (float*) work_mem, lwork, iwork_mem, liwork, &info);
+    status = magma_ssyevd_gpu(jobz, MagmaUpper, n_rows, mem.cl_mem_ptr.ptr, mem.cl_mem_ptr.offset, n_rows, (float*) eigenvalues_cpu, (float*) wA_mem, n_rows, (float*) work_mem, lwork, iwork_mem, liwork, &info);
     }
   else if(is_double<eT>::value)
     {
-    status = magma_dsyevd_gpu(jobz, MagmaUpper, n_rows, mem.cl_mem_ptr, 0, n_rows, (double*) eigenvalues_cpu, (double*) wA_mem, n_rows, (double*) work_mem, lwork, iwork_mem, liwork, &info);
+    status = magma_dsyevd_gpu(jobz, MagmaUpper, n_rows, mem.cl_mem_ptr.ptr, mem.cl_mem_ptr.offset, n_rows, (double*) eigenvalues_cpu, (double*) wA_mem, n_rows, (double*) work_mem, lwork, iwork_mem, liwork, &info);
     }
   else
     {

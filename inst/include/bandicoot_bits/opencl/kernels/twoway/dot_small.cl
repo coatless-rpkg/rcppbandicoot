@@ -16,7 +16,9 @@ __kernel
 void
 COOT_FN(PREFIX,dot_small)(__global twoway_promoted_eT* out_mem,
                           __global const eT1* A,
+                          const UWORD A_offset,
                           __global const eT2* B,
+                          const UWORD B_offset,
                           const UWORD n_elem,
                           __local volatile twoway_promoted_eT* aux_mem)
   {
@@ -28,13 +30,13 @@ COOT_FN(PREFIX,dot_small)(__global twoway_promoted_eT* out_mem,
 
   while (i + get_local_size(0) < n_elem)
     {
-    aux_mem[tid] += (((twoway_promoted_eT) A[i]) * ((twoway_promoted_eT) B[i])) +
-        (((twoway_promoted_eT) A[i + get_local_size(0)]) * ((twoway_promoted_eT) B[i + get_local_size(0)]));
+    aux_mem[tid] += (((twoway_promoted_eT) A[A_offset + i]) * ((twoway_promoted_eT) B[B_offset + i])) +
+        (((twoway_promoted_eT) A[A_offset + i + get_local_size(0)]) * ((twoway_promoted_eT) B[B_offset + i + get_local_size(0)]));
     i += grid_size;
     }
   if (i < n_elem)
     {
-    aux_mem[tid] += (((twoway_promoted_eT) A[i]) * ((twoway_promoted_eT) B[i]));
+    aux_mem[tid] += (((twoway_promoted_eT) A[A_offset + i]) * ((twoway_promoted_eT) B[B_offset + i]));
     }
 
   for (UWORD s = get_local_size(0) / 2; s > 0; s >>= 1)

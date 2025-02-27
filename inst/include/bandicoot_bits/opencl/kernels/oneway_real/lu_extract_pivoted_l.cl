@@ -16,8 +16,11 @@
 __kernel
 void
 COOT_FN(PREFIX,lu_extract_pivoted_l)(__global eT1* L,
+                                     const UWORD L_offset,
                                      __global eT1* U,
+                                     const UWORD U_offset,
                                      __global const eT1* in,
+                                     const UWORD in_offset,
                                      const UWORD n_rows,
                                      const UWORD n_cols,
                                      __global const UWORD* ipiv)
@@ -40,11 +43,11 @@ COOT_FN(PREFIX,lu_extract_pivoted_l)(__global eT1* L,
 
   if ((row < n_rows) && (col < min_rows_cols))
     {
-    L[L_out_index] = (row > col) ? in[in_index] : ((row == col) ? 1 : 0);
+    L[L_offset + L_out_index] = (row > col) ? in[in_offset + in_index] : ((row == col) ? 1 : 0);
     }
 
   if ((row < min_rows_cols) && (col < n_cols))
     {
-    U[U_out_index] = (row > col) ? 0 : in[in_index];
+    U[U_offset + U_out_index] = (row > col) ? 0 : in[in_offset + in_index];
     }
   }

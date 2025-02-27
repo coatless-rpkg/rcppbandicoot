@@ -34,18 +34,22 @@ repmat(const dev_mem_t<eT1> src, dev_mem_t<eT2> dest, const uword n_rows, const 
   runtime_t::adapt_uword local_copies_per_row(copies_per_row);
   runtime_t::adapt_uword local_copies_per_col(copies_per_col);
   runtime_t::adapt_uword local_new_n_rows(new_n_rows);
+  runtime_t::adapt_uword local_src_offset(src.cl_mem_ptr.offset);
+  runtime_t::adapt_uword local_dest_offset(dest.cl_mem_ptr.offset);
 
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(twoway_kernel_id::repmat);
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),    &(src.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(cl_mem),    &(dest.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, local_n_rows.size, local_n_rows.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, local_n_cols.size, local_n_cols.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 4, local_copies_per_row.size, local_copies_per_row.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 5, local_copies_per_col.size, local_copies_per_col.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 6, local_new_n_rows.size, local_new_n_rows.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),            &(src.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, local_src_offset.size,     local_src_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),            &(dest.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, local_dest_offset.size,    local_dest_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, local_n_rows.size,         local_n_rows.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, local_n_cols.size,         local_n_cols.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 6, local_copies_per_row.size, local_copies_per_row.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 7, local_copies_per_col.size, local_copies_per_col.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 8, local_new_n_rows.size,     local_new_n_rows.addr);
 
   const size_t global_work_size[2] = { size_t(n_rows), size_t(n_cols) };
 

@@ -125,6 +125,10 @@ class mtop_find;
 class mtop_find_finite;
 class mtop_find_nonfinite;
 class mtop_find_nan;
+class mtop_index_min;
+class mtop_index_max;
+class mtop_real;
+class mtop_imag;
 
 class eop_scalar_plus;
 class eop_neg;

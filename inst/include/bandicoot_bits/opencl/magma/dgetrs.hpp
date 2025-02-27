@@ -67,9 +67,11 @@ magma_dgetrs_gpu
   magma_int_t n,
   magma_int_t nrhs,
   magmaDouble_ptr dA,
+  size_t dA_offset,
   magma_int_t ldda,
   magma_int_t *ipiv,
   magmaDouble_ptr dB,
+  size_t dB_offset,
   magma_int_t lddb,
   magma_int_t *info
   )
@@ -130,13 +132,13 @@ magma_dgetrs_gpu
 
     if ( nrhs == 1)
       {
-      magma_dtrsv( MagmaLower, MagmaNoTrans, MagmaUnit,    n, dA, 0, ldda, dB, 0, 1, queue );
-      magma_dtrsv( MagmaUpper, MagmaNoTrans, MagmaNonUnit, n, dA, 0, ldda, dB, 0, 1, queue );
+      magma_dtrsv( MagmaLower, MagmaNoTrans, MagmaUnit,    n, dA, dA_offset, ldda, dB, dB_offset, 1, queue );
+      magma_dtrsv( MagmaUpper, MagmaNoTrans, MagmaNonUnit, n, dA, dA_offset, ldda, dB, dB_offset, 1, queue );
       }
     else
       {
-      magma_dtrsm( MagmaLeft, MagmaLower, MagmaNoTrans, MagmaUnit,    n, nrhs, c_one, dA, 0, ldda, dB, 0, lddb, queue );
-      magma_dtrsm( MagmaLeft, MagmaUpper, MagmaNoTrans, MagmaNonUnit, n, nrhs, c_one, dA, 0, ldda, dB, 0, lddb, queue );
+      magma_dtrsm( MagmaLeft, MagmaLower, MagmaNoTrans, MagmaUnit,    n, nrhs, c_one, dA, dA_offset, ldda, dB, dB_offset, lddb, queue );
+      magma_dtrsm( MagmaLeft, MagmaUpper, MagmaNoTrans, MagmaNonUnit, n, nrhs, c_one, dA, dA_offset, ldda, dB, dB_offset, lddb, queue );
       }
     }
   else
@@ -153,21 +155,21 @@ magma_dgetrs_gpu
     /* Solve A**T * X = B  or  A**H * X = B. */
     if ( nrhs == 1)
       {
-      magma_dtrsv( MagmaUpper, trans, MagmaNonUnit, n, dA, 0, ldda, dB, 0, 1, queue );
-      magma_dtrsv( MagmaLower, trans, MagmaUnit,    n, dA, 0, ldda, dB, 0, 1, queue );
+      magma_dtrsv( MagmaUpper, trans, MagmaNonUnit, n, dA, dA_offset, ldda, dB, dB_offset, 1, queue );
+      magma_dtrsv( MagmaLower, trans, MagmaUnit,    n, dA, dA_offset, ldda, dB, dB_offset, 1, queue );
       }
     else
       {
-      magma_dtrsm( MagmaLeft, MagmaUpper, trans, MagmaNonUnit, n, nrhs, c_one, dA, 0, ldda, dB, 0, lddb, queue );
-      magma_dtrsm( MagmaLeft, MagmaLower, trans, MagmaUnit,    n, nrhs, c_one, dA, 0, ldda, dB, 0, lddb, queue );
+      magma_dtrsm( MagmaLeft, MagmaUpper, trans, MagmaNonUnit, n, nrhs, c_one, dA, dA_offset, ldda, dB, dB_offset, lddb, queue );
+      magma_dtrsm( MagmaLeft, MagmaLower, trans, MagmaUnit,    n, nrhs, c_one, dA, dA_offset, ldda, dB, dB_offset, lddb, queue );
       }
 
     // The MAGMABLAS laswp() implementation does not support applying pivots in reverse order from ipiv, so we use CPU LAPACK instead.
     // TODO: fix MAGMABLAS laswp() implementation!
-    magma_dgetmatrix( n, nrhs, dB, 0, lddb, work, n, queue );
+    magma_dgetmatrix( n, nrhs, dB, dB_offset, lddb, work, n, queue );
     lapack::laswp(nrhs, work, n, i1, i2, ipiv, inc);
     //magmablas_dlaswp( nrhs, dB, 0, lddb, i1, i2, ipiv, inc, queue );
-    magma_dsetmatrix( n, nrhs, work, n, dB, 0, lddb, queue );
+    magma_dsetmatrix( n, nrhs, work, n, dB, dB_offset, lddb, queue );
 
     magma_free_cpu(work);
     }

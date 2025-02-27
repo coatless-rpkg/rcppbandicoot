@@ -15,6 +15,7 @@
 __kernel
 void
 COOT_FN(PREFIX,inplace_xorwow_randu)(__global eT1* mem,
+                                     const UWORD mem_offset,
                                      __global uint_eT1* xorwow_state,
                                      const UWORD n)
   {
@@ -35,7 +36,7 @@ COOT_FN(PREFIX,inplace_xorwow_randu)(__global eT1* mem,
     {
     uint_eT1 t = COOT_FN(xorwow_rng_,uint_eT1)(local_xorwow_state);
     // Now normalize to [0, 1] and compute the output.
-    mem[i] = (eT1) (t / (fp_eT1) COOT_FN(coot_type_max_,uint_eT1)());
+    mem[mem_offset + i] = (eT1) (t / (fp_eT1) COOT_FN(coot_type_max_,uint_eT1)());
     i += num_threads;
     }
 

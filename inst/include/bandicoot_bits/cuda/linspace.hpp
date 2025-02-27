@@ -19,7 +19,7 @@
 template<typename eT>
 inline
 void
-linspace(dev_mem_t<eT> mem, const eT start, const eT end, const uword num)
+linspace(dev_mem_t<eT> mem, const uword mem_incr, const eT start, const eT end, const uword num)
   {
   coot_extra_debug_sigprint();
 
@@ -35,6 +35,7 @@ linspace(dev_mem_t<eT> mem, const eT start, const eT end, const uword num)
 
   void* args[] = {
       &(in_mem->cuda_mem_ptr),
+      (uword*) &mem_incr,
       (eT*) &start,
       (eT*) &end,
       (eT*) &step,

@@ -15,9 +15,9 @@
 // Utility functions for generating random numbers via OpenCL.
 
 template<typename eT>
-inline void init_xorwow_state(cl_mem state, const size_t num_rng_threads, const u64 seed = 0);
+inline void init_xorwow_state(coot_cl_mem state, const size_t num_rng_threads, const u64 seed = 0);
 
-inline void init_philox_state(cl_mem state, const size_t num_rng_threads, const u64 seed = 0);
+inline void init_philox_state(coot_cl_mem state, const size_t num_rng_threads, const u64 seed = 0);
 
 template<typename eT>
 inline void fill_randu(dev_mem_t<eT> dest, const uword n);

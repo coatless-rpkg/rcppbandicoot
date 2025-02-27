@@ -38,42 +38,40 @@ dot(dev_mem_t<eT1> mem1, dev_mem_t<eT2> mem2, const uword n_elem)
 
   // Compute workgroup sizes.  We use CL_KERNEL_WORK_GROUP_SIZE as an upper bound, which
   // depends on the compiled kernel.  I assume that the results for k will be identical to k_small.
-  size_t kernel_wg_size;
-  status = coot_wrapper(clGetKernelWorkGroupInfo)(k, get_rt().cl_rt.get_device(), CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &kernel_wg_size, NULL);
-  coot_check_cl_error(status, "dot()");
+  size_t total_num_threads, local_group_size;
+  reduce_kernel_group_info(k, n_elem, "dot", total_num_threads, local_group_size);
 
   const size_t k1_work_dim       = 1;
   const size_t k1_work_offset    = 0;
-  const uword subgroup_size = get_rt().cl_rt.get_subgroup_size();
-
-  uword total_num_threads = std::ceil(n_elem / std::max(1.0, (2 * std::ceil(std::log2(n_elem)))));
-  uword local_group_size = std::min(kernel_wg_size, total_num_threads);
+  const uword  subgroup_size     = get_rt().cl_rt.get_subgroup_size();
 
   // Create auxiliary memory.
   const uword aux_size = std::ceil((total_num_threads + (local_group_size - 1)) / local_group_size);
   Mat<promoted_eT> aux(aux_size, 1);
-  aux.zeros();
   dev_mem_t<promoted_eT> aux_mem = aux.get_dev_mem(false);
 
   // We'll only run once with the dot kernel, and if this still needs further reduction, we can use accu().
   runtime_t::cq_guard guard;
 
+  runtime_t::adapt_uword mem1_offset(mem1.cl_mem_ptr.offset);
+  runtime_t::adapt_uword mem2_offset(mem2.cl_mem_ptr.offset);
   runtime_t::adapt_uword dev_n_elem(n_elem);
 
   // We need to round total_num_threads up to the next power of 2.  (The kernel assumes this.)
-  const uword pow2_group_size = (uword) std::pow(2.0f, std::ceil(std::log2((float) local_group_size)));
-  const uword pow2_total_num_threads = (total_num_threads % pow2_group_size == 0) ? total_num_threads : ((total_num_threads / pow2_group_size) + 1) * pow2_group_size;
+  const uword pow2_total_num_threads = (total_num_threads % local_group_size == 0) ? total_num_threads : ((total_num_threads / local_group_size) + 1) * local_group_size;
 
   // If the number of threads is less than the subgroup size, we need to use the small kernel.
-  cl_kernel* k_use = (pow2_group_size <= subgroup_size) ? &k_small : &k;
+  cl_kernel* k_use = (local_group_size <= subgroup_size) ? &k_small : &k;
 
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 0, sizeof(cl_mem),                        &(aux_mem.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 1, sizeof(cl_mem),                        &(mem1.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 2, sizeof(cl_mem),                        &(mem2.cl_mem_ptr));
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 3, dev_n_elem.size,                       dev_n_elem.addr);
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 4, sizeof(promoted_eT) * pow2_group_size, NULL);
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 0, sizeof(cl_mem),                         &(aux_mem.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 1, sizeof(cl_mem),                         &(mem1.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 2, mem1_offset.size,                       mem1_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 3, sizeof(cl_mem),                         &(mem2.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 4, mem2_offset.size,                       mem2_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 5, dev_n_elem.size,                        dev_n_elem.addr);
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 6, sizeof(promoted_eT) * local_group_size, NULL);
 
-  status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), *k_use, k1_work_dim, &k1_work_offset, &pow2_total_num_threads, &pow2_group_size, 0, NULL, NULL);
+  status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), *k_use, k1_work_dim, &k1_work_offset, &pow2_total_num_threads, &local_group_size, 0, NULL, NULL);
 
   coot_check_cl_error(status, "dot()");
 

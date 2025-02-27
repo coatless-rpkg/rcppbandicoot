@@ -15,16 +15,19 @@
 __kernel
 void
 COOT_FN(PREFIX,rel_lt_array)(__global UWORD* out,
+                             const UWORD out_offset,
                              __global const eT1* X,
+                             const UWORD X_offset,
                              __global const eT2* Y,
+                             const UWORD Y_offset,
                              const UWORD n_elem)
   {
   const UWORD i = get_global_id(0);
 
   if (i < n_elem)
     {
-    const eT1 val1 = X[i];
-    const eT2 val2 = Y[i];
-    out[i] = (val1 < val2);
+    const eT1 val1 = X[X_offset + i];
+    const eT2 val2 = Y[Y_offset + i];
+    out[out_offset + i] = (val1 < val2);
     }
   }

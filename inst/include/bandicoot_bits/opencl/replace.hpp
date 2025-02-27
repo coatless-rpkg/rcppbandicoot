@@ -29,13 +29,15 @@ replace(dev_mem_t<eT> mem, const uword n_elem, const eT val_find, const eT val_r
 
   runtime_t::cq_guard guard;
   runtime_t::adapt_uword N(n_elem);
+  runtime_t::adapt_uword mem_offset(mem.cl_mem_ptr.offset);
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem), &mem.cl_mem_ptr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, sizeof(eT),     &val_find      );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(eT),     &val_replace   );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, N.size,         N.addr         );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),  &mem.cl_mem_ptr.ptr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, mem_offset.size, mem_offset.addr    );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(eT),      &val_find          );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, sizeof(eT),      &val_replace       );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, N.size,          N.addr             );
 
   size_t work_size = size_t(n_elem);
 

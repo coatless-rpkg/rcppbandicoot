@@ -442,6 +442,168 @@ subview<eT>::eye()
 
 template<typename eT>
 inline
+MatValProxy<eT>
+subview<eT>::operator[](const uword ii)
+  {
+  const uword in_col = ii / n_rows;
+  const uword in_row = ii % n_rows;
+
+  const uword index = (in_col + aux_col1)*m.n_rows + aux_row1 + in_row;
+
+  return MatValProxy<eT>(access::rw(this->m), index);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+subview<eT>::operator[](const uword ii) const
+  {
+  const uword in_col = ii / n_rows;
+  const uword in_row = ii % n_rows;
+
+  const uword index = (in_col + aux_col1)*m.n_rows + aux_row1 + in_row;
+
+  return MatValProxy<eT>::get_val(this->m, index);
+  }
+
+
+
+template<typename eT>
+inline
+MatValProxy<eT>
+subview<eT>::at(const uword ii)
+  {
+  const uword in_col = ii / n_rows;
+  const uword in_row = ii % n_rows;
+
+  const uword index = (in_col + aux_col1)*m.n_rows + aux_row1 + in_row;
+
+  return MatValProxy<eT>(access::rw(this->m), index);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+subview<eT>::at(const uword ii) const
+  {
+  const uword in_col = ii / n_rows;
+  const uword in_row = ii % n_rows;
+
+  const uword index = (in_col + aux_col1)*m.n_rows + aux_row1 + in_row;
+
+  return MatValProxy<eT>::get_val(this->m, index);
+  }
+
+
+
+template<typename eT>
+inline
+MatValProxy<eT>
+subview<eT>::operator()(const uword ii)
+  {
+  coot_debug_check( (ii >= n_elem), "subview::operator(): index out of bounds");
+
+  const uword in_col = ii / n_rows;
+  const uword in_row = ii % n_rows;
+
+  const uword index = (in_col + aux_col1)*m.n_rows + aux_row1 + in_row;
+
+  return MatValProxy<eT>(access::rw(this->m), index);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+subview<eT>::operator()(const uword ii) const
+  {
+  coot_debug_check( (ii >= n_elem), "subview::operator(): index out of bounds");
+
+  const uword in_col = ii / n_rows;
+  const uword in_row = ii % n_rows;
+
+  const uword index = (in_col + aux_col1)*m.n_rows + aux_row1 + in_row;
+
+  return MatValProxy<eT>::get_val(this->m, index);
+  }
+
+
+
+template<typename eT>
+inline
+MatValProxy<eT>
+subview<eT>::at(const uword in_row, const uword in_col)
+  {
+  return MatValProxy<eT>(access::rw(this->m), in_row + aux_row1 + (in_col + aux_col1) * m.n_rows);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+subview<eT>::at(const uword in_row, const uword in_col) const
+  {
+  return MatValProxy<eT>::get_val(this->m, in_row + aux_row1 + (in_col + aux_col1) * m.n_rows);
+  }
+
+
+
+template<typename eT>
+inline
+MatValProxy<eT>
+subview<eT>::operator()(const uword in_row, const uword in_col)
+  {
+  coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols)), "subview::operator(): index out of bounds");
+
+  return MatValProxy<eT>(access::rw(this->m), in_row + aux_row1 + (in_col + aux_col1) * m.n_rows);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+subview<eT>::operator()(const uword in_row, const uword in_col) const
+  {
+  coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols)), "subview::operator(): index out of bounds");
+
+  return MatValProxy<eT>::get_val(this->m, in_row + aux_row1 + (in_col + aux_col1) * m.n_rows);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+subview<eT>::front() const
+  {
+  coot_debug_check( (n_elem == 0), "subview::front(): matrix is empty" );
+
+  return m.at(aux_row1, aux_col1);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+subview<eT>::back() const
+  {
+  coot_debug_check( (n_elem == 0), "subview::back(): matrix is empty" );
+
+  return m.at(aux_row1 + n_rows - 1, aux_col1 + n_cols - 1);
+  }
+
+
+
+template<typename eT>
+inline
 bool
 subview<eT>::check_overlap(const subview<eT>& x) const
   {

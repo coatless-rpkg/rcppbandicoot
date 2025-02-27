@@ -50,21 +50,21 @@ min(dev_mem_t<eT2> dest,
 
   const uword src_offset = src_row_offset + src_col_offset * src_M_n_rows;
 
-  runtime_t::adapt_uword cl_dest_offset(dest_offset);
-  runtime_t::adapt_uword cl_src_offset(src_offset);
+  runtime_t::adapt_uword cl_dest_offset(dest.cl_mem_ptr.offset + dest_offset);
+  runtime_t::adapt_uword cl_src_offset(src.cl_mem_ptr.offset + src_offset);
   runtime_t::adapt_uword cl_n_rows(n_rows);
   runtime_t::adapt_uword cl_n_cols(n_cols);
   runtime_t::adapt_uword cl_dest_mem_incr(dest_mem_incr);
   runtime_t::adapt_uword cl_src_M_n_rows(src_M_n_rows);
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),        &(dest.cl_mem_ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_dest_offset.size,   cl_dest_offset.addr  );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),        &(src.cl_mem_ptr)    );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_src_offset.size,    cl_src_offset.addr   );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_n_rows.size,        cl_n_rows.addr       );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_n_cols.size,        cl_n_cols.addr       );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 6, cl_dest_mem_incr.size, cl_dest_mem_incr.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 7, cl_src_M_n_rows.size,  cl_src_M_n_rows.addr );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),        &(dest.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_dest_offset.size,   cl_dest_offset.addr   );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),        &(src.cl_mem_ptr.ptr) );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_src_offset.size,    cl_src_offset.addr    );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_n_rows.size,        cl_n_rows.addr        );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_n_cols.size,        cl_n_cols.addr        );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 6, cl_dest_mem_incr.size, cl_dest_mem_incr.addr );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 7, cl_src_M_n_rows.size,  cl_src_M_n_rows.addr  );
 
   const size_t k1_work_dim       = 1;
   const size_t k1_work_offset[1] = { 0                                    };

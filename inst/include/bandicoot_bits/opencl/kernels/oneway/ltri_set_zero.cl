@@ -15,6 +15,7 @@
 __kernel
 void
 COOT_FN(PREFIX,ltri_set_zero)(__global eT1* out,
+                              const UWORD out_offset,
                               const UWORD n_rows,
                               const UWORD n_cols)
   {
@@ -23,6 +24,6 @@ COOT_FN(PREFIX,ltri_set_zero)(__global eT1* out,
   const UWORD index = row + n_rows * col;
   if( (row < n_rows) && (col < n_cols) && (row > col) )
     {
-    out[index] = (eT1)(0);
+    out[index + out_offset] = (eT1)(0);
     }
   }

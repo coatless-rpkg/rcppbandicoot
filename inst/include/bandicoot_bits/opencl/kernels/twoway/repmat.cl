@@ -15,7 +15,9 @@
 __kernel
 void
 COOT_FN(PREFIX,repmat)(__global const eT1* in,
+                       const UWORD in_offset,
                        __global eT2* out,
+                       const UWORD out_offset,
                        const UWORD n_rows,
                        const UWORD n_cols,
                        const UWORD copies_per_row,
@@ -25,7 +27,7 @@ COOT_FN(PREFIX,repmat)(__global const eT1* in,
   const UWORD row = get_global_id(0);
   const UWORD col = get_global_id(1);
   const UWORD offset = row + col * n_rows;
-  const eT2 element = (eT2) in[offset];
+  const eT2 element = (eT2) in[in_offset + offset];
   if( (row < n_rows) && (col < n_cols) )
     {
     for (UWORD c_copy = 0; c_copy < copies_per_col; ++c_copy)
@@ -34,7 +36,7 @@ COOT_FN(PREFIX,repmat)(__global const eT1* in,
       for (UWORD r_copy = 0; r_copy < copies_per_row; ++r_copy)
         {
         const UWORD copy_offset = col_offset + (row + n_rows * r_copy);
-        out[copy_offset] = element;
+        out[out_offset + copy_offset] = element;
         }
       }
     }

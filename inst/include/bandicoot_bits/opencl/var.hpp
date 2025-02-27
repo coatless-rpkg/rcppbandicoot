@@ -45,25 +45,25 @@ var(dev_mem_t<eT> dest,
   cl_kernel k = get_rt().cl_rt.get_kernel<eT>((dim == 0) ? oneway_kernel_id::var_colwise : oneway_kernel_id::var_rowwise);
   const uword norm_correction = (norm_type == 0) ? 1 : 0;
 
-  const uword src_offset = src_row_offset + src_col_offset * src_M_n_rows;
+  const uword src_offset = src.cl_mem_ptr.offset + src_row_offset + src_col_offset * src_M_n_rows;
 
   cl_int status = 0;
 
   runtime_t::adapt_uword cl_n_rows(n_rows);
   runtime_t::adapt_uword cl_n_cols(n_cols);
   runtime_t::adapt_uword cl_norm_correction(norm_correction);
-  runtime_t::adapt_uword cl_dest_offset(dest_offset);
+  runtime_t::adapt_uword cl_dest_offset(dest.cl_mem_ptr.offset + dest_offset);
   runtime_t::adapt_uword cl_src_offset(src_offset);
   runtime_t::adapt_uword cl_src_means_offset(src_means_offset);
   runtime_t::adapt_uword cl_dest_mem_incr(dest_mem_incr);
   runtime_t::adapt_uword cl_src_M_n_rows(src_M_n_rows);
   runtime_t::adapt_uword cl_src_means_mem_incr(src_means_mem_incr);
 
-  status |= coot_wrapper(clSetKernelArg)(k,  0, sizeof(cl_mem),             &(dest.cl_mem_ptr));
+  status |= coot_wrapper(clSetKernelArg)(k,  0, sizeof(cl_mem),             &(dest.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(k,  1, cl_dest_offset.size,        cl_dest_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(k,  2, sizeof(cl_mem),             &(src.cl_mem_ptr));
+  status |= coot_wrapper(clSetKernelArg)(k,  2, sizeof(cl_mem),             &(src.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(k,  3, cl_src_offset.size,         cl_src_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(k,  4, sizeof(cl_mem),             &(src_means.cl_mem_ptr));
+  status |= coot_wrapper(clSetKernelArg)(k,  4, sizeof(cl_mem),             &(src_means.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(k,  5, cl_src_means_offset.size,   cl_src_means_offset.addr);
   status |= coot_wrapper(clSetKernelArg)(k,  6, cl_n_rows.size,             cl_n_rows.addr);
   status |= coot_wrapper(clSetKernelArg)(k,  7, cl_n_cols.size,             cl_n_cols.addr);

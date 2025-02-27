@@ -55,7 +55,7 @@ COOT_FN(PREFIX,min_small)(const eT1* in_mem,
       {
       aux_mem[tid] = min(aux_mem[tid], aux_mem[tid + s]);
       }
-  }
+    }
 
   if (tid == 0)
     {

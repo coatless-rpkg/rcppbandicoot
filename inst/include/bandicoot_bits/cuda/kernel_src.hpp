@@ -74,6 +74,13 @@ get_cuda_src_preamble()
   "__device__ inline float  coot_type_max(const float)  { return " STR2(FLT_MAX) "; } \n"
   "__device__ inline double coot_type_max(const double) { return " STR2(DBL_MAX) "; } \n"
   "\n"
+  "__device__ inline bool   coot_isnan(const uint)     { return false;    } \n"
+  "__device__ inline bool   coot_isnan(const int)      { return false;    } \n"
+  "__device__ inline bool   coot_isnan(const size_t)   { return false;    } \n"
+  "__device__ inline bool   coot_isnan(const long)     { return false;    } \n"
+  "__device__ inline bool   coot_isnan(const float x)  { return isnan(x); } \n"
+  "__device__ inline bool   coot_isnan(const double x) { return isnan(x); } \n"
+  "\n"
   "extern \"C\" {\n"
   "\n"
   "extern __shared__ char aux_shared_mem[]; \n" // this may be used in some kernels
@@ -136,8 +143,20 @@ std::string
 get_cuda_zeroway_kernel_src()
   {
   // NOTE: kernel names must match the list in the kernel_id struct
+  //
+  std::vector<std::string> aux_function_filenames = {
+      "absdiff.cu",
+      "philox.cu"
+  };
 
   std::string result = "";
+
+  // First, load any auxiliary functions (e.g. device-specific functions).
+  for (const std::string& filename : aux_function_filenames)
+    {
+    std::string full_filename = "zeroway/" + filename;
+    result += read_file(full_filename);
+    }
 
   // Now, load each file for each kernel.
   for (const std::string& kernel_name : zeroway_kernel_id::get_names())
@@ -161,6 +180,8 @@ get_cuda_oneway_kernel_src()
       "accu_warp_reduce.cu",
       "min_warp_reduce.cu",
       "max_warp_reduce.cu",
+      "index_min_warp_reduce.cu",
+      "index_max_warp_reduce.cu",
       "prod_warp_reduce.cu"
   };
 

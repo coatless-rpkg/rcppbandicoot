@@ -17,6 +17,7 @@ __kernel
 void
 COOT_FN(PREFIX,trace)(__global eT1* out,
                       __global const eT1* A,
+                      const UWORD A_offset,
                       const UWORD n_rows,
                       const UWORD N)
   {
@@ -27,7 +28,7 @@ COOT_FN(PREFIX,trace)(__global eT1* out,
     #pragma unroll
     for(UWORD i=0; i<N; ++i)
       {
-      acc += A[i + i*n_rows];
+      acc += A[A_offset + i + i*n_rows];
       }
     out[0] = acc;
     }

@@ -15,7 +15,9 @@
 __kernel
 void
 COOT_FN(PREFIX,rotate_180)(__global eT1* out,
+                           const UWORD out_offset,
                            __global const eT1* in,
+                           const UWORD in_offset,
                            const UWORD n_rows,
                            const UWORD n_cols)
   {
@@ -24,13 +26,13 @@ COOT_FN(PREFIX,rotate_180)(__global eT1* out,
 
   if( (row < n_rows) && (col < n_cols) )
     {
-    const UWORD in_index = col * n_rows + row;
+    const UWORD in_index = in_offset + col * n_rows + row;
     // out(i, j) = in(n_rows - i - 1, n_cols - j - 1)
     //    or
     // out(n_rows - i - 1, n_cols - j - 1) = in(i, j)
     const UWORD out_row = n_rows - row - 1;
     const UWORD out_col = n_cols - col - 1;
-    const UWORD out_index = out_col * n_rows + out_row;
+    const UWORD out_index = out_offset + out_col * n_rows + out_row;
 
     out[out_index] = in[in_index];
     }

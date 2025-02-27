@@ -39,11 +39,11 @@ det(dev_mem_t<eT> in, const uword n_rows, eT& out_val)
 
   if(is_float<eT>::value)
     {
-    status = magma_sgetrf_gpu(n_rows, n_rows, in.cl_mem_ptr, 0, n_rows, ipiv, &info);
+    status = magma_sgetrf_gpu(n_rows, n_rows, in.cl_mem_ptr.ptr, in.cl_mem_ptr.offset, n_rows, ipiv, &info);
     }
   else if (is_double<eT>::value)
     {
-    status = magma_dgetrf_gpu(n_rows, n_rows, in.cl_mem_ptr, 0, n_rows, ipiv, &info);
+    status = magma_dgetrf_gpu(n_rows, n_rows, in.cl_mem_ptr.ptr, in.cl_mem_ptr.offset, n_rows, ipiv, &info);
     }
   else
     {
