@@ -124,3 +124,13 @@ min
 
   return Glue<T1, T2, glue_min>(X, Y);
   }
+
+
+
+coot_warn_unused
+inline
+uword
+min(const SizeCube& s)
+  {
+  return (std::min)( (std::min)(s.n_rows, s.n_cols), s.n_slices );
+  }

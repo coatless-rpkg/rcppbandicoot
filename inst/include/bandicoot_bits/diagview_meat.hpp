@@ -106,9 +106,9 @@ diagview<eT>::operator+=(const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
                         m.get_dev_mem(false), m.get_dev_mem(false),
                         (eT) val, (eT) 0,
-                        1, n_elem,
-                        mem_offset, 0, m.n_rows + 1,
-                        mem_offset, 0, m.n_rows + 1);
+                        1, n_elem, 1,
+                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols,
+                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols);
   }
 
 
@@ -125,9 +125,9 @@ diagview<eT>::operator-=(const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_minus_scalar_post,
                         m.get_dev_mem(false), m.get_dev_mem(false),
                         (eT) val, (eT) 0,
-                        1, n_elem,
-                        mem_offset, 0, m.n_rows + 1,
-                        mem_offset, 0, m.n_rows + 1);
+                        1, n_elem, 1,
+                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols,
+                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols);
   }
 
 
@@ -144,9 +144,9 @@ diagview<eT>::operator*=(const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
                         m.get_dev_mem(false), m.get_dev_mem(false),
                         (eT) val, (eT) 1,
-                        1, n_elem,
-                        mem_offset, 0, m.n_rows + 1,
-                        mem_offset, 0, m.n_rows + 1);
+                        1, n_elem, 1,
+                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols,
+                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols);
   }
 
 
@@ -163,9 +163,9 @@ diagview<eT>::operator/=(const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
                         m.get_dev_mem(false), m.get_dev_mem(false),
                         (eT) val, (eT) 1,
-                        1, n_elem,
-                        mem_offset, 0, m.n_rows + 1,
-                        mem_offset, 0, m.n_rows + 1);
+                        1, n_elem, 1,
+                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols,
+                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols);
   }
 
 
@@ -186,23 +186,11 @@ diagview<eT>::operator= (const Mat<eT>& o)
     "diagview: given object has incompatible size"
     );
 
-  const bool is_alias = (&o == &t_m);
-
-  if (is_alias)
-    {
-    Mat<eT> tmp(o);
-    coot_rt_t::copy_mat(t_m.get_dev_mem(false), tmp.get_dev_mem(false),
-                        1, n_elem,
-                        mem_offset, 0, t_m.n_rows + 1,
-                        0, 0, 1);
-    }
-  else
-    {
-    coot_rt_t::copy_mat(t_m.get_dev_mem(false), o.get_dev_mem(false),
-                        1, n_elem,
-                        mem_offset, 0, t_m.n_rows + 1,
-                        0, 0, 1);
-    }
+  alias_wrapper<diagview<eT>, Mat<eT>> W(*this, o);
+  coot_rt_t::copy_mat(W.get_dev_mem(false), o.get_dev_mem(false),
+                      1, n_elem,
+                      W.get_row_offset(), 0, W.get_incr(),
+                      0, 0, 1);
   }
 
 
@@ -222,25 +210,12 @@ diagview<eT>::operator= (const subview<eT>& o)
     "diagview: given object has incompatible size"
     );
 
-  const bool is_alias = (&o.m == &t_m);
-
-  if (is_alias)
-    {
-    const bool is_vector = (o.n_rows == 1 || o.n_cols == 1);
-
-    Mat<eT> tmp(o);
-    coot_rt_t::copy_mat(t_m.get_dev_mem(false), tmp.get_dev_mem(false),
-                        1, n_elem,
-                        mem_offset, 0, t_m.n_rows + 1,
-                        0, 0, is_vector ? 1 : (tmp.n_rows + 1));
-    }
-  else
-    {
-    coot_rt_t::copy_mat(t_m.get_dev_mem(false), o.m.get_dev_mem(false),
-                        1, n_elem,
-                        mem_offset, 0, t_m.n_rows + 1,
-                        o.aux_row1, o.aux_col1, o.m.n_rows + 1);
-    }
+  const bool is_vector = (o.n_rows == 1 || o.n_cols == 1);
+  alias_wrapper<diagview<eT>, subview<eT>> W(*this, o);
+  coot_rt_t::copy_mat(W.get_dev_mem(false), o.m.get_dev_mem(false),
+                      1, n_elem,
+                      W.get_row_offset(), 0, W.get_incr(),
+                      o.aux_row1, o.aux_col1, is_vector ? 1 : o.m.n_rows + 1);
   }
 
 

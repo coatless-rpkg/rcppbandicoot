@@ -37,6 +37,9 @@ template<typename eT> class subview_col;
 template<typename eT> class subview_row;
 template<typename eT> class subview_cube;
 
+template<typename parent, unsigned int mode>              class subview_each1;
+template<typename parent, unsigned int mode, typename TB> class subview_each2;
+
 template<typename eT> class diagview;
 
 
@@ -65,13 +68,17 @@ template<typename out_eT, typename T1, typename T2, typename mtglue_type> class 
 
 template<                 typename eT, typename gen_type> class  GenCube;
 
-template<                 typename T1, typename  op_type> class   OpCube;
-template<                 typename T1, typename eop_type> class  eOpCube;
+template<                 typename T1, typename   op_type> class   OpCube;
+template<                 typename T1, typename  eop_type> class  eOpCube;
+template<typename out_eT, typename T1, typename mtop_type> class mtOpCube;
 
 template<                 typename T1, typename T2, typename  glue_type> class   GlueCube;
 template<                 typename T1, typename T2, typename eglue_type> class  eGlueCube;
 
+template<                 typename T1, typename op_type> class CubeToMatOp;
+
 template<typename T1> class SizeProxy;
+template<typename T1> class SizeProxyCube;
 
 
 struct coot_vec_indicator {};
@@ -107,6 +114,9 @@ class op_sort_vec;
 class op_det;
 class op_symmat;
 class op_pinv;
+
+class op_row_as_mat;
+class op_col_as_mat;
 
 class mtop_conv_to;
 class mtop_all;

@@ -27,42 +27,22 @@ op_strans::apply(Mat<out_eT>& out, const Op<T1, op_strans>& in)
 
   const unwrap<T1> U(in.m);
 
-  if(U.is_alias(out))
-    {
-    // TODO: inplace transpose?
-    Mat<out_eT> tmp;
-    op_strans::apply_noalias(tmp, U.M);
-    out.steal_mem(tmp);
-    }
-  else
-    {
-    op_strans::apply_noalias(out, U.M);
-    }
-  }
+  alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type> W(out, U.M);
+  W.use.set_size(U.M.n_cols, U.M.n_rows);
 
-
-
-template<typename out_eT, typename in_eT>
-inline
-void
-op_strans::apply_noalias(Mat<out_eT>& out, const Mat<in_eT>& A)
-  {
-  coot_extra_debug_sigprint();
-
-  out.set_size(A.n_cols, A.n_rows);
-
-  if (A.n_cols == 1 || A.n_rows == 1)
+  if (U.M.n_cols == 1 || U.M.n_rows == 1)
     {
     // Simply copying the data is sufficient.
-    coot_rt_t::copy_mat(out.get_dev_mem(false), A.get_dev_mem(false),
+    coot_rt_t::copy_mat(W.get_dev_mem(false), U.get_dev_mem(false),
                         // logically treat both as vectors
-                        out.n_elem, 1,
-                        0, 0, out.n_elem,
-                        0, 0, A.n_elem);
+                        W.use.n_elem, 1,
+                        0, 0, W.use.n_elem,
+                        0, 0, U.M.n_elem);
     }
   else
     {
-    coot_rt_t::strans(out.get_dev_mem(false), A.get_dev_mem(false), A.n_rows, A.n_cols);
+    // TODO: subview arguments
+    coot_rt_t::strans(W.get_dev_mem(false), U.get_dev_mem(false), U.M.n_rows, U.M.n_cols);
     }
   }
 

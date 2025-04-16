@@ -22,15 +22,17 @@ class MatValProxy
   {
   private:
 
-  coot_aligned Mat<eT>& M;
-  coot_aligned uword    index;
+  coot_aligned dev_mem_t<eT> dev_mem;
+  coot_aligned uword         index;
 
   public:
 
   coot_inline MatValProxy(Mat<eT>& in_M, const uword in_index);
-  coot_inline operator eT();
+  coot_inline MatValProxy(Cube<eT>& in_M, const uword in_index);
+  coot_inline operator eT() const;
 
   static inline eT get_val(const Mat<eT>& in_M, const uword in_index);
+  static inline eT get_val(const Cube<eT>& in_M, const uword in_index);
 
   inline void operator= (const MatValProxy<eT>& in_val);
   inline void operator+=(const MatValProxy<eT>& in_val);

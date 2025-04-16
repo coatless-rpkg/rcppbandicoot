@@ -194,6 +194,7 @@ namespace coot
   #include "bandicoot_bits/dev_mem_t_operators.hpp"
   #include "bandicoot_bits/memory_overlaps.hpp"
   #include "bandicoot_bits/is_alias.hpp"
+  #include "bandicoot_bits/alias_wrapper.hpp"
 
   //
   // class prototypes
@@ -201,14 +202,19 @@ namespace coot
   #include "bandicoot_bits/cond_rel_bones.hpp"
 
   #include "bandicoot_bits/Base_bones.hpp"
+  #include "bandicoot_bits/BaseCube_bones.hpp"
 
   #include "bandicoot_bits/MatValProxy_bones.hpp"
   #include "bandicoot_bits/Mat_bones.hpp"
   #include "bandicoot_bits/Row_bones.hpp"
   #include "bandicoot_bits/Col_bones.hpp"
   #include "bandicoot_bits/SizeMat_bones.hpp"
+  #include "bandicoot_bits/SizeCube_bones.hpp"
   #include "bandicoot_bits/subview_bones.hpp"
   #include "bandicoot_bits/diagview_bones.hpp"
+  #include "bandicoot_bits/subview_each_bones.hpp"
+  #include "bandicoot_bits/Cube_bones.hpp"
+  #include "bandicoot_bits/subview_cube_bones.hpp"
 
   #include "bandicoot_bits/eOp_bones.hpp"
   #include "bandicoot_bits/eGlue_bones.hpp"
@@ -218,6 +224,11 @@ namespace coot
   #include "bandicoot_bits/Op_bones.hpp"
   #include "bandicoot_bits/Glue_bones.hpp"
   #include "bandicoot_bits/mtGlue_bones.hpp"
+  #include "bandicoot_bits/eOpCube_bones.hpp"
+  #include "bandicoot_bits/mtOpCube_bones.hpp"
+  #include "bandicoot_bits/eGlueCube_bones.hpp"
+  #include "bandicoot_bits/mtGlueCube_bones.hpp"
+  #include "bandicoot_bits/CubeToMatOp_bones.hpp"
   #include "bandicoot_bits/coot_rng_bones.hpp"
 
   #include "bandicoot_bits/op_sum_bones.hpp"
@@ -246,6 +257,8 @@ namespace coot
   #include "bandicoot_bits/op_det_bones.hpp"
   #include "bandicoot_bits/op_pinv_bones.hpp"
   #include "bandicoot_bits/op_shuffle_bones.hpp"
+  #include "bandicoot_bits/op_row_as_mat_bones.hpp"
+  #include "bandicoot_bits/op_col_as_mat_bones.hpp"
 
   #include "bandicoot_bits/mtop_conv_to_bones.hpp"
   #include "bandicoot_bits/mtop_all_bones.hpp"
@@ -395,9 +408,10 @@ namespace coot
       #include "bandicoot_bits/opencl/min.hpp"
       #include "bandicoot_bits/opencl/max.hpp"
       #include "bandicoot_bits/opencl/max_abs.hpp"
-      #include "bandicoot_bits/opencl/repmat.hpp"
+      #include "bandicoot_bits/opencl/broadcast.hpp"
       #include "bandicoot_bits/opencl/linspace.hpp"
       #include "bandicoot_bits/opencl/logspace.hpp"
+      #include "bandicoot_bits/opencl/regspace.hpp"
       #include "bandicoot_bits/opencl/trans.hpp"
       #include "bandicoot_bits/opencl/clamp.hpp"
       #include "bandicoot_bits/opencl/norm.hpp"
@@ -457,9 +471,10 @@ namespace coot
     #include "bandicoot_bits/cuda/min.hpp"
     #include "bandicoot_bits/cuda/max.hpp"
     #include "bandicoot_bits/cuda/max_abs.hpp"
-    #include "bandicoot_bits/cuda/repmat.hpp"
+    #include "bandicoot_bits/cuda/broadcast.hpp"
     #include "bandicoot_bits/cuda/linspace.hpp"
     #include "bandicoot_bits/cuda/logspace.hpp"
+    #include "bandicoot_bits/cuda/regspace.hpp"
     #include "bandicoot_bits/cuda/trans.hpp"
     #include "bandicoot_bits/cuda/clamp.hpp"
     #include "bandicoot_bits/cuda/norm.hpp"
@@ -500,9 +515,11 @@ namespace coot
   // classes that underlay metaprogramming
 
   #include "bandicoot_bits/unwrap.hpp"
+  #include "bandicoot_bits/unwrap_cube.hpp"
   #include "bandicoot_bits/no_conv_unwrap.hpp"
   #include "bandicoot_bits/special_cor_cov_unwrap.hpp"
   #include "bandicoot_bits/SizeProxy.hpp"
+  #include "bandicoot_bits/SizeProxyCube.hpp"
   #include "bandicoot_bits/strip.hpp"
   #include "bandicoot_bits/extract_subview.hpp"
   #include "bandicoot_bits/copy_alias.hpp"
@@ -528,6 +545,12 @@ namespace coot
   #include "bandicoot_bits/operator_div.hpp"
   #include "bandicoot_bits/operator_relational.hpp"
   #include "bandicoot_bits/operator_ostream.hpp"
+
+  #include "bandicoot_bits/operator_cube_times.hpp"
+  #include "bandicoot_bits/operator_cube_plus.hpp"
+  #include "bandicoot_bits/operator_cube_minus.hpp"
+  #include "bandicoot_bits/operator_cube_schur.hpp"
+  #include "bandicoot_bits/operator_cube_div.hpp"
 
 
 
@@ -560,6 +583,7 @@ namespace coot
   #include "bandicoot_bits/fn_reshape.hpp"
   #include "bandicoot_bits/fn_linspace.hpp"
   #include "bandicoot_bits/fn_logspace.hpp"
+  #include "bandicoot_bits/fn_regspace.hpp"
   #include "bandicoot_bits/fn_vectorise.hpp"
   #include "bandicoot_bits/fn_clamp.hpp"
   #include "bandicoot_bits/fn_size.hpp"
@@ -604,14 +628,19 @@ namespace coot
   #include "bandicoot_bits/cond_rel_meat.hpp"
 
   #include "bandicoot_bits/Base_meat.hpp"
+  #include "bandicoot_bits/BaseCube_meat.hpp"
 
   #include "bandicoot_bits/MatValProxy_meat.hpp"
   #include "bandicoot_bits/Mat_meat.hpp"
   #include "bandicoot_bits/Row_meat.hpp"
   #include "bandicoot_bits/Col_meat.hpp"
   #include "bandicoot_bits/SizeMat_meat.hpp"
+  #include "bandicoot_bits/SizeCube_meat.hpp"
   #include "bandicoot_bits/subview_meat.hpp"
   #include "bandicoot_bits/diagview_meat.hpp"
+  #include "bandicoot_bits/subview_each_meat.hpp"
+  #include "bandicoot_bits/Cube_meat.hpp"
+  #include "bandicoot_bits/subview_cube_meat.hpp"
 
   #include "bandicoot_bits/eOp_meat.hpp"
   #include "bandicoot_bits/eGlue_meat.hpp"
@@ -621,6 +650,11 @@ namespace coot
   #include "bandicoot_bits/Op_meat.hpp"
   #include "bandicoot_bits/Glue_meat.hpp"
   #include "bandicoot_bits/mtGlue_meat.hpp"
+  #include "bandicoot_bits/eOpCube_meat.hpp"
+  #include "bandicoot_bits/mtOpCube_meat.hpp"
+  #include "bandicoot_bits/eGlueCube_meat.hpp"
+  #include "bandicoot_bits/mtGlueCube_meat.hpp"
+  #include "bandicoot_bits/CubeToMatOp_meat.hpp"
   #include "bandicoot_bits/coot_rng_meat.hpp"
 
   #include "bandicoot_bits/op_sum_meat.hpp"
@@ -649,6 +683,8 @@ namespace coot
   #include "bandicoot_bits/op_det_meat.hpp"
   #include "bandicoot_bits/op_pinv_meat.hpp"
   #include "bandicoot_bits/op_shuffle_meat.hpp"
+  #include "bandicoot_bits/op_row_as_mat_meat.hpp"
+  #include "bandicoot_bits/op_col_as_mat_meat.hpp"
 
   #include "bandicoot_bits/mtop_conv_to_meat.hpp"
   #include "bandicoot_bits/mtop_all_meat.hpp"

@@ -52,37 +52,22 @@ glue_join_rows::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_join_rows>& glue
     return;
     }
 
-  if (is_alias(out, U1.M) || is_alias(out, U2.M))
-    {
-    Mat<out_eT> tmp(new_n_rows, new_n_cols);
-    coot_rt_t::join_rows(tmp.get_dev_mem(false),
-                         U1.get_dev_mem(false), A_n_rows, A_n_cols,
-                         U2.get_dev_mem(false), B_n_rows, B_n_cols,
-                         U1.get_dev_mem(false), 0, 0, /* ignored */
-                         U1.get_dev_mem(false), 0, 0, /* ignored */
-                         // subview arguments
-                         0, 0, new_n_rows,
-                         U1.get_row_offset(), U1.get_col_offset(), U1.get_M_n_rows(),
-                         U2.get_row_offset(), U2.get_col_offset(), U2.get_M_n_rows(),
-                         0, 0, 1, /* ignored */
-                         0, 0, 1 /* ignored */);
-    out.steal_mem(tmp);
-    }
-  else
-    {
-    out.set_size(new_n_rows, new_n_cols);
-    coot_rt_t::join_rows(out.get_dev_mem(false),
-                         U1.get_dev_mem(false), A_n_rows, A_n_cols,
-                         U2.get_dev_mem(false), B_n_rows, B_n_cols,
-                         U1.get_dev_mem(false), 0, 0, /* ignored */
-                         U1.get_dev_mem(false), 0, 0, /* ignored */
-                         // subview arguments
-                         0, 0, new_n_rows,
-                         U1.get_row_offset(), U1.get_col_offset(), U1.get_M_n_rows(),
-                         U2.get_row_offset(), U2.get_col_offset(), U2.get_M_n_rows(),
-                         0, 0, 1, /* ignored */
-                         0, 0, 1 /* ignored */);
-    }
+  // We can't have the output be an alias of the input.
+  typedef typename no_conv_unwrap<T1>::stored_type UT1;
+  typedef typename no_conv_unwrap<T2>::stored_type UT2;
+  alias_wrapper<Mat<out_eT>, UT1, UT2> W(out, U1.M, U2.M);
+  W.use.set_size(new_n_rows, new_n_cols);
+  coot_rt_t::join_rows(W.get_dev_mem(false),
+                       U1.get_dev_mem(false), A_n_rows, A_n_cols,
+                       U2.get_dev_mem(false), B_n_rows, B_n_cols,
+                       U1.get_dev_mem(false), 0, 0, /* ignored */
+                       U1.get_dev_mem(false), 0, 0, /* ignored */
+                       // subview arguments
+                       W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
+                       U1.get_row_offset(), U1.get_col_offset(), U1.get_M_n_rows(),
+                       U2.get_row_offset(), U2.get_col_offset(), U2.get_M_n_rows(),
+                       0, 0, 1, /* ignored */
+                       0, 0, 1 /* ignored */);
   }
 
 
@@ -120,38 +105,23 @@ glue_join_rows::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const
     return;
     }
 
-  // Ensure that the output is not an alias.
-  if (is_alias(out, U1.M) || is_alias(out, U2.M) || is_alias(out, U3.M))
-    {
-    Mat<eT> tmp(out_n_rows, out_n_cols);
-    coot_rt_t::join_rows(tmp.get_dev_mem(false),
-                         U1.get_dev_mem(false), A_n_rows, A_n_cols,
-                         U2.get_dev_mem(false), B_n_rows, B_n_cols,
-                         U3.get_dev_mem(false), C_n_rows, C_n_cols,
-                         U1.get_dev_mem(false), 0, 0, /* ignored */
-                         // subview arguments
-                         0, 0, out_n_rows,
-                         U1.get_row_offset(), U1.get_col_offset(), U1.get_M_n_rows(),
-                         U2.get_row_offset(), U2.get_col_offset(), U2.get_M_n_rows(),
-                         U3.get_row_offset(), U3.get_col_offset(), U3.get_M_n_rows(),
-                         0, 0, 1 /* ignored */);
-    out.steal_mem(tmp);
-    }
-  else
-    {
-    out.set_size(out_n_rows, out_n_cols);
-    coot_rt_t::join_rows(out.get_dev_mem(false),
-                         U1.get_dev_mem(false), A_n_rows, A_n_cols,
-                         U2.get_dev_mem(false), B_n_rows, B_n_cols,
-                         U3.get_dev_mem(false), C_n_rows, C_n_cols,
-                         U1.get_dev_mem(false), 0, 0, /* ignored */
-                         // subview arguments
-                         0, 0, out_n_rows,
-                         U1.get_row_offset(), U1.get_col_offset(), U1.get_M_n_rows(),
-                         U2.get_row_offset(), U2.get_col_offset(), U2.get_M_n_rows(),
-                         U3.get_row_offset(), U3.get_col_offset(), U3.get_M_n_rows(),
-                         0, 0, 1 /* ignored */);
-    }
+  // We can't have the output be an alias of the input.
+  typedef typename no_conv_unwrap<T1>::stored_type UT1;
+  typedef typename no_conv_unwrap<T2>::stored_type UT2;
+  typedef typename no_conv_unwrap<T3>::stored_type UT3;
+  alias_wrapper<Mat<eT>, UT1, UT2, UT3> W(out, U1.M, U2.M, U3.M);
+  W.use.set_size(out_n_rows, out_n_cols);
+  coot_rt_t::join_rows(W.get_dev_mem(false),
+                       U1.get_dev_mem(false), A_n_rows, A_n_cols,
+                       U2.get_dev_mem(false), B_n_rows, B_n_cols,
+                       U3.get_dev_mem(false), C_n_rows, C_n_cols,
+                       U1.get_dev_mem(false), 0, 0, /* ignored */
+                       // subview arguments
+                       W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
+                       U1.get_row_offset(), U1.get_col_offset(), U1.get_M_n_rows(),
+                       U2.get_row_offset(), U2.get_col_offset(), U2.get_M_n_rows(),
+                       U3.get_row_offset(), U3.get_col_offset(), U3.get_M_n_rows(),
+                       0, 0, 1 /* ignored */);
   }
 
 
@@ -193,38 +163,24 @@ glue_join_rows::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const
     return;
     }
 
-  // Ensure that the output is not an alias.
-  if (is_alias(out, U1.M) || is_alias(out, U2.M) || is_alias(out, U3.M) || is_alias(out, U4.M))
-    {
-    Mat<eT> tmp(out_n_rows, out_n_cols);
-    coot_rt_t::join_rows(tmp.get_dev_mem(false),
-                         U1.get_dev_mem(false), A_n_rows, A_n_cols,
-                         U2.get_dev_mem(false), B_n_rows, B_n_cols,
-                         U3.get_dev_mem(false), C_n_rows, C_n_cols,
-                         U4.get_dev_mem(false), D_n_rows, D_n_cols,
-                         // subview arguments
-                         0, 0, out_n_rows,
-                         U1.get_row_offset(), U1.get_col_offset(), U1.get_M_n_rows(),
-                         U2.get_row_offset(), U2.get_col_offset(), U2.get_M_n_rows(),
-                         U3.get_row_offset(), U3.get_col_offset(), U3.get_M_n_rows(),
-                         U4.get_row_offset(), U4.get_col_offset(), U4.get_M_n_rows());
-    out.steal_mem(tmp);
-    }
-  else
-    {
-    out.set_size(out_n_rows, out_n_cols);
-    coot_rt_t::join_rows(out.get_dev_mem(false),
-                         U1.get_dev_mem(false), A_n_rows, A_n_cols,
-                         U2.get_dev_mem(false), B_n_rows, B_n_cols,
-                         U3.get_dev_mem(false), C_n_rows, C_n_cols,
-                         U4.get_dev_mem(false), D_n_rows, D_n_cols,
-                         // subview arguments
-                         0, 0, out_n_rows,
-                         U1.get_row_offset(), U1.get_col_offset(), U1.get_M_n_rows(),
-                         U2.get_row_offset(), U2.get_col_offset(), U2.get_M_n_rows(),
-                         U3.get_row_offset(), U3.get_col_offset(), U3.get_M_n_rows(),
-                         U4.get_row_offset(), U4.get_col_offset(), U4.get_M_n_rows());
-    }
+  // We can't have the output be an alias of an input.
+  typedef typename no_conv_unwrap<T1>::stored_type UT1;
+  typedef typename no_conv_unwrap<T2>::stored_type UT2;
+  typedef typename no_conv_unwrap<T3>::stored_type UT3;
+  typedef typename no_conv_unwrap<T4>::stored_type UT4;
+  alias_wrapper<Mat<eT>, UT1, UT2, UT3, UT4> W(out, U1.M, U2.M, U3.M, U4.M);
+  W.use.set_size(out_n_rows, out_n_cols);
+  coot_rt_t::join_rows(W.get_dev_mem(false),
+                       U1.get_dev_mem(false), A_n_rows, A_n_cols,
+                       U2.get_dev_mem(false), B_n_rows, B_n_cols,
+                       U3.get_dev_mem(false), C_n_rows, C_n_cols,
+                       U4.get_dev_mem(false), D_n_rows, D_n_cols,
+                       // subview arguments
+                       W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
+                       U1.get_row_offset(), U1.get_col_offset(), U1.get_M_n_rows(),
+                       U2.get_row_offset(), U2.get_col_offset(), U2.get_M_n_rows(),
+                       U3.get_row_offset(), U3.get_col_offset(), U3.get_M_n_rows(),
+                       U4.get_row_offset(), U4.get_col_offset(), U4.get_M_n_rows());
   }
 
 

@@ -34,9 +34,38 @@ operator<< (std::ostream& o, const Base<eT, T1>& X)
 
 
 
+template<typename eT, typename T1>
+inline
+std::ostream&
+operator<< (std::ostream& o, const BaseCube<eT, T1>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  const unwrap_cube<T1> tmp(X.get_ref());
+
+  coot_ostream::print(o, tmp.M, true);
+
+  return o;
+  }
+
+
+
 inline
 std::ostream&
 operator<< (std::ostream& o, const SizeMat& S)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_ostream::print(o, S);
+
+  return o;
+  }
+
+
+
+inline
+std::ostream&
+operator<< (std::ostream& o, const SizeCube& S)
   {
   coot_extra_debug_sigprint();
 

@@ -54,9 +54,9 @@ median(dev_mem_t<eT2> dest,
       eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
                  dest, dest,
                  eT2(2), eT2(1),
-                 1, n_cols,
-                 dest_offset, 0, dest_mem_incr,
-                 dest_offset, 0, dest_mem_incr);
+                 1, n_cols, 1,
+                 dest_offset, 0, 0, dest_mem_incr, n_cols,
+                 dest_offset, 0, 0, dest_mem_incr, n_cols);
       }
     else
       {
@@ -87,9 +87,9 @@ median(dev_mem_t<eT2> dest,
                  dest, dest,
                  eT2(2), eT2(1),
                  // logically treat as column vector so dest_mem_incr can be used
-                 1, n_rows,
-                 dest_offset, 0, dest_mem_incr,
-                 dest_offset, 0, dest_mem_incr);
+                 1, n_rows, 1,
+                 dest_offset, 0, 0, dest_mem_incr, n_rows,
+                 dest_offset, 0, 0, dest_mem_incr, n_rows);
       }
     else
       {

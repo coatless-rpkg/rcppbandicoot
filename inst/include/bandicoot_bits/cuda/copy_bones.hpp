@@ -53,7 +53,7 @@ copy_mat(dev_mem_t<eT> dest,
 
 
 
-/*
+/**
  * Copy source memory to the destination, changing types.
  */
 template<typename eT2, typename eT1>
@@ -69,3 +69,27 @@ copy_mat(dev_mem_t<eT2> dest,
          const uword src_row_offset,
          const uword src_col_offset,
          const uword src_M_n_rows);
+
+/**
+ * Copy source memory to the destination, changing types.
+ */
+template<typename eT2, typename eT1>
+inline
+void
+copy_cube(dev_mem_t<eT2> dest,
+          const dev_mem_t<eT1> src,
+          // logical size of cube
+          const uword n_rows,
+          const uword n_cols,
+          const uword n_slices,
+          // offsets for subviews
+          const uword dest_row_offset,
+          const uword dest_col_offset,
+          const uword dest_slice_offset,
+          const uword dest_M_n_rows,
+          const uword dest_M_n_cols,
+          const uword src_row_offset,
+          const uword src_col_offset,
+          const uword src_slice_offset,
+          const uword src_M_n_rows,
+          const uword src_M_n_cols);

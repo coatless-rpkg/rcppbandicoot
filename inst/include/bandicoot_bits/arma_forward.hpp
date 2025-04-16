@@ -34,6 +34,18 @@ namespace arma
   template<typename eT>
   class Row;
 
+  template<typename base, typename derived>
+  class BaseCube;
+
+  template<typename eT>
+  class Cube;
+
+  template<typename base, typename derived>
+  class SpBase;
+
+  template<typename eT>
+  class SpMat;
+
   template<typename T1>
   struct conv_to;
 

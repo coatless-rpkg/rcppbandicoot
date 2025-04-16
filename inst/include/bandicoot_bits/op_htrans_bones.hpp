@@ -24,10 +24,6 @@ class op_htrans
   template<typename out_eT, typename T1>
   inline static void apply(Mat<out_eT>& out, const Op<T1, op_htrans>& in);
 
-  template<typename out_eT, typename in_eT>
-  inline static void apply_noalias(Mat<out_eT>& out,
-                                   const Mat<in_eT>& A);
-
   template<typename T1> inline static uword compute_n_rows(const Op<T1, op_htrans>& op, const uword in_n_rows, const uword in_n_cols);
   template<typename T1> inline static uword compute_n_cols(const Op<T1, op_htrans>& op, const uword in_n_rows, const uword in_n_cols);
   };
@@ -41,11 +37,6 @@ class op_htrans2 // scalar * X.t()
 
   template<typename out_eT, typename T1>
   inline static void apply(Mat<out_eT>& out, const Op<T1, op_htrans2>& in);
-
-  template<typename out_eT, typename in_eT>
-  inline static void apply_noalias(Mat<out_eT>& out,
-                                   const Mat<in_eT>& A,
-                                   const out_eT val);
 
   template<typename T1> inline static uword compute_n_rows(const Op<T1, op_htrans2>& op, const uword in_n_rows, const uword in_n_cols);
   template<typename T1> inline static uword compute_n_cols(const Op<T1, op_htrans2>& op, const uword in_n_rows, const uword in_n_cols);

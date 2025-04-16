@@ -73,3 +73,35 @@ randn(const SizeMat& s, const distr_param& param = distr_param(), const typename
 
   return randn<T>(s.n_rows, s.n_cols, param);
   }
+
+
+
+template<typename T>
+coot_warn_unused
+inline
+T
+randn(const uword n_rows, const uword n_cols, const uword n_slices, const distr_param& param = distr_param(), const typename coot_Cube_only<T>::result* junk = nullptr)
+  {
+  coot_extra_debug_sigprint();
+  coot_ignore(junk);
+
+  T out(n_rows, n_cols, n_slices, fill::none);
+
+  coot_rng::fill_randn(out.get_dev_mem(false), out.n_elem, param);
+
+  return out;
+  }
+
+
+
+template<typename T>
+coot_warn_unused
+inline
+T
+randn(const SizeCube& s, const distr_param& param = distr_param(), const typename coot_Cube_only<T>::result* junk = nullptr)
+  {
+  coot_extra_debug_sigprint();
+  coot_ignore(junk);
+
+  return randn<T>(s.n_rows, s.n_cols, s.n_slices, param);
+  }

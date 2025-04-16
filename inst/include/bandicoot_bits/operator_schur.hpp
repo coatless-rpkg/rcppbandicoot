@@ -65,3 +65,67 @@ operator%
 
   return eGlue<T1, T2, glue_mixed_schur>( X, Y );
   }
+
+
+
+template<typename parent, unsigned int mode, typename T2>
+inline
+Mat<typename parent::elem_type>
+operator%
+  (
+  const subview_each1<parent,mode>&          X,
+  const Base<typename parent::elem_type,T2>& Y
+  )
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each1_aux::operator_schur(X, Y.get_ref());
+  }
+
+
+
+template<typename T1, typename parent, unsigned int mode>
+coot_inline
+Mat<typename parent::elem_type>
+operator%
+  (
+  const Base<typename parent::elem_type,T1>& X,
+  const subview_each1<parent,mode>&          Y
+  )
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each1_aux::operator_schur(Y, X.get_ref());  // NOTE: swapped order
+  }
+
+
+
+template<typename parent, unsigned int mode, typename TB, typename T2>
+inline
+Mat<typename parent::elem_type>
+operator%
+  (
+  const subview_each2<parent,mode,TB>&       X,
+  const Base<typename parent::elem_type,T2>& Y
+  )
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each2_aux::operator_schur(X, Y.get_ref());
+  }
+
+
+
+template<typename T1, typename parent, unsigned int mode, typename TB>
+coot_inline
+Mat<typename parent::elem_type>
+operator%
+  (
+  const Base<typename parent::elem_type,T1>& X,
+  const subview_each2<parent,mode,TB>&       Y
+  )
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each2_aux::operator_schur(Y, X.get_ref());  // NOTE: swapped order
+  }

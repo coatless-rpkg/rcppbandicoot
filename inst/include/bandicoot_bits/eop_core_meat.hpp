@@ -98,9 +98,9 @@ eop_core<eop_type>::apply(Mat<eT>& out, const eOp<T1, eop_type>& x)
 
     coot_rt_t::eop_scalar(kernel_num, out_dev_mem, A_dev_mem,
                           aux_in, aux_out,
-                          out.n_rows, out.n_cols,
-                          0, 0, out.get_n_rows(),
-                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+                          out.n_rows, out.n_cols, 1,
+                          0, 0, 0, out.n_rows, out.n_cols,
+                          U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), out.n_cols);
     }
   else
     {
@@ -111,9 +111,9 @@ eop_core<eop_type>::apply(Mat<eT>& out, const eOp<T1, eop_type>& x)
 
     coot_rt_t::eop_scalar(kernel_num, out_dev_mem, A_dev_mem,
                           (typename T1::elem_type) aux_in, aux_out,
-                          out.n_rows, out.n_cols,
-                          0, 0, out.n_rows,
-                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+                          out.n_rows, out.n_cols, 1,
+                          0, 0, 0, out.n_rows, out.n_cols,
+                          U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), U.M.n_cols);
     }
   }
 
@@ -148,14 +148,14 @@ eop_core<eop_type>::apply(Mat<eT>& out, const eOp<mtOp<eT, eOp<T2, eop_type>, mt
     Mat<in_eT> tmp(U.M.n_rows, U.M.n_cols);
     coot_rt_t::eop_scalar(kernel_num, tmp.get_dev_mem(), A_dev_mem,
                           aux_in, in_eT(0),
-                          tmp.n_rows, tmp.n_cols,
-                          0, 0, tmp.n_rows,
-                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+                          tmp.n_rows, tmp.n_cols, 1,
+                          0, 0, 0, tmp.n_rows, tmp.n_cols,
+                          U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), U.M.n_cols);
     coot_rt_t::eop_scalar(kernel_num, out_dev_mem, tmp.get_dev_mem(),
                           in_eT(0), aux_out,
-                          out.n_rows, out.n_cols,
-                          0, 0, out.n_rows,
-                          0, 0, tmp.n_rows);
+                          out.n_rows, out.n_cols, 1,
+                          0, 0, 0, out.n_rows, out.n_cols,
+                          0, 0, 0, tmp.n_rows, tmp.n_cols);
 
     return;
     }
@@ -163,9 +163,9 @@ eop_core<eop_type>::apply(Mat<eT>& out, const eOp<mtOp<eT, eOp<T2, eop_type>, mt
     {
     coot_rt_t::eop_scalar(kernel_num, out_dev_mem, A_dev_mem,
                           aux_in, aux_out,
-                          out.n_rows, out.n_cols,
-                          0, 0, out.n_rows,
-                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+                          out.n_rows, out.n_cols, 1,
+                          0, 0, 0, out.n_rows, out.n_cols,
+                          U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), U.M.n_cols);
     }
   }
 
@@ -233,6 +233,206 @@ eop_core<eop_type>::apply_inplace_div(Mat<eT>& out, const eOp<T1, eop_type>& x)
   coot_debug_assert_same_size(out.n_rows, out.n_cols, x.get_n_rows(), x.get_n_cols(), "element-wise division");
 
   const Mat<eT> tmp(x);
+
+  out /= tmp;
+  }
+
+
+
+//
+// cubes
+
+
+
+template<typename eop_type>
+template<typename eT, typename T1>
+inline
+void
+eop_core<eop_type>::apply(Cube<eT>& out, const eOpCube<T1, eop_type>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  // The strategy we use here is much more heavily documented for the case of Mats.
+  // We reuse that strategy here.
+
+  // Convenience typedef.
+  typedef typename no_conv_unwrap_cube<T1>::stored_type::elem_type in_eT;
+
+  typedef get_default<eop_type> get_default_type;
+
+  in_eT aux_in  = get_default_type::template val<in_eT>();
+     eT aux_out = get_default_type::template val<   eT>();
+  bool force_conv_unwrap = false; // This will only be true if we have case 3.
+
+  // Whether to do the conversion before or after the operation.  This only applies for a few kernel types.
+  bool conv_after_op = false;
+
+  if (is_same_type<eT, typename T1::elem_type>::no)
+    {
+    // This is case 1 or 3.  In both cases we set aux_in to x.aux, but if it is case 3 we must also set force_conv_unwrap.
+    aux_in = x.aux;
+    conv_after_op = true;
+
+    if (is_same_type<in_eT, typename T1::elem_type>::no)
+      {
+      // This is case 3.
+      force_conv_unwrap = true;
+      aux_in = x.aux;
+      }
+    }
+  else
+    {
+    // This is case 2 or 5.  In both cases, we set `aux_out` to x.aux.
+    aux_out = x.aux;
+    }
+
+  const twoway_kernel_id::enum_id kernel_num = conv_after_op ? eop_type::kernel_conv_post : eop_type::kernel_conv_pre;
+
+  dev_mem_t<eT>    out_dev_mem = out.get_dev_mem(false);
+
+  if (!force_conv_unwrap)
+    {
+    const no_conv_unwrap_cube<typename SizeProxyCube<T1>::stored_type> U(x.m.Q);
+
+    dev_mem_t<in_eT> A_dev_mem = U.get_dev_mem(false);
+
+    coot_rt_t::eop_scalar(kernel_num, out_dev_mem, A_dev_mem,
+                          aux_in, aux_out,
+                          out.n_rows, out.n_cols, out.n_slices,
+                          0, 0, 0, out.n_rows, out.n_cols,
+                          U.get_row_offset(), U.get_col_offset(), U.get_slice_offset(), U.get_M_n_rows(), U.get_M_n_cols());
+    }
+  else
+    {
+    // We have to perform any conversion before this level.
+    const unwrap_cube<typename SizeProxyCube<T1>::stored_type> U(x.m.Q);
+
+    dev_mem_t<typename T1::elem_type> A_dev_mem = U.get_dev_mem(false);
+
+    coot_rt_t::eop_scalar(kernel_num, out_dev_mem, A_dev_mem,
+                          (typename T1::elem_type) aux_in, aux_out,
+                          out.n_rows, out.n_cols, out.n_slices,
+                          0, 0, 0, out.n_rows, out.n_cols,
+                          U.get_row_offset(), U.get_col_offset(), U.get_slice_offset(), U.get_M_n_rows(), U.get_M_n_cols());
+    }
+  }
+
+
+
+// This specialization is for case 4 (described above).
+template<typename eop_type>
+template<typename eT, typename T2>
+inline
+void
+eop_core<eop_type>::apply(Cube<eT>& out, const eOpCube<mtOpCube<eT, eOpCube<T2, eop_type>, mtop_conv_to>, eop_type>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  typedef typename T2::elem_type in_eT;
+
+  in_eT aux_in  = X.m.Q.q.aux;
+     eT aux_out = X.aux;
+
+  // Pretend that we're doing the conversion after the operation.
+  const twoway_kernel_id::enum_id kernel_num = eop_type::kernel_conv_post;
+
+  const unwrap_cube<T2> U(X.m.Q.q.m.Q);
+
+  dev_mem_t<eT>    out_dev_mem = out.get_dev_mem(false);
+  dev_mem_t<in_eT>   A_dev_mem = U.get_dev_mem(false);
+
+  // There are a couple exceptions of operations where we actually *can't* chain them together (because the kernels
+  // themselves can't support it).
+  if (!eop_type::is_chainable)
+    {
+    Mat<in_eT> tmp(out.n_rows, out.n_cols, out.n_slices);
+    coot_rt_t::eop_scalar(kernel_num, tmp.get_dev_mem(), A_dev_mem,
+                          aux_in, in_eT(0),
+                          out.n_rows, out.n_cols, out.n_slices,
+                          0, 0, 0, out.n_rows, out.n_cols,
+                          U.get_row_offset(), U.get_col_offset(), U.get_slice_offset(), U.get_M_n_rows(), U.get_M_n_cols());
+    coot_rt_t::eop_scalar(kernel_num, out_dev_mem, tmp.get_dev_mem(),
+                          in_eT(0), aux_out,
+                          out.n_rows, out.n_cols, out.n_slices,
+                          0, 0, 0, out.n_rows, out.n_cols,
+                          0, 0, 0, out.n_rows, out.n_cols);
+
+    return;
+    }
+  else
+    {
+    coot_rt_t::eop_scalar(kernel_num, out_dev_mem, A_dev_mem,
+                          aux_in, aux_out,
+                          out.n_rows, out.n_cols, out.n_slices,
+                          0, 0, 0, out.n_rows, out.n_cols,
+                          U.get_row_offset(), U.get_col_offset(), U.get_slice_offset(), U.get_M_n_rows(), U.get_M_n_cols());
+    }
+  }
+
+
+
+template<typename eop_type>
+template<typename eT, typename T1>
+inline
+void
+eop_core<eop_type>::apply_inplace_plus(Cube<eT>& out, const eOpCube<T1, eop_type>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_debug_assert_same_size(out.n_rows, out.n_cols, out.n_slices, x.get_n_rows(), x.get_n_cols(), x.get_n_slices(), "addition");
+
+  const Cube<eT> tmp(x);
+
+  out += tmp;
+  }
+
+
+
+template<typename eop_type>
+template<typename eT, typename T1>
+inline
+void
+eop_core<eop_type>::apply_inplace_minus(Cube<eT>& out, const eOpCube<T1, eop_type>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_debug_assert_same_size(out.n_rows, out.n_cols, out.n_slices, x.get_n_rows(), x.get_n_cols(), x.get_n_slices(), "subtraction");
+
+  const Cube<eT> tmp(x);
+
+  out -= tmp;
+  }
+
+
+
+template<typename eop_type>
+template<typename eT, typename T1>
+inline
+void
+eop_core<eop_type>::apply_inplace_schur(Cube<eT>& out, const eOpCube<T1, eop_type>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_debug_assert_same_size(out.n_rows, out.n_cols, out.n_slices, x.get_n_rows(), x.get_n_cols(), x.get_n_slices(), "element-wise multiplication");
+
+  const Cube<eT> tmp(x);
+
+  out %= tmp;
+  }
+
+
+
+template<typename eop_type>
+template<typename eT, typename T1>
+inline
+void
+eop_core<eop_type>::apply_inplace_div(Cube<eT>& out, const eOpCube<T1, eop_type>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_debug_assert_same_size(out.n_rows, out.n_cols, out.n_slices, x.get_n_rows(), x.get_n_cols(), x.get_n_slices(), "element-wise division");
+
+  const Cube<eT> tmp(x);
 
   out /= tmp;
   }

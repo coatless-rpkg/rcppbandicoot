@@ -16,79 +16,66 @@
 
 
 
+// This unspecialized version is used for matrices, rows, columns, and cubes.
+template<typename T1>
+struct alias_details
+  {
+  static coot_inline dev_mem_t<typename T1::elem_type> get_dev_mem(const T1& M) { return M.get_dev_mem(false); }
+  static constexpr   uword                             get_offset(const T1& M)  { return 0; }
+  static coot_inline uword                             get_n_elem(const T1& M)  { return M.n_elem; }
+  };
+
+
+
+template<typename eT>
+struct alias_details< subview<eT> >
+  {
+  static coot_inline dev_mem_t<eT>                     get_dev_mem(const subview<eT>& M) { return M.m.get_dev_mem(false); }
+  static coot_inline uword                             get_offset(const subview<eT>& M)  { return M.aux_row1 + M.aux_col1 * M.m.n_rows; }
+  static coot_inline uword                             get_n_elem(const subview<eT>& M)  { return M.n_rows + M.n_cols * M.m.n_rows; }
+  };
+
+
+
+template<typename eT>
+struct alias_details< diagview<eT> >
+  {
+  static coot_inline dev_mem_t<eT>                     get_dev_mem(const diagview<eT>& M) { return M.m.get_dev_mem(false); }
+  static coot_inline uword                             get_offset(const diagview<eT>& M)  { return M.mem_offset; }
+  static coot_inline uword                             get_n_elem(const diagview<eT>& M)  { return M.n_rows * (M.m.n_rows + 1); }
+  };
+
+
+
+template<typename eT>
+struct alias_details< Cube<eT> >
+  {
+  static coot_inline dev_mem_t<eT>                     get_dev_mem(const Cube<eT>& M) { return M.get_dev_mem(false); }
+  static coot_inline uword                             get_offset(const Cube<eT>& M)  { return 0; }
+  static coot_inline uword                             get_n_elem(const Cube<eT>& M)  { return M.n_elem; }
+  };
+
+
+
+template<typename eT>
+struct alias_details< subview_cube<eT> >
+  {
+  static coot_inline dev_mem_t<eT>                     get_dev_mem(const subview_cube<eT>& M) { return M.m.get_dev_mem(false); }
+  static coot_inline uword                             get_offset(const subview_cube<eT>& M)  { return M.aux_row1 + M.aux_col1 * M.m.n_rows + M.aux_slice1 * M.m.n_rows * M.m.n_cols; }
+  static coot_inline uword                             get_n_elem(const subview_cube<eT>& M)  { return M.n_rows + M.n_cols * M.m.n_rows + M.n_slices * M.m.n_rows * M.m.n_cols; }
+  };
+
+
+
 template<typename T1, typename T2>
 inline
-typename enable_if2< is_Mat<T1>::value && is_Mat<T2>::value, bool >::result
+bool
 is_alias(const T1& A, const T2& B)
   {
-  // Shortcut if the objects are the same.
-  if (((void*) &A) == ((void*) &B))
-    {
-    return true;
-    }
-
-  return mem_overlaps(A.get_dev_mem(false),
-                      0,
-                      A.n_elem,
-                      B.get_dev_mem(false),
-                      0,
-                      B.n_elem);
-  }
-
-
-
-template<typename T1, typename eT2>
-inline
-typename enable_if2< is_Mat<T1>::value, bool >::result
-is_alias(const T1& A, const subview<eT2>& B)
-  {
-  const uword B_m_n_elem = B.n_rows + B.n_cols * B.m.n_rows;
-
-  return mem_overlaps(A.get_dev_mem(false),
-                      0,
-                      A.n_elem,
-                      B.m.get_dev_mem(false),
-                      B.aux_row1 + B.aux_col1 + B.m.n_rows,
-                      B_m_n_elem);
-  }
-
-
-
-template<typename eT1, typename T2>
-inline
-typename enable_if2< is_Mat<T2>::value, bool >::result
-is_alias(const subview<eT1>& A, const T2& B)
-  {
-  const uword A_m_n_elem = A.n_rows + A.n_cols * A.m.n_rows;
-
-  return mem_overlaps(A.m.get_dev_mem(false),
-                      A.aux_row1 + A.aux_col1 * A.m.n_rows,
-                      A_m_n_elem,
-                      B.get_dev_mem(false),
-                      0,
-                      B.n_elem);
-  }
-
-
-
-template<typename eT1, typename eT2>
-inline
-bool
-is_alias(const subview<eT1>& A, const subview<eT2>& B)
-  {
-  // Shortcut if the objects are the same.
-  if (((void*) &A) == ((void*) &B))
-    {
-    return true;
-    }
-
-  const uword A_m_n_elem = A.n_rows + A.n_cols * A.m.n_rows;
-  const uword B_m_n_elem = B.n_rows + B.n_cols * B.m.n_rows;
-
-  return mem_overlaps(A.m.get_dev_mem(false),
-                      A.aux_row1 + A.aux_col1 * A.m.n_rows,
-                      A_m_n_elem,
-                      B.m.get_dev_mem(false),
-                      B.aux_row1 + B.aux_col1 + B.m.n_rows,
-                      B_m_n_elem);
+  return mem_overlaps(alias_details<T1>::get_dev_mem(A),
+                      alias_details<T1>::get_offset(A),
+                      alias_details<T1>::get_n_elem(A),
+                      alias_details<T2>::get_dev_mem(B),
+                      alias_details<T2>::get_offset(B),
+                      alias_details<T2>::get_n_elem(B));
   }

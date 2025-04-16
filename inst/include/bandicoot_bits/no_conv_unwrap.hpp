@@ -35,3 +35,21 @@ struct no_conv_unwrap< mtOp<out_eT, T1, mtop_conv_to> > : public unwrap<T1>
   // If we got a conversion operation, we only unwrap the inner operation and avoid the conversion.
   no_conv_unwrap(const mtOp<out_eT, T1, mtop_conv_to>& x) : unwrap<T1>(x.q) { }
   };
+
+
+
+template<typename T1>
+struct no_conv_unwrap_cube : public unwrap_cube<T1>
+  {
+  // By default we simply unwrap as normal.
+  no_conv_unwrap_cube(const T1& x) : unwrap_cube<T1>(x) { }
+  };
+
+
+
+template<typename out_eT, typename T1>
+struct no_conv_unwrap_cube< mtOpCube<out_eT, T1, mtop_conv_to> > : public unwrap_cube<T1>
+  {
+  // If we got a conversion operation, we onyl unrwap the inner operation and avoid the conversion.
+  no_conv_unwrap_cube(const mtOpCube<out_eT, T1, mtop_conv_to>& x) : unwrap_cube<T1>(x.q) { }
+  };

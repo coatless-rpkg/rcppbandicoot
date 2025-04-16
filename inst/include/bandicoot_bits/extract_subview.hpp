@@ -47,3 +47,31 @@ struct extract_subview<Mat<eT>>
 
   const Mat<eT>& M;
   };
+
+
+
+template<typename T1>
+struct extract_subcube
+  {
+  explicit inline extract_subcube(const T1& in)
+    : M(in)
+    {
+    coot_extra_debug_sigprint();
+    }
+
+  Cube<typename T1::elem_type> M;
+  };
+
+
+
+template<typename eT>
+struct extract_subcube<Cube<eT>>
+  {
+  explicit inline extract_subcube(const Cube<eT>& in)
+    : M(in)
+    {
+    coot_extra_debug_sigprint();
+    }
+
+  const Cube<eT>& M;
+  };

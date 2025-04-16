@@ -178,9 +178,9 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const 
     eop_scalar(twoway_kernel_id::equ_array_mod_scalar,
                u32_dest, u32_dest,
                (u32) range + 1, (u32) range + 1,
-               n, 1,
-               0, 0, n,
-               0, 0, n);
+               n, 1, 1,
+               0, 0, 0, n, 1,
+               0, 0, 0, n, 1);
     }
 
   // Now cast it to the correct type, if needed.
@@ -196,9 +196,9 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const 
     eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
                dest, dest,
                (eT) lo, (eT) 0,
-               n, 1,
-               0, 0, n,
-               0, 0, n);
+               n, 1, 1,
+               0, 0, 0, n, 1,
+               0, 0, 0, n, 1);
     }
   }
 
@@ -231,9 +231,9 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const 
     eop_scalar(twoway_kernel_id::equ_array_mod_scalar,
                u64_dest, u64_dest,
                (u64) range + 1, (u64) range + 1,
-               n, 1,
-               0, 0, n,
-               0, 0, n);
+               n, 1, 1,
+               0, 0, 0, n, 1,
+               0, 0, 0, n, 1);
     }
 
   // Now cast it to the correct type, if needed.
@@ -249,8 +249,8 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const 
     eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
                dest, dest,
                (eT) lo, (eT) 0,
-               n, 1,
-               0, 0, n,
-               0, 0, n);
+               n, 1, 1,
+               0, 0, 0, n, 1,
+               0, 0, 0, n, 1);
     }
   }

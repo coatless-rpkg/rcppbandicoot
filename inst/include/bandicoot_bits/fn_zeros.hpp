@@ -29,15 +29,14 @@ zeros(const uword n_rows, const uword n_cols, const typename coot_Mat_Col_Row_on
 
   if (is_Col<T>::value)
     {
-    coot_debug_check( (n_cols != 1), "eye(): incompatible size" );
+    coot_debug_check( (n_cols != 1), "zeros(): incompatible size" );
     }
   else if (is_Row<T>::value)
     {
-    coot_debug_check( (n_rows != 1), "eye(): incompatible size" );
+    coot_debug_check( (n_rows != 1), "zeros(): incompatible size" );
     }
 
-  T out(n_rows, n_cols);
-  out.zeros();
+  T out(n_rows, n_cols, fill::zeros);
   return out;
   }
 
@@ -55,8 +54,7 @@ zeros(const uword n_elem, const typename coot_Mat_Col_Row_only<T>::result* junk 
   const uword n_rows = (is_Row<T>::value) ? uword(1) : n_elem;
   const uword n_cols = (is_Row<T>::value) ? n_elem   : uword(1);
 
-  T out(n_rows, n_cols);
-  out.zeros();
+  T out(n_rows, n_cols, fill::zeros);
   return out;
   }
 
@@ -72,4 +70,33 @@ zeros(const SizeMat& s, const typename coot_Mat_Col_Row_only<T>::result* junk = 
   coot_ignore(junk);
 
   return zeros<T>(s.n_rows, s.n_cols);
+  }
+
+
+
+template<typename T>
+coot_warn_unused
+inline
+T
+zeros(const uword n_rows, const uword n_cols, const uword n_slices, const typename coot_Cube_only<T>::result* junk = nullptr)
+  {
+  coot_extra_debug_sigprint();
+  coot_ignore(junk);
+
+  T out(n_rows, n_cols, n_slices, fill::zeros);
+  return out;
+  }
+
+
+
+template<typename T>
+coot_warn_unused
+inline
+T
+zeros(const SizeCube& s, const typename coot_Cube_only<T>::result* junk = nullptr)
+  {
+  coot_extra_debug_sigprint();
+  coot_ignore(junk);
+
+  return zeros<T>(s.n_rows, s.n_cols, s.n_slices);
   }
