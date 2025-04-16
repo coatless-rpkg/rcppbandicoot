@@ -29,16 +29,8 @@ mtop_index_min::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_index_min>& in
 
   const unwrap<T1> U(in.q);
 
-  if (U.is_alias(out) == false)
-    {
-    mtop_index_min::apply_noalias(out, U.M, dim);
-    }
-  else
-    {
-    Mat<uword> tmp;
-    mtop_index_min::apply_noalias(tmp, U.M, dim);
-    out.steal_mem(tmp);
-    }
+  alias_wrapper<Mat<uword>, typename unwrap<T1>::stored_type> W(out, in.q);
+  mtop_index_min::apply_noalias(W.use, U.M, dim);
   }
 
 
@@ -128,12 +120,27 @@ mtop_index_min::compute_n_cols(const mtOp<uword, T1, mtop_index_min>& op, const 
 template<typename T1>
 inline
 uword
-mtop_index_min::apply_direct(const T1& in)
+mtop_index_min::apply_direct(const Base<typename T1::elem_type, T1>& in)
   {
   coot_extra_debug_sigprint();
 
-  const unwrap<T1> U(in);
+  const unwrap<T1> U(in.get_ref());
   const Mat<typename T1::elem_type>& A = U.M;
+
+  return coot_rt_t::index_min_vec(A.get_dev_mem(false), A.n_elem);
+  }
+
+
+
+template<typename T1>
+inline
+uword
+mtop_index_min::apply_direct(const BaseCube<typename T1::elem_type, T1>& in)
+  {
+  coot_extra_debug_sigprint();
+
+  const unwrap_cube<T1> U(in.get_ref());
+  const Cube<typename T1::elem_type>& A = U.M;
 
   return coot_rt_t::index_min_vec(A.get_dev_mem(false), A.n_elem);
   }

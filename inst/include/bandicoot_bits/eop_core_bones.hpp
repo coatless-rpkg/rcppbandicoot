@@ -36,7 +36,14 @@ class eop_core
 
   // cubes
 
-  // TODO
+  template<typename eT, typename T1> inline static void apply              (Cube<eT>& out, const eOpCube<T1, eop_type>& x);
+
+  template<typename eT, typename T2> inline static void apply              (Cube<eT>& out, const eOpCube<mtOpCube<eT, eOpCube<T2, eop_type>, mtop_conv_to>, eop_type>& X);
+
+  template<typename eT, typename T1> inline static void apply_inplace_plus (Cube<eT>& out, const eOpCube<T1, eop_type>& x);
+  template<typename eT, typename T1> inline static void apply_inplace_minus(Cube<eT>& out, const eOpCube<T1, eop_type>& x);
+  template<typename eT, typename T1> inline static void apply_inplace_schur(Cube<eT>& out, const eOpCube<T1, eop_type>& x);
+  template<typename eT, typename T1> inline static void apply_inplace_div  (Cube<eT>& out, const eOpCube<T1, eop_type>& x);
   };
 
 

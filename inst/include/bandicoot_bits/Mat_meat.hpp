@@ -234,7 +234,7 @@ Mat<eT>::Mat(const arma::Mat<eT>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -294,6 +294,22 @@ Mat<eT>::operator arma::Mat<eT> () const
 
 template<typename eT>
 inline
+Mat<eT>::Mat(const char junk, dev_mem_t<eT> aux_dev_mem, const uword in_n_rows, const uword in_n_cols)
+  : n_rows    (in_n_rows)
+  , n_cols    (in_n_cols)
+  , n_elem    (in_n_rows * in_n_cols)  // TODO: need to check whether the result fits
+  , vec_state (0)
+  , mem_state (3) // fixed memory size
+  , dev_mem(aux_dev_mem)
+  {
+  coot_extra_debug_sigprint_this(this);
+  coot_ignore(junk);
+  }
+
+
+
+template<typename eT>
+inline
 void
 Mat<eT>::cleanup()
   {
@@ -322,17 +338,19 @@ Mat<eT>::init(const uword new_n_rows, const uword new_n_cols)
   uword in_n_rows = new_n_rows;
   uword in_n_cols = new_n_cols;
 
-  // TODO: add handling of mem_state == 1  (ie. if memory is external...)
-
   // ensure that n_elem can hold the result of (n_rows * n_cols)
   coot_debug_check( ((double(new_n_rows)*double(new_n_cols)) > double(std::numeric_limits<uword>::max())), "Mat::init(): requested size is too large" );
 
+  const uword t_mem_state = mem_state;
   const uword t_vec_state = vec_state;
 
   bool err_state = false;
   char* err_msg = nullptr;
+  const char* error_message_1 = "Mat::init(): size is fixed and hence cannot be changed";
   const char* error_message_2 = "Mat::init(): requested size is not compatible with column vector layout";
   const char* error_message_3 = "Mat::init(): requested size is not compatible with row vector layout";
+
+  coot_debug_set_error( err_state, err_msg, (t_mem_state == 3), error_message_1 );
 
   if (vec_state > 0)
     {
@@ -417,9 +435,9 @@ Mat<eT>::operator+=(const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
                         dev_mem, dev_mem,
                         val, (eT) 0,
-                        n_rows, n_cols,
-                        0, 0, n_rows,
-                        0, 0, n_rows);
+                        n_rows, n_cols, 1,
+                        0, 0, 0, n_rows, n_cols,
+                        0, 0, 0, n_rows, n_cols);
 
   return *this;
   }
@@ -436,9 +454,9 @@ Mat<eT>::operator-=(const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_minus_scalar_post,
                         dev_mem, dev_mem,
                         val, (eT) 0,
-                        n_rows, n_cols,
-                        0, 0, n_rows,
-                        0, 0, n_rows);
+                        n_rows, n_cols, 1,
+                        0, 0, 0, n_rows, n_cols,
+                        0, 0, 0, n_rows, n_cols);
 
   return *this;
   }
@@ -455,9 +473,9 @@ Mat<eT>::operator*=(const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
                         dev_mem, dev_mem,
                         val, (eT) 1,
-                        n_rows, n_cols,
-                        0, 0, n_rows,
-                        0, 0, n_rows);
+                        n_rows, n_cols, 1,
+                        0, 0, 0, n_rows, n_cols,
+                        0, 0, 0, n_rows, n_cols);
 
   return *this;
   }
@@ -474,9 +492,9 @@ Mat<eT>::operator/=(const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
                         dev_mem, dev_mem,
                         val, (eT) 1,
-                        n_rows, n_cols,
-                        0, 0, n_rows,
-                        0, 0, n_rows);
+                        n_rows, n_cols, 1,
+                        0, 0, 0, n_rows, n_cols,
+                        0, 0, 0, n_rows, n_cols);
 
   return *this;
   }
@@ -491,7 +509,7 @@ Mat<eT>::Mat(const Mat<eT>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -659,7 +677,9 @@ Mat<eT>::steal_mem(Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
 
-  if(this != &X)
+  if(this == &X) { return; }
+
+  if (X.mem_state == 0)
     {
     reset(); // clear any existing memory
 
@@ -676,6 +696,10 @@ Mat<eT>::steal_mem(Mat<eT>& X)
     access::rw(X.vec_state)          = 0;
     access::rw(X.mem_state)          = 0;
     access::rw(X.dev_mem.cl_mem_ptr) = { NULL, 0 };
+    }
+  else
+    {
+    (*this).operator=(X);
     }
   }
 
@@ -809,7 +833,7 @@ Mat<eT>::Mat(const diagview<eT>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -921,7 +945,7 @@ Mat<eT>::Mat(const eOp<T1, eop_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1056,7 +1080,7 @@ Mat<eT>::Mat(const eGlue<T1, T2, eglue_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1197,7 +1221,7 @@ Mat<eT>::Mat(const mtOp<eT, T1, mtop_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1213,8 +1237,6 @@ const Mat<eT>&
 Mat<eT>::operator=(const mtOp<eT, T1, mtop_type>& X)
   {
   coot_extra_debug_sigprint();
-
-  SizeProxy<mtOp<eT, T1, mtop_type>> S(X);
 
   mtop_type::apply(*this, X);
 
@@ -1323,7 +1345,7 @@ Mat<eT>::Mat(const Op<T1, op_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1445,7 +1467,7 @@ Mat<eT>::Mat(const Glue<T1, T2, glue_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1573,7 +1595,7 @@ Mat<eT>::Mat(const mtGlue<eT, T1, T2, mtglue_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL })
+  , dev_mem({ NULL, 0 })
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1670,6 +1692,128 @@ Mat<eT>::operator/=(const mtGlue<eT, T1, T2, mtglue_type>& X)
   const Mat<eT> m(X);
 
   return (*this).operator/=(m);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+Mat<eT>::Mat(const CubeToMatOp<T1, op_type>& X)
+  : n_rows   (0)
+  , n_cols   (0)
+  , n_elem   (0)
+  , vec_state(0)
+  , mem_state(0)
+  , dev_mem({ NULL, 0 })
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+
+  op_type::apply(*this, X);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+Mat<eT>&
+Mat<eT>::operator=(const CubeToMatOp<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+
+  op_type::apply(*this, X);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+Mat<eT>&
+Mat<eT>::operator+=(const CubeToMatOp<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+
+  (*this) = (*this) + X;
+
+  return (*this);
+  }
+  
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+Mat<eT>&
+Mat<eT>::operator-=(const CubeToMatOp<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+
+  (*this) = (*this) - X;
+
+  return (*this);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+Mat<eT>&
+Mat<eT>::operator*=(const CubeToMatOp<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+
+  Mat<eT> tmp = (*this) * X;
+
+  (*this).steal_mem(tmp);
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+Mat<eT>&
+Mat<eT>::operator%=(const CubeToMatOp<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+
+  (*this) = (*this) % X;
+
+  return (*this);
+  }
+
+
+
+template<typename eT>
+template<typename T1, typename op_type>
+inline
+Mat<eT>&
+Mat<eT>::operator/=(const CubeToMatOp<T1, op_type>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
+
+  (*this) = (*this) / X;
+
+  return (*this);
   }
 
 
@@ -1820,10 +1964,70 @@ Mat<eT>::zeros(const uword new_n_rows, const uword new_n_cols)
 template<typename eT>
 inline
 const Mat<eT>&
+Mat<eT>::zeros(const SizeMat& s)
+  {
+  coot_extra_debug_sigprint();
+
+  (*this).set_size(s);
+  (*this).fill(eT(0));
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
 Mat<eT>::ones()
   {
   coot_extra_debug_sigprint();
 
+  (*this).fill(eT(1));
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::ones(const uword new_n_elem)
+  {
+  coot_extra_debug_sigprint();
+
+  (*this).set_size(new_n_elem);
+  (*this).fill(eT(1));
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::ones(const uword new_n_rows, const uword new_n_cols)
+  {
+  coot_extra_debug_sigprint();
+
+  (*this).set_size(new_n_rows, new_n_cols);
+  (*this).fill(eT(1));
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::ones(const SizeMat& s)
+  {
+  coot_extra_debug_sigprint();
+
+  (*this).set_size(s);
   (*this).fill(eT(1));
 
   return *this;
@@ -1876,6 +2080,20 @@ Mat<eT>::randu(const uword new_n_rows, const uword new_n_cols)
 template<typename eT>
 inline
 const Mat<eT>&
+Mat<eT>::randu(const SizeMat& s)
+  {
+  coot_extra_debug_sigprint();
+
+  set_size(s);
+
+  return (*this).randu();
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
 Mat<eT>::randn()
   {
   coot_extra_debug_sigprint();
@@ -1918,29 +2136,13 @@ Mat<eT>::randn(const uword new_n_rows, const uword new_n_cols)
 template<typename eT>
 inline
 const Mat<eT>&
-Mat<eT>::ones(const uword new_n_elem)
+Mat<eT>::randn(const SizeMat& s)
   {
   coot_extra_debug_sigprint();
 
-  (*this).set_size(new_n_elem);
-  (*this).fill(eT(1));
+  set_size(s);
 
-  return *this;
-  }
-
-
-
-template<typename eT>
-inline
-const Mat<eT>&
-Mat<eT>::ones(const uword new_n_rows, const uword new_n_cols)
-  {
-  coot_extra_debug_sigprint();
-
-  (*this).set_size(new_n_rows, new_n_cols);
-  (*this).fill(eT(1));
-
-  return *this;
+  return (*this).randn();
   }
 
 
@@ -1972,6 +2174,21 @@ Mat<eT>::eye(const uword new_n_rows, const uword new_n_cols)
   coot_extra_debug_sigprint();
 
   (*this).set_size(new_n_rows, new_n_cols);
+  (*this).eye();
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::eye(const SizeMat& s)
+  {
+  coot_extra_debug_sigprint();
+
+  (*this).set_size(s.n_rows, s.n_cols);
   (*this).eye();
 
   return *this;
@@ -2826,6 +3043,106 @@ Mat<eT>::cols(const span& col_span) const
     );
 
   return subview<eT>(*this, 0, in_col1, n_rows, submat_n_cols);
+  }
+
+
+
+template<typename eT>
+coot_inline
+subview_each1<Mat<eT>, 0>
+Mat<eT>::each_col()
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each1<Mat<eT>, 0>(*this);
+  }
+
+
+
+template<typename eT>
+coot_inline
+subview_each1<Mat<eT>, 1>
+Mat<eT>::each_row()
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each1<Mat<eT>, 1>(*this);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview_each1<Mat<eT>, 0>
+Mat<eT>::each_col() const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each1<Mat<eT>, 0>(*this);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview_each1<Mat<eT>, 1>
+Mat<eT>::each_row() const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each1<Mat<eT>, 1>(*this);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+subview_each2<Mat<eT>, 0, T1>
+Mat<eT>::each_col(const Base<uword, T1>& indices)
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each2<Mat<eT>, 0, T1>(*this, indices);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+subview_each2<Mat<eT>, 1, T1>
+Mat<eT>::each_row(const Base<uword, T1>& indices)
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each2<Mat<eT>, 1, T1>(*this, indices);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+const subview_each2<Mat<eT>, 0, T1>
+Mat<eT>::each_col(const Base<uword, T1>& indices) const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each2<Mat<eT>, 0, T1>(*this, indices);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+const subview_each2<Mat<eT>, 1, T1>
+Mat<eT>::each_row(const Base<uword, T1>& indices) const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each2<Mat<eT>, 1, T1>(*this, indices);
   }
 
 

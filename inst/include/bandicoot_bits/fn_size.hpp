@@ -84,3 +84,59 @@ size(const Col<eT>& X)
 
   return SizeMat( X.n_rows, X.n_cols );
   }
+
+
+
+coot_warn_unused
+inline
+const SizeCube
+size(const uword n_rows, const uword n_cols, const uword n_slices)
+  {
+  coot_extra_debug_sigprint();
+
+  return SizeCube(n_rows, n_cols, n_slices);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const SizeCube
+size(const BaseCube<typename T1::elem_type, T1>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  const SizeProxyCube<T1> P(X.get_ref());
+
+  return SizeCube( P.get_n_rows(), P.get_n_cols(), P.get_n_slices() );
+  }
+
+
+
+// explicit overload to workround ADL issues with C++17 std::size()
+template<typename eT>
+coot_warn_unused
+inline
+const SizeCube
+size(const Cube<eT>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  return SizeCube( X.n_rows, X.n_cols, X.n_slices );
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+uword
+size(const BaseCube<typename T1::elem_type, T1>& X, const uword dim)
+  {
+  coot_extra_debug_sigprint();
+
+  const SizeProxyCube<T1> P(X.get_ref());
+
+  return SizeCube( P.get_n_rows(), P.get_n_cols(), P.get_n_slices() )( dim );
+  }

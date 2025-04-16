@@ -53,18 +53,8 @@ op_max::apply(Mat<eT2>& out, const Op<T1, op_max>& in)
     const no_conv_unwrap<T1> U(in.m);
 
     // However, since there may be no conversion, we now have to consider aliases too.
-    if (U.is_alias(out) == false)
-      {
-      op_max::apply_noalias(out, U.M, dim, false);
-      }
-    else
-      {
-      Mat<eT2> tmp;
-
-      op_max::apply_noalias(tmp, U.M, dim, false);
-
-      out.steal_mem(tmp);
-      }
+    alias_wrapper<Mat<eT2>, typename no_conv_unwrap<T1>::stored_type> W(out, U.M);
+    op_max::apply_noalias(W.use, U.M, dim, false);
     }
   }
 
@@ -92,7 +82,6 @@ op_max::apply_noalias(Mat<out_eT>& out, const Mat<in_eT>& A, const uword dim, co
     out.zeros();
     return;
     }
-
 
   coot_rt_t::max(out.get_dev_mem(false), A.get_dev_mem(false),
                  A.n_rows, A.n_cols,
@@ -160,12 +149,27 @@ op_max::compute_n_cols(const Op<T1, op_max>& op, const uword in_n_rows, const uw
 template<typename T1>
 inline
 typename T1::elem_type
-op_max::apply_direct(const T1& in)
+op_max::apply_direct(const Base<typename T1::elem_type, T1>& in)
   {
   coot_extra_debug_sigprint();
 
-  const unwrap<T1> U(in);
+  const unwrap<T1> U(in.get_ref());
   const Mat<typename T1::elem_type>& A = U.M;
+
+  return coot_rt_t::max_vec(A.get_dev_mem(false), A.n_elem);
+  }
+
+
+
+template<typename T1>
+inline
+typename T1::elem_type
+op_max::apply_direct(const BaseCube<typename T1::elem_type, T1>& in)
+  {
+  coot_extra_debug_sigprint();
+
+  const unwrap_cube<T1> U(in.get_ref());
+  const Cube<typename T1::elem_type>& A = U.M;
 
   return coot_rt_t::max_vec(A.get_dev_mem(false), A.n_elem);
   }

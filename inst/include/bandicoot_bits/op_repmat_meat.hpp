@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2022 Ryan Curtin (http://www.ratml.org/)
+// Copyright 2022-2025 Ryan Curtin (http://www.ratml.org/)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,27 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ------------------------------------------------------------------------
-
-template<typename out_eT, typename T1>
-inline
-void
-op_repmat::apply_noalias(Mat<out_eT>& out, const T1& X, const uword copies_per_row, const uword copies_per_col)
-  {
-  coot_extra_debug_sigprint();
-
-  const uword new_n_rows = X.n_rows * copies_per_row;
-  const uword new_n_cols = X.n_cols * copies_per_col;
-
-  out.set_size(new_n_rows, new_n_cols);
-
-  // If the matrix has zero elements, no need to do anything.
-  if (new_n_rows == 0 || new_n_cols == 0)
-    {
-    return;
-    }
-
-  coot_rt_t::repmat(X.get_dev_mem(false), out.get_dev_mem(false), X.n_rows, X.n_cols, copies_per_row, copies_per_col);
-  }
 
 
 
@@ -48,23 +27,38 @@ op_repmat::apply(Mat<out_eT>& out, const Op<T1, op_repmat>& in)
   const uword copies_per_col = in.aux_uword_b;
 
   const unwrap<T1> U(in.m);
-  const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
 
-  if (U.is_alias(out))
-    {
-    // Skip if there is nothing to do.
-    if (copies_per_row == 1 && copies_per_col == 1 && std::is_same<out_eT, typename T1::elem_type>::value)
-      {
-      return;
-      }
+  alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type> W(out, U.M);
 
-    Mat<typename T1::elem_type> tmp(E.M);
-    apply_noalias(out, tmp, copies_per_row, copies_per_col);
-    }
-  else
+  // Skip if there is nothing to do.
+  if (W.using_aux && copies_per_row == 1 && copies_per_col == 1 && std::is_same<out_eT, typename T1::elem_type>::value)
     {
-    apply_noalias(out, E.M, copies_per_row, copies_per_col);
+    W.using_aux = false; // disable steal_mem() in destructor
+    return;
     }
+
+  const uword new_n_rows = U.M.n_rows * copies_per_row;
+  const uword new_n_cols = U.M.n_cols * copies_per_col;
+
+  W.use.set_size(new_n_rows, new_n_cols);
+
+  if (new_n_rows == 0 || new_n_cols == 0)
+    {
+    W.using_aux = false; // disable steal_mem() in destructor
+    return;
+    }
+
+  coot_rt_t::broadcast_op(twoway_kernel_id::broadcast_set,
+                          W.get_dev_mem(false),
+                          W.get_dev_mem(false),
+                          U.get_dev_mem(false),
+                          U.M.n_rows,
+                          U.M.n_cols,
+                          copies_per_row,
+                          copies_per_col,
+                          W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
+                          W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
+                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
   }
 
 
@@ -80,23 +74,38 @@ op_repmat::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_r
   const uword copies_per_col = in.aux_uword_b;
 
   const unwrap<T1> U(in.m.q);
-  const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
 
-  if (U.is_alias(out))
-    {
-    // Skip if there is nothing to do.
-    if (copies_per_row == 1 && copies_per_col == 1 && std::is_same<out_eT, typename T1::elem_type>::value)
-      {
-      return;
-      }
+  alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type> W(out, U.M);
 
-    Mat<typename T1::elem_type> tmp(E.M);
-    apply_noalias(out, tmp, copies_per_row, copies_per_col);
-    }
-  else
+  // Skip if there is nothing to do.
+  if (W.using_aux && copies_per_row == 1 && copies_per_col == 1 && std::is_same<out_eT, typename T1::elem_type>::value)
     {
-    apply_noalias(out, E.M, copies_per_row, copies_per_col);
+    W.using_aux = false; // disable steal_mem() in destructor
+    return;
     }
+
+  const uword new_n_rows = U.M.n_rows * copies_per_row;
+  const uword new_n_cols = U.M.n_cols * copies_per_col;
+
+  W.use.set_size(new_n_rows, new_n_cols);
+
+  if (new_n_rows == 0 || new_n_cols == 0)
+    {
+    W.using_aux = false; // disable steal_mem() in destructor
+    return;
+    }
+
+  coot_rt_t::broadcast_op(twoway_kernel_id::broadcast_set,
+                          W.get_dev_mem(false),
+                          W.get_dev_mem(false),
+                          U.get_dev_mem(false),
+                          U.M.n_rows,
+                          U.M.n_cols,
+                          copies_per_row,
+                          copies_per_col,
+                          W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
+                          W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
+                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
   }
 
 

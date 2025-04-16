@@ -406,3 +406,33 @@ class SizeProxy< mtGlue<out_eT, T1, T2, mtglue_type> >
   coot_inline uword get_n_cols() const { return mtglue_type::compute_n_cols(Q, S1.get_n_rows(), S1.get_n_cols(), S2.get_n_rows(), S2.get_n_cols()); }
   coot_inline uword get_n_elem() const { return get_n_rows() * get_n_cols(); }
   };
+
+
+
+template<typename T1, typename op_type>
+class SizeProxy< CubeToMatOp<T1, op_type> >
+  {
+  public:
+
+  typedef typename T1::elem_type                   elem_type;
+  typedef typename get_pod_type<elem_type>::result pod_type;
+  typedef CubeToMatOp<T1, op_type>                 stored_type;
+
+  static constexpr bool is_row = CubeToMatOp<T1, op_type>::is_row;
+  static constexpr bool is_col = CubeToMatOp<T1, op_type>::is_col;
+
+  coot_aligned const SizeProxyCube<T1> S;
+  coot_aligned const CubeToMatOp<T1, op_type>& Q;
+
+  inline explicit SizeProxy(const CubeToMatOp<T1, op_type>& A)
+    : S(A.m)
+    , Q(A)
+    {
+    coot_extra_debug_sigprint();
+    }
+
+  // Each mtglue_type must implement compute_n_rows() and compute_n_cols()
+  coot_inline uword get_n_rows() const { return op_type::compute_n_rows(Q, S.get_n_rows(), S.get_n_cols(), S.get_n_slices()); }
+  coot_inline uword get_n_cols() const { return op_type::compute_n_cols(Q, S.get_n_rows(), S.get_n_cols(), S.get_n_slices()); }
+  coot_inline uword get_n_elem() const { return get_n_rows() * get_n_cols(); }
+  };

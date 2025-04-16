@@ -424,6 +424,21 @@ coot_incompat_size_string(const uword A_n_rows, const uword A_n_cols, const uwor
 
 
 
+coot_cold
+coot_noinline
+static
+std::string
+coot_incompat_size_string(const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices, const char* x)
+  {
+  std::ostringstream tmp;
+
+  tmp << x << ": incompatible cube dimensions: " << A_n_rows << 'x' << A_n_cols << 'x' << A_n_slices << " and " << B_n_rows << 'x' << B_n_cols << 'x' << B_n_slices;
+
+  return tmp.str();
+  }
+
+
+
 //
 // functions for checking whether two dense matrices have the same dimensions
 
@@ -458,6 +473,47 @@ coot_assert_same_size(const Mat<eT1>& A, const Mat<eT2>& B, const char* x)
   if( (A_n_rows != B_n_rows) || (A_n_cols != B_n_cols) )
     {
     coot_stop_logic_error( coot_incompat_size_string(A_n_rows, A_n_cols, B_n_rows, B_n_cols, x) );
+    }
+  }
+
+
+
+coot_inline
+coot_hot
+void
+coot_assert_same_size(const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices, const char* x)
+  {
+  if( (A_n_rows != B_n_rows) || (A_n_cols != B_n_cols) || (A_n_slices != B_n_slices) )
+    {
+    coot_stop_logic_error( coot_incompat_size_string(A_n_rows, A_n_cols, A_n_slices, B_n_rows, B_n_cols, B_n_slices, x) );
+    }
+  }
+
+
+
+// stop if given cubes have different sizes
+template<typename T1, typename T2>
+coot_hot
+inline
+void
+coot_assert_same_size(const T1& A, const T2& B, const char* x,
+                      const typename enable_if2<is_coot_cube_type<T1>::value, void*>::result* junk1 = 0,
+                      const typename enable_if2<is_coot_cube_type<T2>::value, void*>::result* junk2 = 0)
+  {
+  coot_ignore(junk1);
+  coot_ignore(junk2);
+
+  const uword A_n_rows = A.n_rows;
+  const uword A_n_cols = A.n_cols;
+  const uword A_n_slices = A.n_slices;
+
+  const uword B_n_rows = B.n_rows;
+  const uword B_n_cols = B.n_cols;
+  const uword B_n_slices = B.n_slices;
+
+  if( (A_n_rows != B_n_rows) || (A_n_cols != B_n_cols) || (A_n_slices != B_n_slices) )
+    {
+    coot_stop_logic_error( coot_incompat_size_string(A_n_rows, A_n_cols, A_n_slices, B_n_rows, B_n_cols, B_n_slices, x) );
     }
   }
 

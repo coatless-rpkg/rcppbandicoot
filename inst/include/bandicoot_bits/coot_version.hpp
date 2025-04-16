@@ -16,10 +16,10 @@
 // ------------------------------------------------------------------------
 
 
-#define COOT_VERSION_MAJOR 1
-#define COOT_VERSION_MINOR 16
-#define COOT_VERSION_PATCH 2
-#define COOT_VERSION_NOTE  "Printable Plastic Profusion"
+#define COOT_VERSION_MAJOR 2
+#define COOT_VERSION_MINOR 0
+#define COOT_VERSION_PATCH 0
+#define COOT_VERSION_NOTE  "Pollen River"
 
 
 

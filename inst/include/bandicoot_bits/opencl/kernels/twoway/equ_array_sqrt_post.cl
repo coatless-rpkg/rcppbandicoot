@@ -1,4 +1,5 @@
 // Copyright 2017 Conrad Sanderson (http://conradsanderson.id.au)
+// Copyright 2025 Ryan Curtin (http://ratml.org)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,18 +23,23 @@ COOT_FN(PREFIX,equ_array_sqrt_post)(__global eT2* dest,
                                     const eT2 val_post,
                                     const UWORD n_rows,
                                     const UWORD n_cols,
+                                    const UWORD n_slices,
                                     const UWORD dest_M_n_rows,
-                                    const UWORD src_M_n_rows)
+                                    const UWORD dest_M_n_cols,
+                                    const UWORD src_M_n_rows,
+                                    const UWORD src_M_n_cols)
   {
   (void)(val_pre);
   (void)(val_post);
 
   const UWORD row = get_global_id(0);
   const UWORD col = get_global_id(1);
-  const UWORD src_index = row + col * src_M_n_rows + src_offset;
-  const UWORD dest_index = row + col * dest_M_n_rows + dest_offset;
+  const UWORD slice = get_global_id(2);
 
-  if (row < n_rows && col < n_cols)
+  const UWORD src_index  = row + col * src_M_n_rows  + slice * src_M_n_rows * src_M_n_cols   + src_offset;
+  const UWORD dest_index = row + col * dest_M_n_rows + slice * dest_M_n_rows * dest_M_n_cols + dest_offset;
+
+  if (row < n_rows && col < n_cols && slice < n_slices)
     {
     dest[dest_index] = (eT2) ((eT1) sqrt((fp_eT1) src[src_index]));
     }

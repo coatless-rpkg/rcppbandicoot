@@ -70,9 +70,9 @@ val_add_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
   eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
              mem, mem,
              val, (eT) 0,
-             1, 1,
-             index, 0, index + 1,
-             index, 0, index + 1);
+             1, 1, 1,
+             index, 0, 0, index + 1, 1,
+             index, 0, 0, index + 1, 1);
   }
 
 
@@ -88,9 +88,9 @@ val_minus_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
   eop_scalar(twoway_kernel_id::equ_array_minus_scalar_post,
              mem, mem,
              val, (eT) 0,
-             1, 1,
-             index, 0, index + 1,
-             index, 0, index + 1);
+             1, 1, 1,
+             index, 0, 0, index + 1, 1,
+             index, 0, 0, index + 1, 1);
   }
 
 
@@ -106,9 +106,9 @@ val_mul_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
   eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
              mem, mem,
              val, (eT) 1,
-             1, 1,
-             index, 0, index + 1,
-             index, 0, index + 1);
+             1, 1, 1,
+             index, 0, 0, index + 1, 1,
+             index, 0, 0, index + 1, 1);
   }
 
 
@@ -124,7 +124,7 @@ val_div_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
   eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
              mem, mem,
              val, (eT) 1,
-             1, 1,
-             index, 0, index + 1,
-             index, 0, index + 1);
+             1, 1, 1,
+             index, 0, 0, index + 1, 1,
+             index, 0, 0, index + 1, 1);
   }

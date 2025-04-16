@@ -35,16 +35,14 @@ glue_conv::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_conv>& in)
   Mat<eT> A_col(UA.M.get_dev_mem(false), UA.M.n_elem, 1);
   Mat<eT> B_col(UB.M.get_dev_mem(false), UB.M.n_elem, 1);
 
-  // We may need to make an alias of the output.
-  Mat<out_eT> tmp;
-  const bool is_alias = (UA.is_alias(out) || UB.is_alias(out));
-  Mat<out_eT>& out_ref = is_alias ? tmp : out;
-
   // Following Armadillo convention, if A is a column vector, then the result is a column vector.
   if (UA.M.n_cols == 1 || UA.M.is_col)
     {
+    // The output cannot be the input.
+    alias_wrapper<Mat<out_eT>, T1, T2> W(out, in.A, in.B);
+
     // If the result is a column vector, we can call glue_conv2 directly on the output.
-    glue_conv2::apply_direct(out_ref, A_col, B_col, mode);
+    glue_conv2::apply_direct(W.use, A_col, B_col, mode);
     }
   else
     {
@@ -52,14 +50,9 @@ glue_conv::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_conv>& in)
     Mat<out_eT> out_tmp;
     glue_conv2::apply_direct(out_tmp, A_col, B_col, mode);
     out_tmp.reshape(1, out_tmp.n_elem);
-    out_ref.set_size(out_tmp.n_rows, out_tmp.n_cols);
-    out_ref.steal_mem(out_tmp);
-    }
 
-  if (is_alias)
-    {
-    out.set_size(tmp.n_rows, tmp.n_cols);
-    out.steal_mem(tmp);
+    out.set_size(out_tmp.n_rows, out_tmp.n_cols);
+    out.steal_mem(out_tmp);
     }
   }
 

@@ -55,18 +55,8 @@ op_sum::apply(Mat<out_eT>& out, const Op<T1, op_sum>& in)
     const no_conv_unwrap<T1> U(in.m);
 
     // However, since there may be no conversion, we now have to consider aliases too.
-    if (U.is_alias(out) == false)
-      {
-      op_sum::apply_noalias(out, U.M, dim, false);
-      }
-    else
-      {
-      Mat<out_eT> tmp;
-
-      op_sum::apply_noalias(tmp, U.M, dim, false);
-
-      out.steal_mem(tmp);
-      }
+    alias_wrapper<Mat<out_eT>, typename no_conv_unwrap<T1>::stored_type> W(out, U.M);
+    op_sum::apply_noalias(W.use, U.M, dim, false);
     }
   }
 

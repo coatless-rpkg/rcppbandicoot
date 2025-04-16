@@ -30,7 +30,7 @@ class Mat : public Base< eT, Mat<eT> >
   coot_aligned const uword n_cols;    // number of columns  (read-only)
   coot_aligned const uword n_elem;    // number of elements (read-only)
   coot_aligned const uword vec_state; // 0: matrix layout; 1: column vector layout; 2: row vector layout
-  coot_aligned const uword mem_state; // 0: normal; 1: external;  TODO: should this be expanded to allow re-allocation if size of aux mem is smaller than requested size?
+  coot_aligned const uword mem_state; // 0: normal; 1: external; 3: fixed size (used by slices)  TODO: should this be expanded to allow re-allocation if size of aux mem is smaller than requested size?
 
   static constexpr bool is_col = false;
   static constexpr bool is_row = false;
@@ -150,6 +150,14 @@ class Mat : public Base< eT, Mat<eT> >
   template<typename T1, typename T2, typename mtglue_type> inline const Mat& operator%=(const mtGlue<eT, T1, T2, mtglue_type>& X);
   template<typename T1, typename T2, typename mtglue_type> inline const Mat& operator/=(const mtGlue<eT, T1, T2, mtglue_type>& X);
 
+  template<typename T1, typename op_type> inline             Mat(const CubeToMatOp<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Mat& operator= (const CubeToMatOp<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Mat& operator+=(const CubeToMatOp<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Mat& operator-=(const CubeToMatOp<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Mat& operator*=(const CubeToMatOp<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Mat& operator%=(const CubeToMatOp<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Mat& operator/=(const CubeToMatOp<T1, op_type>& X);
+
   coot_inline       diagview<eT> diag(const sword in_id = 0);
   coot_inline const diagview<eT> diag(const sword in_id = 0) const;
 
@@ -163,21 +171,26 @@ class Mat : public Base< eT, Mat<eT> >
   inline const Mat& zeros();
   inline const Mat& zeros(const uword new_n_elem);
   inline const Mat& zeros(const uword new_n_rows, const uword new_n_cols);
+  inline const Mat& zeros(const SizeMat& s);
 
   inline const Mat& ones();
   inline const Mat& ones(const uword new_n_elem);
   inline const Mat& ones(const uword new_n_rows, const uword new_n_cols);
+  inline const Mat& ones(const SizeMat& s);
 
   inline const Mat& randu();
   inline const Mat& randu(const uword new_n_elem);
   inline const Mat& randu(const uword new_n_elem, const uword new_n_cols);
+  inline const Mat& randu(const SizeMat& s);
 
   inline const Mat& randn();
   inline const Mat& randn(const uword new_n_elem);
   inline const Mat& randn(const uword new_n_elem, const uword new_n_cols);
+  inline const Mat& randn(const SizeMat& s);
 
   inline const Mat& eye();
   inline const Mat& eye(const uword new_n_rows, const uword new_n_cols);
+  inline const Mat& eye(const SizeMat& s);
 
   inline void reset();
   inline void set_size(const uword new_n_elem);
@@ -248,6 +261,17 @@ class Mat : public Base< eT, Mat<eT> >
   coot_inline       subview<eT> cols(const span& col_span);
   coot_inline const subview<eT> cols(const span& col_span) const;
 
+  coot_inline       subview_each1<Mat<eT>, 0> each_col();
+  coot_inline       subview_each1<Mat<eT>, 1> each_row();
+
+  coot_inline const subview_each1<Mat<eT>, 0> each_col() const;
+  coot_inline const subview_each1<Mat<eT>, 1> each_row() const;
+
+  template<typename T1> inline       subview_each2<Mat<eT>, 0, T1> each_col(const Base<uword, T1>& indices);
+  template<typename T1> inline       subview_each2<Mat<eT>, 1, T1> each_row(const Base<uword, T1>& indices);
+
+  template<typename T1> inline const subview_each2<Mat<eT>, 0, T1> each_col(const Base<uword, T1>& indices) const;
+  template<typename T1> inline const subview_each2<Mat<eT>, 1, T1> each_row(const Base<uword, T1>& indices) const;
 
   coot_inline       subview<eT> submat(const uword in_row1, const uword in_col1, const uword in_row2, const uword in_col2);
   coot_inline const subview<eT> submat(const uword in_row1, const uword in_col1, const uword in_row2, const uword in_col2) const;
@@ -285,11 +309,15 @@ class Mat : public Base< eT, Mat<eT> >
 
   protected:
 
+  // used by Cube slices
+  inline Mat(const char junk, dev_mem_t<eT> mem, const uword n_rows, const uword n_cols);
+
   inline void cleanup();
   inline void init(const uword new_n_rows, const uword new_n_cols);
 
   friend class subview<eT>;
   friend class MatValProxy<eT>;
+  friend class Cube<eT>;
 
 
   public:

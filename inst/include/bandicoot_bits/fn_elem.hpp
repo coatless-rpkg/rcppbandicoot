@@ -34,6 +34,19 @@ square(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_square>
+square(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_square>(A.get_ref());
+  }
+
+
+
 //
 // sqrt
 
@@ -47,6 +60,20 @@ sqrt(const T1& A)
 
   return eOp<T1, eop_sqrt>(A);
   }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_sqrt>
+sqrt(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_sqrt>(A.get_ref());
+  }
+
 
 
 //
@@ -64,6 +91,20 @@ exp(const T1& A)
   }
 
 
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_exp>
+exp(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_exp>(A.get_ref());
+  }
+
+
+
 //
 // exp2
 
@@ -77,6 +118,21 @@ exp2(const T1& A)
 
   return eOp<T1, eop_exp2>(A);
   }
+
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_exp2>
+exp2(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_exp2>(A.get_ref());
+  }
+
 
 
 //
@@ -94,6 +150,20 @@ exp10(const T1& A)
   }
 
 
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_exp10>
+exp10(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_exp10>(A.get_ref());
+  }
+
+
+
 //
 // trunc_exp
 
@@ -109,6 +179,20 @@ trunc_exp(const T1& A)
   }
 
 
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_trunc_exp>
+trunc_exp(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_trunc_exp>(A.get_ref());
+  }
+
+
+
 //
 // log
 
@@ -121,6 +205,19 @@ log(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_log>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_log>
+log(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_log>(A.get_ref());
   }
 
 
@@ -141,6 +238,19 @@ log2(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_log2>
+log2(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_log2>(A.get_ref());
+  }
+
+
+
 //
 // log10
 
@@ -153,6 +263,19 @@ log10(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_log10>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_log10>
+log10(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_log10>(A.get_ref());
   }
 
 
@@ -173,6 +296,19 @@ trunc_log(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_trunc_log>
+trunc_log(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_trunc_log>(A.get_ref());
+  }
+
+
+
 //
 // cos
 
@@ -185,6 +321,19 @@ cos(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_cos>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_cos>
+cos(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_cos>(A.get_ref());
   }
 
 
@@ -205,6 +354,19 @@ sin(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_sin>
+sin(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_sin>(A.get_ref());
+  }
+
+
+
 //
 // tan
 
@@ -217,6 +379,19 @@ tan(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_tan>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_tan>
+tan(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_tan>(A.get_ref());
   }
 
 
@@ -237,6 +412,19 @@ acos(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_acos>
+acos(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_acos>(A.get_ref());
+  }
+
+
+
 //
 // asin
 
@@ -249,6 +437,19 @@ asin(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_asin>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_asin>
+asin(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_asin>(A.get_ref());
   }
 
 
@@ -269,6 +470,19 @@ atan(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_atan>
+atan(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_atan>(A.get_ref());
+  }
+
+
+
 //
 // cosh
 
@@ -281,6 +495,19 @@ cosh(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_cosh>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_cosh>
+cosh(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_cosh>(A.get_ref());
   }
 
 
@@ -301,6 +528,19 @@ sinh(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_sinh>
+sinh(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_sinh>(A.get_ref());
+  }
+
+
+
 //
 // tanh
 
@@ -313,6 +553,19 @@ tanh(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_tanh>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_tanh>
+tanh(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_tanh>(A.get_ref());
   }
 
 
@@ -333,6 +586,19 @@ acosh(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_acosh>
+acosh(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_acosh>(A.get_ref());
+  }
+
+
+
 //
 // asinh
 
@@ -345,6 +611,19 @@ asinh(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_asinh>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_asinh>
+asinh(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_asinh>(A.get_ref());
   }
 
 
@@ -365,6 +644,19 @@ atanh(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_atanh>
+atanh(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_atanh>(A.get_ref());
+  }
+
+
+
 //
 // sinc
 
@@ -377,6 +669,19 @@ sinc(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_sinc>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_sinc>
+sinc(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_sinc>(A.get_ref());
   }
 
 
@@ -395,6 +700,8 @@ atan2(const T1& X, const T2& Y)
   return eGlue<T1, T2, eglue_atan2>(X, Y);
   }
 
+// TODO: cube version
+
 
 
 //
@@ -410,6 +717,8 @@ hypot(const T1& X, const T2& Y)
 
   return eGlue<T1, T2, eglue_hypot>(X, Y);
   }
+
+// TODO: cube version
 
 
 
@@ -429,6 +738,19 @@ abs(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+typename enable_if2< std::is_signed<typename T1::elem_type>::value, const eOpCube<T1, eop_abs> >::result
+abs(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_abs>(A.get_ref());
+  }
+
+
+
 // abs(unsigned)... nothing to do
 template<typename T1>
 coot_warn_unused
@@ -443,12 +765,38 @@ abs(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+typename enable_if2< !std::is_signed<typename T1::elem_type>::value, const T1&>::result
+abs(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return A.get_ref();
+  }
+
+
+
 // abs(abs)... nothing to do
 template<typename T1>
 coot_warn_unused
 inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_abs>& >::result
 abs(const eOp<T1, eop_abs>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return A;
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+typename enable_if2< is_coot_cube_type<T1>::value, const eOpCube<T1, eop_abs>& >::result
+abs(const eOpCube<T1, eop_abs>& A)
   {
   coot_extra_debug_sigprint();
 
@@ -473,6 +821,19 @@ pow(const T1& A, const typename T1::elem_type exponent)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_pow>
+pow(const BaseCube<typename T1::elem_type, T1>& A, const typename T1::elem_type exponent)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_pow>(A.get_ref(), exponent);
+  }
+
+
+
 //
 // floor
 // TODO: optimizations to skip processing entirely for integer types
@@ -486,6 +847,19 @@ floor(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_floor>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_floor>
+floor(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_floor>(A.get_ref());
   }
 
 
@@ -506,6 +880,19 @@ ceil(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_ceil>
+ceil(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_ceil>(A.get_ref());
+  }
+
+
+
 //
 // round
 
@@ -518,6 +905,19 @@ round(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_round>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_round>
+round(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_round>(A.get_ref());
   }
 
 
@@ -538,6 +938,19 @@ trunc(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_trunc>
+trunc(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_trunc>(A.get_ref());
+  }
+
+
+
 //
 // sign
 
@@ -550,6 +963,19 @@ sign(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_sign>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_sign>
+sign(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_sign>(A.get_ref());
   }
 
 
@@ -570,6 +996,19 @@ erf(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_erf>
+erf(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_erf>(A.get_ref());
+  }
+
+
+
 //
 // erfc
 
@@ -582,6 +1021,19 @@ erfc(const T1& A)
   coot_extra_debug_sigprint();
 
   return eOp<T1, eop_erfc>(A);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_erfc>
+erfc(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_erfc>(A.get_ref());
   }
 
 
@@ -602,6 +1054,19 @@ lgamma(const T1& A)
 
 
 
+template<typename T1>
+coot_warn_unused
+inline
+const eOpCube<T1, eop_lgamma>
+lgamma(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return eOpCube<T1, eop_lgamma>(A.get_ref());
+  }
+
+
+
 //
 // real
 
@@ -610,6 +1075,19 @@ coot_warn_unused
 inline
 typename enable_if2< is_coot_type<T1>::value && is_cx<typename T1::elem_type>::no, const T1& >::result
 real(const T1& A)
+  {
+  coot_extra_debug_sigprint();
+
+  return A;
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+typename enable_if2< is_cx<typename T1::elem_type>::no, const BaseCube<typename T1::elem_type, T1>& >::result
+real(const BaseCube<typename T1::elem_type, T1>& A)
   {
   coot_extra_debug_sigprint();
 
@@ -649,6 +1127,25 @@ imag(const T1& A)
   const uword n_cols = A.get_n_cols();
 
   return Mat<typename T1::pod_type>(n_rows, n_cols, fill::zeros);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+typename enable_if2< is_cx<typename T1::elem_type>::no, Cube<typename T1::pod_type>& >::result
+imag(const BaseCube<typename T1::elem_type, T1>& A)
+  {
+  coot_extra_debug_sigprint();
+
+  SizeProxyCube<T1> sp(A);
+
+  const uword n_rows = A.get_n_rows();
+  const uword n_cols = A.get_n_cols();
+  const uword n_slices = A.get_n_slices();
+
+  return Cube<typename T1::pod_type>(n_rows, n_cols, n_slices, fill::zeros);
   }
 
 

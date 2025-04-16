@@ -130,9 +130,9 @@ subview<eT>::operator+= (const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
                         m.dev_mem, m.dev_mem,
                         (eT) val, (eT) 0,
-                        n_rows, n_cols,
-                        aux_row1, aux_col1, m.n_rows,
-                        aux_row1, aux_col1, m.n_rows);
+                        n_rows, n_cols, 1,
+                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols,
+                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols);
   }
 
 
@@ -147,9 +147,9 @@ subview<eT>::operator-= (const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_minus_scalar_post,
                         m.dev_mem, m.dev_mem,
                         (eT) val, (eT) 0,
-                        n_rows, n_cols,
-                        aux_row1, aux_col1, m.n_rows,
-                        aux_row1, aux_col1, m.n_rows);
+                        n_rows, n_cols, 1,
+                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols,
+                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols);
   }
 
 
@@ -164,9 +164,9 @@ subview<eT>::operator*= (const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
                         m.dev_mem, m.dev_mem,
                         (eT) val, (eT) 1,
-                        n_rows, n_cols,
-                        aux_row1, aux_col1, m.n_rows,
-                        aux_row1, aux_col1, m.n_rows);
+                        n_rows, n_cols, 1,
+                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols,
+                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols);
   }
 
 
@@ -181,9 +181,9 @@ subview<eT>::operator/= (const eT val)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
                         m.dev_mem, m.dev_mem,
                         (eT) val, (eT) 1,
-                        n_rows, n_cols,
-                        aux_row1, aux_col1, m.n_rows,
-                        aux_row1, aux_col1, m.n_rows);
+                        n_rows, n_cols, 1,
+                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols,
+                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols);
   }
 
 
@@ -792,6 +792,110 @@ subview<eT>::div_inplace(Mat<eT1>& out, const subview<eT>& in)
 
 
 //
+// each_col and each_row
+
+
+template<typename eT>
+coot_inline
+subview_each1<subview<eT>, 0>
+subview<eT>::each_col()
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each1<subview<eT>, 0>(*this);
+  }
+
+
+
+template<typename eT>
+coot_inline
+subview_each1<subview<eT>, 1>
+subview<eT>::each_row()
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each1<subview<eT>, 1>(*this);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview_each1<subview<eT>, 0>
+subview<eT>::each_col() const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each1<subview<eT>, 0>(*this);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const subview_each1<subview<eT>, 1>
+subview<eT>::each_row() const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each1<subview<eT>, 1>(*this);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+subview_each2<subview<eT>, 0, T1>
+subview<eT>::each_col(const Base<uword, T1>& indices)
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each2<subview<eT>, 0, T1>(*this, indices);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+subview_each2<subview<eT>, 1, T1>
+subview<eT>::each_row(const Base<uword, T1>& indices)
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each2<subview<eT>, 1, T1>(*this, indices);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+const subview_each2<subview<eT>, 0, T1>
+subview<eT>::each_col(const Base<uword, T1>& indices) const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each2<subview<eT>, 0, T1>(*this, indices);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+const subview_each2<subview<eT>, 1, T1>
+subview<eT>::each_row(const Base<uword, T1>& indices) const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_each2<subview<eT>, 1, T1>(*this, indices);
+  }
+
+
+
+//
 // subview_col
 
 
@@ -870,6 +974,36 @@ subview_col<eT>::operator=(const Base<eT,T1>& X)
   coot_extra_debug_sigprint();
 
   subview<eT>::operator=(X); // interprets 'subview_col' as 'subview'
+  }
+
+
+
+template<typename eT>
+coot_inline
+const Op<subview_col<eT>, op_htrans>
+subview_col<eT>::t() const
+  {
+  return Op<subview_col<eT>, op_htrans>(*this);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const Op<subview_col<eT>, op_htrans>
+subview_col<eT>::ht() const
+  {
+  return Op<subview_col<eT>, op_htrans>(*this);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const Op<subview_col<eT>, op_strans>
+subview_col<eT>::st() const
+  {
+  return Op<subview_col<eT>, op_strans>(*this);
   }
 
 
@@ -953,4 +1087,34 @@ subview_row<eT>::operator=(const Base<eT,T1>& X)
   coot_extra_debug_sigprint();
 
   subview<eT>::operator=(X);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const Op<subview_row<eT>, op_htrans>
+subview_row<eT>::t() const
+  {
+  return Op<subview_row<eT>, op_htrans>(*this);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const Op<subview_row<eT>, op_htrans>
+subview_row<eT>::ht() const
+  {
+  return Op<subview_row<eT>, op_htrans>(*this);
+  }
+
+
+
+template<typename eT>
+coot_inline
+const Op<subview_row<eT>, op_strans>
+subview_row<eT>::st() const
+  {
+  return Op<subview_row<eT>, op_strans>(*this);
   }

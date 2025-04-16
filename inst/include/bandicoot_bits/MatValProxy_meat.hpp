@@ -20,8 +20,8 @@
 template<typename eT>
 coot_inline
 MatValProxy<eT>::MatValProxy(Mat<eT>& in_M, const uword in_index)
-  : M    (in_M    )
-  , index(in_index)
+  : dev_mem(in_M.get_dev_mem(false))
+  , index  (in_index)
   {
   coot_extra_debug_sigprint();
   }
@@ -30,9 +30,22 @@ MatValProxy<eT>::MatValProxy(Mat<eT>& in_M, const uword in_index)
 
 template<typename eT>
 coot_inline
-MatValProxy<eT>::operator eT()
+MatValProxy<eT>::MatValProxy(Cube<eT>& in_M, const uword in_index)
+  : dev_mem(in_M.get_dev_mem(false))
+  , index  (in_index)
   {
-  return MatValProxy<eT>::get_val(M, index);
+  coot_extra_debug_sigprint();
+  }
+
+
+
+template<typename eT>
+coot_inline
+MatValProxy<eT>::operator eT() const
+  {
+  coot_extra_debug_sigprint();
+
+  return coot_rt_t::get_val(dev_mem, index);
   }
 
 
@@ -41,6 +54,18 @@ template<typename eT>
 inline
 eT
 MatValProxy<eT>::get_val(const Mat<eT>& M, const uword index)
+  {
+  coot_extra_debug_sigprint();
+
+  return coot_rt_t::get_val(M.dev_mem, index);
+  }
+
+
+
+template<typename eT>
+inline
+eT
+MatValProxy<eT>::get_val(const Cube<eT>& M, const uword index)
   {
   coot_extra_debug_sigprint();
 
@@ -106,7 +131,7 @@ MatValProxy<eT>::operator=(const eT in_val)
   {
   coot_extra_debug_sigprint();
 
-  coot_rt_t::set_val(M.dev_mem, index, in_val);
+  coot_rt_t::set_val(dev_mem, index, in_val);
   }
 
 
@@ -118,7 +143,7 @@ MatValProxy<eT>::operator+=(const eT in_val)
   {
   coot_extra_debug_sigprint();
 
-  coot_rt_t::val_add_inplace(M.dev_mem, index, in_val);
+  coot_rt_t::val_add_inplace(dev_mem, index, in_val);
   }
 
 
@@ -130,7 +155,7 @@ MatValProxy<eT>::operator-=(const eT in_val)
   {
   coot_extra_debug_sigprint();
 
-  coot_rt_t::val_minus_inplace(M.dev_mem, index, in_val);
+  coot_rt_t::val_minus_inplace(dev_mem, index, in_val);
   }
 
 
@@ -142,7 +167,7 @@ MatValProxy<eT>::operator*=(const eT in_val)
   {
   coot_extra_debug_sigprint();
 
-  coot_rt_t::val_mul_inplace(M.dev_mem, index, in_val);
+  coot_rt_t::val_mul_inplace(dev_mem, index, in_val);
   }
 
 
@@ -154,5 +179,5 @@ MatValProxy<eT>::operator/=(const eT in_val)
   {
   coot_extra_debug_sigprint();
 
-  coot_rt_t::val_div_inplace(M.dev_mem, index, in_val);
+  coot_rt_t::val_div_inplace(dev_mem, index, in_val);
   }

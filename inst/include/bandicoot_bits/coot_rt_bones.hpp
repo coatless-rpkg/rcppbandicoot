@@ -71,7 +71,7 @@ class coot_rt_t
    */
   template<typename eT2, typename eT1>
   static inline void copy_mat(dev_mem_t<eT2> dest,
-                              dev_mem_t<eT1> src,
+                              const dev_mem_t<eT1> src,
                               // logical size of matrix
                               const uword n_rows,
                               const uword n_cols,
@@ -82,6 +82,28 @@ class coot_rt_t
                               const uword src_row_offset,
                               const uword src_col_offset,
                               const uword src_M_n_rows);
+
+  /**
+   * Copy one cube to another cube.
+   */
+  template<typename eT2, typename eT1>
+  static inline void copy_cube(dev_mem_t<eT2> dest,
+                               const dev_mem_t<eT1> src,
+                               // logical size of cube
+                               const uword n_rows,
+                               const uword n_cols,
+                               const uword n_slices,
+                               // offsets for subviews
+                               const uword dest_row_offset,
+                               const uword dest_col_offset,
+                               const uword dest_slice_offset,
+                               const uword dest_M_n_rows,
+                               const uword dest_M_n_cols,
+                               const uword src_row_offset,
+                               const uword src_col_offset,
+                               const uword src_slice_offset,
+                               const uword src_M_n_rows,
+                               const uword src_M_n_cols);
 
   template<typename eT>
   static inline void reorder_cols(dev_mem_t<eT> out, const dev_mem_t<eT> mem, const uword n_rows, const dev_mem_t<uword> order, const uword out_n_cols);
@@ -118,8 +140,8 @@ class coot_rt_t
   static inline void fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi);
 
   /**
-   * Perform an elementwise scalar operation on a matrix of size `n_rows x n_cols`, storing the result in `dest`.
-   * The offsets and M_n_rows are meant to allow the source (and destination) to be subviews of a larger matrix.
+   * Perform an elementwise scalar operation on a matrix or cube of size `n_rows x n_cols x n_slices`, storing the result in `dest`.
+   * The offsets and M_n_rows are meant to allow the source (and destination) to be subviews of a larger matrix or cube.
    */
   template<typename eT1, typename eT2>
   static inline void eop_scalar(const twoway_kernel_id::enum_id num,
@@ -130,14 +152,19 @@ class coot_rt_t
                                 // logical size of source and destination
                                 const uword n_rows,
                                 const uword n_cols,
+                                const uword n_slices,
                                 // submatrix destination offsets (set to 0, 0, and n_rows if not a subview)
                                 const uword dest_row_offset,
                                 const uword dest_col_offset,
+                                const uword dest_slice_offset,
                                 const uword dest_M_n_rows,
+                                const uword dest_M_n_cols,
                                 // submatrix source offsets (set to 0, 0, and n_rows if not a subview)
                                 const uword src_row_offset,
                                 const uword src_col_offset,
-                                const uword src_M_n_rows);
+                                const uword src_slice_offset,
+                                const uword src_M_n_rows,
+                                const uword src_M_n_cols);
 
   /**
    * Perform an elementwise matrix operation on two matrices of size `n_rows` x `n_cols`.
@@ -161,6 +188,36 @@ class coot_rt_t
                              const uword src_B_row_offset,
                              const uword src_B_col_offset,
                              const uword src_B_M_n_rows);
+
+  /**
+   * Perform an elementwise operation on two cubes of size `n_rows` x `n_cols` x `n_slices`.
+   */
+  template<typename eT1, typename eT2>
+  static inline void eop_cube(const twoway_kernel_id::enum_id num,
+                              dev_mem_t<eT2> dest,
+                              const dev_mem_t<eT2> src_A,
+                              const dev_mem_t<eT1> src_B,
+                              // logical size of source and destination
+                              const uword n_rows,
+                              const uword n_cols,
+                              const uword n_slices,
+                              // subcube destination offsets (set to 0, 0, 0, n_rows, and n_cols if not a subview)
+                              const uword dest_row_offset,
+                              const uword dest_col_offset,
+                              const uword dest_slice_offset,
+                              const uword dest_M_n_rows,
+                              const uword dest_M_n_cols,
+                              // subcube source offsets (set to 0, 0, 0, n_rows, and n_cols if not a subview)
+                              const uword src_A_row_offset,
+                              const uword src_A_col_offset,
+                              const uword src_A_slice_offset,
+                              const uword src_A_M_n_rows,
+                              const uword src_A_M_n_cols,
+                              const uword src_B_row_offset,
+                              const uword src_B_col_offset,
+                              const uword src_B_slice_offset,
+                              const uword src_B_M_n_rows,
+                              const uword src_B_M_n_cols);
 
   template<typename eT>
   static inline eT prod(const dev_mem_t<eT> mem, const uword n_elem);
@@ -373,7 +430,48 @@ class coot_rt_t
   static inline typename promote_type<eT1, eT2>::result dot(const dev_mem_t<eT1> mem1, const dev_mem_t<eT2> mem2, const uword n_elem);
 
   template<typename eT1, typename eT2>
-  static inline void repmat(const dev_mem_t<eT1> src, dev_mem_t<eT2> dest, const uword n_rows, const uword n_cols, const uword copies_per_row, const uword copies_per_col);
+  static inline void broadcast_op(const twoway_kernel_id::enum_id num,
+                                  dev_mem_t<eT2> dest,
+                                  const dev_mem_t<eT2> dest_in,
+                                  const dev_mem_t<eT1> src,
+                                  const uword src_n_rows,
+                                  const uword src_n_cols,
+                                  const uword copies_per_row,
+                                  const uword copies_per_col,
+                                  // subview arguments
+                                  const uword dest_row_offset,
+                                  const uword dest_col_offset,
+                                  const uword dest_M_n_rows,
+                                  const uword dest_in_row_offset,
+                                  const uword dest_in_col_offset,
+                                  const uword dest_in_M_n_rows,
+                                  const uword src_row_offset,
+                                  const uword src_col_offset,
+                                  const uword src_M_n_rows);
+
+  template<typename eT1, typename eT2>
+  static inline void broadcast_subset_op(const twoway_kernel_id::enum_id num,
+                                         dev_mem_t<eT2> dest,
+                                         const dev_mem_t<eT2> dest_in,
+                                         const dev_mem_t<eT1> src,
+                                         const dev_mem_t<uword> indices,
+                                         const uword mode, // 0 => src_n_rows == indices.n_elem
+                                         const uword src_n_rows,
+                                         const uword src_n_cols,
+                                         const uword copies_per_row,
+                                         const uword copies_per_col,
+                                         // subview arguments
+                                         const uword dest_row_offset,
+                                         const uword dest_col_offset,
+                                         const uword dest_M_n_rows,
+                                         const uword dest_in_row_offset,
+                                         const uword dest_in_col_offset,
+                                         const uword dest_in_M_n_rows,
+                                         const uword src_row_offset,
+                                         const uword src_col_offset,
+                                         const uword src_M_n_rows,
+                                         const uword indices_offset,
+                                         const uword indices_incr);
 
   template<typename eT>
   static inline void linspace(dev_mem_t<eT> mem,
@@ -388,6 +486,15 @@ class coot_rt_t
                               const eT start,
                               const eT end,
                               const uword num);
+
+  template<typename eT>
+  static inline void regspace(dev_mem_t<eT> mem,
+                              const uword mem_incr,
+                              const eT start,
+                              const eT delta,
+                              const eT end,
+                              const uword num,
+                              const bool desc);
 
   template<typename eT1, typename eT2>
   static inline void clamp(dev_mem_t<eT2> dest,

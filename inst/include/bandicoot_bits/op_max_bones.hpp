@@ -42,7 +42,10 @@ class op_max
   //
 
   template<typename T1>
-  inline static typename T1::elem_type apply_direct(const T1& in);
+  inline static typename T1::elem_type apply_direct(const Base<typename T1::elem_type, T1>& in);
+
+  template<typename T1>
+  inline static typename T1::elem_type apply_direct(const BaseCube<typename T1::elem_type, T1>& in);
 
   template<typename T1>
   inline static typename T1::elem_type apply_direct(const eOp<T1, eop_abs>& in);

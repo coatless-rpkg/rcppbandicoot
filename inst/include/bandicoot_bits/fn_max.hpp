@@ -124,3 +124,13 @@ max
 
   return Glue<T1, T2, glue_max>(X, Y);
   }
+
+
+
+coot_warn_unused
+inline
+uword
+max(const SizeCube& s)
+  {
+  return (std::max)( (std::max)(s.n_rows, s.n_cols), s.n_slices );
+  }

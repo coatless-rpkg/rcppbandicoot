@@ -214,7 +214,6 @@ runtime_t::compile_kernels(const std::string& unique_host_device_id)
   gpu_arch_opt << "--gpu-architecture=sm_" << use_arch;
   const std::string& gpu_arch_opt_tmp = gpu_arch_opt.str();
   opts.push_back(gpu_arch_opt_tmp.c_str());
-  std::cout << "use gpu arch " << gpu_arch_opt_tmp << "\n";
 
   result = coot_wrapper(nvrtcCompileProgram)(prog,         // CUDA runtime compilation program
                                              opts.size(),  // number of compile options

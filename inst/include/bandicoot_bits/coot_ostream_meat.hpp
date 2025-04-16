@@ -290,6 +290,14 @@ coot_ostream::print(std::ostream& o, const Mat<eT>& m, const bool modify)
     }
   else
     {
+    if(modify)
+      {
+      o.unsetf(ios::showbase);
+      o.unsetf(ios::uppercase); 
+      o.unsetf(ios::showpos);
+      o.setf(ios::fixed);
+      }
+
     o << "[matrix size: " << m_n_rows << 'x' << m_n_cols << "]\n";
     }
 
@@ -360,10 +368,58 @@ coot_ostream::print(std::ostream& o, const subview<eT>& m, const bool modify)
     }
   else
     {
+    if(modify)
+      {
+      o.unsetf(ios::showbase);
+      o.unsetf(ios::uppercase); 
+      o.unsetf(ios::showpos);
+      o.setf(ios::fixed);
+      }
+
     o << "[matrix size: " << m_n_rows << 'x' << m_n_cols << "]\n";
     }
 
   o.flush();
+  stream_state.restore(o);
+  }
+
+
+
+template<typename eT>
+coot_cold
+inline
+void
+coot_ostream::print(std::ostream& o, const Cube<eT>& x, const bool modify)
+  {
+  coot_extra_debug_sigprint();
+
+  const coot_ostream_state stream_state(o);
+
+  if(x.is_empty() == false)
+    {
+    for(uword slice = 0; slice < x.n_slices; ++slice)
+      {
+      const Mat<eT> tmp(x.slice_get_dev_mem(slice, true), x.n_rows, x.n_cols);
+
+      o << "[cube slice: " << slice << "]\n";
+      coot_ostream::print(o, tmp, modify);
+
+      if((slice + 1) < x.n_slices) { o << '\n'; }
+      }
+    }
+  else
+    {
+    if(modify)
+      {
+      o.unsetf(ios::showbase);
+      o.unsetf(ios::uppercase);
+      o.unsetf(ios::showpos);
+      o.setf(ios::fixed);
+      }
+
+    o << "[cube size: " << x.n_rows << 'x' << x.n_cols << 'x' << x.n_slices << "]\n";
+    }
+
   stream_state.restore(o);
   }
 
@@ -385,6 +441,28 @@ coot_ostream::print(std::ostream& o, const SizeMat& S)
   o.setf(ios::fixed);
 
   o << S.n_rows << 'x' << S.n_cols;
+
+  stream_state.restore(o);
+  }
+
+
+
+coot_cold
+inline
+void
+coot_ostream::print(std::ostream& o, const SizeCube& S)
+  {
+  coot_extra_debug_sigprint();
+
+  const coot_ostream_state stream_state(o);
+
+  o.unsetf(ios::showbase);
+  o.unsetf(ios::uppercase);
+  o.unsetf(ios::showpos);
+
+  o.setf(ios::fixed);
+
+  o << S.n_rows << 'x' << S.n_cols << 'x' << S.n_slices;
 
   stream_state.restore(o);
   }

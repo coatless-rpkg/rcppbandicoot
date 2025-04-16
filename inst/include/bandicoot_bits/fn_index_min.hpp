@@ -62,3 +62,16 @@ index_min(const SizeMat& s)
   {
   return (s.n_rows <= s.n_cols) ? uword(0) : uword(1);
   }
+
+
+
+coot_warn_unused
+inline
+uword
+index_min(const SizeCube& s)
+  {
+  const uword tmp_val   = (s.n_rows <= s.n_cols) ? s.n_rows : s.n_cols;
+  const uword tmp_index = (s.n_rows <= s.n_cols) ? uword(0) : uword(1);
+
+  return (tmp_val <= s.n_slices) ? tmp_index : uword(2);
+  }

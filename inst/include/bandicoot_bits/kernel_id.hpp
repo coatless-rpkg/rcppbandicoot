@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
+// Copyright 2017-2025 Ryan Curtin (https://www.ratml.org)
 // Copyright 2017      Conrad Sanderson (https://conradsanderson.id.au)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,6 +70,7 @@ struct oneway_kernel_id
     inplace_set_eye,
     linspace,
     logspace,
+    regspace_desc,
     //
     accu_simple,
     accu,
@@ -166,6 +167,7 @@ struct oneway_kernel_id
     names.push_back("inplace_set_eye");
     names.push_back("linspace");
     names.push_back("logspace");
+    names.push_back("regspace_desc");
 
     names.push_back("accu_simple");
     names.push_back("accu");
@@ -479,6 +481,11 @@ struct twoway_kernel_id
     equ_array_lgamma_post,
     clamp,
     //
+    equ_array_plus_array_cube,
+    equ_array_minus_array_cube,
+    equ_array_mul_array_cube,
+    equ_array_div_array_cube,
+    //
     sum_colwise_conv_pre,
     sum_rowwise_conv_pre,
     sum_colwise_conv_post,
@@ -500,8 +507,22 @@ struct twoway_kernel_id
     dot_small,
     //
     convert_type,
+    convert_type_cube,
     //
-    repmat,
+    broadcast_set,
+    broadcast_plus,
+    broadcast_minus_pre,
+    broadcast_minus_post,
+    broadcast_schur,
+    broadcast_div_pre,
+    broadcast_div_post,
+    broadcast_subset_set,
+    broadcast_subset_plus,
+    broadcast_subset_minus_pre,
+    broadcast_subset_minus_post,
+    broadcast_subset_schur,
+    broadcast_subset_div_pre,
+    broadcast_subset_div_post,
     //
     htrans,
     strans,
@@ -623,6 +644,11 @@ struct twoway_kernel_id
     names.push_back("equ_array_lgamma_post");
     names.push_back("clamp");
 
+    names.push_back("equ_array_plus_array_cube");
+    names.push_back("equ_array_minus_array_cube");
+    names.push_back("equ_array_mul_array_cube");
+    names.push_back("equ_array_div_array_cube");
+
     names.push_back("sum_colwise_conv_pre");
     names.push_back("sum_rowwise_conv_pre");
     names.push_back("sum_colwise_conv_post");
@@ -644,8 +670,22 @@ struct twoway_kernel_id
     names.push_back("dot_small");
 
     names.push_back("convert_type");
+    names.push_back("convert_type_cube");
 
-    names.push_back("repmat");
+    names.push_back("broadcast_set");
+    names.push_back("broadcast_plus");
+    names.push_back("broadcast_minus_pre");
+    names.push_back("broadcast_minus_post");
+    names.push_back("broadcast_schur");
+    names.push_back("broadcast_div_pre");
+    names.push_back("broadcast_div_post");
+    names.push_back("broadcast_subset_set");
+    names.push_back("broadcast_subset_plus");
+    names.push_back("broadcast_subset_minus_pre");
+    names.push_back("broadcast_subset_minus_post");
+    names.push_back("broadcast_subset_schur");
+    names.push_back("broadcast_subset_div_pre");
+    names.push_back("broadcast_subset_div_post");
 
     names.push_back("htrans");
     names.push_back("strans");

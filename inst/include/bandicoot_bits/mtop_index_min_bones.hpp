@@ -42,5 +42,8 @@ class mtop_index_min
   //
 
   template<typename T1>
-  inline static uword apply_direct(const T1& in);
+  inline static uword apply_direct(const Base<typename T1::elem_type, T1>& in);
+
+  template<typename T1>
+  inline static uword apply_direct(const BaseCube<typename T1::elem_type, T1>& in);
   };

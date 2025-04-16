@@ -51,6 +51,8 @@ class coot_ostream
 
   template<typename eT> coot_cold inline static void print(std::ostream& o, const     Mat<eT>& m, const bool modify);
   template<typename eT> coot_cold inline static void print(std::ostream& o, const subview<eT>& m, const bool modify);
+  template<typename eT> coot_cold inline static void print(std::ostream& o, const    Cube<eT>& m, const bool modify);
 
   coot_cold inline static void print(std::ostream& o, const SizeMat&  S);
+  coot_cold inline static void print(std::ostream& o, const SizeCube& S);
   };

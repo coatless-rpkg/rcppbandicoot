@@ -90,9 +90,9 @@ op_normalise_vec::apply(Mat<eT>& out, const Op<mtOp<eT, T1, mtop_conv_to>, op_no
     coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
                           out.get_dev_mem(false), U.get_dev_mem(false),
                           eT2(1), eT(norm_val_b),
-                          out.n_rows, out.n_cols,
-                          0, 0, out.n_rows,
-                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+                          out.n_rows, out.n_cols, 1,
+                          0, 0, 0, out.n_rows, out.n_cols,
+                          U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), out.n_cols /* ignored */);
     }
   }
 

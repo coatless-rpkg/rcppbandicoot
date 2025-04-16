@@ -56,18 +56,9 @@ op_pinv::apply_direct(Mat<eT2>& out, const T1& in, const typename T1::elem_type 
     unwrap<ST1> U(S.M);
     if (U.M.n_rows == 1 || U.M.n_cols == 1)
       {
-      if (!U.is_alias(out))
-        {
-        return apply_direct_diag(out, U.M, tol);
-        }
-      else
-        {
-        // Aliases must be handled via a temporary.
-        Mat<eT2> tmp;
-        const std::tuple<bool, std::string> status = apply_direct_diag(tmp, U.M, tol);
-        out.steal_mem(tmp);
-        return status;
-        }
+      // Aliases must be handled via a temporary.
+      alias_wrapper<Mat<eT2>, typename unwrap<ST1>::stored_type> W(out, U.M);
+      return apply_direct_diag(W.use, U.M, tol);
       }
     else
       {
@@ -157,9 +148,9 @@ op_pinv::apply_direct_diag(Mat<eT>& out, const Mat<eT>& in, const eT tol)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_abs,
                         abs_in.get_dev_mem(false), in.get_dev_mem(false),
                         (eT) 0, (eT) 0,
-                        abs_in.n_rows, abs_in.n_cols,
-                        0, 0, abs_in.n_rows,
-                        0, 0, abs_in.n_rows);
+                        abs_in.n_rows, abs_in.n_cols, 1,
+                        0, 0, 0, abs_in.n_rows, abs_in.n_cols,
+                        0, 0, 0, abs_in.n_rows, abs_in.n_cols);
 
   // Compute tolerance if not given.
   eT tol_use = tol;
@@ -182,9 +173,9 @@ op_pinv::apply_direct_diag(Mat<eT>& out, const Mat<eT>& in, const eT tol)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
                         out_vec.get_dev_mem(false), out_vec.get_dev_mem(false),
                         (eT) 0, (eT) 1,
-                        out_vec.n_rows, out_vec.n_cols,
-                        0, 0, out_vec.n_rows,
-                        0, 0, out_vec.n_rows);
+                        out_vec.n_rows, out_vec.n_cols, 1,
+                        0, 0, 0, out_vec.n_rows, out_vec.n_cols,
+                        0, 0, 0, out_vec.n_rows, out_vec.n_cols);
 
   // Zero out any values that are below the tolerance.
   coot_rt_t::eop_mat(threeway_kernel_id::equ_array_mul_array,
@@ -240,9 +231,9 @@ op_pinv::apply_direct_diag(Mat<eT2>& out, const Mat<eT1>& in, const eT1 tol, con
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_abs,
                         abs_in.get_dev_mem(false), in.get_dev_mem(false),
                         (eT1) 0, (eT1) 0,
-                        abs_in.n_rows, abs_in.n_cols,
-                        0, 0, abs_in.n_rows,
-                        0, 0, abs_in.n_rows);
+                        abs_in.n_rows, abs_in.n_cols, 1,
+                        0, 0, 0, abs_in.n_rows, abs_in.n_cols,
+                        0, 0, 0, abs_in.n_rows, abs_in.n_cols);
 
   // Compute tolerance if not given.
   eT1 tol_use = tol;
@@ -265,9 +256,9 @@ op_pinv::apply_direct_diag(Mat<eT2>& out, const Mat<eT1>& in, const eT1 tol, con
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
                         out_vec.get_dev_mem(false), out_vec.get_dev_mem(false),
                         (eT1) 0, (eT1) 1,
-                        out_vec.n_rows, out_vec.n_cols,
-                        0, 0, out_vec.n_rows,
-                        0, 0, out_vec.n_rows);
+                        out_vec.n_rows, out_vec.n_cols, 1,
+                        0, 0, 0, out_vec.n_rows, out_vec.n_cols,
+                        0, 0, 0, out_vec.n_rows, out_vec.n_cols);
 
   // Zero out any values that are below the tolerance.
   coot_rt_t::eop_mat(threeway_kernel_id::equ_array_mul_array,
@@ -320,9 +311,9 @@ op_pinv::apply_direct_sym(Mat<eT>& out, Mat<eT>& in, const eT tol)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_abs,
                         abs_eigvals.get_dev_mem(false), eigvals.get_dev_mem(false),
                         (eT) 0, (eT) 0,
-                        abs_eigvals.n_rows, abs_eigvals.n_cols,
-                        0, 0, abs_eigvals.n_rows,
-                        0, 0, eigvals.n_rows);
+                        abs_eigvals.n_rows, abs_eigvals.n_cols, 1,
+                        0, 0, 0, abs_eigvals.n_rows, abs_eigvals.n_cols,
+                        0, 0, 0, eigvals.n_rows, eigvals.n_cols);
 
   Col<uword> eigval_order(in.n_rows);
   // This also sorts `abs_eigvals`.
@@ -355,9 +346,9 @@ op_pinv::apply_direct_sym(Mat<eT>& out, Mat<eT>& in, const eT tol)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
                         filtered_eigvals.get_dev_mem(false), filtered_eigvals.get_dev_mem(false),
                         (eT) 0, (eT) 1,
-                        filtered_eigvals.n_rows, filtered_eigvals.n_cols,
-                        0, 0, filtered_eigvals.n_rows,
-                        0, 0, filtered_eigvals.n_rows);
+                        filtered_eigvals.n_rows, filtered_eigvals.n_cols, 1,
+                        0, 0, 0, filtered_eigvals.n_rows, filtered_eigvals.n_cols,
+                        0, 0, 0, filtered_eigvals.n_rows, filtered_eigvals.n_cols);
 
   //
   // 4. Construct output.
@@ -496,9 +487,9 @@ op_pinv::apply_direct_gen(Mat<eT>& out, Mat<eT>& in, const eT tol)
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
                         filtered_S.get_dev_mem(false), filtered_S.get_dev_mem(false),
                         (eT) 0, (eT) 1,
-                        num_svs, 1,
-                        0, 0, num_svs,
-                        0, 0, num_svs);
+                        num_svs, 1, 1,
+                        0, 0, 0, num_svs, 1,
+                        0, 0, 0, num_svs, 1);
 
   //
   // 5. Reconstruct as subset of V * diagmat(inv_s) * subset of U

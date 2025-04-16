@@ -74,6 +74,18 @@ class subview : public Base<eT, subview<eT> >
   template<typename eT1> inline static void schur_inplace(Mat<eT1>& out, const subview& in);
   template<typename eT1> inline static void   div_inplace(Mat<eT1>& out, const subview& in);
 
+  inline       subview_each1<subview<eT>, 0> each_col();
+  inline       subview_each1<subview<eT>, 1> each_row();
+
+  inline const subview_each1<subview<eT>, 0> each_col() const;
+  inline const subview_each1<subview<eT>, 1> each_row() const;
+
+  template<typename T1> inline       subview_each2<subview<eT>, 0, T1> each_col(const Base<uword, T1>& indices);
+  template<typename T1> inline       subview_each2<subview<eT>, 1, T1> each_row(const Base<uword, T1>& indices);
+
+  template<typename T1> inline const subview_each2<subview<eT>, 0, T1> each_col(const Base<uword, T1>& indices) const;
+  template<typename T1> inline const subview_each2<subview<eT>, 1, T1> each_row(const Base<uword, T1>& indices) const;
+
   coot_inline       diagview<eT> diag(const sword in_id = 0);
   coot_inline const diagview<eT> diag(const sword in_id = 0) const;
 
@@ -136,6 +148,9 @@ class subview_col : public subview<eT>
   template<typename T1>
   inline void operator= (const Base<eT,T1>& x);
 
+  coot_inline const Op<subview_col<eT>, op_htrans>  t() const;
+  coot_inline const Op<subview_col<eT>, op_htrans> ht() const;
+  coot_inline const Op<subview_col<eT>, op_strans> st() const;
 
   protected:
 

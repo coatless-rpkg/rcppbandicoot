@@ -73,3 +73,33 @@ randu(const SizeMat& s, const typename coot_Mat_Col_Row_only<T>::result* junk = 
 
   return randu<T>(s.n_rows, s.n_cols);
   }
+
+
+
+template<typename T>
+coot_warn_unused
+inline
+T
+randu(const uword n_rows, const uword n_cols, const uword n_slices, const typename coot_Cube_only<T>::result* junk = nullptr)
+  {
+  coot_extra_debug_sigprint();
+  coot_ignore(junk);
+
+  T out(n_rows, n_cols, n_slices);
+  coot_rng::fill_randu(out.get_dev_mem(false), out.n_elem);
+  return out;
+  }
+
+
+
+template<typename T>
+coot_warn_unused
+inline
+T
+randu(const SizeCube& s, const typename coot_Cube_only<T>::result* junk = nullptr)
+  {
+  coot_extra_debug_sigprint();
+  coot_ignore(junk);
+
+  return randu<T>(s.n_rows, s.n_cols, s.n_slices);
+  }

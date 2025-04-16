@@ -142,6 +142,46 @@ struct is_arma_Mat< const arma::Row<eT> >
 
 
 template<typename T>
+struct is_arma_SpMat
+  { static const bool value = false; };
+
+template<typename eT>
+struct is_arma_SpMat< arma::SpMat<eT> >
+  { static const bool value = true; };
+
+template<typename eT>
+struct is_arma_SpMat< const arma::SpMat<eT> >
+  { static const bool value = true; };
+
+
+
+//
+//
+//
+
+
+
+template<typename T>
+struct is_arma_Cube
+  { static const bool value = false; };
+
+template<typename eT>
+struct is_arma_Cube< arma::Cube<eT> >
+  { static const bool value = true; };
+
+template<typename eT>
+struct is_arma_Cube< const arma::Cube<eT> >
+  { static const bool value = true; };
+
+
+
+//
+//
+//
+
+
+
+template<typename T>
 struct is_subview
   { static constexpr bool value = false; };
 
@@ -226,6 +266,19 @@ struct is_Op< const Op<T1, op_type> >
 
 
 template<typename T>
+struct is_CubeToMatOp
+  { static constexpr bool value = false; };
+
+template<typename T1, typename op_type>
+struct is_CubeToMatOp< CubeToMatOp<T1,op_type> >
+  { static constexpr bool value = true; };
+
+template<typename T1, typename op_type>
+struct is_CubeToMatOp< const CubeToMatOp<T1,op_type> >
+  { static constexpr bool value = true; };
+
+
+template<typename T>
 struct is_eOp
   { static constexpr bool value = false; };
 
@@ -304,6 +357,22 @@ template<typename eT>
 struct is_Cube< Cube<eT> >
   { static constexpr bool value = true; };
 
+template<typename eT>
+struct is_Cube< const Cube<eT> >
+  { static constexpr bool value = true; };
+
+template<typename T>
+struct is_subview_cube
+  { static constexpr bool value = false; };
+
+template<typename eT>
+struct is_subview_cube< subview_cube<eT> >
+  { static constexpr bool value = true; };
+
+template<typename eT>
+struct is_subview_cube< const subview_cube<eT> >
+  { static constexpr bool value = true; };
+
 
 //
 //
@@ -319,6 +388,10 @@ template<typename eT, typename gen_type>
 struct is_GenCube< GenCube<eT,gen_type> >
   { static constexpr bool value = true; };
 
+template<typename eT, typename gen_type>
+struct is_GenCube< const GenCube<eT,gen_type> >
+  { static constexpr bool value = true; };
+
 
 template<typename T>
 struct is_OpCube
@@ -326,6 +399,10 @@ struct is_OpCube
 
 template<typename T1, typename op_type>
 struct is_OpCube< OpCube<T1,op_type> >
+  { static constexpr bool value = true; };
+
+template<typename T1, typename op_type>
+struct is_OpCube< const OpCube<T1,op_type> >
   { static constexpr bool value = true; };
 
 
@@ -337,6 +414,23 @@ template<typename T1, typename eop_type>
 struct is_eOpCube< eOpCube<T1,eop_type> >
   { static constexpr bool value = true; };
 
+template<typename T1, typename eop_type>
+struct is_eOpCube< const eOpCube<T1,eop_type> >
+  { static constexpr bool value = true; };
+
+
+template<typename T>
+struct is_mtOpCube
+  { static constexpr bool value = false; };
+
+template<typename out_eT, typename T1, typename mtop_type>
+struct is_mtOpCube< mtOpCube<out_eT, T1, mtop_type> >
+  { static constexpr bool value = true; };
+
+template<typename out_eT, typename T1, typename mtop_type>
+struct is_mtOpCube< const mtOpCube<out_eT, T1, mtop_type> >
+  { static constexpr bool value = true; };
+
 
 template<typename T>
 struct is_GlueCube
@@ -346,6 +440,10 @@ template<typename T1, typename T2, typename glue_type>
 struct is_GlueCube< GlueCube<T1,T2,glue_type> >
   { static constexpr bool value = true; };
 
+template<typename T1, typename T2, typename glue_type>
+struct is_GlueCube< const GlueCube<T1,T2,glue_type> >
+  { static constexpr bool value = true; };
+
 
 template<typename T>
 struct is_eGlueCube
@@ -353,6 +451,10 @@ struct is_eGlueCube
 
 template<typename T1, typename T2, typename eglue_type>
 struct is_eGlueCube< eGlueCube<T1,T2,eglue_type> >
+  { static constexpr bool value = true; };
+
+template<typename T1, typename T2, typename eglue_type>
+struct is_eGlueCube< const eGlueCube<T1,T2,eglue_type> >
   { static constexpr bool value = true; };
 
 
@@ -379,6 +481,7 @@ struct is_coot_type
   || is_subview_col<T1>::value
   || is_subview_row<T1>::value
   || is_diagview<T1>::value
+  || is_CubeToMatOp<T1>::value
   ;
   };
 
@@ -392,9 +495,12 @@ struct is_coot_cube_type
   || is_GenCube<T1>::value
   || is_OpCube<T1>::value
   || is_eOpCube<T1>::value
+  || is_mtOpCube<T1>::value
   || is_GlueCube<T1>::value
   || is_eGlueCube<T1>::value
-  // TODO: subview_cube
+  //|| is_mtGlueCube<T1>::value
+  || is_subview_cube<T1>::value
+  //|| is_subview_cube_slices<T1>::value
   ;
   };
 

@@ -29,44 +29,26 @@ glue_times_redirect<N>::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& 
   const partial_unwrap<T1> tmp1(X.A);
   const partial_unwrap<T2> tmp2(X.B);
 
-  const typename partial_unwrap<T1>::stored_type& A = tmp1.M;
-  const typename partial_unwrap<T2>::stored_type& B = tmp2.M;
+  typedef typename partial_unwrap<T1>::stored_type PT1;
+  typedef typename partial_unwrap<T2>::stored_type PT2;
+
+  const PT1& A = tmp1.M;
+  const PT2& B = tmp2.M;
 
   const bool use_alpha = partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times;
   const out_eT   alpha = use_alpha ? (tmp1.get_val() * tmp2.get_val()) : out_eT(0);
 
-  const bool alias = tmp1.is_alias(out) || tmp2.is_alias(out);
-
-  if(alias == false)
-    {
-    glue_times::apply
-      <
-      out_eT,
-      T1,
-      T2,
-      partial_unwrap<T1>::do_trans,
-      partial_unwrap<T2>::do_trans,
-      (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times)
-      >
-      (out, A, B, alpha);
-    }
-  else
-    {
-    Mat<out_eT> tmp;
-
-    glue_times::apply
-      <
-      out_eT,
-      T1,
-      T2,
-      partial_unwrap<T1>::do_trans,
-      partial_unwrap<T2>::do_trans,
-      (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times)
-      >
-      (tmp, A, B, alpha);
-
-    out.steal_mem(tmp);
-    }
+  alias_wrapper<Mat<out_eT>, PT1, PT2> W(out, tmp1, tmp2);
+  glue_times::apply
+    <
+    out_eT,
+    T1,
+    T2,
+    partial_unwrap<T1>::do_trans,
+    partial_unwrap<T2>::do_trans,
+    (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times)
+    >
+    (W.use, A, B, alpha);
   }
 
 
@@ -81,44 +63,26 @@ glue_times_redirect<2>::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& 
   const partial_unwrap<T1> tmp1(X.A);
   const partial_unwrap<T2> tmp2(X.B);
 
-  const typename partial_unwrap<T1>::stored_type& A = tmp1.M;
-  const typename partial_unwrap<T2>::stored_type& B = tmp2.M;
+  typedef typename partial_unwrap<T1>::stored_type PT1;
+  typedef typename partial_unwrap<T2>::stored_type PT2;
+
+  const PT1& A = tmp1.M;
+  const PT2& B = tmp2.M;
 
   const bool use_alpha = partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times;
   const out_eT   alpha = use_alpha ? (tmp1.get_val() * tmp2.get_val()) : out_eT(0);
 
-  const bool alias = tmp1.is_alias(out) || tmp2.is_alias(out);
-
-  if(alias == false)
-    {
-    glue_times::apply
-      <
-      out_eT,
-      typename partial_unwrap<T1>::stored_type,
-      typename partial_unwrap<T2>::stored_type,
-      partial_unwrap<T1>::do_trans,
-      partial_unwrap<T2>::do_trans,
-      (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times)
-      >
-      (out, A, B, alpha);
-    }
-  else
-    {
-    Mat<out_eT> tmp;
-
-    glue_times::apply
-      <
-      out_eT,
-      typename partial_unwrap<T1>::stored_type,
-      typename partial_unwrap<T2>::stored_type,
-      partial_unwrap<T1>::do_trans,
-      partial_unwrap<T2>::do_trans,
-      (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times)
-      >
-      (tmp, A, B, alpha);
-
-    out.steal_mem(tmp);
-    }
+  alias_wrapper<Mat<out_eT>, PT1, PT2> W(out, A, B);
+  glue_times::apply
+    <
+    out_eT,
+    PT1,
+    PT2,
+    partial_unwrap<T1>::do_trans,
+    partial_unwrap<T2>::do_trans,
+    (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times)
+    >
+    (W.use, A, B, alpha);
   }
 
 
@@ -137,49 +101,30 @@ glue_times_redirect<3>::apply(Mat<out_eT>& out, const Glue<Glue<T1, T2, glue_tim
   const partial_unwrap<T2> tmp2(X.A.B);
   const partial_unwrap<T3> tmp3(X.B  );
 
-  const typename partial_unwrap<T1>::stored_type& A = tmp1.M;
-  const typename partial_unwrap<T2>::stored_type& B = tmp2.M;
-  const typename partial_unwrap<T3>::stored_type& C = tmp3.M;
+  typedef typename partial_unwrap<T1>::stored_type PT1;
+  typedef typename partial_unwrap<T2>::stored_type PT2;
+  typedef typename partial_unwrap<T3>::stored_type PT3;
+
+  const PT1& A = tmp1.M;
+  const PT2& B = tmp2.M;
+  const PT3& C = tmp3.M;
 
   const bool use_alpha = partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times || partial_unwrap<T3>::do_times;
   const out_eT   alpha = use_alpha ? (tmp1.get_val() * tmp2.get_val() * tmp3.get_val()) : out_eT(0);
 
-  const bool alias = tmp1.is_alias(out) || tmp2.is_alias(out) || tmp3.is_alias(out);
-
-  if(alias == false)
-    {
-    glue_times::apply
-      <
-      out_eT,
-      typename partial_unwrap<T1>::stored_type,
-      typename partial_unwrap<T2>::stored_type,
-      typename partial_unwrap<T3>::stored_type,
-      partial_unwrap<T1>::do_trans,
-      partial_unwrap<T2>::do_trans,
-      partial_unwrap<T3>::do_trans,
-      (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times || partial_unwrap<T3>::do_times)
-      >
-      (out, A, B, C, alpha);
-    }
-  else
-    {
-    Mat<out_eT> tmp;
-
-    glue_times::apply
-      <
-      out_eT,
-      typename partial_unwrap<T1>::stored_type,
-      typename partial_unwrap<T2>::stored_type,
-      typename partial_unwrap<T3>::stored_type,
-      partial_unwrap<T1>::do_trans,
-      partial_unwrap<T2>::do_trans,
-      partial_unwrap<T3>::do_trans,
-      (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times || partial_unwrap<T3>::do_times)
-      >
-      (tmp, A, B, C, alpha);
-
-    out.steal_mem(tmp);
-    }
+  alias_wrapper<Mat<out_eT>, PT1, PT2, PT3> W(out, A, B, C);
+  glue_times::apply
+    <
+    out_eT,
+    PT1,
+    PT2,
+    PT3,
+    partial_unwrap<T1>::do_trans,
+    partial_unwrap<T2>::do_trans,
+    partial_unwrap<T3>::do_trans,
+    (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times || partial_unwrap<T3>::do_times)
+    >
+    (W.use, A, B, C, alpha);
   }
 
 
@@ -199,54 +144,34 @@ glue_times_redirect<4>::apply(Mat<out_eT>& out, const Glue<Glue<Glue<T1, T2, glu
   const partial_unwrap<T3> tmp3(X.A.B  );
   const partial_unwrap<T4> tmp4(X.B    );
 
-  const typename partial_unwrap<T1>::stored_type& A = tmp1.M;
-  const typename partial_unwrap<T2>::stored_type& B = tmp2.M;
-  const typename partial_unwrap<T3>::stored_type& C = tmp3.M;
-  const typename partial_unwrap<T4>::stored_type& D = tmp4.M;
+  typedef typename partial_unwrap<T1>::stored_type PT1;
+  typedef typename partial_unwrap<T2>::stored_type PT2;
+  typedef typename partial_unwrap<T3>::stored_type PT3;
+  typedef typename partial_unwrap<T4>::stored_type PT4;
+
+  const PT1& A = tmp1.M;
+  const PT2& B = tmp2.M;
+  const PT3& C = tmp3.M;
+  const PT4& D = tmp4.M;
 
   const bool use_alpha = partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times || partial_unwrap<T3>::do_times || partial_unwrap<T4>::do_times;
   const out_eT   alpha = use_alpha ? (tmp1.get_val() * tmp2.get_val() * tmp3.get_val() * tmp4.get_val()) : out_eT(0);
 
-  const bool alias = tmp1.is_alias(out) || tmp2.is_alias(out) || tmp3.is_alias(out) || tmp4.is_alias(out);
-
-  if(alias == false)
-    {
-    glue_times::apply
-      <
-      out_eT,
-      typename partial_unwrap<T1>::stored_type,
-      typename partial_unwrap<T2>::stored_type,
-      typename partial_unwrap<T3>::stored_type,
-      typename partial_unwrap<T4>::stored_type,
-      partial_unwrap<T1>::do_trans,
-      partial_unwrap<T2>::do_trans,
-      partial_unwrap<T3>::do_trans,
-      partial_unwrap<T4>::do_trans,
-      (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times || partial_unwrap<T3>::do_times || partial_unwrap<T4>::do_times)
-      >
-      (out, A, B, C, D, alpha);
-    }
-  else
-    {
-    Mat<out_eT> tmp;
-
-    glue_times::apply
-      <
-      out_eT,
-      typename partial_unwrap<T1>::stored_type,
-      typename partial_unwrap<T2>::stored_type,
-      typename partial_unwrap<T3>::stored_type,
-      typename partial_unwrap<T4>::stored_type,
-      partial_unwrap<T1>::do_trans,
-      partial_unwrap<T2>::do_trans,
-      partial_unwrap<T3>::do_trans,
-      partial_unwrap<T4>::do_trans,
-      (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times || partial_unwrap<T3>::do_times || partial_unwrap<T4>::do_times)
-      >
-      (tmp, A, B, C, D, alpha);
-
-    out.steal_mem(tmp);
-    }
+  alias_wrapper<Mat<out_eT>, PT1, PT2, PT3, PT4> W(out, A, B, C, D);
+  glue_times::apply
+    <
+    out_eT,
+    PT1,
+    PT2,
+    PT3,
+    PT4,
+    partial_unwrap<T1>::do_trans,
+    partial_unwrap<T2>::do_trans,
+    partial_unwrap<T3>::do_trans,
+    partial_unwrap<T4>::do_trans,
+    (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times || partial_unwrap<T3>::do_times || partial_unwrap<T4>::do_times)
+    >
+    (W.use, A, B, C, D, alpha);
   }
 
 
@@ -568,9 +493,9 @@ glue_times_diag::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times_diag>& X)
       coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
                             tmp.get_dev_mem(false), tmp.get_dev_mem(false),
                             alpha, (out_eT) 1,
-                            tmp.n_rows, tmp.n_cols,
-                            0, 0, tmp.n_rows,
-                            0, 0, tmp.n_rows);
+                            tmp.n_rows, tmp.n_cols, 1,
+                            0, 0, 0, tmp.n_rows, tmp.n_cols,
+                            0, 0, 0, tmp.n_rows, tmp.n_cols);
       }
 
     // Set the diagonal of `out` to the vector in `tmp`.

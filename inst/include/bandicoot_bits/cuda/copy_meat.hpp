@@ -137,3 +137,67 @@ copy_mat(dev_mem_t<eT2> dest,
 
   coot_check_cuda_error(result, "coot::cuda::copy_mat(): cuLaunchKernel() failed");
   }
+
+
+
+/**
+ * Copy the source memory to the destination.
+ */
+template<typename eT2, typename eT1>
+inline
+void
+copy_cube(dev_mem_t<eT2> dest,
+          const dev_mem_t<eT1> src,
+          // logical size of cube
+          const uword n_rows,
+          const uword n_cols,
+          const uword n_slices,
+          // offsets for subviews
+          const uword dest_row_offset,
+          const uword dest_col_offset,
+          const uword dest_slice_offset,
+          const uword dest_M_n_rows,
+          const uword dest_M_n_cols,
+          const uword src_row_offset,
+          const uword src_col_offset,
+          const uword src_slice_offset,
+          const uword src_M_n_rows,
+          const uword src_M_n_cols)
+  {
+  coot_extra_debug_sigprint();
+
+  // Get kernel.
+  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT2, eT1>(twoway_kernel_id::convert_type_cube);
+
+  const uword dest_offset = dest_row_offset + dest_col_offset * dest_M_n_rows + dest_slice_offset * dest_M_n_rows * dest_M_n_cols;
+  const uword  src_offset =  src_row_offset +  src_col_offset * src_M_n_rows  +  src_slice_offset * src_M_n_rows * src_M_n_cols;
+
+  const eT2* dest_ptr = dest.cuda_mem_ptr + dest_offset;
+  const eT1*  src_ptr =  src.cuda_mem_ptr + src_offset;
+
+  const void* args[] = {
+      &dest_ptr,
+      &dest_ptr, // ignored
+      &src_ptr,
+      (uword*) &n_rows,
+      (uword*) &n_cols,
+      (uword*) &n_slices,
+      (uword*) &dest_M_n_rows,
+      (uword*) &dest_M_n_cols,
+      (uword*) &src_M_n_rows, // ignored
+      (uword*) &src_M_n_cols, // ignored
+      (uword*) &src_M_n_rows,
+      (uword*) &src_M_n_cols };
+
+  const kernel_dims dims = three_dimensional_grid_dims(n_rows, n_cols, n_slices);
+
+  CUresult result = coot_wrapper(cuLaunchKernel)(
+      kernel,
+      dims.d[0], dims.d[1], dims.d[2],
+      dims.d[3], dims.d[4], dims.d[5],
+      0, NULL, // shared mem and stream
+      (void**) args, // arguments
+      0);
+
+  coot_check_cuda_error(result, "coot::cuda::copy_cube(): cuLaunchKernel() failed");
+  }

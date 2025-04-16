@@ -29,6 +29,14 @@ struct eglue_core
   template<typename eT3, typename T1, typename T2> inline static void apply_inplace_minus(Mat<eT3>& out, const eGlue<T1, T2, eglue_type>& x);
   template<typename eT3, typename T1, typename T2> inline static void apply_inplace_schur(Mat<eT3>& out, const eGlue<T1, T2, eglue_type>& x);
   template<typename eT3, typename T1, typename T2> inline static void apply_inplace_div  (Mat<eT3>& out, const eGlue<T1, T2, eglue_type>& x);
+
+  // cubes
+
+  template<typename eT3, typename T1, typename T2> inline static void apply              (Cube<eT3>& out, const eGlueCube<T1, T2, eglue_type>& x);
+  template<typename eT3, typename T1, typename T2> inline static void apply_inplace_plus (Cube<eT3>& out, const eGlueCube<T1, T2, eglue_type>& x);
+  template<typename eT3, typename T1, typename T2> inline static void apply_inplace_minus(Cube<eT3>& out, const eGlueCube<T1, T2, eglue_type>& x);
+  template<typename eT3, typename T1, typename T2> inline static void apply_inplace_schur(Cube<eT3>& out, const eGlueCube<T1, T2, eglue_type>& x);
+  template<typename eT3, typename T1, typename T2> inline static void apply_inplace_div  (Cube<eT3>& out, const eGlueCube<T1, T2, eglue_type>& x);
   };
 
 
