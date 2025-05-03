@@ -1,4 +1,4 @@
-// Copyright 2023 Ryan Curtin (http://www.ratml.org)
+// Copyright 2023-2025 Ryan Curtin (http://www.ratml.org)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,22 +19,25 @@ COOT_FN(PREFIX,mul_rowwise)(__global eT1* out,
                             const UWORD out_offset,
                             __global const eT1* A, // expected to have length n_rows
                             const UWORD A_offset,
+                            const UWORD A_incr,
                             __global const eT1* in,
                             const UWORD in_offset,
                             const eT1 alpha,
                             const UWORD n_rows,
-                            const UWORD n_cols)
+                            const UWORD n_cols,
+                            const UWORD in_M_n_rows)
   {
   const UWORD row = get_global_id(0);
   if(row < n_rows)
     {
-    const eT1 val = alpha * A[A_offset + row];
+    const eT1 val = alpha * A[A_offset + row * A_incr];
 
     #pragma unroll
     for(UWORD i = 0; i < n_cols; ++i)
       {
-      const UWORD offset = i * n_rows + row;
-      out[out_offset + offset] = val * in[in_offset + offset];
+      const UWORD  in_elem_offset = i * in_M_n_rows + row;
+      const UWORD out_elem_offset = i * in_M_n_rows + row;
+      out[out_offset + out_elem_offset] = val * in[in_offset + in_elem_offset];
       }
     }
   }

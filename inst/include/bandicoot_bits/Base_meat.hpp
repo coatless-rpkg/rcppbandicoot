@@ -336,3 +336,66 @@ Base<elem_type,derived>::index_max() const
   {
   return mtop_index_max::apply_direct( (*this).get_ref() );
   }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
+Base<elem_type, derived>::is_finite() const
+  {
+  coot_extra_debug_sigprint();
+
+  // The finite kernels only work on contiguous memory.
+  if (is_non_integral<elem_type>::value)
+    {
+    Mat<elem_type> tmp((*this).get_ref());
+    return tmp.is_finite();
+    }
+  else
+    {
+    return true;
+    }
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
+Base<elem_type, derived>::has_inf() const
+  {
+  coot_extra_debug_sigprint();
+
+  // The has_inf kernels only work on contiguous memory.
+  if (is_non_integral<elem_type>::value)
+    {
+    Mat<elem_type> tmp((*this).get_ref());
+    return tmp.has_inf();
+    }
+  else
+    {
+    return false;
+    }
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
+Base<elem_type, derived>::has_nan() const
+  {
+  coot_extra_debug_sigprint();
+
+  // The has_nan kernels only work on contiguous memory.
+  if (is_non_integral<elem_type>::value)
+    {
+    Mat<elem_type> tmp((*this).get_ref());
+    return tmp.has_nan();
+    }
+  else
+    {
+    return false;
+    }
+  }

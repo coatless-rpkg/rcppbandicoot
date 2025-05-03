@@ -232,12 +232,12 @@ class Cube : public BaseCube< eT, Cube<eT> >
   /* template<typename gen_type> inline Cube& operator%=(const GenCube<eT, gen_type>& X); */
   /* template<typename gen_type> inline Cube& operator/=(const GenCube<eT, gen_type>& X); */
 
-  /* template<typename T1, typename op_type> inline             Cube(const OpCube<T1, op_type>& X); */
-  /* template<typename T1, typename op_type> inline Cube& operator= (const OpCube<T1, op_type>& X); */
-  /* template<typename T1, typename op_type> inline Cube& operator+=(const OpCube<T1, op_type>& X); */
-  /* template<typename T1, typename op_type> inline Cube& operator-=(const OpCube<T1, op_type>& X); */
-  /* template<typename T1, typename op_type> inline Cube& operator%=(const OpCube<T1, op_type>& X); */
-  /* template<typename T1, typename op_type> inline Cube& operator/=(const OpCube<T1, op_type>& X); */
+  template<typename T1, typename op_type> inline             Cube(const OpCube<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Cube& operator= (const OpCube<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Cube& operator+=(const OpCube<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Cube& operator-=(const OpCube<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Cube& operator%=(const OpCube<T1, op_type>& X);
+  template<typename T1, typename op_type> inline Cube& operator/=(const OpCube<T1, op_type>& X);
 
   template<typename T1, typename eop_type> inline             Cube(const eOpCube<T1, eop_type>& X);
   template<typename T1, typename eop_type> inline Cube& operator= (const eOpCube<T1, eop_type>& X);
@@ -253,12 +253,12 @@ class Cube : public BaseCube< eT, Cube<eT> >
   template<typename T1, typename op_type> inline Cube& operator%=(const mtOpCube<eT, T1, op_type>& X);
   template<typename T1, typename op_type> inline Cube& operator/=(const mtOpCube<eT, T1, op_type>& X);
 
-  /* template<typename T1, typename T2, typename glue_type> inline             Cube(const GlueCube<T1, T2, glue_type>& X); */
-  /* template<typename T1, typename T2, typename glue_type> inline Cube& operator= (const GlueCube<T1, T2, glue_type>& X); */
-  /* template<typename T1, typename T2, typename glue_type> inline Cube& operator+=(const GlueCube<T1, T2, glue_type>& X); */
-  /* template<typename T1, typename T2, typename glue_type> inline Cube& operator-=(const GlueCube<T1, T2, glue_type>& X); */
-  /* template<typename T1, typename T2, typename glue_type> inline Cube& operator%=(const GlueCube<T1, T2, glue_type>& X); */
-  /* template<typename T1, typename T2, typename glue_type> inline Cube& operator/=(const GlueCube<T1, T2, glue_type>& X); */
+  template<typename T1, typename T2, typename glue_type> inline             Cube(const GlueCube<T1, T2, glue_type>& X);
+  template<typename T1, typename T2, typename glue_type> inline Cube& operator= (const GlueCube<T1, T2, glue_type>& X);
+  template<typename T1, typename T2, typename glue_type> inline Cube& operator+=(const GlueCube<T1, T2, glue_type>& X);
+  template<typename T1, typename T2, typename glue_type> inline Cube& operator-=(const GlueCube<T1, T2, glue_type>& X);
+  template<typename T1, typename T2, typename glue_type> inline Cube& operator%=(const GlueCube<T1, T2, glue_type>& X);
+  template<typename T1, typename T2, typename glue_type> inline Cube& operator/=(const GlueCube<T1, T2, glue_type>& X);
 
   template<typename T1, typename T2, typename eglue_type> inline             Cube(const eGlueCube<T1, T2, eglue_type>& X);
   template<typename T1, typename T2, typename eglue_type> inline Cube& operator= (const eGlueCube<T1, T2, eglue_type>& X);
@@ -297,11 +297,11 @@ class Cube : public BaseCube< eT, Cube<eT> >
   /* arma_inline const Cube& operator--(); */
   /* arma_inline void        operator--(int); */
 
-  /*      inline arma_warn_unused bool is_finite() const; */
+  coot_warn_unused coot_inline bool is_finite() const;
   coot_warn_unused coot_inline bool is_empty()  const;
 
-  /* inline arma_warn_unused bool has_inf() const; */
-  /* inline arma_warn_unused bool has_nan() const; */
+  coot_warn_unused inline bool has_inf() const;
+  coot_warn_unused inline bool has_nan() const;
 
   /* arma_inline arma_warn_unused bool in_range(const uword i) const; */
   /* arma_inline arma_warn_unused bool in_range(const span& x) const; */
@@ -325,7 +325,8 @@ class Cube : public BaseCube< eT, Cube<eT> >
   //inline void resize(const SizeCube& s);
 
 
-  /* template<typename eT2> inline void copy_size(const Cube<eT2>& m); */
+  template<typename eT2, typename expr>
+  inline Cube& copy_size(const BaseCube<eT2, expr>& X);
 
   inline const Cube& replace(const eT old_val, const eT new_val);
 

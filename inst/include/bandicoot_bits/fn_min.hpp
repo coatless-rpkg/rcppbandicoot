@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2021      Ryan Curtin (https://www.ratml.org/)
+// Copyright 2021-2025 Ryan Curtin (https://www.ratml.org/)
 // Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 //
@@ -133,4 +133,45 @@ uword
 min(const SizeCube& s)
   {
   return (std::min)( (std::min)(s.n_rows, s.n_cols), s.n_slices );
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const OpCube<T1, op_min>
+min
+  (
+  const T1& X,
+  const uword dim = 0,
+  const typename enable_if< is_coot_cube_type<T1>::value  == true  >::result* junk = 0
+  )
+  {
+  coot_extra_debug_sigprint();
+  coot_ignore(junk);
+
+  return OpCube<T1, op_min>(X, dim, 0);
+  }
+
+
+
+template<typename T1, typename T2>
+coot_warn_unused
+inline
+typename
+enable_if2
+  <
+  ( is_coot_cube_type<T1>::value && is_coot_cube_type<T2>::value && is_same_type<typename T1::elem_type, typename T2::elem_type>::value ),
+  GlueCube<T1, T2, glue_min>
+  >::result
+min
+  (
+  const T1& X,
+  const T2& Y
+  )
+  {
+  coot_extra_debug_sigprint();
+
+  return GlueCube<T1, T2, glue_min>(X, Y);
   }

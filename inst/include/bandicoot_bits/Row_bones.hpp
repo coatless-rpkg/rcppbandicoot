@@ -51,8 +51,17 @@ class Row : public Mat<eT>
   inline                  Row(Row&& X);
   inline const Row& operator=(Row&& X);
 
-  // TODO: inline            Row(Mat<eT>&& m);
-  // TODO: inline Col& operator=(Mat<eT>&& m);
+  inline            Row(const char*        text);
+  inline Row& operator=(const char*        text);
+
+  inline            Row(const std::string& text);
+  inline Row& operator=(const std::string& text);
+
+  inline            Row(const std::vector<eT>& x);
+  inline Row& operator=(const std::vector<eT>& x);
+
+  inline            Row(const std::initializer_list<eT>& list);
+  inline Row& operator=(const std::initializer_list<eT>& list);
 
   template<typename T1> inline            Row(const Base<eT, T1>& X);
   template<typename T1> inline Row& operator=(const Base<eT, T1>& X);

@@ -28,15 +28,23 @@ mul_diag
   const dev_mem_t<eT> A_mem,
   const bool A_is_diag,
   const bool A_trans,
+  const uword A_row_offset,
+  const uword A_col_offset,
+  const uword A_M_n_rows,
   const dev_mem_t<eT> B_mem,
   const bool B_is_diag,
-  const bool B_trans
+  const bool B_trans,
+  const uword B_row_offset,
+  const uword B_col_offset,
+  const uword B_M_n_rows
   )
   {
   coot_extra_debug_sigprint();
 
   eT* diag_arg_ptr;
   eT* mat_arg_ptr;
+  uword diag_arg_incr;
+  uword mat_arg_M_n_rows;
 
   CUfunction kernel;
   kernel_dims dims;
@@ -46,8 +54,11 @@ mul_diag
     // diagmat(A) * B
     kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::mul_rowwise);
 
-    diag_arg_ptr = A_mem.cuda_mem_ptr;
-    mat_arg_ptr  = B_mem.cuda_mem_ptr;
+    diag_arg_ptr = A_mem.cuda_mem_ptr + A_row_offset + A_col_offset * A_M_n_rows;
+    mat_arg_ptr  = B_mem.cuda_mem_ptr + B_row_offset + B_col_offset * B_M_n_rows;
+
+    diag_arg_incr = A_M_n_rows;
+    mat_arg_M_n_rows = B_M_n_rows;
 
     dims = one_dimensional_grid_dims(C_n_cols);
     }
@@ -56,8 +67,11 @@ mul_diag
     // A * diagmat(B)
     kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::mul_colwise);
 
-    diag_arg_ptr = B_mem.cuda_mem_ptr;
-    mat_arg_ptr  = A_mem.cuda_mem_ptr;
+    diag_arg_ptr = B_mem.cuda_mem_ptr + B_row_offset + B_col_offset * B_M_n_rows;
+    mat_arg_ptr  = A_mem.cuda_mem_ptr + A_row_offset + A_col_offset * A_M_n_rows;
+
+    diag_arg_incr = B_M_n_rows;
+    mat_arg_M_n_rows = A_M_n_rows;
 
     dims = one_dimensional_grid_dims(C_n_rows);
     }
@@ -68,8 +82,11 @@ mul_diag
 
     coot_debug_check( mem_overlaps(C_mem, 0, C_n_rows * C_n_cols, B_mem, 0, C_n_rows * C_n_cols), "coot::cuda::mul_diag(): incorrect call, alias and transpose not allowed" );
 
-    diag_arg_ptr = A_mem.cuda_mem_ptr;
-    mat_arg_ptr  = B_mem.cuda_mem_ptr;
+    diag_arg_ptr = A_mem.cuda_mem_ptr + A_row_offset + A_col_offset * A_M_n_rows;
+    mat_arg_ptr  = B_mem.cuda_mem_ptr + B_row_offset + B_col_offset * B_M_n_rows;
+
+    diag_arg_incr = A_M_n_rows;
+    mat_arg_M_n_rows = B_M_n_rows;
 
     dims = one_dimensional_grid_dims(C_n_rows);
     }
@@ -80,8 +97,11 @@ mul_diag
 
     coot_debug_check( mem_overlaps(C_mem, 0, C_n_rows * C_n_cols, A_mem, 0, C_n_rows * C_n_cols), "coot::cuda::mul_diag(): incorrect call, alias and transpose not allowed" );
 
-    diag_arg_ptr = B_mem.cuda_mem_ptr;
-    mat_arg_ptr  = A_mem.cuda_mem_ptr;
+    diag_arg_ptr = B_mem.cuda_mem_ptr + B_row_offset + B_col_offset * B_M_n_rows;
+    mat_arg_ptr  = A_mem.cuda_mem_ptr + A_row_offset + A_col_offset * A_M_n_rows;
+
+    diag_arg_incr = B_M_n_rows;
+    mat_arg_M_n_rows = A_M_n_rows;
 
     dims = one_dimensional_grid_dims(C_n_cols);
     }
@@ -93,10 +113,12 @@ mul_diag
   const void* args[] = {
       &(C_mem.cuda_mem_ptr),
       &diag_arg_ptr,
+      (uword*) &diag_arg_incr,
       &mat_arg_ptr,
       (eT*) &alpha,
       (uword*) &C_n_rows,
-      (uword*) &C_n_cols };
+      (uword*) &C_n_cols,
+      (uword*) &mat_arg_M_n_rows };
 
   CUresult result = coot_wrapper(cuLaunchKernel)(
       kernel,

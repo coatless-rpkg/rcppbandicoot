@@ -317,6 +317,89 @@ subview_cube<eT>::operator/=(const BaseCube<eT, T1>& x)
 
 
 template<typename eT>
+inline
+void
+subview_cube<eT>::operator=(const subview_cube<eT>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_rt_t::copy_cube(m.dev_mem, x.m.dev_mem,
+                       n_rows, n_cols, n_slices,
+                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
+                       x.aux_row1, x.aux_col1, x.aux_slice1, x.m.n_rows, x.m.n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+void
+subview_cube<eT>::operator+=(const subview_cube<eT>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+                      m.dev_mem, m.dev_mem, x.m.dev_mem,
+                      n_rows, n_cols, n_slices,
+                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
+                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
+                      x.aux_row1, x.aux_col1, x.aux_slice1, x.m.n_rows, x.m.n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+void
+subview_cube<eT>::operator-=(const subview_cube<eT>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+                      m.dev_mem, m.dev_mem, x.m.dev_mem,
+                      n_rows, n_cols, n_slices,
+                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
+                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
+                      x.aux_row1, x.aux_col1, x.aux_slice1, x.m.n_rows, x.m.n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+void
+subview_cube<eT>::operator%=(const subview_cube<eT>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+                      m.dev_mem, m.dev_mem, x.m.dev_mem,
+                      n_rows, n_cols, n_slices,
+                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
+                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
+                      x.aux_row1, x.aux_col1, x.aux_slice1, x.m.n_rows, x.m.n_cols);
+  }
+
+
+
+template<typename eT>
+inline
+void
+subview_cube<eT>::operator/=(const subview_cube<eT>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+                      m.dev_mem, m.dev_mem, x.m.dev_mem,
+                      n_rows, n_cols, n_slices,
+                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
+                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
+                      x.aux_row1, x.aux_col1, x.aux_slice1, x.m.n_rows, x.m.n_cols);
+  }
+
+
+
+template<typename eT>
 template<typename T1>
 inline
 void

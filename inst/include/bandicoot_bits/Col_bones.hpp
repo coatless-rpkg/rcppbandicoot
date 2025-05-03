@@ -51,8 +51,17 @@ class Col : public Mat<eT>
   inline                  Col(Col&& X);
   inline const Col& operator=(Col&& X);
 
-  // TODO: inline            Col(Mat<eT>&& m);
-  // TODO: inline Col& operator=(Mat<eT>&& m);
+  inline            Col(const char*        text);
+  inline Col& operator=(const char*        text);
+
+  inline            Col(const std::string& text);
+  inline Col& operator=(const std::string& text);
+
+  inline            Col(const std::vector<eT>& x);
+  inline Col& operator=(const std::vector<eT>& x);
+
+  inline            Col(const std::initializer_list<eT>& list);
+  inline Col& operator=(const std::initializer_list<eT>& list);
 
   template<typename T1> inline            Col(const Base<eT, T1>& X);
   template<typename T1> inline Col& operator=(const Base<eT, T1>& X);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
+// Copyright 2017-2025 Ryan Curtin (https://www.ratml.org)
 // Copyright 2017      Conrad Sanderson (http://conradsanderson.id.au)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,9 @@
 
 
 #define COOT_VERSION_MAJOR 2
-#define COOT_VERSION_MINOR 0
+#define COOT_VERSION_MINOR 1
 #define COOT_VERSION_PATCH 0
-#define COOT_VERSION_NOTE  "Pollen River"
+#define COOT_VERSION_NOTE  "Flat Tire"
 
 
 

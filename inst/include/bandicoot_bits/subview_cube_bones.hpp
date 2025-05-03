@@ -69,6 +69,12 @@ class subview_cube : public BaseCube< eT, subview_cube<eT> >
   template<typename T1> inline void operator%= (const BaseCube<eT,T1>& x);
   template<typename T1> inline void operator/= (const BaseCube<eT,T1>& x);
 
+  inline void operator=  (const subview_cube& x);
+  inline void operator+= (const subview_cube& x);
+  inline void operator-= (const subview_cube& x);
+  inline void operator%= (const subview_cube& x);
+  inline void operator/= (const subview_cube& x);
+
   template<typename T1> inline void operator=  (const Base<eT,T1>& x);
   template<typename T1> inline void operator+= (const Base<eT,T1>& x);
   template<typename T1> inline void operator-= (const Base<eT,T1>& x);
