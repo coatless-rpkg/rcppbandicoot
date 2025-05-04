@@ -129,6 +129,402 @@ Mat<eT>::Mat(const SizeMat& s, const fill::fill_class<fill_type>& f)
 
 template<typename eT>
 inline
+Mat<eT>::Mat(const char* text)
+  : n_rows    (0)
+  , n_cols    (0)
+  , n_elem    (0)
+  , vec_state (0)
+  , mem_state (0)
+  , dev_mem({ NULL, 0 })
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  init( std::string(text) );
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>&
+Mat<eT>::operator=(const char* text)
+  {
+  coot_extra_debug_sigprint();
+
+  init( std::string(text) );
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>::Mat(const std::string& text)
+  : n_rows    (0)
+  , n_cols    (0)
+  , n_elem    (0)
+  , vec_state (0)
+  , mem_state (0)
+  , dev_mem({ NULL, 0 })
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  init( text );
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>&
+Mat<eT>::operator=(const std::string& text)
+  {
+  coot_extra_debug_sigprint();
+
+  init( text );
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+void
+Mat<eT>::init(const std::string& text_orig)
+  {
+  coot_extra_debug_sigprint();
+
+  const bool replace_commas = (is_cx<eT>::yes) ? false : ( text_orig.find(',') != std::string::npos );
+
+  std::string text_mod;
+
+  if(replace_commas)
+    {
+    text_mod = text_orig;
+    // std::replace is not available until C++17 is the minimum standard, so we use our own implementation.
+    for (size_t i = 0; i < text_mod.size(); ++i)
+      {
+      if (text_mod[i] == ',')
+        {
+        text_mod[i] == ' ';
+        }
+      }
+    }
+
+  const std::string& text = (replace_commas) ? text_mod : text_orig;
+
+  //
+  // work out the size
+
+  uword t_n_rows = 0;
+  uword t_n_cols = 0;
+
+  bool has_semicolon = false;
+  bool has_token     = false;
+
+  std::string token;
+
+  std::string::size_type line_start = 0;
+  std::string::size_type line_end   = 0;
+  std::string::size_type line_len   = 0;
+
+  std::stringstream line_stream;
+
+  while( line_start < text.length() )
+    {
+    line_end = text.find(';', line_start);
+
+    if(line_end == std::string::npos)
+      {
+      has_semicolon = false;
+      line_end      = text.length()-1;
+      line_len      = line_end - line_start + 1;
+      }
+    else
+      {
+      has_semicolon = true;
+      line_len      = line_end - line_start;  // omit the ';' character
+      }
+
+    line_stream.clear();
+    line_stream.str( text.substr(line_start,line_len) );
+
+    has_token = false;
+
+    uword line_n_cols = 0;
+
+    while(line_stream >> token)  { has_token = true; ++line_n_cols; }
+
+    if(t_n_rows == 0)
+      {
+      t_n_cols = line_n_cols;
+      }
+    else
+      {
+      if(has_semicolon || has_token)  { coot_check( (line_n_cols != t_n_cols), "Mat::init(): inconsistent number of columns in given string"); }
+      }
+
+    ++t_n_rows;
+
+    line_start = line_end+1;
+    }
+
+  // if the last line was empty, ignore it
+  if( (has_semicolon == false) && (has_token == false) && (t_n_rows >= 1) )  { --t_n_rows; }
+
+  Mat<eT>& x = (*this);
+  x.set_size(t_n_rows, t_n_cols);
+
+  if(x.is_empty())  { return; }
+
+  line_start = 0;
+  line_end   = 0;
+  line_len   = 0;
+
+  uword urow = 0;
+
+  // Allocate memory that we will later put on the GPU.
+  eT* tmp_mem = cpu_memory::acquire<eT>(x.n_elem);
+
+  while( line_start < text.length() )
+    {
+    line_end = text.find(';', line_start);
+
+    if(line_end == std::string::npos)
+      {
+      line_end = text.length()-1;
+      line_len = line_end - line_start + 1;
+      }
+    else
+      {
+      line_len = line_end - line_start;  // omit the ';' character
+      }
+
+    line_stream.clear();
+    line_stream.str( text.substr(line_start,line_len) );
+
+    uword ucol = 0;
+    while(line_stream >> token)
+      {
+      diskio::convert_token( tmp_mem[urow + ucol * t_n_rows], token );
+      ++ucol;
+      }
+
+    ++urow;
+    line_start = line_end+1;
+    }
+
+    // Now copy all the memory to the GPU.
+    coot_rt_t::copy_into_dev_mem(x.get_dev_mem(false), tmp_mem, x.n_elem);
+
+    // We have to ensure completion before we delete the temporary memory.
+    coot_rt_t::synchronise();
+
+    cpu_memory::release(tmp_mem);
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>::Mat(const std::vector<eT>& x)
+  : n_rows    (0)
+  , n_cols    (0)
+  , n_elem    (0)
+  , vec_state (0)
+  , mem_state (0)
+  , dev_mem({ NULL, 0 })
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  set_size(uword(x.size()), 1);
+
+  if (n_elem > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(dev_mem, &(x[0]), n_elem);
+    // Force synchronisation in case x goes out of scope.
+    coot_rt_t::synchronise();
+    }
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>&
+Mat<eT>::operator=(const std::vector<eT>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  set_size(uword(x.size()), 1);
+
+  if (n_elem > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(dev_mem, &(x[0]), n_elem);
+    // Force synchronisation in case x goes out of scope.
+    coot_rt_t::synchronise();
+    }
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>::Mat(const std::initializer_list<eT>& list)
+  : n_rows    (0)
+  , n_cols    (0)
+  , n_elem    (0)
+  , vec_state (0)
+  , mem_state (0)
+  , dev_mem({ NULL, 0 })
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  init(list);
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>&
+Mat<eT>::operator=(const std::initializer_list<eT>& list)
+  {
+  coot_extra_debug_sigprint();
+
+  init(list);
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>::Mat(const std::initializer_list< std::initializer_list<eT> >& list)
+  : n_rows    (0)
+  , n_cols    (0)
+  , n_elem    (0)
+  , vec_state (0)
+  , mem_state (0)
+  , dev_mem({ NULL, 0 })
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  init(list);
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>&
+Mat<eT>::operator=(const std::initializer_list< std::initializer_list<eT> >& list)
+  {
+  coot_extra_debug_sigprint();
+
+  init(list);
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+void
+Mat<eT>::init(const std::initializer_list<eT>& list)
+  {
+  coot_extra_debug_sigprint();
+
+  const uword N = uword(list.size());
+
+  set_size(1, N);
+
+  if(N > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(dev_mem, list.begin(), N);
+    // Force synchronisation in case `list` goes out of scope.
+    coot_rt_t::synchronise();
+    }
+  }
+
+
+
+template<typename eT>
+inline
+void
+Mat<eT>::init(const std::initializer_list< std::initializer_list<eT> >& list)
+  {
+  coot_extra_debug_sigprint();
+
+  uword x_n_rows = uword(list.size());
+  uword x_n_cols = 0;
+  uword x_n_elem = 0;
+
+  auto it     = list.begin();
+  auto it_end = list.end();
+
+  for(; it != it_end; ++it)
+    {
+    const uword x_n_cols_new = uword((*it).size());
+
+    x_n_elem += x_n_cols_new;
+
+    x_n_cols = (std::max)(x_n_cols, x_n_cols_new);
+    }
+
+  Mat<eT>& t = (*this);
+  t.set_size(x_n_rows, x_n_cols);
+
+  // if the inner lists have varying number of elements, treat missing elements as zeros
+  if(t.n_elem != x_n_elem)  { t.zeros(); }
+
+  if(t.n_elem == 0) { return; }
+
+  // Allocate temporary memory that we will fill on the CPU.
+  eT* tmp_mem = cpu_memory::acquire<eT>(t.n_elem);
+  for (uword i = 0; i < t.n_elem; ++i)
+    {
+    tmp_mem[i] = (eT) 0;
+    }
+
+  uword row_num = 0;
+
+  auto row_it     = list.begin();
+  auto row_it_end = list.end();
+
+  for(; row_it != row_it_end; ++row_it)
+    {
+    uword col_num = 0;
+
+    auto col_it     = (*row_it).begin();
+    auto col_it_end = (*row_it).end();
+
+    for(; col_it != col_it_end; ++col_it)
+      {
+      tmp_mem[row_num + col_num * x_n_rows] = (*col_it);
+      ++col_num;
+      }
+
+    ++row_num;
+    }
+
+  // Move all the memory to the GPU.
+  coot_rt_t::copy_into_dev_mem(dev_mem, tmp_mem, t.n_elem);
+  // Synchronise before we release the CPU memory to ensure the copy is done.
+  coot_rt_t::synchronise();
+  cpu_memory::release(tmp_mem);
+  }
+
+
+
+template<typename eT>
+inline
 Mat<eT>::Mat(dev_mem_t<eT> aux_dev_mem, const uword in_n_rows, const uword in_n_cols)
   : n_rows    (in_n_rows)
   , n_cols    (in_n_cols)
@@ -679,7 +1075,7 @@ Mat<eT>::steal_mem(Mat<eT>& X)
 
   if(this == &X) { return; }
 
-  if (X.mem_state == 0)
+  if (mem_state == 0 && X.mem_state == 0)
     {
     reset(); // clear any existing memory
 
@@ -699,6 +1095,7 @@ Mat<eT>::steal_mem(Mat<eT>& X)
     }
   else
     {
+    // Either we are an alias or another matrix is an alias so we have to copy.
     (*this).operator=(X);
     }
   }
@@ -2220,6 +2617,23 @@ Mat<eT>::reset()
 
 
 template<typename eT>
+template<typename eT2, typename expr>
+inline
+Mat<eT>&
+Mat<eT>::copy_size(const Base<eT2, expr>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  SizeProxy<expr> S(X.get_ref());
+
+  this->set_size(S.get_n_rows(), S.get_n_cols());
+
+  return *this;
+  }
+
+
+
+template<typename eT>
 inline
 void
 Mat<eT>::set_size(const uword new_n_elem)
@@ -2482,6 +2896,66 @@ bool
 Mat<eT>::is_empty() const
   {
   return (n_elem == 0);
+  }
+
+
+
+template<typename eT>
+inline
+bool
+Mat<eT>::is_finite() const
+  {
+  coot_extra_debug_sigprint();
+
+  // integral types cannot have non-finite values
+  if (is_non_integral<eT>::value)
+    {
+    return !coot_rt_t::any_vec(dev_mem, n_elem, (eT) 0, oneway_real_kernel_id::rel_any_nonfinite, oneway_real_kernel_id::rel_any_nonfinite_small);
+    }
+  else
+    {
+    return true;
+    }
+  }
+
+
+
+template<typename eT>
+inline
+bool
+Mat<eT>::has_inf() const
+  {
+  coot_extra_debug_sigprint();
+
+  // integral types cannot have non-finite values
+  if (is_non_integral<eT>::value)
+    {
+    return coot_rt_t::any_vec(dev_mem, n_elem, (eT) 0, oneway_real_kernel_id::rel_any_inf, oneway_real_kernel_id::rel_any_inf_small);
+    }
+  else
+    {
+    return false;
+    }
+  }
+
+
+
+template<typename eT>
+inline
+bool
+Mat<eT>::has_nan() const
+  {
+  coot_extra_debug_sigprint();
+
+  // integral types cannot have non-finite values
+  if (is_non_integral<eT>::value)
+    {
+    return coot_rt_t::any_vec(dev_mem, n_elem, (eT) 0, oneway_real_kernel_id::rel_any_nan, oneway_real_kernel_id::rel_any_nan_small);
+    }
+  else
+    {
+    return false;
+    }
   }
 
 

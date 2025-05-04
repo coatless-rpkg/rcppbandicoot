@@ -478,16 +478,23 @@ glue_times_diag::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times_diag>& X)
 
     // In this case, we can do an elementwise multiplication of the diagonal
     // vectors, and create a new diagonal matrix.
-    // TODO: once partial_unwrap supports subviews, or even diagviews, we can use subview offsets here
+
+    // We use unwrap on the partial_unwrap result so we can have generic access to
+    // row and column offsets, in case either element is a subview.
+    typedef typename partial_unwrap<ST1>::stored_type PST1;
+    typedef typename partial_unwrap<ST2>::stored_type PST2;
+    unwrap<PST1> up1(p1.M);
+    unwrap<PST2> up2(p2.M);
+
     Col<out_eT> tmp(A_n_elem);
     coot_rt_t::eop_mat(threeway_kernel_id::equ_array_mul_array,
                        tmp.get_dev_mem(false),
-                       p1.M.get_dev_mem(false),
-                       p2.M.get_dev_mem(false),
+                       up1.get_dev_mem(false),
+                       up2.get_dev_mem(false),
                        tmp.n_rows, tmp.n_cols,
                        0, 0, tmp.n_rows,
-                       0, 0, p1.M.n_rows,
-                       0, 0, p2.M.n_rows);
+                       up1.get_row_offset(), up1.get_col_offset(), up1.get_M_n_rows(),
+                       up2.get_row_offset(), up2.get_col_offset(), up2.get_M_n_rows());
     if (alpha != out_eT(1))
       {
       coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
@@ -510,7 +517,21 @@ glue_times_diag::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times_diag>& X)
     }
   else
     {
-    coot_rt_t::mul_diag(out.get_dev_mem(false), C_n_rows, C_n_cols, alpha, p1.M.get_dev_mem(false), A_diag, A_trans, p2.M.get_dev_mem(false), B_diag, B_trans);
+    // We use unwrap on the partial_unwrap result so we can have generic access to
+    // row and column offsets, in case either element is a subview.
+    typedef typename partial_unwrap<ST1>::stored_type PST1;
+    typedef typename partial_unwrap<ST2>::stored_type PST2;
+    unwrap<PST1> up1(p1.M);
+    unwrap<PST2> up2(p2.M);
+
+    // ensure that the diagonal matrix (a vector) is treated as a row vector (not a column vector)
+    // so that we can set the increment for each element correctly.
+    const uword up1_M_n_rows = (A_diag && up1.M.n_cols == 1) ? 1 : up1.get_M_n_rows();
+    const uword up2_M_n_rows = (B_diag && up2.M.n_cols == 1) ? 1 : up2.get_M_n_rows();
+
+    coot_rt_t::mul_diag(out.get_dev_mem(false), C_n_rows, C_n_cols, alpha,
+                        up1.get_dev_mem(false), A_diag, A_trans, up1.get_row_offset(), up1.get_col_offset(), up1_M_n_rows,
+                        up2.get_dev_mem(false), B_diag, B_trans, up2.get_row_offset(), up2.get_col_offset(), up2_M_n_rows);
     }
   }
 

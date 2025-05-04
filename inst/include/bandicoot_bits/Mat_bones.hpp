@@ -53,6 +53,21 @@ class Mat : public Base< eT, Mat<eT> >
   template<typename fill_type> inline Mat(const uword in_n_rows, const uword in_n_cols, const fill::fill_class<fill_type>& f);
   template<typename fill_type> inline Mat(const SizeMat& s,                             const fill::fill_class<fill_type>& f);
 
+  coot_cold inline            Mat(const char*        text);
+  coot_cold inline Mat& operator=(const char*        text);
+
+  coot_cold inline            Mat(const std::string& text);
+  coot_cold inline Mat& operator=(const std::string& text);
+
+  inline            Mat(const std::vector<eT>& x);
+  inline Mat& operator=(const std::vector<eT>& x);
+
+  inline            Mat(const std::initializer_list<eT>& list);
+  inline Mat& operator=(const std::initializer_list<eT>& list);
+
+  inline            Mat(const std::initializer_list< std::initializer_list<eT> >& list);
+  inline Mat& operator=(const std::initializer_list< std::initializer_list<eT> >& list);
+
   inline Mat(dev_mem_t<eT> aux_dev_mem, const uword in_rows, const uword in_cols);
   inline Mat(cl_mem        aux_dev_mem, const uword in_rows, const uword in_cols); // OpenCL alias constructor
   inline Mat(eT*           aux_dev_mem, const uword in_rows, const uword in_cols); // CUDA alias constructor
@@ -192,6 +207,9 @@ class Mat : public Base< eT, Mat<eT> >
   inline const Mat& eye(const uword new_n_rows, const uword new_n_cols);
   inline const Mat& eye(const SizeMat& s);
 
+  template<typename eT2, typename expr>
+  inline Mat& copy_size(const Base<eT2, expr>& X);
+
   inline void reset();
   inline void set_size(const uword new_n_elem);
   inline void set_size(const uword new_n_rows, const uword new_n_cols);
@@ -218,6 +236,10 @@ class Mat : public Base< eT, Mat<eT> >
   coot_warn_unused inline bool is_rowvec() const;
   coot_warn_unused inline bool is_square() const;
   coot_warn_unused inline bool is_empty()  const;
+  coot_warn_unused inline bool is_finite() const;
+
+  coot_warn_unused inline bool has_inf() const;
+  coot_warn_unused inline bool has_nan() const;
 
   coot_inline uword get_n_rows() const;
   coot_inline uword get_n_cols() const;
@@ -314,6 +336,11 @@ class Mat : public Base< eT, Mat<eT> >
 
   inline void cleanup();
   inline void init(const uword new_n_rows, const uword new_n_cols);
+
+  coot_cold inline void init(const std::string& text);
+
+  inline void init(const std::initializer_list<eT>& list);
+  inline void init(const std::initializer_list<std::initializer_list<eT>>& list);
 
   friend class subview<eT>;
   friend class MatValProxy<eT>;

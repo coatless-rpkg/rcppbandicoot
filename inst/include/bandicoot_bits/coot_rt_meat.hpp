@@ -1846,14 +1846,31 @@ coot_rt_t::gemv(dev_mem_t<eT> y_mem,
 template<typename eT>
 inline
 void
-coot_rt_t::mul_diag(dev_mem_t<eT> C_mem, const uword C_n_rows, const uword C_n_cols, const eT alpha, const dev_mem_t<eT> A_mem, const bool A_is_diag, const bool A_trans, const dev_mem_t<eT> B_mem, const bool B_is_diag, const bool B_trans)
+coot_rt_t::mul_diag(dev_mem_t<eT> C_mem,
+                    const uword C_n_rows,
+                    const uword C_n_cols,
+                    const eT alpha,
+                    const dev_mem_t<eT> A_mem,
+                    const bool A_is_diag,
+                    const bool A_trans,
+                    const uword A_row_offset,
+                    const uword A_col_offset,
+                    const uword A_M_n_rows,
+                    const dev_mem_t<eT> B_mem,
+                    const bool B_is_diag,
+                    const bool B_trans,
+                    const uword B_row_offset,
+                    const uword B_col_offset,
+                    const uword B_M_n_rows)
   {
   coot_extra_debug_sigprint();
 
   if (get_rt().backend == CL_BACKEND)
     {
     #if defined(COOT_USE_OPENCL)
-    opencl::mul_diag(C_mem, C_n_rows, C_n_cols, alpha, A_mem, A_is_diag, A_trans, B_mem, B_is_diag, B_trans);
+    opencl::mul_diag(C_mem, C_n_rows, C_n_cols, alpha,
+                     A_mem, A_is_diag, A_trans, A_row_offset, A_col_offset, A_M_n_rows,
+                     B_mem, B_is_diag, B_trans, B_row_offset, B_col_offset, B_M_n_rows);
     #else
     coot_stop_runtime_error("coot_rt::mul_diag(): OpenCL backend not enabled");
     #endif
@@ -1861,7 +1878,9 @@ coot_rt_t::mul_diag(dev_mem_t<eT> C_mem, const uword C_n_rows, const uword C_n_c
   else if (get_rt().backend == CUDA_BACKEND)
     {
     #if defined(COOT_USE_CUDA)
-    cuda::mul_diag(C_mem, C_n_rows, C_n_cols, alpha, A_mem, A_is_diag, A_trans, B_mem, B_is_diag, B_trans);
+    cuda::mul_diag(C_mem, C_n_rows, C_n_cols, alpha,
+                   A_mem, A_is_diag, A_trans, A_row_offset, A_col_offset, A_M_n_rows,
+                   B_mem, B_is_diag, B_trans, B_row_offset, B_col_offset, B_M_n_rows);
     #else
     coot_stop_runtime_error("coot_rt::mul_diag(): CUDA backend not enabled");
     #endif
@@ -2040,6 +2059,46 @@ coot_rt_t::min(dev_mem_t<eT2> dest,
 
 
 
+template<typename eT1, typename eT2>
+inline
+void
+coot_rt_t::min_cube_col(dev_mem_t<eT2> dest,
+                        const dev_mem_t<eT1> src,
+                        const uword n_rows,
+                        const uword n_cols,
+                        const uword n_slices,
+                        const bool post_conv_apply)
+  {
+  coot_extra_debug_sigprint();
+
+  if (get_rt().backend == CL_BACKEND)
+    {
+    #if defined(COOT_USE_OPENCL)
+    opencl::min_cube_col(dest, src,
+                         n_rows, n_cols, n_slices,
+                         post_conv_apply);
+    #else
+    coot_stop_runtime_error("coot_rt::min_cube_col(): OpenCL backend not enabled");
+    #endif
+    }
+  else if (get_rt().backend == CUDA_BACKEND)
+    {
+    #if defined(COOT_USE_CUDA)
+    cuda::min_cube_col(dest, src,
+                       n_rows, n_cols, n_slices,
+                       post_conv_apply);
+    #else
+    coot_stop_runtime_error("coot_rt::min_cube_col(): CUDA backend not enabled");
+    #endif
+    }
+  else
+    {
+    coot_stop_runtime_error("coot_rt::min_cube_col(): unknown backend");
+    }
+  }
+
+
+
 template<typename eT>
 inline
 eT
@@ -2156,6 +2215,46 @@ coot_rt_t::max_vec(const dev_mem_t<eT> mem, const uword n_elem)
 
 
 
+template<typename eT1, typename eT2>
+inline
+void
+coot_rt_t::max_cube_col(dev_mem_t<eT2> dest,
+                        const dev_mem_t<eT1> src,
+                        const uword n_rows,
+                        const uword n_cols,
+                        const uword n_slices,
+                        const bool post_conv_apply)
+  {
+  coot_extra_debug_sigprint();
+
+  if (get_rt().backend == CL_BACKEND)
+    {
+    #if defined(COOT_USE_OPENCL)
+    opencl::max_cube_col(dest, src,
+                         n_rows, n_cols, n_slices,
+                         post_conv_apply);
+    #else
+    coot_stop_runtime_error("coot_rt::max_col_cube(): OpenCL backend not enabled");
+    #endif
+    }
+  else if (get_rt().backend == CUDA_BACKEND)
+    {
+    #if defined(COOT_USE_CUDA)
+    cuda::max_cube_col(dest, src,
+                       n_rows, n_cols, n_slices,
+                       post_conv_apply);
+    #else
+    coot_stop_runtime_error("coot_rt::max_col_cube(): CUDA backend not enabled");
+    #endif
+    }
+  else
+    {
+    coot_stop_runtime_error("coot_rt::max_col_cube(): unknown backend");
+    }
+  }
+
+
+
 template<typename eT>
 inline
 void
@@ -2176,9 +2275,9 @@ coot_rt_t::index_min(dev_mem_t<uword> dest,
   if (get_rt().backend == CL_BACKEND)
     {
     #if defined(COOT_USE_OPENCL)
-    return opencl::index_min(dest, src, n_rows, n_cols, dim,
-                             dest_offset, dest_mem_incr,
-                             src_row_offset, src_col_offset, src_M_n_rows);
+    opencl::index_min(dest, src, n_rows, n_cols, dim,
+                      dest_offset, dest_mem_incr,
+                      src_row_offset, src_col_offset, src_M_n_rows);
     #else
     coot_stop_runtime_error("coot_rt::index_min(): OpenCL backend not enabled");
     #endif
@@ -2186,9 +2285,9 @@ coot_rt_t::index_min(dev_mem_t<uword> dest,
   else if (get_rt().backend == CUDA_BACKEND)
     {
     #if defined(COOT_USE_CUDA)
-    return cuda::index_min(dest, src, n_rows, n_cols, dim,
-                           dest_offset, dest_mem_incr,
-                           src_row_offset, src_col_offset, src_M_n_rows);
+    cuda::index_min(dest, src, n_rows, n_cols, dim,
+                    dest_offset, dest_mem_incr,
+                    src_row_offset, src_col_offset, src_M_n_rows);
     #else
     coot_stop_runtime_error("coot_rt::index_min(): CUDA backend not enabled");
     #endif
@@ -2196,6 +2295,37 @@ coot_rt_t::index_min(dev_mem_t<uword> dest,
   else
     {
     coot_stop_runtime_error("coot_rt::index_min(): unknown backend");
+    }
+  }
+
+
+
+template<typename eT>
+inline
+void
+coot_rt_t::index_min_cube_col(dev_mem_t<uword> dest, const dev_mem_t<eT> src, const uword n_rows, const uword n_cols, const uword n_slices)
+  {
+  coot_extra_debug_sigprint();
+
+  if (get_rt().backend == CL_BACKEND)
+    {
+    #if defined(COOT_USE_OPENCL)
+    opencl::index_min_cube_col(dest, src, n_rows, n_cols, n_slices);
+    #else
+    coot_stop_runtime_error("coot_rt::index_min_cube_col(): OpenCL backend not enabled");
+    #endif
+    }
+  else if (get_rt().backend == CUDA_BACKEND)
+    {
+    #if defined(COOT_USE_CUDA)
+    cuda::index_min_cube_col(dest, src, n_rows, n_cols, n_slices);
+    #else
+    coot_stop_runtime_error("coot_rt::index_min_cube_col(): CUDA backend not enabled");
+    #endif
+    }
+  else
+    {
+    coot_stop_runtime_error("coot_rt::index_min_cube_col(): unknown backend");
     }
   }
 
@@ -2254,9 +2384,9 @@ coot_rt_t::index_max(dev_mem_t<uword> dest,
   if (get_rt().backend == CL_BACKEND)
     {
     #if defined(COOT_USE_OPENCL)
-    return opencl::index_max(dest, src, n_rows, n_cols, dim,
-                             dest_offset, dest_mem_incr,
-                             src_row_offset, src_col_offset, src_M_n_rows);
+    opencl::index_max(dest, src, n_rows, n_cols, dim,
+                      dest_offset, dest_mem_incr,
+                      src_row_offset, src_col_offset, src_M_n_rows);
     #else
     coot_stop_runtime_error("coot_rt::index_max(): OpenCL backend not enabled");
     #endif
@@ -2264,9 +2394,9 @@ coot_rt_t::index_max(dev_mem_t<uword> dest,
   else if (get_rt().backend == CUDA_BACKEND)
     {
     #if defined(COOT_USE_CUDA)
-    return cuda::index_max(dest, src, n_rows, n_cols, dim,
-                           dest_offset, dest_mem_incr,
-                           src_row_offset, src_col_offset, src_M_n_rows);
+    cuda::index_max(dest, src, n_rows, n_cols, dim,
+                    dest_offset, dest_mem_incr,
+                    src_row_offset, src_col_offset, src_M_n_rows);
     #else
     coot_stop_runtime_error("coot_rt::index_max(): CUDA backend not enabled");
     #endif
@@ -2274,6 +2404,37 @@ coot_rt_t::index_max(dev_mem_t<uword> dest,
   else
     {
     coot_stop_runtime_error("coot_rt::index_max(): unknown backend");
+    }
+  }
+
+
+
+template<typename eT>
+inline
+void
+coot_rt_t::index_max_cube_col(dev_mem_t<uword> dest, const dev_mem_t<eT> src, const uword n_rows, const uword n_cols, const uword n_slices)
+  {
+  coot_extra_debug_sigprint();
+
+  if (get_rt().backend == CL_BACKEND)
+    {
+    #if defined(COOT_USE_OPENCL)
+    opencl::index_max_cube_col(dest, src, n_rows, n_cols, n_slices);
+    #else
+    coot_stop_runtime_error("coot_rt::index_max_cube_col(): OpenCL backend not enabled");
+    #endif
+    }
+  else if (get_rt().backend == CUDA_BACKEND)
+    {
+    #if defined(COOT_USE_CUDA)
+    cuda::index_max_cube_col(dest, src, n_rows, n_cols, n_slices);
+    #else
+    coot_stop_runtime_error("coot_rt::index_max_cube_col(): CUDA backend not enabled");
+    #endif
+    }
+  else
+    {
+    coot_stop_runtime_error("coot_rt::index_max_cube_col(): unknown backend");
     }
   }
 
@@ -3445,6 +3606,60 @@ coot_rt_t::approx_equal(const dev_mem_t<eT> A,
   else
     {
     coot_stop_runtime_error("coot_rt::approx_equal(): unknown backend");
+    }
+
+  return false; // fix warning
+  }
+
+
+
+template<typename eT>
+inline
+bool
+coot_rt_t::approx_equal_cube(const dev_mem_t<eT> A,
+                             const uword A_row_offset,
+                             const uword A_col_offset,
+                             const uword A_slice_offset,
+                             const uword A_M_n_rows,
+                             const uword A_M_n_cols,
+                             const dev_mem_t<eT> B,
+                             const uword B_row_offset,
+                             const uword B_col_offset,
+                             const uword B_slice_offset,
+                             const uword B_M_n_rows,
+                             const uword B_M_n_cols,
+                             const uword n_rows,
+                             const uword n_cols,
+                             const uword n_slices,
+                             const char sig,
+                             const eT abs_tol,
+                             const eT rel_tol)
+  {
+  if (get_rt().backend == CL_BACKEND)
+    {
+    #if defined(COOT_USE_OPENCL)
+    return opencl::approx_equal_cube(A, A_row_offset, A_col_offset, A_slice_offset, A_M_n_rows, A_M_n_cols,
+                                     B, B_row_offset, B_col_offset, B_slice_offset, B_M_n_rows, B_M_n_cols,
+                                     n_rows, n_cols, n_slices,
+                                     sig, abs_tol, rel_tol);
+    #else
+    coot_stop_runtime_error("coot_rt::approx_equal_cube(): OpenCL backend not enabled");
+    #endif
+    }
+  else if (get_rt().backend == CUDA_BACKEND)
+    {
+    #if defined(COOT_USE_CUDA)
+    return cuda::approx_equal_cube(A, A_row_offset, A_col_offset, A_slice_offset, A_M_n_rows, A_M_n_cols,
+                                   B, B_row_offset, B_col_offset, B_slice_offset, B_M_n_rows, B_M_n_cols,
+                                   n_rows, n_cols, n_slices,
+                                   sig, abs_tol, rel_tol);
+    #else
+    coot_stop_runtime_error("coot_rt::approx_equal_cube(): CUDA backend not enabled");
+    #endif
+    }
+  else
+    {
+    coot_stop_runtime_error("coot_rt::approx_equal_cube(): unknown backend");
     }
 
   return false; // fix warning

@@ -216,6 +216,8 @@ namespace coot
   #include "bandicoot_bits/Cube_bones.hpp"
   #include "bandicoot_bits/subview_cube_bones.hpp"
 
+  #include "bandicoot_bits/diskio_bones.hpp"
+
   #include "bandicoot_bits/eOp_bones.hpp"
   #include "bandicoot_bits/eGlue_bones.hpp"
   #include "bandicoot_bits/eop_core_bones.hpp"
@@ -228,6 +230,8 @@ namespace coot
   #include "bandicoot_bits/mtOpCube_bones.hpp"
   #include "bandicoot_bits/eGlueCube_bones.hpp"
   #include "bandicoot_bits/mtGlueCube_bones.hpp"
+  #include "bandicoot_bits/OpCube_bones.hpp"
+  #include "bandicoot_bits/GlueCube_bones.hpp"
   #include "bandicoot_bits/CubeToMatOp_bones.hpp"
   #include "bandicoot_bits/coot_rng_bones.hpp"
 
@@ -642,6 +646,8 @@ namespace coot
   #include "bandicoot_bits/Cube_meat.hpp"
   #include "bandicoot_bits/subview_cube_meat.hpp"
 
+  #include "bandicoot_bits/diskio_meat.hpp"
+
   #include "bandicoot_bits/eOp_meat.hpp"
   #include "bandicoot_bits/eGlue_meat.hpp"
   #include "bandicoot_bits/eop_core_meat.hpp"
@@ -654,6 +660,8 @@ namespace coot
   #include "bandicoot_bits/mtOpCube_meat.hpp"
   #include "bandicoot_bits/eGlueCube_meat.hpp"
   #include "bandicoot_bits/mtGlueCube_meat.hpp"
+  #include "bandicoot_bits/OpCube_meat.hpp"
+  #include "bandicoot_bits/GlueCube_meat.hpp"
   #include "bandicoot_bits/CubeToMatOp_meat.hpp"
   #include "bandicoot_bits/coot_rng_meat.hpp"
 

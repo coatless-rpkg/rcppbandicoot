@@ -72,6 +72,42 @@ index_max(dev_mem_t<uword> dest,
 
 
 /**
+ * Compute the maximum index of each column in a cube.
+ */
+template<typename eT>
+inline
+void
+index_max_cube_col(dev_mem_t<uword> dest, const dev_mem_t<eT> src, const uword n_rows, const uword n_cols, const uword n_slices)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::index_max_cube_col(): CUDA runtime not valid" );
+
+  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::index_max_cube_col);
+
+  const void* args[] = {
+      &(dest.cuda_mem_ptr),
+      &(src.cuda_mem_ptr),
+      (uword*) &n_rows,
+      (uword*) &n_cols,
+      (uword*) &n_slices };
+
+  const kernel_dims dims = two_dimensional_grid_dims(n_rows, n_slices);
+
+  CUresult result = coot_wrapper(cuLaunchKernel)(
+      kernel,
+      dims.d[0], dims.d[1], dims.d[2],
+      dims.d[3], dims.d[4], dims.d[5],
+      0, NULL,
+      (void**) args,
+      0);
+
+  coot_check_cuda_error(result, "coot::cuda::index_max_cube_col(): cuLaunchKernel() failed");
+  }
+
+
+
+/**
  * Compute the maximum index of all elements in `mem`.
  */
 template<typename eT>

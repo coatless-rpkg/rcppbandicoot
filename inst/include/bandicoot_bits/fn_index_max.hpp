@@ -75,3 +75,16 @@ index_max(const SizeCube& s)
 
   return (tmp_val >= s.n_slices) ? tmp_index : uword(2);
   }
+
+
+
+template<typename T1>
+coot_warn_unused
+coot_inline
+typename enable_if2< is_coot_cube_type<T1>::value, const mtOpCube<uword, T1, mtop_index_max> >::result
+index_max(const T1& X, const uword dim)
+  {
+  coot_extra_debug_sigprint();
+
+  return mtOpCube<uword, T1, mtop_index_max>(X, dim, 0);
+  }
