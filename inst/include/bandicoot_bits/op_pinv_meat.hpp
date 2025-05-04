@@ -135,7 +135,7 @@ op_pinv::apply_direct_diag(Mat<eT>& out, const Mat<eT>& in, const eT tol)
   out.zeros(N, N);
 
   // Check for any NaNs in the input.
-  const bool has_nans = coot_rt_t::any_vec(in.get_dev_mem(false), in.n_elem, (eT) 0, oneway_real_kernel_id::rel_any_nonfinite, oneway_real_kernel_id::rel_any_nonfinite_small);
+  const bool has_nans = coot_rt_t::any_vec(in.get_dev_mem(false), in.n_elem, (eT) 0, oneway_real_kernel_id::rel_any_nan, oneway_real_kernel_id::rel_any_nan_small);
 
   if (has_nans == true)
     {
@@ -218,7 +218,7 @@ op_pinv::apply_direct_diag(Mat<eT2>& out, const Mat<eT1>& in, const eT1 tol, con
   out.zeros(N, N);
 
   // Check for any NaNs in the input.
-  const bool has_nans = coot_rt_t::any_vec(in.get_dev_mem(false), in.n_elem, (eT1) 0, oneway_real_kernel_id::rel_any_nonfinite, oneway_real_kernel_id::rel_any_nonfinite_small);
+  const bool has_nans = coot_rt_t::any_vec(in.get_dev_mem(false), in.n_elem, (eT1) 0, oneway_real_kernel_id::rel_any_nan, oneway_real_kernel_id::rel_any_nan_small);
 
   if (has_nans == true)
     {
@@ -357,8 +357,8 @@ op_pinv::apply_direct_sym(Mat<eT>& out, Mat<eT>& in, const eT tol)
   Mat<eT> tmp(filtered_eigvecs.n_rows, filtered_eigvecs.n_cols);
   // tmp = filtered_eigvecs * diagmat(inverted eigvals)
   coot_rt_t::mul_diag(tmp.get_dev_mem(false), tmp.n_rows, tmp.n_cols,
-                      (eT) 1, filtered_eigvecs.get_dev_mem(false), false, false,
-                      filtered_eigvals.get_dev_mem(false), true /* diag */, false);
+                      (eT) 1, filtered_eigvecs.get_dev_mem(false), false, false, 0, 0, filtered_eigvecs.n_rows,
+                      filtered_eigvals.get_dev_mem(false), true /* diag */, false, 0, 0, 1);
   // out = tmp * filtered_eigvecs.t()
   coot_rt_t::gemm<eT, false, true>(out.get_dev_mem(true), out.n_rows, out.n_cols,
                                    tmp.get_dev_mem(true), tmp.n_rows, tmp.n_cols,
@@ -499,8 +499,8 @@ op_pinv::apply_direct_gen(Mat<eT>& out, Mat<eT>& in, const eT tol)
     {
     // U' = U * diagmat(s)   (in-place into U)
     coot_rt_t::mul_diag(filtered_U.get_dev_mem(false), filtered_U.n_rows, filtered_U.n_cols,
-                        (eT) 1.0, filtered_U.get_dev_mem(false), false, false,
-                        filtered_S.get_dev_mem(false), true, false);
+                        (eT) 1.0, filtered_U.get_dev_mem(false), false, false, 0, 0, filtered_U.n_rows,
+                        filtered_S.get_dev_mem(false), true, false, 0, 0, 1);
 
     // out = U' * V^T (remember V is already transposed)
     out.set_size(filtered_U.n_rows, filtered_V.n_rows);
@@ -516,8 +516,8 @@ op_pinv::apply_direct_gen(Mat<eT>& out, Mat<eT>& in, const eT tol)
     // tmp = V * diagmat(s)   (in-place into V)
     Mat<eT> tmp(filtered_V.n_cols, filtered_V.n_rows);
     coot_rt_t::mul_diag(tmp.get_dev_mem(false), tmp.n_rows, tmp.n_cols,
-                        (eT) 1.0, filtered_V.get_dev_mem(false), false, true,
-                        filtered_S.get_dev_mem(false), true, false);
+                        (eT) 1.0, filtered_V.get_dev_mem(false), false, true, 0, 0, filtered_V.n_rows,
+                        filtered_S.get_dev_mem(false), true, false, 0, 0, 1);
 
     // out = tmp * U^T
     out.set_size(tmp.n_rows, filtered_U.n_rows);

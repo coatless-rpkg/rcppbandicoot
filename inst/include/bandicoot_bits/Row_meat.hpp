@@ -228,6 +228,160 @@ Row<eT>::operator=(Row<eT>&& X)
 
 
 template<typename eT>
+inline
+Row<eT>::Row(const char* text)
+  : Mat<eT>()
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  (*this).operator=(text);
+  }
+
+
+
+template<typename eT>
+inline
+Row<eT>&
+Row<eT>::operator=(const char* text)
+  {
+  coot_extra_debug_sigprint();
+
+  Mat<eT> tmp(text);
+
+  coot_debug_check( ((tmp.n_elem > 0) && (tmp.is_vec() == false)), "Mat::init(): requested size is not compatible with row vector layout" );
+
+  access::rw(tmp.n_rows) = 1;
+  access::rw(tmp.n_cols) = tmp.n_elem;
+
+  (*this).steal_mem(tmp);
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Row<eT>::Row(const std::string& text)
+  : Mat<eT>()
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  (*this).operator=(text);
+  }
+
+
+
+template<typename eT>
+inline
+Row<eT>&
+Row<eT>::operator=(const std::string& text)
+  {
+  coot_extra_debug_sigprint();
+
+  Mat<eT> tmp(text);
+
+  coot_debug_check( ((tmp.n_elem > 0) && (tmp.is_vec() == false)), "Mat::init(): requested size is not compatible with row vector layout" );
+
+  access::rw(tmp.n_rows) = 1;
+  access::rw(tmp.n_cols) = tmp.n_elem;
+
+  (*this).steal_mem(tmp);
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Row<eT>::Row(const std::vector<eT>& x)
+  : Mat<eT>()
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  const uword N = uword(x.size());
+
+  Mat<eT>::set_size(1, N);
+
+  if (N > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(this->get_dev_mem(false), &(x[0]), N);
+    // Force synchronisation in case x goes out of scope.
+    coot_rt_t::synchronise();
+    }
+  }
+
+
+
+template<typename eT>
+inline
+Row<eT>&
+Row<eT>::operator=(const std::vector<eT>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  const uword N = uword(x.size());
+
+  Mat<eT>::set_size(1, N);
+
+  if (N > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(this->get_dev_mem(false), &(x[0]), N);
+    // Force synchronisation in case x goes out of scope.
+    coot_rt_t::synchronise();
+    }
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Row<eT>::Row(const std::initializer_list<eT>& list)
+  : Mat<eT>()
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  const uword N = uword(list.size());
+
+  Mat<eT>::set_size(1, N);
+
+  if (N > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(this->get_dev_mem(false), list.begin(), N);
+    // Force synchronisation in case the list goes out of scope.
+    coot_rt_t::synchronise();
+    }
+  }
+
+
+
+template<typename eT>
+inline
+Row<eT>&
+Row<eT>::operator=(const std::initializer_list<eT>& list)
+  {
+  coot_extra_debug_sigprint();
+
+  const uword N = uword(list.size());
+
+  Mat<eT>::set_size(1, N);
+
+  if (N > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(this->get_dev_mem(false), list.begin(), N);
+    // Force synchronisation in case the list goes out of scope.
+    coot_rt_t::synchronise();
+    }
+
+  return *this;
+  }
+
+
+
+template<typename eT>
 template<typename T1>
 inline
 Row<eT>::Row(const Base<eT, T1>& X)

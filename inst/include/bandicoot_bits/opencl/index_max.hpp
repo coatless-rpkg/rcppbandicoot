@@ -77,6 +77,53 @@ index_max(dev_mem_t<uword> dest,
 
 
 /**
+ * Compute the minimum index of elements in a Cube in each column.
+ * This particular operation cannot be done with any of the matrix min kernels.
+ */
+template<typename eT>
+inline
+void
+index_max_cube_col(dev_mem_t<uword> dest,
+                   const dev_mem_t<eT> src,
+                   const uword n_rows,
+                   const uword n_cols,
+                   const uword n_slices)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::index_max_cube_col(): OpenCL runtime not valid" );
+
+  cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::index_max_cube_col);
+
+  runtime_t::adapt_uword cl_dest_offset(dest.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_src_offset(src.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_n_rows(n_rows);
+  runtime_t::adapt_uword cl_n_cols(n_cols);
+  runtime_t::adapt_uword cl_n_slices(n_slices);
+
+  cl_int status = 0;
+
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),      &(dest.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_dest_offset.size, cl_dest_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),      &(src.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_src_offset.size,  cl_src_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_n_rows.size,      cl_n_rows.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_n_cols.size,      cl_n_cols.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 6, cl_n_slices.size,    cl_n_slices.addr);
+
+  coot_check_cl_error(status, "coot::opencl::index_max_cube_col(): could not set arguments for kernel");
+
+  const size_t work_offset[2] = { 0, 0 };
+  const size_t work_size[2] = { n_rows, n_slices };
+
+  status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, 2, work_offset, work_size, NULL, 0, NULL, NULL);
+
+  coot_check_cl_error(status, "coot::opencl::index_max_cube_col(): failed to run kernel");
+  }
+
+
+
+/**
  * Compute the maximum of all elements in `mem`.
  * This is basically the same as accu(), which is also a reduction.
  */

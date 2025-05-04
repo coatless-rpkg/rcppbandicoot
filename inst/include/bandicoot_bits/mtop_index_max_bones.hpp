@@ -22,7 +22,7 @@ class mtop_index_max
   public:
 
   //
-  // for use in delayed operations
+  // for use in delayed operations on matrices
   //
 
   template<typename T1>
@@ -36,6 +36,20 @@ class mtop_index_max
 
   template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_index_max>& op, const uword in_n_rows, const uword in_n_cols);
   template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_index_max>& op, const uword in_n_rows, const uword in_n_cols);
+
+  //
+  // for use in delayed operations on cubes
+  //
+
+  template<typename T1>
+  inline static void apply(Cube<uword>& out, const mtOpCube<uword, T1, mtop_index_max>& in);
+
+  template<typename eT>
+  inline static void apply_noalias(Cube<uword>& out, const Cube<eT>& A, const uword dim);
+
+  template<typename T1> inline static uword   compute_n_rows(const mtOpCube<uword, T1, mtop_index_max>& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices);
+  template<typename T1> inline static uword   compute_n_cols(const mtOpCube<uword, T1, mtop_index_max>& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices);
+  template<typename T1> inline static uword compute_n_slices(const mtOpCube<uword, T1, mtop_index_max>& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices);
 
   //
   // for use in direct operations

@@ -33,8 +33,8 @@ COOT_FN(PREFIX,rel_any_nonfinite_small)(__global const eT1* X,
     const eT1 val1 = X[X_offset + i];
     const eT1 val2 = X[X_offset + i + get_local_size(0)];
 
-    aux_mem[tid] |= isnan(val1);
-    aux_mem[tid] |= isnan(val2);
+    aux_mem[tid] |= isnan(val1) | isinf(val1);
+    aux_mem[tid] |= isnan(val2) | isinf(val2);
     if (aux_mem[tid] == 1)
       break;
     i += grid_size;
@@ -43,7 +43,7 @@ COOT_FN(PREFIX,rel_any_nonfinite_small)(__global const eT1* X,
   if (i < n_elem && aux_mem[tid] == 0)
     {
     const eT1 val1 = X[X_offset + i];
-    aux_mem[tid] |= isnan(val1);
+    aux_mem[tid] |= isnan(val1) | isinf(val1);
     }
 
   for (UWORD s = get_local_size(0) / 2; s > 0; s >>= 1)

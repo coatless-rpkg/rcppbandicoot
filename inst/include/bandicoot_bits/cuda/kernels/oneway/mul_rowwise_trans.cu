@@ -1,4 +1,4 @@
-// Copyright 2023 Ryan Curtin (http://www.ratml.org/)
+// Copyright 2023-2025 Ryan Curtin (http://www.ratml.org/)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,18 +17,20 @@ __global__
 void
 COOT_FN(PREFIX,mul_rowwise_trans)(eT1* out,
                                   const eT1* A, // expected to have length n_rows
+                                  const UWORD A_incr,
                                   const eT1* in,
                                   const eT1 alpha, // scalar to multiply
                                   const UWORD n_rows, // size of `out`
-                                  const UWORD n_cols)
+                                  const UWORD n_cols,
+                                  const UWORD in_M_n_rows)
   {
   const UWORD row = blockIdx.x * blockDim.x + threadIdx.x;
   if(row < n_rows)
     {
-    const eT1 val = alpha * A[row];
+    const eT1 val = alpha * A[row * A_incr];
     for (UWORD i = 0; i < n_cols; ++i)
       {
-      const UWORD in_offset = i + row * n_cols;
+      const UWORD in_offset = i + row * in_M_n_rows;
       const UWORD out_offset = i * n_rows + row;
       out[out_offset] = val * in[in_offset];
       }

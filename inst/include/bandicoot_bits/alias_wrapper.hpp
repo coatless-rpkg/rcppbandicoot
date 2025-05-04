@@ -40,7 +40,7 @@ struct is_any_alias
 
   template<typename T2, typename... Args>
   coot_inline
-  typename enable_if2< is_Mat<T2>::value || is_subview<T2>::value || is_diagview<T2>::value, bool >::result
+  typename enable_if2< is_Mat<T2>::value || is_subview<T2>::value || is_diagview<T2>::value || is_Cube<T2>::value || is_subview_cube<T2>::value, bool >::result
   check(const T2& t2, const Args&... args)
     {
     return is_alias(in, t2) || check(args...);
@@ -48,7 +48,7 @@ struct is_any_alias
 
   template<typename T2, typename... Args>
   coot_inline
-  typename enable_if2< !is_Mat<T2>::value && !is_subview<T2>::value && !is_diagview<T2>::value, bool >::result
+  typename enable_if2< !is_Mat<T2>::value && !is_subview<T2>::value && !is_diagview<T2>::value && !is_Cube<T2>::value && !is_subview_cube<T2>::value, bool >::result
   check(const T2&, const Args&... args)
     {
     return check(args...);
@@ -56,7 +56,7 @@ struct is_any_alias
 
   template<typename T2>
   coot_inline
-  typename enable_if2< is_Mat<T2>::value || is_subview<T2>::value || is_diagview<T2>::value, bool >::result
+  typename enable_if2< is_Mat<T2>::value || is_subview<T2>::value || is_diagview<T2>::value || is_Cube<T2>::value || is_subview_cube<T2>::value, bool >::result
   check(const T2& t2)
     {
     return is_alias(in, t2);
@@ -65,7 +65,7 @@ struct is_any_alias
   template<typename T2>
   constexpr static
   coot_inline
-  typename enable_if2< !is_Mat<T2>::value && !is_subview<T2>::value && !is_diagview<T2>::value, bool >::result
+  typename enable_if2< !is_Mat<T2>::value && !is_subview<T2>::value && !is_diagview<T2>::value && !is_Cube<T2>::value && !is_subview_cube<T2>::value, bool >::result
   check(const T2&)
     {
     return false;
@@ -204,4 +204,94 @@ struct alias_wrapper<diagview<eT>, TArgs...>
   diagview<eT>& dest;
   Mat<eT>       aux;
   bool          using_aux;
+  };
+
+
+
+template<typename eT, typename... TArgs>
+struct alias_wrapper<Cube<eT>, TArgs...>
+  {
+  // dest: the output cube to be used for the operation
+  // arg: the input, which may be an alias of the output
+  alias_wrapper(Cube<eT>& dest_in, const TArgs&... args)
+    : dest(dest_in)
+    , using_aux(is_any_alias<Cube<eT>>(dest).check(args...))
+    , use(using_aux ? aux : dest)
+    {
+    if (using_aux)
+      {
+      aux.set_size(dest.n_rows, dest.n_cols, dest.n_slices);
+      }
+    }
+
+  ~alias_wrapper()
+    {
+    if (using_aux)
+      {
+      dest.steal_mem(aux);
+      }
+    }
+
+  typedef eT       elem_type;
+  typedef Cube<eT> stored_type;
+
+  inline uword get_n_rows()   const { return use.n_rows; }
+  inline uword get_n_cols()   const { return use.n_cols; }
+  inline uword get_n_slices() const { return use.n_slices; }
+  inline uword get_n_elem()   const { return use.n_elem; }
+
+  coot_inline dev_mem_t<elem_type> get_dev_mem(const bool synchronise = false) { return use.get_dev_mem(synchronise); }
+  coot_inline uword                get_row_offset() const                      { return 0;                            }
+  coot_inline uword                get_col_offset() const                      { return 0;                            }
+  coot_inline uword                get_M_n_rows() const                        { return use.n_rows;                   }
+  coot_inline uword                get_incr() const                            { return 1;                            }
+
+  Cube<eT>& dest;
+  Cube<eT>  aux;
+  bool      using_aux;
+  Cube<eT>& use;
+  };
+
+
+
+template<typename eT, typename... TArgs>
+struct alias_wrapper<subview_cube<eT>, TArgs...>
+  {
+  // dest: the output cube to be used for the operation
+  // arg: the input, which may be an alias of the output
+  alias_wrapper(subview_cube<eT>& dest_in, const TArgs&... args)
+    : dest(dest_in)
+    , using_aux(is_any_alias<subview_cube<eT>>(dest).check(args...))
+    {
+    if (using_aux)
+      {
+      aux.set_size(dest.n_rows, dest.n_cols);
+      }
+    }
+
+  ~alias_wrapper()
+    {
+    if (using_aux)
+      {
+      dest = aux; // a copy is needed unfortunately
+      }
+    }
+
+  typedef eT               elem_type;
+  typedef subview_cube<eT> stored_type;
+
+  inline uword get_n_rows()   const { return using_aux ? aux.n_rows : dest.n_rows; }
+  inline uword get_n_cols()   const { return using_aux ? aux.n_cols : dest.n_cols; }
+  inline uword get_n_slices() const { return using_aux ? aux.n_slices : dest.n_slices; }
+  inline uword get_n_elem()   const { return using_aux ? aux.n_elem : dest.n_elem; }
+
+  coot_inline dev_mem_t<eT> get_dev_mem(const bool synchronise = false) { return using_aux ? aux.get_dev_mem(synchronise) : dest.m.get_dev_mem(synchronise); }
+  coot_inline uword         get_row_offset() const                      { return using_aux ? 0 : dest.aux_row1;                                            }
+  coot_inline uword         get_col_offset() const                      { return using_aux ? 0 : dest.aux_col1;                                            }
+  coot_inline uword         get_M_n_rows() const                        { return using_aux ? aux.n_rows : dest.m.n_rows;                                   }
+  coot_inline uword         get_incr() const                            { return 1;                                                                        }
+
+  subview<eT>& dest;
+  Cube<eT>     aux;
+  bool         using_aux;
   };

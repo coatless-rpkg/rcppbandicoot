@@ -1,4 +1,4 @@
-// Copyright 2021 Ryan Curtin (http://www.ratml.org)
+// Copyright 2021-2025 Ryan Curtin (http://www.ratml.org)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -94,4 +94,52 @@ max_vec(dev_mem_t<eT> mem, const uword n_elem)
   cl_kernel k_small = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::max_small);
 
   return generic_reduce<eT, eT>(mem, n_elem, "max_vec", k, k_small, std::make_tuple(/* no extra args */));
+  }
+
+
+
+/**
+ * Compute the minimum of elements in a Cube in each column.
+ * This particular operation cannot be done with any of the matrix min kernels.
+ */
+template<typename eT2, typename eT1>
+inline
+void
+max_cube_col(dev_mem_t<eT2> dest,
+             const dev_mem_t<eT1> src,
+             const uword n_rows,
+             const uword n_cols,
+             const uword n_slices,
+             const bool post_conv_apply)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::max_cube_col(): OpenCL runtime not valid" );
+
+  cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(post_conv_apply ? twoway_kernel_id::max_cube_col_conv_post : twoway_kernel_id::max_cube_col_conv_pre);
+
+  runtime_t::adapt_uword cl_dest_offset(dest.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_src_offset(src.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_n_rows(n_rows);
+  runtime_t::adapt_uword cl_n_cols(n_cols);
+  runtime_t::adapt_uword cl_n_slices(n_slices);
+
+  cl_int status = 0;
+
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),      &(dest.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_dest_offset.size, cl_dest_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),      &(src.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_src_offset.size,  cl_src_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_n_rows.size,      cl_n_rows.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_n_cols.size,      cl_n_cols.addr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 6, cl_n_slices.size,    cl_n_slices.addr);
+
+  coot_check_cl_error(status, "coot::opencl::max_cube_col(): could not set arguments for kernel");
+
+  const size_t work_offset[2] = { 0, 0 };
+  const size_t work_size[2] = { n_rows, n_slices };
+
+  status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, 2, work_offset, work_size, NULL, 0, NULL, NULL);
+
+  coot_check_cl_error(status, "coot::opencl::max_cube_col(): failed to run kernel");
   }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// 
+//
 // Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
 // Copyright 2008-2023 Conrad Sanderson (https://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
@@ -81,9 +81,9 @@ Col<eT>::Col(const uword N, const fill::fill_class<fill_type>& f)
   : Mat<eT>(N, 1)
   {
   coot_extra_debug_sigprint();
-  
+
   access::rw(Mat<eT>::vec_state) = 1;
-  
+
   Mat<eT>::fill(f);
   }
 
@@ -96,11 +96,11 @@ Col<eT>::Col(const uword in_rows, const uword in_cols, const fill::fill_class<fi
   : Mat<eT>()
   {
   coot_extra_debug_sigprint();
-  
+
   access::rw(Mat<eT>::vec_state) = 1;
-  
+
   Mat<eT>::init(in_rows, in_cols);
-  
+
   Mat<eT>::fill(f);
   }
 
@@ -113,11 +113,11 @@ Col<eT>::Col(const SizeMat& s, const fill::fill_class<fill_type>& f)
   : Mat<eT>()
   {
   coot_extra_debug_sigprint();
-  
+
   access::rw(Mat<eT>::vec_state) = 1;
-  
+
   Mat<eT>::init(s.n_rows, s.n_cols);
-  
+
   Mat<eT>::fill(f);
   }
 
@@ -221,6 +221,160 @@ Col<eT>::operator=(Col<eT>&& X)
   Mat<eT>::steal_mem(X);
   // Make sure to restore the other Col's vec_state.
   access::rw(X.vec_state) = 1;
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Col<eT>::Col(const char* text)
+  : Mat<eT>()
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  (*this).operator=(text);
+  }
+
+
+
+template<typename eT>
+inline
+Col<eT>&
+Col<eT>::operator=(const char* text)
+  {
+  coot_extra_debug_sigprint();
+
+  Mat<eT> tmp(text);
+
+  coot_debug_check( ((tmp.n_elem > 0) && (tmp.is_vec() == false)), "Mat::init(): requested size is not compatible with column vector layout" );
+
+  access::rw(tmp.n_rows) = tmp.n_elem;
+  access::rw(tmp.n_cols) = 1;
+
+  (*this).steal_mem(tmp);
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Col<eT>::Col(const std::string& text)
+  : Mat<eT>()
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  (*this).operator=(text);
+  }
+
+
+
+template<typename eT>
+inline
+Col<eT>&
+Col<eT>::operator=(const std::string& text)
+  {
+  coot_extra_debug_sigprint();
+
+  Mat<eT> tmp(text);
+
+  coot_debug_check( ((tmp.n_elem > 0) && (tmp.is_vec() == false)), "Mat::init(): requested size is not compatible with column vector layout" );
+
+  access::rw(tmp.n_rows) = tmp.n_elem;
+  access::rw(tmp.n_cols) = 1;
+
+  (*this).steal_mem(tmp);
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Col<eT>::Col(const std::vector<eT>& x)
+  : Mat<eT>()
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  const uword N = uword(x.size());
+
+  Mat<eT>::set_size(N, 1);
+
+  if (N > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(this->get_dev_mem(false), &(x[0]), N);
+    // Force synchronisation in case x goes out of scope.
+    coot_rt_t::synchronise();
+    }
+  }
+
+
+
+template<typename eT>
+inline
+Col<eT>&
+Col<eT>::operator=(const std::vector<eT>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  const uword N = uword(x.size());
+
+  Mat<eT>::set_size(N, 1);
+
+  if (N > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(this->get_dev_mem(false), &(x[0]), N);
+    // Force synchronisation in case x goes out of scope.
+    coot_rt_t::synchronise();
+    }
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+Col<eT>::Col(const std::initializer_list<eT>& list)
+  : Mat<eT>()
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  const uword N = uword(list.size());
+
+  Mat<eT>::set_size(N, 1);
+
+  if (N > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(this->get_dev_mem(false), list.begin(), N);
+    // Force synchronisation in case the list goes out of scope.
+    coot_rt_t::synchronise();
+    }
+  }
+
+
+
+template<typename eT>
+inline
+Col<eT>&
+Col<eT>::operator=(const std::initializer_list<eT>& list)
+  {
+  coot_extra_debug_sigprint();
+
+  const uword N = uword(list.size());
+
+  Mat<eT>::set_size(N, 1);
+
+  if (N > 0)
+    {
+    coot_rt_t::copy_into_dev_mem(this->get_dev_mem(false), list.begin(), N);
+    // Force synchronisation in case the list goes out of scope.
+    coot_rt_t::synchronise();
+    }
 
   return *this;
   }

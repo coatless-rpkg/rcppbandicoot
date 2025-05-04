@@ -233,6 +233,69 @@ BaseCube<elem_type, derived>::col_as_mat(const uword in_col) const
 
 
 
+template<typename elem_type, typename derived>
+inline
+bool
+BaseCube<elem_type, derived>::is_finite() const
+  {
+  coot_extra_debug_sigprint();
+
+  // The is_finite kernels only work on contiguous memory.
+  if (is_non_integral<elem_type>::value)
+    {
+    Cube<elem_type> tmp((*this).get_ref());
+    return tmp.is_finite();
+    }
+  else
+    {
+    return true;
+    }
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
+BaseCube<elem_type, derived>::has_inf() const
+  {
+  coot_extra_debug_sigprint();
+
+  // The has_inf kernels only work on contiguous memory.
+  if (is_non_integral<elem_type>::value)
+    {
+    Cube<elem_type> tmp((*this).get_ref());
+    return tmp.has_inf();
+    }
+  else
+    {
+    return false;
+    }
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
+BaseCube<elem_type, derived>::has_nan() const
+  {
+  coot_extra_debug_sigprint();
+
+  // The has_nan kernels only work on contiguous memory.
+  if (is_non_integral<elem_type>::value)
+    {
+    Cube<elem_type> tmp((*this).get_ref());
+    return tmp.has_nan();
+    }
+  else
+    {
+    return false;
+    }
+  }
+
+
+
 //
 // extra functions defined in BaseCube_eval_Cube
 

@@ -121,4 +121,8 @@ struct Base
 
   coot_warn_unused inline uword index_min() const;
   coot_warn_unused inline uword index_max() const;
+
+  coot_warn_unused inline bool is_finite()  const;
+  coot_warn_unused inline bool has_inf()    const;
+  coot_warn_unused inline bool has_nan()    const;
   };

@@ -69,12 +69,12 @@ op_max::apply_noalias(Mat<out_eT>& out, const Mat<in_eT>& A, const uword dim, co
 
   if(dim == 0)
     {
-    out.set_size(1, A.n_cols);
+    out.set_size(A.n_rows == 0 ? 0 : 1, A.n_cols);
     }
   else
   if(dim == 1)
     {
-    out.set_size(A.n_rows, 1);
+    out.set_size(A.n_rows, A.n_cols == 0 ? 0 : 1);
     }
 
   if(A.n_elem == 0)
@@ -101,12 +101,12 @@ op_max::apply_noalias(Mat<out_eT>& out, const subview<in_eT>& sv, const uword di
 
   if(dim == 0)
     {
-    out.set_size(1, sv.n_cols);
+    out.set_size(sv.n_rows == 0 ? 0 : 1, sv.n_cols);
     }
   else
   if(dim == 1)
     {
-    out.set_size(sv.n_rows, 1);
+    out.set_size(sv.n_rows, sv.n_cols == 0 ? 0 : 1);
     }
 
   if(sv.n_elem == 0)
@@ -130,7 +130,7 @@ uword
 op_max::compute_n_rows(const Op<T1, op_max>& op, const uword in_n_rows, const uword in_n_cols)
   {
   coot_ignore(in_n_cols);
-  return (op.aux_uword_a == 0) ? 1 : in_n_rows;
+  return (op.aux_uword_a == 0 && in_n_rows > 0) ? 1 : in_n_rows;
   }
 
 
@@ -141,7 +141,7 @@ uword
 op_max::compute_n_cols(const Op<T1, op_max>& op, const uword in_n_rows, const uword in_n_cols)
   {
   coot_ignore(in_n_rows);
-  return (op.aux_uword_a == 0) ? in_n_cols : 1;
+  return (op.aux_uword_a == 0 && in_n_cols > 0) ? in_n_cols : 1;
   }
 
 
@@ -188,4 +188,130 @@ op_max::apply_direct(const eOp<T1, eop_abs>& in)
   const Mat<typename T1::elem_type>& A = U.M;
 
   return coot_rt_t::max_abs(A.get_dev_mem(false), A.n_elem);
+  }
+
+
+
+template<typename eT2, typename T1>
+inline
+void
+op_max::apply(Cube<eT2>& out, const OpCube<T1, op_max>& in)
+  {
+  coot_extra_debug_sigprint();
+
+  const uword dim = in.aux_uword_a;
+
+  coot_debug_check( (dim > 2), "max(): parameter 'dim' must be 0 or 1 or 2" );
+
+  if (is_same_type<eT2, typename T1::elem_type>::no)
+    {
+    // This is a post-min conversion, so unwrap fully.
+    const unwrap_cube<T1> U(in.m);
+
+    // We do not have specific min/max kernels for subcubes, so we also must extract any subcube.
+    extract_subcube<typename unwrap_cube<T1>::stored_type> E(U.M);
+    op_max::apply_noalias(out, E.M, dim, true);
+    }
+  else
+    {
+    // This is a pre-min conversion (or no conversion at all), so use a no-conv unwrap, which will
+    // avoid performing a type conversion.
+    const no_conv_unwrap_cube<T1> U(in.m);
+
+    // However, since there may be no conversion, we now have to consider aliases too.
+    // We do not have specific min/max kernels for subcubes, so we also must extract any subcube.
+    extract_subcube<typename no_conv_unwrap_cube<T1>::stored_type> E(U.M);
+    alias_wrapper<Cube<eT2>, Cube<typename no_conv_unwrap_cube<T1>::stored_type::elem_type>> W(out, U.M);
+    op_max::apply_noalias(W.use, E.M, dim, false);
+    }
+  }
+
+
+
+template<typename out_eT, typename in_eT>
+inline
+void
+op_max::apply_noalias(Cube<out_eT>& out, const Cube<in_eT>& A, const uword dim, const bool post_conv_apply)
+  {
+  coot_extra_debug_sigprint();
+
+  out.set_size((dim == 0 && A.n_rows > 0) ? 1 : A.n_rows,
+               (dim == 1 && A.n_cols > 0) ? 1 : A.n_cols,
+               (dim == 2 && A.n_slices > 0) ? 1 : A.n_slices);
+
+  // Shortcut if we don't need to do anything.
+  if (out.n_elem == 0)
+    {
+    return;
+    }
+
+  // When we are computing the maximum along a dimension for a Cube (not a subcube!),
+  // we can make two simple optimizations that allow us to reuse the matrix kernels.
+  if (dim == 0)
+    {
+    // If we are computing the maximum value in each row, we can treat the cube as
+    // a matrix of size n_rows x (n_cols * n_slices).
+
+    coot_rt_t::max(out.get_dev_mem(false), A.get_dev_mem(false),
+                   A.n_rows, (A.n_cols * A.n_slices),
+                   dim, post_conv_apply,
+                   0, 1,
+                   0, 0, A.n_rows);
+    }
+  else if (dim == 2)
+    {
+    // If we are computing the maximum value in each slice, we can treat the cube as
+    // a matrix of size (n_rows * n_cols) x n_slices.
+
+    coot_rt_t::max(out.get_dev_mem(false), A.get_dev_mem(false),
+                   (A.n_rows * A.n_cols), A.n_slices,
+                   dim, post_conv_apply,
+                   0, 1,
+                   0, 0, A.n_rows * A.n_cols);
+    }
+  else
+    {
+    // If we are computing the maximum value in each column, the situation is slightly
+    // more complicated---we need a kernel specific to cubes.
+
+    coot_rt_t::max_cube_col(out.get_dev_mem(false), A.get_dev_mem(false),
+                            A.n_rows, A.n_cols, A.n_slices,
+                            post_conv_apply);
+    }
+  }
+
+
+
+template<typename T1>
+inline
+uword
+op_max::compute_n_rows(const OpCube<T1, op_max>& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices)
+  {
+  coot_ignore(in_n_cols);
+  coot_ignore(in_n_slices);
+  return (op.aux_uword_a == 0) ? 1 : in_n_rows;
+  }
+
+
+
+template<typename T1>
+inline
+uword
+op_max::compute_n_cols(const OpCube<T1, op_max>& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices)
+  {
+  coot_ignore(in_n_rows);
+  coot_ignore(in_n_slices);
+  return (op.aux_uword_a == 1) ? 1 : in_n_cols;
+  }
+
+
+
+template<typename T1>
+inline
+uword
+op_max::compute_n_slices(const OpCube<T1, op_max>& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices)
+  {
+  coot_ignore(in_n_rows);
+  coot_ignore(in_n_cols);
+  return (op.aux_uword_a == 2) ? 1 : in_n_slices;
   }

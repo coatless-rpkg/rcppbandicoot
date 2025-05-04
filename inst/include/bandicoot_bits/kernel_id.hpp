@@ -88,8 +88,10 @@ struct oneway_kernel_id
     index_max_small,
     index_min_rowwise,
     index_min_colwise,
+    index_min_cube_col,
     index_max_rowwise,
     index_max_colwise,
+    index_max_cube_col,
     //
     prod,
     prod_small,
@@ -143,6 +145,8 @@ struct oneway_kernel_id
     //
     approx_equal,
     approx_equal_small,
+    approx_equal_cube,
+    approx_equal_cube_small,
     //
     invalid_kernel
     };
@@ -185,8 +189,10 @@ struct oneway_kernel_id
     names.push_back("index_max_small");
     names.push_back("index_min_rowwise");
     names.push_back("index_min_colwise");
+    names.push_back("index_min_cube_col");
     names.push_back("index_max_rowwise");
     names.push_back("index_max_colwise");
+    names.push_back("index_max_cube_col");
 
     names.push_back("prod");
     names.push_back("prod_small");
@@ -240,6 +246,8 @@ struct oneway_kernel_id
 
     names.push_back("approx_equal");
     names.push_back("approx_equal_small");
+    names.push_back("approx_equal_cube");
+    names.push_back("approx_equal_cube_small");
 
     return names;
     }
@@ -278,6 +286,10 @@ struct oneway_real_kernel_id
     rel_isfinite,
     rel_isnonfinite,
     rel_isnan,
+    rel_any_nan,
+    rel_any_nan_small,
+    rel_any_inf,
+    rel_any_inf_small,
     rel_any_nonfinite,
     rel_any_nonfinite_small,
     //
@@ -317,6 +329,10 @@ struct oneway_real_kernel_id
     names.push_back("rel_isfinite");
     names.push_back("rel_isnonfinite");
     names.push_back("rel_isnan");
+    names.push_back("rel_any_nan");
+    names.push_back("rel_any_nan_small");
+    names.push_back("rel_any_inf");
+    names.push_back("rel_any_inf_small");
     names.push_back("rel_any_nonfinite");
     names.push_back("rel_any_nonfinite_small");
 
@@ -485,6 +501,8 @@ struct twoway_kernel_id
     equ_array_minus_array_cube,
     equ_array_mul_array_cube,
     equ_array_div_array_cube,
+    equ_array_min_array_cube,
+    equ_array_max_array_cube,
     //
     sum_colwise_conv_pre,
     sum_rowwise_conv_pre,
@@ -494,10 +512,14 @@ struct twoway_kernel_id
     min_rowwise_conv_pre,
     min_colwise_conv_post,
     min_rowwise_conv_post,
+    min_cube_col_conv_pre,
+    min_cube_col_conv_post,
     max_colwise_conv_pre,
     max_rowwise_conv_pre,
     max_colwise_conv_post,
     max_rowwise_conv_post,
+    max_cube_col_conv_pre,
+    max_cube_col_conv_post,
     mean_colwise_conv_pre,
     mean_rowwise_conv_pre,
     mean_colwise_conv_post,
@@ -648,6 +670,8 @@ struct twoway_kernel_id
     names.push_back("equ_array_minus_array_cube");
     names.push_back("equ_array_mul_array_cube");
     names.push_back("equ_array_div_array_cube");
+    names.push_back("equ_array_min_array_cube");
+    names.push_back("equ_array_max_array_cube");
 
     names.push_back("sum_colwise_conv_pre");
     names.push_back("sum_rowwise_conv_pre");
@@ -657,10 +681,14 @@ struct twoway_kernel_id
     names.push_back("min_rowwise_conv_pre");
     names.push_back("min_colwise_conv_post");
     names.push_back("min_rowwise_conv_post");
+    names.push_back("min_cube_col_conv_pre");
+    names.push_back("min_cube_col_conv_post");
     names.push_back("max_colwise_conv_pre");
     names.push_back("max_rowwise_conv_pre");
     names.push_back("max_colwise_conv_post");
     names.push_back("max_rowwise_conv_post");
+    names.push_back("max_cube_col_conv_pre");
+    names.push_back("max_cube_col_conv_post");
     names.push_back("mean_colwise_conv_pre");
     names.push_back("mean_rowwise_conv_pre");
     names.push_back("mean_colwise_conv_post");
