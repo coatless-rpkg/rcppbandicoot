@@ -51,6 +51,33 @@ struct zeroway_kernel_id
 
     return names;
     }
+
+
+
+  static
+  inline
+  std::unordered_map<enum_id, std::vector<std::string>>
+  init_deps()
+    {
+    std::unordered_map<enum_id, std::vector<std::string>> deps;
+
+    deps[shuffle_large_compute_locs] = { "var_philox" };
+
+    return deps;
+    }
+
+
+
+  static
+  inline
+  const std::unordered_map<enum_id, std::vector<std::string>>&
+  get_deps()
+    {
+    static const std::unordered_map<enum_id, std::vector<std::string>> deps = init_deps();
+
+    return deps;
+    }
+
   };
 
 
@@ -100,9 +127,11 @@ struct oneway_kernel_id
     //
     ltri_set_zero,
     //
-    inplace_xorwow_randu,
+    inplace_xorwow32_randu,
+    inplace_xorwow64_randu,
     inplace_philox_randn,
-    inplace_xorwow_randi,
+    inplace_xorwow32_randi,
+    inplace_xorwow64_randi,
     shuffle,
     shuffle_large,
     //
@@ -138,7 +167,6 @@ struct oneway_kernel_id
     symmatu_inplace,
     symmatl_inplace,
     //
-    replace,
     reorder_cols,
     //
     rotate_180,
@@ -201,9 +229,11 @@ struct oneway_kernel_id
 
     names.push_back("ltri_set_zero");
 
-    names.push_back("inplace_xorwow_randu");
+    names.push_back("inplace_xorwow32_randu");
+    names.push_back("inplace_xorwow64_randu");
     names.push_back("inplace_philox_randn");
-    names.push_back("inplace_xorwow_randi");
+    names.push_back("inplace_xorwow32_randi");
+    names.push_back("inplace_xorwow64_randi");
     names.push_back("shuffle");
     names.push_back("shuffle_large");
 
@@ -239,7 +269,6 @@ struct oneway_kernel_id
     names.push_back("symmatu_inplace");
     names.push_back("symmatl_inplace");
 
-    names.push_back("replace");
     names.push_back("reorder_cols");
 
     names.push_back("rotate_180");
@@ -263,6 +292,43 @@ struct oneway_kernel_id
 
     return names;
     }
+
+
+
+  static
+  inline
+  std::unordered_map<enum_id, std::vector<std::string>>
+  init_deps()
+    {
+    std::unordered_map<enum_id, std::vector<std::string>> deps;
+
+    deps[approx_equal_cube] = { "and_subgroup_reduce_u32" };
+    deps[approx_equal]      = { "and_subgroup_reduce_u32" };
+    deps[shuffle]           = { "var_philox"              };
+    deps[shuffle_large]     = { "var_philox"              };
+    deps[prod]              = { "prod_subgroup_reduce"    };
+    deps[min]               = { "min_subgroup_reduce"     };
+    deps[max]               = { "max_subgroup_reduce"     };
+    deps[max_abs]           = { "max_subgroup_reduce"     };
+    deps[accu]              = { "accu_subgroup_reduce"    };
+    deps[var]               = { "accu_subgroup_reduce"    };
+    deps[submat_var]        = { "accu_subgroup_reduce"    };
+
+    return deps;
+    }
+
+
+
+  static
+  inline
+  const std::unordered_map<enum_id, std::vector<std::string>>&
+  get_deps()
+    {
+    static const std::unordered_map<enum_id, std::vector<std::string>> deps = init_deps();
+
+    return deps;
+    }
+
   };
 
 
@@ -359,6 +425,41 @@ struct oneway_real_kernel_id
 
     return names;
     }
+
+
+
+  static
+  inline
+  std::unordered_map<enum_id, std::vector<std::string>>
+  init_deps()
+    {
+    std::unordered_map<enum_id, std::vector<std::string>> deps;
+
+    deps[rel_any_nan]       = { "or_subgroup_reduce_u32" };
+    deps[rel_any_inf]       = { "or_subgroup_reduce_u32" };
+    deps[rel_any_nonfinite] = { "or_subgroup_reduce_u32" };
+    deps[diag_prod]         = { "prod_subgroup_reduce"   };
+    deps[vec_norm_min]      = { "min_subgroup_reduce"    };
+    deps[vec_norm_1]        = { "accu_subgroup_reduce"   };
+    deps[vec_norm_2]        = { "accu_subgroup_reduce"   };
+    deps[vec_norm_2_robust] = { "accu_subgroup_reduce"   };
+    deps[vec_norm_k]        = { "accu_subgroup_reduce"   };
+
+    return deps;
+    }
+
+
+
+  static
+  inline
+  const std::unordered_map<enum_id, std::vector<std::string>>&
+  get_deps()
+    {
+    static const std::unordered_map<enum_id, std::vector<std::string>> deps = init_deps();
+
+    return deps;
+    }
+
   };
 
 
@@ -412,6 +513,33 @@ struct oneway_integral_kernel_id
 
     return names;
     }
+
+
+
+  static
+  inline
+  std::unordered_map<enum_id, std::vector<std::string>>
+  init_deps()
+    {
+    std::unordered_map<enum_id, std::vector<std::string>> deps;
+
+    deps[ipiv_det] = { "prod_subgroup_reduce" };
+
+    return deps;
+    }
+
+
+
+  static
+  inline
+  const std::unordered_map<enum_id, std::vector<std::string>>&
+  get_deps()
+    {
+    static const std::unordered_map<enum_id, std::vector<std::string>> deps = init_deps();
+
+    return deps;
+    }
+
   };
 
 
@@ -495,6 +623,7 @@ struct twoway_kernel_id
     equ_array_erfc_post,
     equ_array_lgamma_pre,
     equ_array_lgamma_post,
+    replace,
     clamp,
     //
     equ_array_plus_array_cube,
@@ -664,6 +793,7 @@ struct twoway_kernel_id
     names.push_back("equ_array_erfc_post");
     names.push_back("equ_array_lgamma_pre");
     names.push_back("equ_array_lgamma_post");
+    names.push_back("replace");
     names.push_back("clamp");
 
     names.push_back("equ_array_plus_array_cube");
@@ -760,6 +890,34 @@ struct twoway_kernel_id
 
     return names;
     }
+
+
+
+  static
+  inline
+  std::unordered_map<enum_id, std::vector<std::string>>
+  init_deps()
+    {
+    std::unordered_map<enum_id, std::vector<std::string>> deps;
+
+    deps[rel_any_neq] = { "or_subgroup_reduce_u32" };
+    deps[rel_all_neq] = { "and_subgroup_reduce_u32" };
+
+    return deps;
+    }
+
+
+
+  static
+  inline
+  const std::unordered_map<enum_id, std::vector<std::string>>&
+  get_deps()
+    {
+    static const std::unordered_map<enum_id, std::vector<std::string>> deps = init_deps();
+
+    return deps;
+    }
+
   };
 
 
@@ -816,4 +974,29 @@ struct threeway_kernel_id
 
     return names;
     }
+
+
+
+  static
+  inline
+  std::unordered_map<enum_id, std::vector<std::string>>
+  init_deps()
+    {
+    std::unordered_map<enum_id, std::vector<std::string>> deps;
+
+    return deps;
+    }
+
+
+
+  static
+  inline
+  const std::unordered_map<enum_id, std::vector<std::string>>&
+  get_deps()
+    {
+    static const std::unordered_map<enum_id, std::vector<std::string>> deps = init_deps();
+
+    return deps;
+    }
+
   };

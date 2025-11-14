@@ -25,12 +25,12 @@ COOT_FN(PREFIX,min_cube_col_conv_post)(eT2* dest,
 
   if(row < n_rows && slice < n_slices)
     {
-    eT1 acc = (eT1) src[row + slice * n_rows * n_cols];
+    eT1 acc = src[row + slice * n_rows * n_cols];
     for (UWORD i = 1; i < n_cols; ++i)
       {
       acc = min(acc, src[(i * n_rows) + row + slice * n_rows * n_cols]);
       }
 
-    dest[row + slice * n_rows] = (eT2) (acc);
+    dest[row + slice * n_rows] = TO_ET2(acc);
     }
   }

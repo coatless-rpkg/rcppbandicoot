@@ -35,11 +35,13 @@ shifted_prefix_sum_small(dev_mem_t<eT> mem, const uword n_elem, const size_t tot
   // This kernel does both the upsweep and the downsweep in the same kernel, unlike the large variant.
   cl_kernel k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::shifted_prefix_sum_small);
 
+  typedef typename cl_type<eT>::type ceT;
+
   cl_int status;
-  status  = coot_wrapper(clSetKernelArg)(k, 0, sizeof(cl_mem),                    &mem.cl_mem_ptr.ptr);
-  status |= coot_wrapper(clSetKernelArg)(k, 1, dev_offset.size,                   dev_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(k, 2, dev_n_elem.size,                   dev_n_elem.addr);
-  status |= coot_wrapper(clSetKernelArg)(k, 3, sizeof(eT) * 2 * local_group_size, NULL);
+  status  = coot_wrapper(clSetKernelArg)(k, 0, sizeof(cl_mem),                     &mem.cl_mem_ptr.ptr);
+  status |= coot_wrapper(clSetKernelArg)(k, 1, dev_offset.size,                    dev_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(k, 2, dev_n_elem.size,                    dev_n_elem.addr);
+  status |= coot_wrapper(clSetKernelArg)(k, 3, sizeof(ceT) * 2 * local_group_size, NULL);
   coot_check_cl_error(status, "coot::opencl::shifted_prefix_sum_small()");
 
   status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), k, 1, NULL, &total_num_threads, &local_group_size, 0, NULL, NULL);
@@ -73,12 +75,14 @@ shifted_prefix_sum_large(dev_mem_t<eT> mem, const uword n_elem, const size_t tot
 
   cl_kernel k_subgroups = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::shifted_prefix_sum_subgroups);
 
+  typedef typename cl_type<eT>::type ceT;
+
   cl_int status;
   status  = coot_wrapper(clSetKernelArg)(k_subgroups, 0, sizeof(cl_mem),                     &mem.cl_mem_ptr.ptr);
   status |= coot_wrapper(clSetKernelArg)(k_subgroups, 1, dev_offset.size,                    dev_offset.addr);
   status |= coot_wrapper(clSetKernelArg)(k_subgroups, 2, sizeof(cl_mem),                     &tmp_mem.cl_mem_ptr.ptr);
   status |= coot_wrapper(clSetKernelArg)(k_subgroups, 3, dev_n_elem.size,                    dev_n_elem.addr);
-  status |= coot_wrapper(clSetKernelArg)(k_subgroups, 4, sizeof(eT) * 2 * local_group_size, NULL);
+  status |= coot_wrapper(clSetKernelArg)(k_subgroups, 4, sizeof(ceT) * 2 * local_group_size, NULL);
   coot_check_cl_error(status, "coot::opencl::shifted_prefix_sum_large()");
 
   status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), k_subgroups, 1, NULL, &total_num_threads, &local_group_size, 0, NULL, NULL);
@@ -91,11 +95,11 @@ shifted_prefix_sum_large(dev_mem_t<eT> mem, const uword n_elem, const size_t tot
   // Finally, perform the down-sweep.
   cl_kernel k_add_offset = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::shifted_prefix_sum_add_offset);
 
-  status  = coot_wrapper(clSetKernelArg)(k_add_offset, 0, sizeof(cl_mem),  &mem.cl_mem_ptr.ptr);
-  status |= coot_wrapper(clSetKernelArg)(k_add_offset, 1, dev_offset.size, dev_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(k_add_offset, 2, sizeof(cl_mem),  &tmp_mem.cl_mem_ptr.ptr);
-  status |= coot_wrapper(clSetKernelArg)(k_add_offset, 3, dev_n_elem.size, dev_n_elem.addr);
-  status |= coot_wrapper(clSetKernelArg)(k_add_offset, 4, sizeof(eT) * 2 * local_group_size, NULL);
+  status  = coot_wrapper(clSetKernelArg)(k_add_offset, 0, sizeof(cl_mem),                     &mem.cl_mem_ptr.ptr);
+  status |= coot_wrapper(clSetKernelArg)(k_add_offset, 1, dev_offset.size,                    dev_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(k_add_offset, 2, sizeof(cl_mem),                     &tmp_mem.cl_mem_ptr.ptr);
+  status |= coot_wrapper(clSetKernelArg)(k_add_offset, 3, dev_n_elem.size,                    dev_n_elem.addr);
+  status |= coot_wrapper(clSetKernelArg)(k_add_offset, 4, sizeof(ceT) * 2 * local_group_size, NULL);
   coot_check_cl_error(status, "coot::opencl::shifted_prefix_sum_large()");
 
   status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), k_add_offset, 1, NULL, &total_num_threads, &local_group_size, 0, NULL, NULL);

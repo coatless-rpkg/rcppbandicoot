@@ -157,10 +157,45 @@ coot_ostream::modify_stream(std::ostream& o, const eT* data, const uword n_elem)
 
 template<typename eT>
 inline
-void
+typename enable_if2<
+    !is_fp16<eT>::value,
+    void
+>::result
 coot_ostream::print_elem_zero(std::ostream& o, const bool modify)
   {
   typedef typename promote_type<eT, s16>::result promoted_eT;
+
+  if(modify)
+    {
+    const ios::fmtflags   save_flags     = o.flags();
+    const std::streamsize save_precision = o.precision();
+
+    o.unsetf(ios::scientific);
+    o.setf(ios::fixed);
+    o.precision(0);
+
+    o << promoted_eT(0);
+
+    o.flags(save_flags);
+    o.precision(save_precision);
+    }
+  else
+    {
+    o << promoted_eT(0);
+    }
+  }
+
+
+
+template<typename eT>
+inline
+typename enable_if2<
+    is_fp16<eT>::value,
+    void
+>::result
+coot_ostream::print_elem_zero(std::ostream& o, const bool modify)
+  {
+  typedef typename promote_type<eT, float>::result promoted_eT;
 
   if(modify)
     {
@@ -203,7 +238,10 @@ coot_ostream::print_elem(std::ostream& o, const eT& x, const bool modify)
 
 template<typename eT>
 inline
-void
+typename enable_if2<
+    !is_fp16<eT>::value,
+    void
+>::result
 coot_ostream::raw_print_elem(std::ostream& o, const eT& x)
   {
   if(is_signed<eT>::value)
@@ -225,6 +263,21 @@ coot_ostream::raw_print_elem(std::ostream& o, const eT& x)
 
     o << promoted_eT(x);
     }
+  }
+
+
+
+template<typename eT>
+inline
+typename enable_if2<
+    is_fp16<eT>::value,
+    void
+>::result
+coot_ostream::raw_print_elem(std::ostream& o, const eT& x)
+  {
+  typedef typename promote_type<eT, float>::result promoted_eT;
+
+  coot_ostream::raw_print_elem(o, promoted_eT(x));
   }
 
 

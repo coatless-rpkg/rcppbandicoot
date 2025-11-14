@@ -39,29 +39,29 @@ COOT_FN(PREFIX,equ_array_trunc_exp_pre)(eT2* dest,
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
     // To imitate Armadillo's behavior exactly, if the type is not floating-point, we convert to double.
-    const eT2 val = (eT2) src[src_index];
+    const eT2 val = TO_ET2(src[src_index]);
     if (coot_is_fp(val))
       {
-      const fp_eT2 fp_val = (fp_eT2) val;
-      if (fp_val >= log(coot_type_max((fp_eT2) 0)))
+      const fp_eT2 fp_val = TO_FP_ET2(val);
+      if (fp_val >= log(coot_type_max(TO_FP_ET2(0))))
         {
-        dest[dest_index] = (eT2) coot_type_max((fp_eT2) 0);
+        dest[dest_index] = TO_ET2(coot_type_max(TO_FP_ET2(0)));
         }
       else
         {
-        dest[dest_index] = (eT2) exp(fp_val);
+        dest[dest_index] = TO_ET2(exp(fp_val));
         }
       }
     else
       {
       const double fp_val = (double) val;
-      if (fp_val >= log(coot_type_max((double) 0)))
+      if (fp_val >= log(DBL_MAX))
         {
-        dest[dest_index] = (eT2) coot_type_max((double) 0);
+        dest[dest_index] = TO_ET2(DBL_MAX);
         }
       else
         {
-        dest[dest_index] = (eT2) exp(fp_val);
+        dest[dest_index] = TO_ET2(exp(fp_val));
         }
       }
     }

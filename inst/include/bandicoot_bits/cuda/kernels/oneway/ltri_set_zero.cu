@@ -23,6 +23,6 @@ COOT_FN(PREFIX,ltri_set_zero)(eT1* out,
   const UWORD index = col * n_rows + row;
   if ( (row < n_rows) && (col < n_cols) && (row > col) )
     {
-    out[index] = (eT1)(0);
+    out[index] = TO_ET1(0);
     }
   }

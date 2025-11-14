@@ -41,8 +41,10 @@ mul_diag
   {
   coot_extra_debug_sigprint();
 
-  eT* diag_arg_ptr;
-  eT* mat_arg_ptr;
+  typedef typename cuda_type<eT>::type ceT;
+
+  ceT* diag_arg_ptr;
+  ceT* mat_arg_ptr;
   uword diag_arg_incr;
   uword mat_arg_M_n_rows;
 
@@ -110,12 +112,14 @@ mul_diag
     coot_stop_runtime_error("coot::cuda::mul_diag(): incorrect call, at least one matrix must be non-diagonal");
     }
 
+  ceT cuda_alpha = to_cuda_type(alpha);
+
   const void* args[] = {
       &(C_mem.cuda_mem_ptr),
       &diag_arg_ptr,
       (uword*) &diag_arg_incr,
       &mat_arg_ptr,
-      (eT*) &alpha,
+      (ceT*) &cuda_alpha,
       (uword*) &C_n_rows,
       (uword*) &C_n_cols,
       (uword*) &mat_arg_M_n_rows };

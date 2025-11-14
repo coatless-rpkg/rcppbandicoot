@@ -23,7 +23,7 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(__global eT1* A,
                                                   __global eT1* tmp_mem,
                                                   __global UWORD* tmp_mem_index,
                                                   const UWORD n_elem,
-                                                  __local volatile uint_eT1* aux_mem)
+                                                  __local volatile UWORD* aux_mem)
   {
   // The stable sort differs from the rest of our radix sorts in that we must avoid ever "reversing" point orders.
   // We do this by adapting the regular radix sort to also consider the highest bit (the sign bit for signed types).
@@ -167,7 +167,7 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(__global eT1* A,
         {
         const UWORD ai = offset * (2 * tid + 1) - 1;
         const UWORD bi = offset * (2 * tid + 2) - 1;
-        uint_eT1 tmp = aux_mem[ai];
+        UWORD tmp = aux_mem[ai];
         aux_mem[ai] = aux_mem[bi];
         aux_mem[bi] += tmp;
         }
@@ -178,13 +178,13 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(__global eT1* A,
     offset >>= 1;
     const UWORD ai3 = offset * (2 * tid + 1) - 1;
     const UWORD bi3 = offset * (2 * tid + 2) - 1;
-    uint_eT1 tmp3 = aux_mem[ai3];
+    UWORD tmp3 = aux_mem[ai3];
     aux_mem[ai3] = aux_mem[bi3];
     aux_mem[bi3] += tmp3;
 
     const UWORD ai4 = offset * (2 * (tid + num_threads) + 1) - 1;
     const UWORD bi4 = offset * (2 * (tid + num_threads) + 2) - 1;
-    uint_eT1 tmp4 = aux_mem[ai4];
+    UWORD tmp4 = aux_mem[ai4];
     aux_mem[ai4] = aux_mem[bi4];
     aux_mem[bi4] += tmp4;
     barrier(CLK_LOCAL_MEM_FENCE);

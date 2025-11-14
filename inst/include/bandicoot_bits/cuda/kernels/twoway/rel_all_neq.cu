@@ -12,6 +12,8 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
+
+
 // this kernel is technically incorrect if the size is not a factor of 2!
 __global__
 void
@@ -30,8 +32,8 @@ COOT_FN(PREFIX,rel_all_neq)(const eT1* X, // will be casted to eT2 before compar
 
   while (i + blockDim.x < n_elem)
     {
-    const eT2 val1 = (eT2) X[i];
-    const eT2 val2 = (eT2) X[i + blockDim.x];
+    const eT2 val1 = TO_ET2(X[i]);
+    const eT2 val2 = TO_ET2(X[i + blockDim.x]);
 
     aux_mem[tid] &= (val1 != val);
     aux_mem[tid] &= (val2 != val);
@@ -39,7 +41,7 @@ COOT_FN(PREFIX,rel_all_neq)(const eT1* X, // will be casted to eT2 before compar
     }
   if (i < n_elem)
     {
-    const eT2 val1 = (eT2) X[i];
+    const eT2 val1 = TO_ET2(X[i]);
 
     aux_mem[tid] &= (val1 != val);
     }
@@ -56,7 +58,7 @@ COOT_FN(PREFIX,rel_all_neq)(const eT1* X, // will be casted to eT2 before compar
 
   if (tid < 32) // unroll last warp's worth of work
     {
-    u32_and_warp_reduce(aux_mem, tid);
+    and_subgroup_reduce_u32(aux_mem, tid);
     }
 
   if (tid == 0)

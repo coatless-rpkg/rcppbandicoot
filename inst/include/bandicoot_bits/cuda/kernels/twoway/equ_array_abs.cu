@@ -38,6 +38,6 @@ COOT_FN(PREFIX,equ_array_abs)(eT2* dest,
 
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
-    dest[dest_index] = (eT2) ET1_ABS(src[src_index]);
+    dest[dest_index] = TO_ET2(ET1_ABS(src[src_index]));
     }
   }

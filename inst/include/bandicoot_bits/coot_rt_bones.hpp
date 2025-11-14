@@ -121,8 +121,27 @@ class coot_rt_t
                           const uword col_offset,
                           const uword M_n_rows);
 
-  template<typename eT>
-  static inline void replace(dev_mem_t<eT> mem, const uword n_elem, const eT val_find, const eT val_replace);
+  template<typename eT1, typename eT2>
+  static inline void replace(dev_mem_t<eT2> mem_out,
+                             const dev_mem_t<eT1> mem_in,
+                             const eT1 val_find,
+                             const eT1 val_replace,
+                             // logical size of matrix
+                             const uword n_rows,
+                             const uword n_cols,
+                             const uword n_slices,
+                             // submatrix destination offsets (set to 0, 0, and n_rows if not a subview)
+                             const uword dest_row_offset,
+                             const uword dest_col_offset,
+                             const uword dest_slice_offset,
+                             const uword dest_M_n_rows,
+                             const uword dest_M_n_cols,
+                             // submatrix source offsets (set to 0, 0, and n_rows if not a subview)
+                             const uword src_row_offset,
+                             const uword src_col_offset,
+                             const uword src_slice_offset,
+                             const uword src_M_n_rows,
+                             const uword src_M_n_cols);
 
   template<typename eT1, typename eT2>
   static inline void htrans(dev_mem_t<eT2> dest, const dev_mem_t<eT1> src, const uword n_rows, const uword n_cols);

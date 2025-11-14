@@ -63,14 +63,19 @@ eop_scalar(const twoway_kernel_id::enum_id num,
   runtime_t::adapt_uword cl_dest_M_n_rows(dest_M_n_rows);
   runtime_t::adapt_uword cl_dest_M_n_cols(dest_M_n_cols);
 
+  typedef typename cl_type<eT1>::type ceT1;
+  typedef typename cl_type<eT2>::type ceT2;
+  ceT1 cl_aux_val_pre = to_cl_type(aux_val_pre);
+  ceT2 cl_aux_val_post = to_cl_type(aux_val_post);
+
   cl_int status = 0;
 
   status |= coot_wrapper(clSetKernelArg)(kernel,  0, sizeof(cl_mem),        &dest.cl_mem_ptr.ptr );
   status |= coot_wrapper(clSetKernelArg)(kernel,  1, cl_dest_offset.size,   cl_dest_offset.addr  );
   status |= coot_wrapper(clSetKernelArg)(kernel,  2, sizeof(cl_mem),        &src.cl_mem_ptr.ptr  );
   status |= coot_wrapper(clSetKernelArg)(kernel,  3, cl_src_offset.size,    cl_src_offset.addr   );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  4, sizeof(eT1),           &aux_val_pre         );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  5, sizeof(eT2),           &aux_val_post        );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  4, sizeof(ceT1),          &cl_aux_val_pre      );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  5, sizeof(ceT2),          &cl_aux_val_post     );
   status |= coot_wrapper(clSetKernelArg)(kernel,  6, cl_n_rows.size,        cl_n_rows.addr       );
   status |= coot_wrapper(clSetKernelArg)(kernel,  7, cl_n_cols.size,        cl_n_cols.addr       );
   status |= coot_wrapper(clSetKernelArg)(kernel,  8, cl_n_slices.size,      cl_n_slices.addr     );

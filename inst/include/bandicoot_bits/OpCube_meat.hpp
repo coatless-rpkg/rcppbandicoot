@@ -74,6 +74,17 @@ OpCube<T1, op_type>::OpCube(const BaseCube<typename T1::elem_type, T1>& in_m, co
 
 
 template<typename T1, typename op_type>
+OpCube<T1, op_type>::OpCube(const BaseCube<typename T1::elem_type, T1>& in_m, const char junk, const elem_type in_aux, const elem_type in_aux_b)
+  : m(in_m.get_ref())
+  , aux(in_aux)
+  , aux_b(in_aux_b)
+  {
+  coot_extra_debug_sigprint();
+  }
+
+
+
+template<typename T1, typename op_type>
 OpCube<T1, op_type>::~OpCube()
   {
   coot_extra_debug_sigprint();

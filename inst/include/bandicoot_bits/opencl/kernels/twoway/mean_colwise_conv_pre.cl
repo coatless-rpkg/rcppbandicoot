@@ -28,7 +28,9 @@ COOT_FN(PREFIX,mean_colwise_conv_pre)(__global eT2* dest,
     {
     __global const eT1* colptr = &(src[col * src_M_n_rows + src_offset]);
     eT2 acc = (eT2) (0);
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for(UWORD i = 0; i < n_rows; ++i)
       {
       acc += (eT2) (colptr[i]);

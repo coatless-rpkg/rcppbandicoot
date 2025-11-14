@@ -24,7 +24,7 @@ COOT_FN(PREFIX,count_nonzeros)(const eT1* A,
   // This will give us a count for each individual thread; we then want to prefix-sum this.
   // This kernel is meant to be used as the first part of find().
 
-  uint_eT1* aux_mem = (uint_eT1*) aux_shared_mem; // should have size equal to num_threads + 1
+  UWORD* aux_mem = (UWORD*) aux_shared_mem; // should have size equal to num_threads + 1
 
   const UWORD tid = threadIdx.x;
 
@@ -38,11 +38,11 @@ COOT_FN(PREFIX,count_nonzeros)(const eT1* A,
   UWORD i = start_elem;
   while (i + 1 < end_elem)
     {
-    if (A[i] != (eT1) 0)
+    if (A[i] != TO_ET1(0))
       {
       ++local_count;
       }
-    if (A[i + 1] != (eT1) 0)
+    if (A[i + 1] != TO_ET1(0))
       {
       ++local_count;
       }
@@ -51,7 +51,7 @@ COOT_FN(PREFIX,count_nonzeros)(const eT1* A,
     }
   if (i < end_elem)
     {
-    if (A[i] != (eT1) 0)
+    if (A[i] != TO_ET1(0))
       {
       ++local_count;
       }
@@ -92,7 +92,7 @@ COOT_FN(PREFIX,count_nonzeros)(const eT1* A,
       {
       const UWORD ai = offset * (2 * tid + 1) - 1;
       const UWORD bi = offset * (2 * tid + 2) - 1;
-      uint_eT1 tmp = aux_mem[ai];
+      UWORD tmp = aux_mem[ai];
       aux_mem[ai] = aux_mem[bi];
       aux_mem[bi] += tmp;
       }

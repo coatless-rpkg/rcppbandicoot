@@ -83,8 +83,10 @@ shuffle_small(      dev_mem_t<eT> out, const uword out_offset, const uword out_i
   {
   coot_extra_debug_sigprint();
 
-        eT* out_ptr = out.cuda_mem_ptr + out_offset;
-  const eT* in_ptr  =  in.cuda_mem_ptr + in_offset;
+  typedef typename cuda_type<eT>::type ceT;
+
+        ceT* out_ptr = out.cuda_mem_ptr + out_offset;
+  const ceT* in_ptr  =  in.cuda_mem_ptr + in_offset;
 
   const void* args[] = {
     &out_ptr,
@@ -124,8 +126,10 @@ shuffle_large(      dev_mem_t<eT> out, const uword out_offset, const uword out_i
   {
   coot_extra_debug_sigprint();
 
-        eT* out_ptr = out.cuda_mem_ptr + out_offset;
-  const eT* in_ptr  =  in.cuda_mem_ptr + in_offset;
+  typedef typename cuda_type<eT>::type ceT;
+
+        ceT* out_ptr = out.cuda_mem_ptr + out_offset;
+  const ceT* in_ptr  =  in.cuda_mem_ptr + in_offset;
 
   dev_mem_t<uword> out_block_mem;
   out_block_mem.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<uword>(dims.d[0]);

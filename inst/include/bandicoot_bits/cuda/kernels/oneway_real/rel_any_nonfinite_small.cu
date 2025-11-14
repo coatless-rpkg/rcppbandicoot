@@ -33,8 +33,8 @@ COOT_FN(PREFIX,rel_any_nonfinite_small)(const eT1* X,
     const eT1 val1 = X[i];
     const eT1 val2 = X[i + blockDim.x];
 
-    aux_mem[tid] |= isnan(val1) | isinf(val1);
-    aux_mem[tid] |= isnan(val2) | isinf(val2);
+    aux_mem[tid] |= !coot_isfinite(val1);
+    aux_mem[tid] |= !coot_isfinite(val2);
     if (aux_mem[tid] == 1)
       break;
 
@@ -45,7 +45,7 @@ COOT_FN(PREFIX,rel_any_nonfinite_small)(const eT1* X,
     {
     const eT1 val1 = X[i];
 
-    aux_mem[tid] |= isnan(val1) | isinf(val1);
+    aux_mem[tid] |= !coot_isfinite(val1);
     }
 
   for (UWORD s = blockDim.x / 2; s > 0; s >>= 1)

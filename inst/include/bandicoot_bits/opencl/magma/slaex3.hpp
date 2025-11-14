@@ -271,14 +271,14 @@ magma_slaex3
 
     for (i = ibegin; i < iend; ++i)
       {
-      dlamda[i] = lapackf77_slamc3(&dlamda[i], &dlamda[i]) - dlamda[i];
+      dlamda[i] = lapack::lamc3(&dlamda[i], &dlamda[i]) - dlamda[i];
       }
 
     for (j = ibegin; j < iend; ++j)
       {
       magma_int_t tmpp = j+1;
       magma_int_t iinfo = 0;
-      lapackf77_slaed4(&k, &tmpp, dlamda, w, Q + j * ldq, &rho, &d[j], &iinfo);
+      lapack::laed4(k, tmpp, dlamda, w, Q + j * ldq, rho, &d[j], &iinfo);
       // If the zero finder fails, the computation is terminated.
       if (iinfo != 0)
         {
@@ -362,7 +362,7 @@ magma_slaex3
         #pragma omp barrier
 
         // reduce the number of threads used to have enough S workspace
-        nthread = min(n1, omp_get_num_threads());
+        nthread = std::min(n1, omp_get_num_threads());
 
         if (tid < nthread)
           {

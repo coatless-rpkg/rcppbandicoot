@@ -56,7 +56,7 @@
 
 inline
 magma_int_t
-magma_get_dgebrd_nb(magma_int_t m, magma_int_t n)
+magma_get_dgebrd_nb(magma_int_t /* m */, magma_int_t /* n */)
   {
   return 32;
   }

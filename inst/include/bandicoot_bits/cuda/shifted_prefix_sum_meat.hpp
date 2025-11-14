@@ -26,7 +26,8 @@ shifted_prefix_sum_small(dev_mem_t<eT> mem, const uword offset, const uword n_el
   {
   coot_extra_debug_sigprint();
 
-  eT* mem_ptr = mem.cuda_mem_ptr + offset;
+  typedef typename cuda_type<eT>::type ceT;
+  ceT* mem_ptr = mem.cuda_mem_ptr + offset;
 
   const void* args[] = { &mem_ptr, (uword*) &n_elem };
 
@@ -57,7 +58,8 @@ shifted_prefix_sum_large(dev_mem_t<eT> mem, const uword offset, const uword n_el
   // then we prefix-sum the single block with shifted_prefix_sum_small();
   // then we perform down-sweeps until the entire array is prefix-summed.
 
-  eT* mem_ptr = mem.cuda_mem_ptr + offset;
+  typedef typename cuda_type<eT>::type ceT;
+  ceT* mem_ptr = mem.cuda_mem_ptr + offset;
 
   Col<eT> tmp(dims.d[0]);
   dev_mem_t<eT> tmp_mem = tmp.get_dev_mem(false);

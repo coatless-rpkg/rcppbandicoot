@@ -23,13 +23,19 @@ namespace priv
     {
     public:
 
+    //
+    // nan detection
+    //
+
     template<typename eT>
     static
-    typename coot_real_only<eT>::result
-    nan(typename coot_real_only<eT>::result* junk = 0)
+    inline
+    typename enable_if2<
+        is_real<eT>::value && !is_fp16<eT>::value,
+        eT
+    >::result
+    nan()
       {
-      coot_ignore(junk);
-
       if(std::numeric_limits<eT>::has_quiet_NaN)
         {
         return std::numeric_limits<eT>::quiet_NaN();
@@ -41,8 +47,10 @@ namespace priv
       }
 
 
+
     template<typename eT>
     static
+    inline
     typename coot_cx_only<eT>::result
     nan(typename coot_cx_only<eT>::result* junk = 0)
       {
@@ -54,8 +62,10 @@ namespace priv
       }
 
 
+
     template<typename eT>
     static
+    inline
     typename coot_integral_only<eT>::result
     nan(typename coot_integral_only<eT>::result* junk = 0)
       {
@@ -65,13 +75,66 @@ namespace priv
       }
 
 
+
     template<typename eT>
     static
-    typename coot_real_only<eT>::result
-    inf(typename coot_real_only<eT>::result* junk = 0)
+    inline
+    typename enable_if2<
+        is_same_type<eT, fp16_shim>::yes,
+        eT
+    >::result
+    nan()
       {
-      coot_ignore(junk);
+      return fp16_shim(std::numeric_limits<float>::quiet_NaN());
+      }
 
+
+
+    #if defined(COOT_USE_CUDA)
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, __half>::yes,
+        eT
+    >::result
+    nan()
+      {
+      return __half(CUDART_NAN_FP16);
+      }
+    #endif
+
+
+
+    #if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, std::float16_t>::yes,
+        eT
+    >::result
+    nan()
+      {
+      return std::numeric_limits<eT>::quiet_NaN();
+      }
+    #endif
+
+
+
+    //
+    // inf detection
+    //
+
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_real<eT>::value && !is_fp16<eT>::value,
+        eT
+    >::result
+    inf()
+      {
       if(std::numeric_limits<eT>::has_infinity)
         {
         return std::numeric_limits<eT>::infinity();
@@ -83,8 +146,10 @@ namespace priv
       }
 
 
+
     template<typename eT>
     static
+    inline
     typename coot_cx_only<eT>::result
     inf(typename coot_cx_only<eT>::result* junk = 0)
       {
@@ -96,8 +161,10 @@ namespace priv
       }
 
 
+
     template<typename eT>
     static
+    inline
     typename coot_integral_only<eT>::result
     inf(typename coot_integral_only<eT>::result* junk = 0)
       {
@@ -105,6 +172,254 @@ namespace priv
 
       return std::numeric_limits<eT>::max();
       }
+
+
+
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, fp16_shim>::yes,
+        eT
+    >::result
+    inf()
+      {
+      return fp16_shim(std::numeric_limits<float>::infinity());
+      }
+
+
+
+    #if defined(COOT_USE_CUDA)
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, __half>::yes,
+        eT
+    >::result
+    inf()
+      {
+      return __half(CUDART_INF_FP16);
+      }
+    #endif
+
+
+
+    #if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, std::float16_t>::yes,
+        eT
+    >::result
+    inf()
+      {
+      return std::numeric_limits<eT>::infinity();
+      }
+    #endif
+
+
+
+    //
+    // max detection
+    //
+
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        !is_fp16<eT>::value,
+        eT
+    >::result
+    max()
+      {
+      return std::numeric_limits<eT>::max();
+      }
+
+
+
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, fp16_shim>::yes,
+        eT
+    >::result
+    max()
+      {
+      // We hardcode the maximum value for IEEE 754 FP16.
+      // This is equivalent to 0x7BFF.
+      return fp16_shim(65504.0f);
+      }
+
+
+
+    #if defined(COOT_USE_CUDA)
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, __half>::yes,
+        eT
+    >::result
+    max()
+      {
+      return __half(CUDART_MAX_NORMAL_FP16);
+      }
+    #endif
+
+
+
+    #if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, std::float16_t>::yes,
+        eT
+    >::result
+    max()
+      {
+      return std::numeric_limits<eT>::max();
+      }
+    #endif
+
+
+
+    //
+    // min detection
+    //
+
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        !is_fp16<eT>::value,
+        eT
+    >::result
+    min()
+      {
+      return std::numeric_limits<eT>::min();
+      }
+
+
+
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, fp16_shim>::yes,
+        eT
+    >::result
+    min()
+      {
+      // We hardcode the IEEE 754 minimum representable value.
+      // This is equivalent to 0x0001.
+      return fp16_shim(std::pow(2.0f, -24.0f));
+      }
+
+
+
+    #if defined(COOT_USE_CUDA)
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, __half>::yes,
+        eT
+    >::result
+    min()
+      {
+      return __half(CUDART_MIN_DENORM_FP16);
+      }
+    #endif
+
+
+
+    #if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, std::float16_t>::yes,
+        eT
+    >::result
+    min()
+      {
+      return std::numeric_limits<eT>::min();
+      }
+    #endif
+
+
+    //
+    // epsilon detection
+    //
+
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        !is_fp16<eT>::value,
+        eT
+    >::result
+    epsilon()
+      {
+      return std::numeric_limits<eT>::epsilon();
+      }
+
+
+
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, fp16_shim>::yes,
+        eT
+    >::result
+    epsilon()
+      {
+      // This assumes IEEE 754 encoding for the FP16 values.
+      const uint32_t one_val = 0x3F800000;
+      const uint32_t one_plus_val = 0x3F802000;
+      return fp16_shim(reinterpret_cast<const float&>(one_plus_val) - reinterpret_cast<const float&>(one_val));
+      }
+
+
+
+    #if defined(COOT_USE_CUDA)
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, __half>::yes,
+        eT
+    >::result
+    epsilon()
+      {
+      #if CUDART_VERSION < 12020
+      return (coot_cuda_ushort_as_half((unsigned short) 0x3C00U) - coot_cuda_ushort_as_half((unsigned short) 0x3C01U));
+      #else
+      return (__ushort_as_half((unsigned short) 0x3C00U) - __ushort_as_half((unsigned short) 0x3C01U));
+      #endif
+      }
+    #endif
+
+
+
+    #if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+    template<typename eT>
+    static
+    inline
+    typename enable_if2<
+        is_same_type<eT, std::float16_t>::yes,
+        eT
+    >::result
+    epsilon()
+      {
+      return std::numeric_limits<eT>::epsilon();
+      }
+    #endif
 
     };
   }
@@ -134,6 +449,8 @@ class Datum
   static const eT log_max;  // log of the maximum representable value
   static const eT nan;      // "not a number"
   static const eT inf;      // infinity
+  static const eT min;      // minimum representable value
+  static const eT max;      // maximum representable non-inf value
 
   //
 
@@ -178,11 +495,13 @@ template<typename eT> const eT Datum<eT>::e         = eT(2.718281828459045235360
 template<typename eT> const eT Datum<eT>::euler     = eT(0.5772156649015328606065120900824024310421593359399235988057672348848677267776646709369470632917467495);
 template<typename eT> const eT Datum<eT>::gratio    = eT(1.6180339887498948482045868343656381177203091798057628621354486227052604628189024497072072041893911374);
 template<typename eT> const eT Datum<eT>::sqrt2     = eT(1.4142135623730950488016887242096980785696718753769480731766797379907324784621070388503875343276415727);
-template<typename eT> const eT Datum<eT>::eps       = std::numeric_limits<eT>::epsilon();
-template<typename eT> const eT Datum<eT>::log_min   = std::log(std::numeric_limits<eT>::min());
-template<typename eT> const eT Datum<eT>::log_max   = std::log(std::numeric_limits<eT>::max());
+template<typename eT> const eT Datum<eT>::eps       = priv::Datum_helper::epsilon<eT>();
+template<typename eT> const eT Datum<eT>::log_min   = std::log(priv::Datum_helper::min<eT>());
+template<typename eT> const eT Datum<eT>::log_max   = std::log(priv::Datum_helper::max<eT>());
 template<typename eT> const eT Datum<eT>::nan       = priv::Datum_helper::nan<eT>();
 template<typename eT> const eT Datum<eT>::inf       = priv::Datum_helper::inf<eT>();
+template<typename eT> const eT Datum<eT>::min       = priv::Datum_helper::min<eT>();
+template<typename eT> const eT Datum<eT>::max       = priv::Datum_helper::max<eT>();
 
 template<typename eT> const eT Datum<eT>::m_u       = eT(1.660539040e-27);
 template<typename eT> const eT Datum<eT>::N_A       = eT(6.022140857e23);

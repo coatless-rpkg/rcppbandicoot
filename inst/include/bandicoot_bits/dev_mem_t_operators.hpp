@@ -99,7 +99,7 @@ inline
 dev_mem_t<eT>
 operator+(const dev_mem_t<eT>& a, const size_t b)
   {
-  dev_mem_t<eT> result;
+  dev_mem_t<eT> result({ NULL, 0 });
   if (get_rt().backend == CL_BACKEND)
     {
     result.cl_mem_ptr = a.cl_mem_ptr + b;
@@ -119,7 +119,7 @@ inline
 dev_mem_t<eT>
 operator-(const dev_mem_t<eT>& a, const size_t b)
   {
-  dev_mem_t<eT> result;
+  dev_mem_t<eT> result({ NULL, 0 });
   if (get_rt().backend == CL_BACKEND)
     {
     result.cl_mem_ptr = a.cl_mem_ptr - b;

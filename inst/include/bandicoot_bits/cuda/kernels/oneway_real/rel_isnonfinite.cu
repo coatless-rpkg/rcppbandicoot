@@ -22,6 +22,6 @@ COOT_FN(PREFIX,rel_isnonfinite)(UWORD* out,
   if (i < n_elem)
     {
     const eT1 val = (eT1) X[i];
-    out[i] = !isfinite(val);
+    out[i] = !coot_isfinite(val);
     }
   }

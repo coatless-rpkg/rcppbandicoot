@@ -33,13 +33,28 @@
 #if !defined(COOT_USE_OPENCL)
 #define COOT_USE_OPENCL
 //// Uncomment the above line if you have OpenCL available on your system.
-//// Bandicoot requires OpenCL and clBLAS to be available.
+//// Bandicoot requires OpenCL to be available.
+//// For nontrivial operations it is also required to have either clBLAS or CLBlast available also.
+#endif
+
+#if !defined(COOT_USE_CLBLAST)
+#define COOT_USE_CLBLAST
+//// Uncomment the above line if you have CLBlast available on your system.
+#endif
+
+#if !defined(COOT_USE_CLBLAS)
+#define COOT_USE_CLBLAS
+//// Uncomment the above line if you have clBLAS available on your system.
+//// It is generally preferred to use CLBlast.
 #endif
 
 #if !defined(COOT_USE_CUDA)
 #define COOT_USE_CUDA
 //// Uncomment the above line if you have CUDA available on your system.
 //// Bandicoot requires CUDA, CUDART, cuBLAS, cuRAND, cuSolver, and NVRTC.
+#define COOT_CUDA_INCLUDE_PATH /usr/include/
+//// Set the above line to the include path used to include parts of the CUDA toolkit.
+//// These will be used by NVRTC to compile kernels on-the-fly.
 #endif
 
 #if !defined(COOT_DEFAULT_BACKEND)

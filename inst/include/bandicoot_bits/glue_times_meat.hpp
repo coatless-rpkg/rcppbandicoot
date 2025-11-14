@@ -70,7 +70,7 @@ glue_times_redirect<2>::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& 
   const PT2& B = tmp2.M;
 
   const bool use_alpha = partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times;
-  const out_eT   alpha = use_alpha ? (tmp1.get_val() * tmp2.get_val()) : out_eT(0);
+  const out_eT   alpha = use_alpha ? out_eT(tmp1.get_val() * tmp2.get_val()) : out_eT(0);
 
   alias_wrapper<Mat<out_eT>, PT1, PT2> W(out, A, B);
   glue_times::apply
@@ -468,7 +468,7 @@ glue_times_diag::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times_diag>& X)
 
   coot_debug_assert_trans_mul_size<A_trans, B_trans>(A_n_rows, A_n_cols, B_n_rows, B_n_cols, "matrix multiplication");
 
-  const out_eT alpha = (p1.get_val() == out_eT(1) && p2.get_val() == out_eT(1)) ? out_eT(1) : p1.get_val() * p2.get_val();
+  const out_eT alpha = (p1.get_val() == out_eT(1) && p2.get_val() == out_eT(1)) ? out_eT(1) : out_eT(p1.get_val() * p2.get_val());
 
   out.zeros(C_n_rows, C_n_cols);
 

@@ -31,14 +31,18 @@ logspace(dev_mem_t<eT> mem, const uword mem_incr, const eT start, const eT end, 
 
   dev_mem_t<eT>* in_mem = &mem;
 
-  const eT step = static_cast<eT>(end - start) / (num - 1);
+  typedef typename cuda_type<eT>::type ceT;
+
+  const ceT step = to_cuda_type(eT((double(end) - double(start)) / (double(num) - 1)));
+  const ceT cuda_start = to_cuda_type(start);
+  const ceT cuda_end = to_cuda_type(end);
 
   void* args[] = {
       &(in_mem->cuda_mem_ptr),
       (uword*) &mem_incr,
-      (eT*) &start,
-      (eT*) &end,
-      (eT*) &step,
+      (ceT*) &cuda_start,
+      (ceT*) &cuda_end,
+      (ceT*) &step,
       (uword*) &num };
 
   CUresult result = coot_wrapper(cuLaunchKernel)(

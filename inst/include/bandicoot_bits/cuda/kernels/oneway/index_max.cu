@@ -12,6 +12,51 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
+
+
+__device__
+void
+COOT_FN(PREFIX,index_max_subgroup_reduce)(volatile eT1* data, volatile UWORD* uword_data, int tid)
+  {
+  if ((const eT1) data[tid + 32] > (const eT1) data[tid])
+    {
+    data[tid] = data[tid + 32];
+    uword_data[tid] = uword_data[tid + 32];
+    }
+
+  if ((const eT1) data[tid + 16] > (const eT1) data[tid])
+    {
+    data[tid] = data[tid + 16];
+    uword_data[tid] = uword_data[tid + 16];
+    }
+
+  if ((const eT1) data[tid + 8] > (const eT1) data[tid])
+    {
+    data[tid] = data[tid + 8];
+    uword_data[tid] = uword_data[tid + 8];
+    }
+
+  if ((const eT1) data[tid + 4] > (const eT1) data[tid])
+    {
+    data[tid] = data[tid + 4];
+    uword_data[tid] = uword_data[tid + 4];
+    }
+
+  if ((const eT1) data[tid + 2] > (const eT1) data[tid])
+    {
+    data[tid] = data[tid + 2];
+    uword_data[tid] = uword_data[tid + 2];
+    }
+
+  if ((const eT1) data[tid + 1] > (const eT1) data[tid])
+    {
+    data[tid] = data[tid + 1];
+    uword_data[tid] = uword_data[tid + 1];
+    }
+  }
+
+
+
 // this kernel is technically incorrect if the size is not a factor of 2!
 __global__
 void
@@ -32,8 +77,8 @@ COOT_FN(PREFIX,index_max)(const eT1* in_mem,
 
   // Make sure all auxiliary memory is initialized to something that won't
   // screw up the final reduce.
-  aux_mem[tid] = coot_type_min((eT1) 0);
-  aux_uword_mem[tid] = coot_type_min((eT1) 0);
+  aux_mem[tid] = coot_type_min(TO_ET1(0));
+  aux_uword_mem[tid] = SIZE_MAX;
 
   if (i < n_elem)
     {
@@ -91,7 +136,7 @@ COOT_FN(PREFIX,index_max)(const eT1* in_mem,
 
   if (tid < 32) // unroll last warp's worth of work
     {
-    COOT_FN(PREFIX,index_max_warp_reduce)(aux_mem, aux_uword_mem, tid);
+    COOT_FN(PREFIX,index_max_subgroup_reduce)(aux_mem, aux_uword_mem, tid);
     }
 
   if (tid == 0)

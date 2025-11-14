@@ -65,7 +65,7 @@ class Cube : public BaseCube< eT, Cube<eT> >
 
   atomic_mat_ptr_type* mat_ptrs = nullptr;
 
-  #if defined(ARMA_USE_STD_MUTEX)
+  #if defined(COOT_USE_STD_MUTEX)
     mutable std::mutex mat_mutex;   // required for slice()
   #endif
 
@@ -91,9 +91,9 @@ class Cube : public BaseCube< eT, Cube<eT> >
   inline            Cube(Cube&& m);
   inline Cube& operator=(Cube&& m);
 
-  inline Cube(dev_mem_t<eT> aux_dev_mem, const uword in_rows, const uword in_cols, const uword in_slices);
-  inline Cube(cl_mem        aux_dev_mem, const uword in_rows, const uword in_cols, const uword in_slices); // OpenCL alias constructor
-  inline Cube(eT*           aux_dev_mem, const uword in_rows, const uword in_cols, const uword in_slices); // CUDA alias constructor
+  inline Cube(dev_mem_t<eT>                 aux_dev_mem, const uword in_rows, const uword in_cols, const uword in_slices);
+  inline Cube(cl_mem                        aux_dev_mem, const uword in_rows, const uword in_cols, const uword in_slices); // OpenCL alias constructor
+  inline Cube(typename cuda_type<eT>::type* aux_dev_mem, const uword in_rows, const uword in_cols, const uword in_slices); // CUDA alias constructor
 
   inline dev_mem_t<eT> get_dev_mem(const bool sync = true) const;
 

@@ -38,7 +38,7 @@ COOT_FN(PREFIX,equ_array_erf_pre)(eT2* dest,
 
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
-    const eT2 val = (eT2) src[src_index];
-    dest[dest_index] = (eT2) erf((fp_eT2) val);
+    const eT2 val = TO_ET2(src[src_index]);
+    dest[dest_index] = TO_ET2(erf(TO_FP_ET2(val)));
     }
   }

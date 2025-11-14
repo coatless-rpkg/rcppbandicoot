@@ -23,6 +23,6 @@ COOT_FN(PREFIX,inplace_set_eye)(eT1* out,
   if( (row < n_rows) && (col < n_cols) )
     {
     const UWORD offset = row + col * n_rows;
-    out[offset] = (row == col) ? (eT1)(1) : (eT1)(0);
+    out[offset] = (row == col) ? TO_ET1(1) : TO_ET1(0);
     }
   }

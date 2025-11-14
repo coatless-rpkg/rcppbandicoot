@@ -16,7 +16,12 @@
 
 template<typename eT>
 inline
-void
+typename
+enable_if2
+  <
+  is_same_type< eT, typename cl_type<eT>::type >::yes,
+  void
+  >::result
 copy_from_dev_mem(eT* dest,
                   const dev_mem_t<eT> src,
                   const uword n_rows,
@@ -29,7 +34,42 @@ copy_from_dev_mem(eT* dest,
 
 template<typename eT>
 inline
-void
+typename
+enable_if2
+  <
+  is_same_type< eT, typename cl_type<eT>::type >::no,
+  void
+  >::result
+copy_from_dev_mem(eT* dest,
+                  const dev_mem_t<eT> src,
+                  const uword n_rows,
+                  const uword n_cols,
+                  const uword src_row_offset,
+                  const uword src_col_offset,
+                  const uword src_M_n_rows);
+
+
+
+template<typename eT>
+inline
+typename
+enable_if2
+  <
+  is_same_type< eT, typename cl_type<eT>::type >::yes,
+  void
+  >::result
+copy_into_dev_mem(dev_mem_t<eT> dest, const eT* src, const uword N);
+
+
+
+template<typename eT>
+inline
+typename
+enable_if2
+  <
+  is_same_type< eT, typename cl_type<eT>::type >::no,
+  void
+  >::result
 copy_into_dev_mem(dev_mem_t<eT> dest, const eT* src, const uword N);
 
 

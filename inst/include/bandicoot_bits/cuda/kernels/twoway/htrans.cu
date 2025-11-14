@@ -28,7 +28,7 @@ COOT_FN(PREFIX,htrans)(eT2* out,
 
   if( (row < in_n_rows) && (col < in_n_cols) )
     {
-    const eT2 element = (eT2) in[in_offset];
+    const eT2 element = TO_ET2(in[in_offset]);
     out[out_offset] = element;
     }
   }

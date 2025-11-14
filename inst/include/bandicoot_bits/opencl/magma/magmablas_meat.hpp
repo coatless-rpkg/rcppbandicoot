@@ -287,7 +287,7 @@ void
 magmablas_run_laset_kernel
   (
   const opencl::magma_real_kernel_id::enum_id num,
-  magma_uplo_t uplo,
+  magma_uplo_t /* uplo */,
   magma_int_t m,
   magma_int_t n,
   eT offdiag,
@@ -651,8 +651,8 @@ void
 magmablas_lascl
   (
   magma_type_t type,
-  magma_int_t kl,
-  magma_int_t ku,
+  magma_int_t /* kl */,
+  magma_int_t /* ku */,
   eT cfrom,
   eT cto,
   magma_int_t m,

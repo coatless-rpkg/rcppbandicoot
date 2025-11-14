@@ -22,6 +22,6 @@ COOT_FN(PREFIX,rel_isnan)(UWORD* out,
   if (i < n_elem)
     {
     const eT1 val1 = (eT1) X[i];
-    out[i] = isnan(val1);
+    out[i] = coot_isnan(val1);
     }
   }

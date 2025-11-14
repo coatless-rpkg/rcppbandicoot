@@ -24,7 +24,7 @@ COOT_FN(PREFIX,radix_sort_index_multi_wg_shuffle)(__global eT1* A,
                                                   const UWORD out_offset,
                                                   __global UWORD* out_index,
                                                   const UWORD out_index_offset,
-                                                  __global uint_eT1* counts,
+                                                  __global UWORD* counts,
                                                   const UWORD counts_offset,
                                                   const UWORD n_elem,
                                                   const UWORD sort_type,
@@ -41,7 +41,7 @@ COOT_FN(PREFIX,radix_sort_index_multi_wg_shuffle)(__global eT1* A,
   const uint_eT1 mask = (((uint_eT1) 3) << start_bit);
 
   int upper_bit_shift = 1;
-  uint_eT1 local_offsets[4];
+  UWORD local_offsets[4];
   if (sort_type == 0)
     {
     // for an ascending sort, the offsets are ordered for bit values 00/01/10/11
@@ -132,12 +132,12 @@ COOT_FN(PREFIX,radix_sort_index_multi_wg_shuffle)(__global eT1* A,
     const uint_eT1 val1 = uA[A_offset + i    ];
     const uint_eT1 val2 = uA[A_offset + i + 1];
 
-    const uint_eT1 loc1 = ((val1 & mask) >> start_bit);
-    const uint_eT1 loc2 = ((val2 & mask) >> start_bit);
+    const UWORD loc1 = ((val1 & mask) >> start_bit);
+    const UWORD loc2 = ((val2 & mask) >> start_bit);
 
-    const uint_eT1 out_index1 = local_offsets[loc1];
+    const UWORD out_index1 = local_offsets[loc1];
     local_offsets[loc1] += ((loc1 >= 2) ? upper_bit_shift : 1);
-    const uint_eT1 out_index2 = local_offsets[loc2];
+    const UWORD out_index2 = local_offsets[loc2];
     local_offsets[loc2] += ((loc2 >= 2) ? upper_bit_shift : 1);
 
     out[out_offset + out_index1] = A[A_offset + i];
@@ -151,8 +151,8 @@ COOT_FN(PREFIX,radix_sort_index_multi_wg_shuffle)(__global eT1* A,
   if (i < end_elem)
     {
     const uint_eT1 val = uA[A_offset + i];
-    const uint_eT1 loc = ((val & mask) >> start_bit);
-    const uint_eT1 out_index1 = local_offsets[loc];
+    const UWORD loc = ((val & mask) >> start_bit);
+    const UWORD out_index1 = local_offsets[loc];
     local_offsets[loc] += ((loc >= 2) ? upper_bit_shift : 1);
     out[out_offset + out_index1] = A[A_offset + i];
     out_index[out_index_offset + out_index1] = A_index[A_index_offset + i];

@@ -13,7 +13,7 @@
 // ------------------------------------------------------------------------
 
 // Forward declaration of one-way kernel that we need.
-__device__ void COOT_FN(PREFIX,min_warp_reduce)(volatile eT1* data, int tid);
+__device__ void COOT_FN(PREFIX,min_subgroup_reduce)(volatile eT1* data, int tid);
 
 // this kernel is technically incorrect if the size is not a factor of 2!
 __global__
@@ -69,8 +69,8 @@ COOT_FN(PREFIX,vec_norm_min)(const eT1* in_mem,
 
   if (tid < 32) // unroll last warp's worth of work
     {
-    // Since we are just accumulating, we can use the accu_warp_reduce utility function.
-    COOT_FN(PREFIX,min_warp_reduce)(aux_mem, tid);
+    // Since we are just accumulating, we can use the min_subgroup_reduce utility function.
+    COOT_FN(PREFIX,min_subgroup_reduce)(aux_mem, tid);
     }
 
   if (tid == 0)

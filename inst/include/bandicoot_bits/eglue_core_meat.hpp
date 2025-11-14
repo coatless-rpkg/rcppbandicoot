@@ -31,9 +31,6 @@ eglue_core<eglue_type>::apply(Mat<eT3>& out, const eGlue<T1, T2, eglue_type>& x)
   {
   coot_extra_debug_sigprint();
 
-  typedef typename T1::elem_type eT1;
-  typedef typename T2::elem_type eT2;
-
   const unwrap<typename SizeProxy<T1>::stored_type> UA(x.A.Q);
   const unwrap<typename SizeProxy<T2>::stored_type> UB(x.B.Q);
 
@@ -165,9 +162,6 @@ void
 eglue_core<eglue_type>::apply(Cube<eT3>& out, const eGlueCube<T1, T2, eglue_type>& x)
   {
   coot_extra_debug_sigprint();
-
-  typedef typename T1::elem_type eT1;
-  typedef typename T2::elem_type eT2;
 
   const unwrap_cube<typename SizeProxyCube<T1>::stored_type> UA(x.A.Q);
   const unwrap_cube<typename SizeProxyCube<T2>::stored_type> UB(x.B.Q);

@@ -29,11 +29,11 @@ COOT_FN(PREFIX,dot_small)(twoway_promoted_eT* out_mem,
 
   while (i + blockDim.x < n_elem)
     {
-    const twoway_promoted_eT A_i1 = (twoway_promoted_eT) A[i];
-    const twoway_promoted_eT B_i1 = (twoway_promoted_eT) B[i];
+    const twoway_promoted_eT A_i1 = TO_TWOWAY_PROMOTED_ET(A[i]);
+    const twoway_promoted_eT B_i1 = TO_TWOWAY_PROMOTED_ET(B[i]);
 
-    const twoway_promoted_eT A_i2 = (twoway_promoted_eT) A[i + blockDim.x];
-    const twoway_promoted_eT B_i2 = (twoway_promoted_eT) B[i + blockDim.x];
+    const twoway_promoted_eT A_i2 = TO_TWOWAY_PROMOTED_ET(A[i + blockDim.x]);
+    const twoway_promoted_eT B_i2 = TO_TWOWAY_PROMOTED_ET(B[i + blockDim.x]);
 
     // copy to local shared memory
     aux_mem[tid] += (A_i1 * B_i1) + (A_i2 * B_i2);
@@ -41,8 +41,8 @@ COOT_FN(PREFIX,dot_small)(twoway_promoted_eT* out_mem,
     }
   if (i < n_elem)
     {
-    const twoway_promoted_eT A_i1 = (twoway_promoted_eT) A[i];
-    const twoway_promoted_eT B_i1 = (twoway_promoted_eT) B[i];
+    const twoway_promoted_eT A_i1 = TO_TWOWAY_PROMOTED_ET(A[i]);
+    const twoway_promoted_eT B_i1 = TO_TWOWAY_PROMOTED_ET(B[i]);
 
     aux_mem[tid] += (A_i1 * B_i1);
     }

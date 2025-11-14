@@ -38,10 +38,10 @@ COOT_FN(PREFIX,equ_array_trunc_pre)(eT2* dest,
 
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
-    const eT2 val = (eT2) src[src_index];
+    const eT2 val = TO_ET2(src[src_index]);
     if (coot_is_fp(val))
       {
-      dest[dest_index] = trunc((fp_eT2) val);
+      dest[dest_index] = trunc(TO_FP_ET2(val));
       }
     else
       {

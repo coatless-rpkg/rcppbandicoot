@@ -49,12 +49,52 @@
 //  of this software, even if advised of the possibility of such damage.
 
 
+
+// Forward declaration required for some functionality.
+namespace opencl
+  {
+  template<typename eT>
+  inline
+  void
+  fill(dev_mem_t<eT> dest,
+       const eT val,
+       const uword n_rows,
+       const uword n_cols,
+       const uword row_offset,
+       const uword col_offset,
+       const uword M_n_rows);
+  }
+
+
+
 inline
 void
 check_error(const cl_int error_code)
   {
   opencl::coot_check_cl_error(error_code, "magma_function");
   }
+
+
+
+#if defined(COOT_USE_CLBLAST)
+inline
+void
+check_clblast_error(const CLBlastStatusCode error_code)
+  {
+  opencl::coot_check_clblast_error(error_code, "magma_function");
+  }
+#endif
+
+
+
+#if defined(COOT_USE_CLBLAS)
+inline
+void
+check_clblas_error(const cl_int error_code)
+  {
+  opencl::coot_check_clblas_error(error_code, "magma_function");
+  }
+#endif
 
 
 
@@ -111,7 +151,7 @@ magma_malloc( magma_ptr* ptr_ptr, size_t size )
   cl_int err;
   *ptr_ptr = coot_wrapper(clCreateBuffer)( get_rt().cl_rt.get_context(), CL_MEM_READ_WRITE, size, NULL, &err );
 
-  if ( err != clblasSuccess )
+  if ( err != CL_SUCCESS )
     {
     return MAGMA_ERR_DEVICE_ALLOC;
     }
@@ -125,7 +165,7 @@ magma_int_t
 magma_free( magma_ptr ptr )
   {
   cl_int err = coot_wrapper(clReleaseMemObject)( ptr );
-  if ( err != clblasSuccess )
+  if ( err != CL_SUCCESS )
     {
     return MAGMA_ERR_INVALID_PTR;
     }
@@ -446,7 +486,7 @@ magma_dgetvector_async
   magmaDouble_const_ptr  dx_src, size_t dx_offset, magma_int_t incx,
   double                *hy_dst,                   magma_int_t incy,
   magma_queue_t queue,
-  const char* func, const char* file, int line
+  const char* /* func */, const char* /* file */, int /* line */
   )
   {
   magma_dgetmatrix_async(1, n, dx_src, dx_offset, incx, hy_dst, incy, queue);
@@ -603,7 +643,7 @@ magma_sgetvector_async
   magmaFloat_const_ptr  dx_src, size_t dx_offset, magma_int_t incx,
   float                *hy_dst,                   magma_int_t incy,
   magma_queue_t queue,
-  const char* func, const char* file, int line
+  const char* /* func */, const char* /* file */, int /* line */
   )
   {
   magma_sgetmatrix_async(1, n, dx_src, dx_offset, incx, hy_dst, incy, queue);
@@ -657,7 +697,7 @@ inline
 float
 magma_smake_lwork( magma_int_t lwork )
   {
-  double one_eps = 1. + std::numeric_limits<double>::epsilon();
+  double one_eps = 1. + Datum<double>::eps;
   return float(lwork * one_eps);
   }
 
@@ -837,44 +877,83 @@ const char* lapack_vec_const   ( magma_vec_t    magma_const )
   }
 
 
-/////////////////////
-// clBLAS wrappers
-
-
-// TODO: what a horror
-const int magma2amdblas_constants[] =
-{
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0,                      // 100
-    clblasRowMajor,         // 101: MagmaRowMajor
-    clblasColumnMajor,      // 102: MagmaColMajor
-    0, 0, 0, 0, 0, 0, 0, 0,
-    clblasNoTrans,          // 111: MagmaNoTrans
-    clblasTrans,            // 112: MagmaTrans
-    clblasConjTrans,        // 113: MagmaConjTrans
-    0, 0, 0, 0, 0, 0, 0,
-    clblasUpper,            // 121: MagmaUpper
-    clblasLower,            // 122: MagmaLower
-    0, 0, 0, 0, 0, 0, 0, 0,
-    clblasNonUnit,          // 131: MagmaNonUnit
-    clblasUnit,             // 132: MagmaUnit
-    0, 0, 0, 0, 0, 0, 0, 0,
-    clblasLeft,             // 141: MagmaLeft
-    clblasRight,            // 142: MagmaRight
-    0, 0, 0, 0, 0, 0, 0, 0
-};
+//////////////////////////////
+// clBLAS and CLBlast wrappers
+//////////////////////////////
 
 
 
+#if defined(COOT_USE_CLBLAST)
+inline
+CLBlastTriangle
+clblast_uplo_const( magma_uplo_t magma_const )
+  {
+  assert( magma_const >= MagmaUpper );
+  assert( magma_const <= MagmaLower );
+
+  switch (magma_const)
+    {
+    case MagmaUpper:  return CLBlastTriangleUpper;
+    case MagmaLower:  return CLBlastTriangleLower;
+    default:          return CLBlastTriangleUpper;
+    }
+  }
+
+
+inline
+CLBlastTranspose
+clblast_trans_const( magma_trans_t magma_const )
+  {
+  assert( magma_const >= MagmaNoTrans   );
+  assert( magma_const <= MagmaConjTrans );
+
+  switch (magma_const)
+    {
+    case MagmaNoTrans:    return CLBlastTransposeNo;
+    case MagmaTrans:      return CLBlastTransposeYes;
+    case MagmaConjTrans:  return CLBlastTransposeConjugate;
+    default:              return CLBlastTransposeNo;
+    }
+  }
+
+
+
+inline
+CLBlastSide
+clblast_side_const( magma_side_t magma_const )
+  {
+  assert( magma_const >= MagmaLeft  );
+  assert( magma_const <= MagmaRight );
+
+  switch (magma_const)
+    {
+    case MagmaLeft:   return CLBlastSideLeft;
+    case MagmaRight:  return CLBlastSideRight;
+    default:          return CLBlastSideLeft;
+    }
+  }
+
+
+
+inline
+CLBlastDiagonal
+clblast_diag_const( magma_diag_t magma_const )
+  {
+  assert( magma_const >= MagmaNonUnit );
+  assert( magma_const <= MagmaUnit    );
+
+  switch (magma_const)
+    {
+    case MagmaNonUnit:  return CLBlastDiagonalNonUnit;
+    case MagmaUnit:     return CLBlastDiagonalUnit;
+    default:            return CLBlastDiagonalNonUnit;
+    }
+  }
+#endif
+
+
+
+#if defined(COOT_USE_CLBLAS)
 inline
 clblasUplo
 clblas_uplo_const ( magma_uplo_t magma_const )
@@ -882,8 +961,14 @@ clblas_uplo_const ( magma_uplo_t magma_const )
   assert( magma_const >= MagmaUpper );
   assert( magma_const <= MagmaLower );
 
-  return (clblasUplo)      magma2amdblas_constants[ magma_const ];
+  switch (magma_const)
+    {
+    case MagmaUpper:  return clblasUpper;
+    case MagmaLower:  return clblasLower;
+    default:          return clblasUpper;
+    }
   }
+
 
 
 inline
@@ -893,8 +978,15 @@ clblas_trans_const( magma_trans_t magma_const )
   assert( magma_const >= MagmaNoTrans   );
   assert( magma_const <= MagmaConjTrans );
 
-  return (clblasTranspose) magma2amdblas_constants[ magma_const ];
+  switch (magma_const)
+    {
+    case MagmaNoTrans:    return clblasNoTrans;
+    case MagmaTrans:      return clblasTrans;
+    case MagmaConjTrans:  return clblasConjTrans;
+    default:              return clblasNoTrans;
+    }
   }
+
 
 
 inline
@@ -904,8 +996,15 @@ clblas_side_const ( magma_side_t magma_const )
   assert( magma_const >= MagmaLeft  );
   assert( magma_const <= MagmaRight );
 
-  return (clblasSide)      magma2amdblas_constants[ magma_const ];
+  switch (magma_const)
+    {
+    case MagmaLeft:   return clblasLeft;
+    case MagmaRight:  return clblasRight;
+    default:          return clblasLeft;
+    }
   }
+
+
 
 inline
 clblasDiag
@@ -913,8 +1012,15 @@ clblas_diag_const ( magma_diag_t magma_const )
   {
   assert( magma_const >= MagmaNonUnit );
   assert( magma_const <= MagmaUnit    );
-  return (clblasDiag)      magma2amdblas_constants[ magma_const ];
+
+  switch (magma_const)
+    {
+    case MagmaNonUnit:  return clblasNonUnit;
+    case MagmaUnit:     return clblasUnit;
+    default:            return clblasNonUnit;
+    }
   }
+#endif
 
 
 
@@ -937,19 +1043,49 @@ magma_dgemm
   {
   if ( m <= 0 || n <= 0 || k <= 0 )  { return; }
 
-  cl_int err = coot_wrapper(clblasDgemm)(
-      clblasColumnMajor,
-      clblas_trans_const( transA ),
-      clblas_trans_const( transB ),
-      m, n, k,
-      alpha, dA, dA_offset, ldda,
-             dB, dB_offset, lddb,
-      beta,  dC, dC_offset, lddc,
-      1, &queue, 0, NULL, get_g_event() );
+  #if defined(COOT_USE_CLBLAST)
+    {
+    if (beta == 0.0)
+      {
+      // paranoia: CLBlast doesn't seem to like it when C is not initialized to 0
+      dev_mem_t<double> dC_mem;
+      dC_mem.cl_mem_ptr = coot_cl_mem({ dC, 0 });
+      opencl::fill(dC_mem, 0.0, m, n, dC_offset, 0, lddc);
+      }
 
-  coot_wrapper(clFlush)(queue);
+    CLBlastStatusCode err = coot_wrapper(CLBlastDgemm)(
+        CLBlastLayoutColMajor,
+        clblast_trans_const( transA ),
+        clblast_trans_const( transB ),
+        m, n, k,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        beta,  dC, dC_offset, lddc,
+        &queue, get_g_event() );
 
-  check_error( err );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magma_dgemm()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    cl_int err = coot_wrapper(clblasDgemm)(
+        clblasColumnMajor,
+        clblas_trans_const( transA ),
+        clblas_trans_const( transB ),
+        m, n, k,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        beta,  dC, dC_offset, lddc,
+        1, &queue, 0, NULL, get_g_event() );
+
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblas_error(err, "magma_dgemm()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -964,10 +1100,36 @@ magma_sgemm(
     float beta,
     magmaFloat_ptr       dC, size_t dC_offset, magma_int_t lddc,
     magma_queue_t queue )
-{
-    if ( m <= 0 || n <= 0 || k <= 0 )
-        return;
+  {
+  if ( m <= 0 || n <= 0 || k <= 0 )
+    {
+    return;
+    }
 
+  #if defined(COOT_USE_CLBLAST)
+    {
+    if (beta == 0.0f)
+      {
+      // paranoia: CLBlast doesn't seem to like it when C is not initialized to 0
+      dev_mem_t<float> dC_mem;
+      dC_mem.cl_mem_ptr = coot_cl_mem({ dC, 0 });
+      opencl::fill(dC_mem, 0.0f, m, n, dC_offset, 0, lddc);
+      }
+
+    CLBlastStatusCode err = coot_wrapper(CLBlastSgemm)(
+        CLBlastLayoutColMajor,
+        clblast_trans_const( transA ),
+        clblast_trans_const( transB ),
+        m, n, k,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        beta,  dC, dC_offset, lddc,
+        &queue, get_g_event() );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magma_sgemm()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
     cl_int err = coot_wrapper(clblasSgemm)(
         clblasColumnMajor,
         clblas_trans_const( transA ),
@@ -978,8 +1140,14 @@ magma_sgemm(
         beta,  dC, dC_offset, lddc,
         1, &queue, 0, NULL, get_g_event() );
     coot_wrapper(clFlush)(queue);
-    check_error( err );
-}
+    opencl::coot_check_clblas_error(err, "magma_sgemm()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
+  }
 
 
 
@@ -999,18 +1167,49 @@ magma_dgemv
   magma_queue_t queue)
   {
   if (m <= 0 || n <= 0)
+    {
     return;
+    }
 
-  cl_int err = coot_wrapper(clblasDgemv)(
-      clblasColumnMajor,
-      clblas_trans_const( trans ),
-      size_t(m), size_t(n),
-      alpha, dA, dA_offset, ldda,
-             dx, dx_offset, incx,
-      beta,  dy, dy_offset, incy,
-      1, &queue, 0, NULL, get_g_event() );
-  coot_wrapper(clFlush)(queue);
-  check_error( err );
+  #if defined(COOT_USE_CLBLAST)
+    {
+    if (beta == 0.0)
+      {
+      // Paranoia: CLBlast doesn't seem to like it when y is not initialized to 0
+      dev_mem_t<double> dy_mem;
+      dy_mem.cl_mem_ptr = coot_cl_mem({ dy, 0 });
+      opencl::fill(dy_mem, 0.0, 1, (trans == MagmaNoTrans) ? m : n, dy_offset, 0, incy);
+      }
+
+    CLBlastStatusCode err = coot_wrapper(CLBlastDgemv)(
+        CLBlastLayoutColMajor,
+        clblast_trans_const( trans ),
+        size_t(m), size_t(n),
+        alpha, dA, dA_offset, ldda,
+               dx, dx_offset, incx,
+        beta,  dy, dy_offset, incy,
+        &queue, get_g_event() );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magma_dgemv()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    cl_int err = coot_wrapper(clblasDgemv)(
+        clblasColumnMajor,
+        clblas_trans_const( trans ),
+        size_t(m), size_t(n),
+        alpha, dA, dA_offset, ldda,
+               dx, dx_offset, incx,
+        beta,  dy, dy_offset, incy,
+        1, &queue, 0, NULL, get_g_event() );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblas_error(err, "magma_dgemv()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -1030,16 +1229,45 @@ magma_sgemv
   if (m <= 0 || n <= 0)
     return;
 
-  cl_int err = coot_wrapper(clblasSgemv)(
-      clblasColumnMajor,
-      clblas_trans_const( trans ),
-      size_t(m), size_t(n),
-      alpha, dA, dA_offset, ldda,
-             dx, dx_offset, incx,
-      beta,  dy, dy_offset, incy,
-      1, &queue, 0, NULL, get_g_event() );
-  coot_wrapper(clFlush)(queue);
-  check_error( err );
+  #if defined(COOT_USE_CLBLAST)
+    {
+    // Paranoia: CLBlast doesn't seem to like it when y is not initialized to 0
+    if (beta == 0.0)
+      {
+      dev_mem_t<float> dy_mem;
+      dy_mem.cl_mem_ptr = coot_cl_mem({ dy, 0 });
+      opencl::fill(dy_mem, 0.0f, 1, (trans == MagmaNoTrans) ? m : n, dy_offset, 0, incy);
+      }
+
+    CLBlastStatusCode err = coot_wrapper(CLBlastSgemv)(
+        CLBlastLayoutColMajor,
+        clblast_trans_const( trans ),
+        size_t(m), size_t(n),
+        alpha, dA, dA_offset, ldda,
+               dx, dx_offset, incx,
+        beta,  dy, dy_offset, incy,
+        &queue, get_g_event() );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magma_sgemv()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    cl_int err = coot_wrapper(clblasSgemv)(
+        clblasColumnMajor,
+        clblas_trans_const( trans ),
+        size_t(m), size_t(n),
+        alpha, dA, dA_offset, ldda,
+               dx, dx_offset, incx,
+        beta,  dy, dy_offset, incy,
+        1, &queue, 0, NULL, get_g_event() );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblas_error(err, "magma_sgemv()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -1060,18 +1288,39 @@ magma_dsyrk
   magma_queue_t queue
   )
   {
-  cl_int err = coot_wrapper(clblasDsyrk)(
-    clblasColumnMajor,
-    clblas_uplo_const( uplo ),
-    clblas_trans_const( trans ),
-    n, k,
-    alpha,
-    dA, dA_offset, ldda,
-    beta,
-    dC, dC_offset, lddc,
-    1, &queue, 0, NULL, get_g_event() );
-
-  opencl::coot_check_clblas_error(err, "magma_dsyrk()");
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode err = coot_wrapper(CLBlastDsyrk)(
+        CLBlastLayoutColMajor,
+        clblast_uplo_const( uplo ),
+        clblast_trans_const( trans ),
+        n, k,
+        alpha,
+        dA, dA_offset, ldda,
+        beta,
+        dC, dC_offset, lddc,
+        &queue, get_g_event());
+    opencl::coot_check_clblast_error(err, "magma_dsyrk()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    cl_int err = coot_wrapper(clblasDsyrk)(
+        clblasColumnMajor,
+        clblas_uplo_const( uplo ),
+        clblas_trans_const( trans ),
+        n, k,
+        alpha,
+        dA, dA_offset, ldda,
+        beta,
+        dC, dC_offset, lddc,
+        1, &queue, 0, NULL, get_g_event() );
+    opencl::coot_check_clblas_error(err, "magma_dsyrk()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -1085,7 +1334,21 @@ magma_ssyrk(
     float beta,
     magmaFloat_ptr       dC, size_t dC_offset, magma_int_t lddc,
     magma_queue_t queue )
-{
+  {
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode err = coot_wrapper(CLBlastSsyrk)(
+        CLBlastLayoutColMajor,
+        clblast_uplo_const( uplo ),
+        clblast_trans_const( trans ),
+        n, k,
+        alpha, dA, dA_offset, ldda,
+        beta,  dC, dC_offset, lddc,
+        &queue, get_g_event());
+    opencl::coot_check_clblast_error(err, "magma_ssyrk()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
     cl_int err = coot_wrapper(clblasSsyrk)(
         clblasColumnMajor,
         clblas_uplo_const( uplo ),
@@ -1094,8 +1357,14 @@ magma_ssyrk(
         alpha, dA, dA_offset, ldda,
         beta,  dC, dC_offset, lddc,
         1, &queue, 0, NULL, get_g_event() );
-    check_error( err );
-}
+    opencl::coot_check_clblas_error(err, "magma_ssyrk()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
+  }
 
 
 
@@ -1117,20 +1386,41 @@ magma_dtrsm
   {
   if (m <= 0 || n <= 0)  { return; }
 
-  cl_int err = coot_wrapper(clblasDtrsm)(
-      clblasColumnMajor,
-      clblas_side_const( side ),
-      clblas_uplo_const( uplo ),
-      clblas_trans_const( trans ),
-      clblas_diag_const( diag ),
-      m, n,
-      alpha, dA, dA_offset, ldda,
-             dB, dB_offset, lddb,
-      1, &queue, 0, NULL, get_g_event() );
-
-  coot_wrapper(clFlush)(queue);
-
-  check_error( err );
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode err = coot_wrapper(CLBlastDtrsm)(
+        CLBlastLayoutColMajor,
+        clblast_side_const( side ),
+        clblast_uplo_const( uplo ),
+        clblast_trans_const( trans ),
+        clblast_diag_const( diag ),
+        m, n,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        &queue, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magma_dtrsm()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    cl_int err = coot_wrapper(clblasDtrsm)(
+        clblasColumnMajor,
+        clblas_side_const( side ),
+        clblas_uplo_const( uplo ),
+        clblas_trans_const( trans ),
+        clblas_diag_const( diag ),
+        m, n,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        1, &queue, 0, NULL, get_g_event() );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblas_error(err, "magma_dtrsm()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -1143,10 +1433,29 @@ magma_strsm(
     magmaFloat_const_ptr dA, size_t dA_offset, magma_int_t ldda,
     magmaFloat_ptr       dB, size_t dB_offset, magma_int_t lddb,
     magma_queue_t queue )
-{
-    if (m <= 0 || n <= 0)
-        return;
+  {
+  if (m <= 0 || n <= 0)
+    {
+    return;
+    }
 
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode err = coot_wrapper(CLBlastStrsm)(
+        CLBlastLayoutColMajor,
+        clblast_side_const( side ),
+        clblast_uplo_const( uplo ),
+        clblast_trans_const( trans ),
+        clblast_diag_const( diag ),
+        m, n,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        &queue, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magma_strsm()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
     cl_int err = coot_wrapper(clblasStrsm)(
         clblasColumnMajor,
         clblas_side_const( side ),
@@ -1158,8 +1467,14 @@ magma_strsm(
                dB, dB_offset, lddb,
         1, &queue, 0, NULL, get_g_event() );
     coot_wrapper(clFlush)(queue);
-    check_error( err );
-}
+    opencl::coot_check_cl_error(err, "magma_strsm()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
+  }
 
 
 
@@ -1175,9 +1490,29 @@ magma_dtrmm(
     magmaDouble_const_ptr dA, size_t dA_offset, magma_int_t ldda,
     magmaDouble_ptr       dB, size_t dB_offset, magma_int_t lddb,
     magma_queue_t queue )
-{
-    if (m <= 0 || n <= 0)  { return; }
+  {
+  if (m <= 0 || n <= 0)
+    {
+    return;
+    }
 
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode err = coot_wrapper(CLBlastDtrmm)(
+        CLBlastLayoutColMajor,
+        clblast_side_const( side ),
+        clblast_uplo_const( uplo ),
+        clblast_trans_const( trans ),
+        clblast_diag_const( diag ),
+        m, n,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        &queue, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magma_dtrmm()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
     cl_int err = coot_wrapper(clblasDtrmm)(
         clblasColumnMajor,
         clblas_side_const( side ),
@@ -1189,8 +1524,14 @@ magma_dtrmm(
                dB, dB_offset, lddb,
         1, &queue, 0, NULL, get_g_event() );
     coot_wrapper(clFlush)(queue);
-    check_error( err );
-}
+    opencl::coot_check_clblas_error(err, "magma_dtrmm()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
+  }
 
 
 
@@ -1203,10 +1544,29 @@ magma_strmm(
     magmaFloat_const_ptr dA, size_t dA_offset, magma_int_t ldda,
     magmaFloat_ptr       dB, size_t dB_offset, magma_int_t lddb,
     magma_queue_t queue )
-{
-    if (m <= 0 || n <= 0)
-        return;
+  {
+  if (m <= 0 || n <= 0)
+    {
+    return;
+    }
 
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode err = coot_wrapper(CLBlastStrmm)(
+        CLBlastLayoutColMajor,
+        clblast_side_const( side ),
+        clblast_uplo_const( uplo ),
+        clblast_trans_const( trans ),
+        clblast_diag_const( diag ),
+        m, n,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        &queue, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magma_strmm()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
     cl_int err = coot_wrapper(clblasStrmm)(
         clblasColumnMajor,
         clblas_side_const( side ),
@@ -1218,8 +1578,14 @@ magma_strmm(
                dB, dB_offset, lddb,
         1, &queue, 0, NULL, get_g_event() );
     coot_wrapper(clFlush)(queue);
-    check_error( err );
-}
+    opencl::coot_check_clblas_error(err, "magma_strmm()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
+  }
 
 
 
@@ -1248,35 +1614,49 @@ magma_dtrsv
   if (n <= 0)
     return;
 
-  if (incx != 1)
+  #if defined(COOT_USE_CLBLAST)
     {
-    throw std::runtime_error("magma_dtrsv() cannot accept incx != 1");
+    CLBlastStatusCode err = coot_wrapper(CLBlastDtrsv)(
+        CLBlastLayoutColMajor,
+        clblast_uplo_const( uplo ),
+        clblast_trans_const( transA ),
+        clblast_diag_const( diag ),
+        n,
+        dA, dA_offset, ldda,
+        dx, dx_offset, incx,
+        &queue, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magma_dtrsv()");
     }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    if (incx != 1)
+      {
+      throw std::runtime_error("magma_dtrsv() with clBLAS cannot accept incx != 1");
+      }
 
-  // clBLAS's TRSV implementation generates invalid kernels that violate the OpenCL standard!
-  // See https://github.com/clMathLibraries/clBLAS/issues/341
-  // So, instead, we use TRSM...
-  cl_int err = coot_wrapper(clblasDtrsm)(clblasColumnMajor,
-                                         clblasLeft,
-                                         clblas_uplo_const( uplo ),
-                                         clblas_trans_const( transA ),
-                                         clblas_diag_const( diag ),
-                                         n,
-                                         1,
-                                         (double) 1.0,
-                                         dA,
-                                         dA_offset,
-                                         ldda,
-                                         dx,
-                                         dx_offset,
-                                         n,
-                                         1,
-                                         &queue,
-                                         0,
-                                         NULL,
-                                         get_g_event());
-  coot_wrapper(clFlush)(queue);
-  check_error(err);
+    // clBLAS's TRSV implementation generates invalid kernels that violate the OpenCL standard!
+    // See https://github.com/clMathLibraries/clBLAS/issues/341
+    // So, instead, we use TRSM...
+    cl_int err = coot_wrapper(clblasDtrsm)(
+        clblasColumnMajor,
+        clblasLeft,
+        clblas_uplo_const( uplo ),
+        clblas_trans_const( transA ),
+        clblas_diag_const( diag ),
+        n, 1, (double) 1.0,
+        dA, dA_offset, ldda,
+        dx, dx_offset, n,
+        1,
+        &queue, 0, NULL, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblas_error(err, "magma_dtrsv()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -1301,35 +1681,48 @@ magma_strsv
   if (n <= 0)
     return;
 
-  if (incx != 1)
+  #if defined(COOT_USE_CLBLAST)
     {
-    throw std::runtime_error("magma_strsv() cannot accept incx != 1");
+    CLBlastStatusCode err = coot_wrapper(CLBlastStrsv)(
+        CLBlastLayoutColMajor,
+        clblast_uplo_const( uplo ),
+        clblast_trans_const( transA ),
+        clblast_diag_const( diag ),
+        n,
+        dA, dA_offset, ldda,
+        dx, dx_offset, incx,
+        &queue, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magma_strsv()");
     }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    if (incx != 1)
+      {
+      throw std::runtime_error("magma_strsv() cannot accept incx != 1");
+      }
 
-  // clBLAS's TRSV implementation generates invalid kernels that violate the OpenCL standard!
-  // See https://github.com/clMathLibraries/clBLAS/issues/341
-  // So, instead, we use TRSM...
-  cl_int err = coot_wrapper(clblasStrsm)(clblasColumnMajor,
-                                         clblasLeft,
-                                         clblas_uplo_const( uplo ),
-                                         clblas_trans_const( transA ),
-                                         clblas_diag_const( diag ),
-                                         n,
-                                         1,
-                                         (float) 1.0,
-                                         dA,
-                                         dA_offset,
-                                         ldda,
-                                         dx,
-                                         dx_offset,
-                                         n,
-                                         1,
-                                         &queue,
-                                         0,
-                                         NULL,
-                                         get_g_event());
-  coot_wrapper(clFlush)(queue);
-  check_error(err);
+    // clBLAS's TRSV implementation generates invalid kernels that violate the OpenCL standard!
+    // See https://github.com/clMathLibraries/clBLAS/issues/341
+    // So, instead, we use TRSM...
+    cl_int err = coot_wrapper(clblasStrsm)(
+        clblasColumnMajor,
+        clblasLeft,
+        clblas_uplo_const( uplo ),
+        clblas_trans_const( transA ),
+        clblas_diag_const( diag ),
+        n, 1, (float) 1.0,
+        dA, dA_offset, ldda,
+        dx, dx_offset, n, 1,
+        &queue, 0, NULL, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblas_error(err, "magma_strsv()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -1361,16 +1754,37 @@ magmablas_ssymv_work
     return;
     }
 
-  cl_int err = coot_wrapper(clblasSsymv)(
-      clblasColumnMajor,
-      clblas_uplo_const( uplo ),
-      n,
-      alpha, dA, dA_offset, ldda,
-             dx, dx_offset, incx,
-      beta,  dy, dy_offset, incy,
-      1, &queue, 0, NULL, get_g_event() );
-  coot_wrapper(clFlush)(queue);
-  check_error( err );
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode err = coot_wrapper(CLBlastSsymv)(
+        CLBlastLayoutColMajor,
+        clblast_uplo_const( uplo ),
+        n,
+        alpha, dA, dA_offset, ldda,
+               dx, dx_offset, incx,
+        beta,  dy, dy_offset, incy,
+        &queue, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magmablas_ssymv_work()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    cl_int err = coot_wrapper(clblasSsymv)(
+        clblasColumnMajor,
+        clblas_uplo_const( uplo ),
+        n,
+        alpha, dA, dA_offset, ldda,
+               dx, dx_offset, incx,
+        beta,  dy, dy_offset, incy,
+        1, &queue, 0, NULL, get_g_event() );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblas_error(err, "magmablas_ssymv_work()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -1398,16 +1812,37 @@ magmablas_dsymv_work
     return;
     }
 
-  cl_int err = coot_wrapper(clblasDsymv)(
-      clblasColumnMajor,
-      clblas_uplo_const( uplo ),
-      n,
-      alpha, dA, dA_offset, ldda,
-             dx, dx_offset, incx,
-      beta,  dy, dy_offset, incy,
-      1, &queue, 0, NULL, get_g_event() );
-  coot_wrapper(clFlush)(queue);
-  check_error( err );
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode err = coot_wrapper(CLBlastDsymv)(
+        CLBlastLayoutColMajor,
+        clblast_uplo_const( uplo ),
+        n,
+        alpha, dA, dA_offset, ldda,
+               dx, dx_offset, incx,
+        beta,  dy, dy_offset, incy,
+        &queue, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magmablas_dsymv_work()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    cl_int err = coot_wrapper(clblasDsymv)(
+        clblasColumnMajor,
+        clblas_uplo_const( uplo ),
+        n,
+        alpha, dA, dA_offset, ldda,
+               dx, dx_offset, incx,
+        beta,  dy, dy_offset, incy,
+        1, &queue, 0, NULL, get_g_event() );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblas_error(err, "magmablas_dsymv_work()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -1435,17 +1870,39 @@ magmablas_ssyr2k
     return;
     }
 
-  cl_int err = coot_wrapper(clblasSsyr2k)(
-      clblasColumnMajor,
-      clblas_uplo_const( uplo ),
-      clblas_trans_const( trans ),
-      n, k,
-      alpha, dA, dA_offset, ldda,
-             dB, dB_offset, lddb,
-      beta,  dC, dC_offset, lddc,
-      1, &queue, 0, NULL, get_g_event() );
-  coot_wrapper(clFlush)(queue);
-  check_error( err );
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode err = coot_wrapper(CLBlastSsyr2k)(
+        CLBlastLayoutColMajor,
+        clblast_uplo_const( uplo ),
+        clblast_trans_const( trans ),
+        n, k,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        beta,  dC, dC_offset, lddc,
+        &queue, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magmablas_ssyr2k()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    cl_int err = coot_wrapper(clblasSsyr2k)(
+        clblasColumnMajor,
+        clblas_uplo_const( uplo ),
+        clblas_trans_const( trans ),
+        n, k,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        beta,  dC, dC_offset, lddc,
+        1, &queue, 0, NULL, get_g_event() );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblas_error(err, "magmablas_ssyr2k()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -1469,17 +1926,39 @@ magmablas_dsyr2k
     return;
     }
 
-  cl_int err = coot_wrapper(clblasDsyr2k)(
-      clblasColumnMajor,
-      clblas_uplo_const( uplo ),
-      clblas_trans_const( trans ),
-      n, k,
-      alpha, dA, dA_offset, ldda,
-             dB, dB_offset, lddb,
-      beta,  dC, dC_offset, lddc,
-      1, &queue, 0, NULL, get_g_event() );
-  coot_wrapper(clFlush)(queue);
-  check_error( err );
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode err = coot_wrapper(CLBlastDsyr2k)(
+        CLBlastLayoutColMajor,
+        clblast_uplo_const( uplo ),
+        clblast_trans_const( trans ),
+        n, k,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        beta,  dC, dC_offset, lddc,
+        &queue, get_g_event());
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblast_error(err, "magmablas_dsyr2k()");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    cl_int err = coot_wrapper(clblasDsyr2k)(
+        clblasColumnMajor,
+        clblas_uplo_const( uplo ),
+        clblas_trans_const( trans ),
+        n, k,
+        alpha, dA, dA_offset, ldda,
+               dB, dB_offset, lddb,
+        beta,  dC, dC_offset, lddc,
+        1, &queue, 0, NULL, get_g_event() );
+    coot_wrapper(clFlush)(queue);
+    opencl::coot_check_clblas_error(err, "magmablas_ssyr2k()");
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
   }
 
 
@@ -1667,17 +2146,30 @@ magma_isamax(magma_int_t n, magmaFloat_const_ptr dx, size_t dx_offset, magma_int
 
   // need to initialize one GPU unsigned int to store the result...
   coot_cl_mem out = get_rt().cl_rt.acquire_memory<unsigned int>(1);
-  coot_cl_mem dwork = get_rt().cl_rt.acquire_memory<float>(2 * n);
 
-  cl_int status = coot_wrapper(clblasiSamax)(n, out.ptr, 0, dx, dx_offset, incx, dwork.ptr, 1, &queue, 0, NULL, get_g_event() );
-  opencl::coot_check_cl_error(status, "coot::opencl::magma_isamax(): call to clblasiSamax() failed");
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode status = coot_wrapper(CLBlastiSamax)(n, out.ptr, 0, dx, dx_offset, incx, &queue, get_g_event() );
+    opencl::coot_check_clblast_error(status, "coot::opencl::magma_isamax(): call to CLBlastiSamax() failed");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    coot_cl_mem dwork = get_rt().cl_rt.acquire_memory<float>(2 * n);
+    cl_int status = coot_wrapper(clblasiSamax)(n, out.ptr, 0, dx, dx_offset, incx, dwork.ptr, 1, &queue, 0, NULL, get_g_event() );
+    opencl::coot_check_clblas_error(status, "coot::opencl::magma_isamax(): call to clblasiSamax() failed");
+    get_rt().cl_rt.release_memory(dwork);
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
 
   int result = 0;
-  status = coot_wrapper(clEnqueueReadBuffer)(queue, out.ptr, CL_TRUE, 0, sizeof(unsigned int), &result, 0, NULL, NULL);
+  cl_int status = coot_wrapper(clEnqueueReadBuffer)(queue, out.ptr, CL_TRUE, 0, sizeof(unsigned int), &result, 0, NULL, NULL);
   opencl::coot_check_cl_error(status, "coot::opencl::magma_isamax(): getting result from device memory failed");
 
   get_rt().cl_rt.release_memory(out);
-  get_rt().cl_rt.release_memory(dwork);
 
   return result;
   }
@@ -1695,17 +2187,30 @@ magma_idamax(magma_int_t n, magmaDouble_const_ptr dx, size_t dx_offset, magma_in
 
   // need to initialize one GPU unsigned int to store the result...
   coot_cl_mem out = get_rt().cl_rt.acquire_memory<unsigned int>(1);
-  coot_cl_mem dwork = get_rt().cl_rt.acquire_memory<double>(2 * n);
 
-  cl_int status = coot_wrapper(clblasiDamax)(n, out.ptr, 0, dx, dx_offset, incx, dwork.ptr, 1, &queue, 0, NULL, get_g_event() );
-  opencl::coot_check_cl_error(status, "coot::opencl::magma_isamax(): call to clblasiSamax() failed");
+  #if defined(COOT_USE_CLBLAST)
+    {
+    CLBlastStatusCode status = coot_wrapper(CLBlastiDamax)(n, out.ptr, 0, dx, dx_offset, incx, &queue, get_g_event() );
+    opencl::coot_check_clblast_error(status, "coot::opencl::magma_idamax(): call to CLBlastiDamax() failed");
+    }
+  #elif defined(COOT_USE_CLBLAS)
+    {
+    coot_cl_mem dwork = get_rt().cl_rt.acquire_memory<double>(2 * n);
+    cl_int status = coot_wrapper(clblasiDamax)(n, out.ptr, 0, dx, dx_offset, incx, dwork.ptr, 1, &queue, 0, NULL, get_g_event() );
+    opencl::coot_check_clblas_error(status, "coot::opencl::magma_isamax(): call to clblasiSamax() failed");
+    get_rt().cl_rt.release_memory(dwork);
+    }
+  #else
+    {
+    coot_stop_runtime_error("OpenCL MAGMA decompositions require CLBlast or clBLAS support to be enabled");
+    }
+  #endif
 
   int result = 0;
-  status = coot_wrapper(clEnqueueReadBuffer)(queue, out.ptr, CL_TRUE, 0, sizeof(unsigned int), &result, 0, NULL, NULL);
+  cl_int status = coot_wrapper(clEnqueueReadBuffer)(queue, out.ptr, CL_TRUE, 0, sizeof(unsigned int), &result, 0, NULL, NULL);
   opencl::coot_check_cl_error(status, "coot::opencl::magma_isamax(): getting result from device memory failed");
 
   get_rt().cl_rt.release_memory(out);
-  get_rt().cl_rt.release_memory(dwork);
 
   return result;
   }

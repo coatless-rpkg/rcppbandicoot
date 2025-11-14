@@ -29,7 +29,12 @@ extern "C"
   extern CUresult coot_wrapper(cuDeviceGetCount)(int* count);
   extern CUresult coot_wrapper(cuDeviceGet)(CUdevice* device, int ordinal);
   extern CUresult coot_wrapper(cuDeviceGetAttribute)(int* pi, CUdevice_attribute attrib, CUdevice dev);
+  // The number of parameters changed in CUDA 13.
+  #if CUDA_VERSION >= 13000
+  extern CUresult coot_wrapper(cuCtxCreate)(CUcontext* pctx, CUctxCreateParams* ctxCreateParams, unsigned int flags, CUdevice dev);
+  #else
   extern CUresult coot_wrapper(cuCtxCreate)(CUcontext* pctx, unsigned int flags, CUdevice dev);
+  #endif
   extern CUresult coot_wrapper(cuModuleLoadDataEx)(CUmodule* module, const void* image, unsigned int numOptions, CUjit_option* options, void** optionValues);
   extern CUresult coot_wrapper(cuModuleGetFunction)(CUfunction* hfunc, CUmodule hmod, const char* name);
 

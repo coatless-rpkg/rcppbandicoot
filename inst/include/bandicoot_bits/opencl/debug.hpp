@@ -29,6 +29,7 @@ coot_check_cl_error(const cl_int error_code, const T1& x)
 
 
 
+#if defined(COOT_USE_CLBLAS)
 template<typename T1>
 coot_hot
 inline
@@ -40,6 +41,23 @@ coot_check_clblas_error(const cl_int error_code, const T1& x)
     coot_stop_runtime_error( x, coot_clblas_error::as_string(error_code) );
     }
   }
+#endif
+
+
+
+#if defined(COOT_USE_CLBLAST)
+template<typename T1>
+coot_hot
+inline
+void
+coot_check_clblast_error(const CLBlastStatusCode error_code, const T1& x)
+  {
+  if(error_code != CLBlastSuccess)
+    {
+    coot_stop_runtime_error( x, coot_clblast_error::as_string(error_code) );
+    }
+  }
+#endif
 
 
 

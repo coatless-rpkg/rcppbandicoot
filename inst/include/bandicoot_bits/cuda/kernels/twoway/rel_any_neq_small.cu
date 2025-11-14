@@ -30,8 +30,8 @@ COOT_FN(PREFIX,rel_any_neq_small)(const eT1* X, // will be casted to eT2 before 
   while (i + blockDim.x < n_elem)
     {
     // copy to local shared memory
-    const eT2 val1 = (eT2) X[i];
-    const eT2 val2 = (eT2) X[i + blockDim.x];
+    const eT2 val1 = TO_ET2(X[i]);
+    const eT2 val2 = TO_ET2(X[i + blockDim.x]);
 
     aux_mem[tid] |= (val1 != val);
     aux_mem[tid] |= (val2 != val);
@@ -43,7 +43,7 @@ COOT_FN(PREFIX,rel_any_neq_small)(const eT1* X, // will be casted to eT2 before 
 
   if (i < n_elem && aux_mem[tid] == 0)
     {
-    const eT2 val1 = (eT2) X[i];
+    const eT2 val1 = TO_ET2(X[i]);
 
     aux_mem[tid] |= (val1 != val);
     }

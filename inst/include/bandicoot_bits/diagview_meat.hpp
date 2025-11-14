@@ -515,8 +515,6 @@ diagview<eT>::fill(const eT val)
   {
   coot_extra_debug_sigprint();
 
-  Mat<eT>& t_m = const_cast< Mat<eT>& >(m);
-
   coot_rt_t::fill(m.get_dev_mem(false), val,
                   1, n_elem,
                   mem_offset, 0, m.n_rows + 1);

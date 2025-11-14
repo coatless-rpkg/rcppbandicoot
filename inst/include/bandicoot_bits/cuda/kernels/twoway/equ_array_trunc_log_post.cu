@@ -42,34 +42,34 @@ COOT_FN(PREFIX,equ_array_trunc_log_post)(eT2* dest,
     const eT1 val = src[src_index];
     if (coot_is_fp(val))
       {
-      const fp_eT1 fp_val = (fp_eT1) val;
-      if (fp_val <= (fp_eT1) 0)
+      const fp_eT1 fp_val = TO_FP_ET1(val);
+      if (fp_val <= TO_FP_ET1(0))
         {
-        dest[dest_index] = (eT2) log(coot_type_min((fp_eT1) 0));
+        dest[dest_index] = TO_ET2(log(coot_type_minpos(TO_FP_ET1(0))));
         }
-      else if (isinf(fp_val))
+      else if (coot_isinf(fp_val))
         {
-        dest[dest_index] = (eT2) log(coot_type_max((fp_eT1) 0));
+        dest[dest_index] = TO_ET2(log(coot_type_max(TO_FP_ET1(0))));
         }
       else
         {
-        dest[dest_index] = (eT2) ((eT1) log(fp_val));
+        dest[dest_index] = TO_ET2(TO_ET1(log(fp_val)));
         }
       }
     else
       {
       const double fp_val = (double) val;
-      if (fp_val <= (fp_eT1) 0)
+      if (fp_val <= TO_FP_ET1(0))
         {
-        dest[dest_index] = (eT2) log(coot_type_min((double) 0));
+        dest[dest_index] = TO_ET2(log(DBL_MIN));
         }
       else if (isinf(fp_val))
         {
-        dest[dest_index] = (eT2) log(coot_type_max((double) 0));
+        dest[dest_index] = TO_ET2(log(DBL_MAX));
         }
       else
         {
-        dest[dest_index] = (eT2) ((eT1) log(fp_val));
+        dest[dest_index] = TO_ET2(TO_ET1(log(fp_val)));
         }
       }
     }

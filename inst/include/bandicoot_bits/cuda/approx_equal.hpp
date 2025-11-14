@@ -63,8 +63,12 @@ approx_equal(const dev_mem_t<eT> A,
 
   const uword A_offset = A_row_offset + A_col_offset * A_M_n_rows;
   const uword B_offset = B_row_offset + B_col_offset * B_M_n_rows;
-  const eT* A_mem_ptr = A.cuda_mem_ptr + A_offset;
-  const eT* B_mem_ptr = B.cuda_mem_ptr + B_offset;
+  typedef typename cuda_type<eT>::type ceT;
+  const ceT* A_mem_ptr = A.cuda_mem_ptr + A_offset;
+  const ceT* B_mem_ptr = B.cuda_mem_ptr + B_offset;
+
+  ceT conv_abs_tol = to_cuda_type(abs_tol);
+  ceT conv_rel_tol = to_cuda_type(rel_tol);
 
   const void* args[] = {
       &(aux_mem.cuda_mem_ptr),
@@ -75,8 +79,8 @@ approx_equal(const dev_mem_t<eT> A,
       (uword*) &n_rows,
       (uword*) &n_elem,
       (uword*) &mode,
-      (eT*) &abs_tol,
-      (eT*) &rel_tol };
+      (ceT*) &conv_abs_tol,
+      (ceT*) &conv_rel_tol };
 
   CUresult curesult = coot_wrapper(cuLaunchKernel)(
         num_threads <= 32 ? k_small : k, // if we have fewer threads than a single warp, we can use a more optimized version of the kernel
@@ -169,8 +173,12 @@ approx_equal_cube(const dev_mem_t<eT> A,
 
   const uword A_offset = A_row_offset + A_col_offset * A_M_n_rows + A_slice_offset * A_M_n_rows * A_M_n_cols;
   const uword B_offset = B_row_offset + B_col_offset * B_M_n_rows + B_slice_offset * B_M_n_rows * B_M_n_cols;
-  const eT* A_mem_ptr = A.cuda_mem_ptr + A_offset;
-  const eT* B_mem_ptr = B.cuda_mem_ptr + B_offset;
+  typedef typename cuda_type<eT>::type ceT;
+  const ceT* A_mem_ptr = A.cuda_mem_ptr + A_offset;
+  const ceT* B_mem_ptr = B.cuda_mem_ptr + B_offset;
+
+  ceT conv_abs_tol = to_cuda_type(abs_tol);
+  ceT conv_rel_tol = to_cuda_type(rel_tol);
 
   const void* args[] = {
       &(aux_mem.cuda_mem_ptr),
@@ -184,8 +192,8 @@ approx_equal_cube(const dev_mem_t<eT> A,
       (uword*) &n_cols,
       (uword*) &n_elem,
       (uword*) &mode,
-      (eT*) &abs_tol,
-      (eT*) &rel_tol };
+      (ceT*) &abs_tol,
+      (ceT*) &rel_tol };
 
   CUresult curesult = coot_wrapper(cuLaunchKernel)(
         num_threads <= 32 ? k_small : k, // if we have fewer threads than a single warp, we can use a more optimized version of the kernel

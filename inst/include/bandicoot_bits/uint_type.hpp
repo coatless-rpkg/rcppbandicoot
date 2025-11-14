@@ -24,8 +24,11 @@ template<typename T, bool integral> struct uint_type_helper { };
 
 template<typename T> struct uint_type_helper<T, true> { typedef typename std::make_unsigned<T>::type result; };
 
-template<> struct uint_type_helper<float,  false> { typedef u32  result; };
-template<> struct uint_type_helper<double, false> { typedef u64  result; };
+template<> struct uint_type_helper<fp16,                 false> { typedef u16  result; };
+template<> struct uint_type_helper<float,                false> { typedef u32  result; };
+template<> struct uint_type_helper<double,               false> { typedef u64  result; };
+template<> struct uint_type_helper<std::complex<float>,  false> { typedef u32  result; };
+template<> struct uint_type_helper<std::complex<double>, false> { typedef u64  result; };
 // Used sometimes by the kernel generation utilities to avoid specifying an unnecessary type.
 template<> struct uint_type_helper<void,   false> { typedef void result; };
 
@@ -33,5 +36,5 @@ template<> struct uint_type_helper<void,   false> { typedef void result; };
 
 template<typename T> struct uint_type
   {
-  typedef typename uint_type_helper<T, std::is_integral<T>::value>::result result;
+  typedef typename uint_type_helper<T, !(is_real<T>::value || is_cx<T>::value)>::result result;
   };

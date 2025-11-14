@@ -178,16 +178,26 @@ op_norm::mat_norm_2(const Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
 
-  // TODO: once is_finite() is implemented, handle this warning
-//  if (X.is_finite() == false)
-//    {
-//    coot_debug_warn_level(1, "norm(): given matrix has non-finite elements");
-//    }
+  if (X.is_finite() == false)
+    {
+    coot_debug_warn_level(1, "norm(): given matrix has non-finite elements");
+    }
 
-  Col<eT> s;
-  svd(s, X);
+  if (is_fp16<eT>::value == false)
+    {
+    Col<eT> s;
+    svd(s, X);
 
-  return (s.n_elem > 0) ? s[0] : eT(0);
+    return (s.n_elem > 0) ? s[0] : eT(0);
+    }
+  else
+    {
+    // Imitate the Armadillo FP16 approach: upgrade to FP32.
+    typedef typename promote_type<eT, float>::result promoted_eT;
+
+    const Mat<promoted_eT> XX = conv_to<Mat<promoted_eT>>::from(X);
+    return eT(op_norm::mat_norm_2(XX));
+    }
   }
 
 

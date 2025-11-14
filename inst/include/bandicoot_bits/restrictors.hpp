@@ -27,6 +27,7 @@ template<> struct coot_scalar_only<u32>    { typedef u32    result; };
 template<> struct coot_scalar_only<s32>    { typedef s32    result; };
 template<> struct coot_scalar_only<u64>    { typedef u64    result; };
 template<> struct coot_scalar_only<s64>    { typedef s64    result; };
+template<> struct coot_scalar_only<fp16>   { typedef fp16   result; };
 template<> struct coot_scalar_only<float>  { typedef float  result; };
 template<> struct coot_scalar_only<double> { typedef double result; };
 #if defined(COOT_ALLOW_LONG)
@@ -86,6 +87,7 @@ template<> struct coot_signed_only<s8>     { typedef s8     result; };
 template<> struct coot_signed_only<s16>    { typedef s16    result; };
 template<> struct coot_signed_only<s32>    { typedef s32    result; };
 template<> struct coot_signed_only<s64>    { typedef s64    result; };
+template<> struct coot_signed_only<fp16>   { typedef fp16   result; };
 template<> struct coot_signed_only<float>  { typedef float  result; };
 template<> struct coot_signed_only<double> { typedef double result; };
 #if defined(COOT_ALLOW_LONG)
@@ -98,14 +100,17 @@ template<typename T> struct coot_signed_only< std::complex<T> > { typedef std::c
 
 template<typename T> struct coot_real_only { };
 
+template<> struct coot_real_only<fp16>   { typedef fp16   result; };
 template<> struct coot_real_only<float>  { typedef float  result; };
 template<> struct coot_real_only<double> { typedef double result; };
 
 
 template<typename T> struct coot_real_or_cx_only { };
 
+template<> struct coot_real_or_cx_only< fp16 >                 { typedef fp16                 result; };
 template<> struct coot_real_or_cx_only< float >                { typedef float                result; };
 template<> struct coot_real_or_cx_only< double >               { typedef double               result; };
+template<> struct coot_real_or_cx_only< std::complex<fp16>   > { typedef std::complex<fp16>   result; };
 template<> struct coot_real_or_cx_only< std::complex<float>  > { typedef std::complex<float>  result; };
 template<> struct coot_real_or_cx_only< std::complex<double> > { typedef std::complex<double> result; };
 
@@ -113,6 +118,7 @@ template<> struct coot_real_or_cx_only< std::complex<double> > { typedef std::co
 
 template<typename T> struct coot_cx_only { };
 
+template<> struct coot_cx_only< std::complex<fp16>   > { typedef std::complex<fp16>   result; };
 template<> struct coot_cx_only< std::complex<float>  > { typedef std::complex<float>  result; };
 template<> struct coot_cx_only< std::complex<double> > { typedef std::complex<double> result; };
 
@@ -151,11 +157,3 @@ template<typename eT> struct coot_Mat_Col_Row_only< Row<eT> > { typedef Row<eT> 
 
 template<typename  T> struct coot_Cube_only             { };
 template<typename eT> struct coot_Cube_only< Cube<eT> > { typedef Cube<eT> result; };
-
-
-template<bool> struct enable_if       {                     };
-template<>     struct enable_if<true> { typedef int result; };
-
-
-template<bool, typename result_type > struct enable_if2                    {                             };
-template<      typename result_type > struct enable_if2<true, result_type> { typedef result_type result; };

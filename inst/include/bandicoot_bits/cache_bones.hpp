@@ -17,7 +17,9 @@
 // This contains caching utilities for saving and loading compiled kernels.
 
 // If in write mode, we will create the file (and directories if needed).
-inline std::fstream open_cache(const std::string& unique_host_device_id, const bool write);
+inline std::fstream open_cache(const std::string& unique_host_device_id,
+                               const std::string& kernel_name,
+                               const bool write);
 
 // Try to open `f` to read or write the file dirname/filename.
 // If `write` is true, necessary directories will be created if possible.
@@ -28,11 +30,14 @@ inline void try_open(std::fstream& f,
 
 inline bool try_recursive_mkdir(const std::string& dirname);
 
-inline size_t has_cached_kernels(const std::string& unique_host_device_id);
+inline size_t has_cached_kernel(const std::string& unique_host_device_id,
+                                const std::string& kernel_name);
 
-inline bool read_cached_kernels(const std::string& unique_host_device_id,
-                                unsigned char* buffer);
+inline bool read_cached_kernel(const std::string& unique_host_device_id,
+                               const std::string& kernel_name,
+                               unsigned char* buffer);
 
-inline bool cache_kernels(const std::string& unique_host_device_id,
-                          const unsigned char* buffer,
-                          const size_t buf_len);
+inline bool cache_kernel(const std::string& unique_host_device_id,
+                         const std::string& kernel_name,
+                         const unsigned char* buffer,
+                         const size_t buf_len);

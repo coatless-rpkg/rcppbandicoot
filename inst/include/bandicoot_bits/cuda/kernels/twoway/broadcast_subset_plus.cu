@@ -46,6 +46,6 @@ COOT_FN(PREFIX,broadcast_subset_plus)(eT2* out,
         indices[out_col * indices_incr] * out_src_M_n_rows + out_row :
         out_col * out_src_M_n_rows + indices[out_row * indices_incr];
 
-    out[out_loc] = out_src[out_src_loc] + ((eT2) in[in_loc]);
+    out[out_loc] = out_src[out_src_loc] + (TO_ET2(in[in_loc]));
     }
   }

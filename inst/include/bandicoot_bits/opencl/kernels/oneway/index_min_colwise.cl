@@ -30,7 +30,9 @@ COOT_FN(PREFIX,index_min_colwise)(__global UWORD* dest,
 
     eT1 best_val = colptr[0];
     UWORD best_index = 0;
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for(UWORD i = 1; i < n_rows; ++i)
       {
       if (colptr[i] < best_val)

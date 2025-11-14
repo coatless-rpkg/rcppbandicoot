@@ -12,6 +12,21 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
+
+
+__device__
+void
+COOT_FN(PREFIX,or_subgroup_reduce)(volatile eT1* data, int tid)
+  {
+  data[tid] |= data[tid + 32];
+  data[tid] |= data[tid + 16];
+  data[tid] |= data[tid + 8];
+  data[tid] |= data[tid + 4];
+  data[tid] |= data[tid + 2];
+  data[tid] |= data[tid + 1];
+  }
+
+
 // this kernel is technically incorrect if the size is not a factor of 2!
 __global__
 void
@@ -53,7 +68,7 @@ COOT_FN(PREFIX,or_reduce)(const eT1* in_mem,
 
   if (tid < 32) // unroll last warp's worth of work
     {
-    COOT_FN(PREFIX,or_warp_reduce)(aux_mem, tid);
+    COOT_FN(PREFIX,or_subgroup_reduce)(aux_mem, tid);
     }
 
   if (tid == 0)

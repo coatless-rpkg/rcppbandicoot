@@ -31,7 +31,7 @@ COOT_FN(PREFIX,radix_sort_colwise_ascending)(eT1* A,
     UWORD counts[2];
 
     // If the type is unsigned, all the work will be done the same way.
-    const UWORD max_bit = coot_is_signed((eT1) 0) ? (8 * sizeof(eT1) - 1) : (8 * sizeof(eT1));
+    const UWORD max_bit = coot_is_signed(TO_ET1(0)) ? (8 * sizeof(eT1) - 1) : (8 * sizeof(eT1));
 
     for (UWORD b = 0; b < max_bit; ++b)
       {
@@ -65,7 +65,7 @@ COOT_FN(PREFIX,radix_sort_colwise_ascending)(eT1* A,
       }
 
     // If the type is unsigned, we're now done---we don't have to handle a sign bit differently.
-    if (!coot_is_signed((eT1) 0))
+    if (!coot_is_signed(TO_ET1(0)))
       {
       return;
       }
@@ -88,7 +88,7 @@ COOT_FN(PREFIX,radix_sort_colwise_ascending)(eT1* A,
     // counts[0] now holds the number of positive points; counts[1] holds the number of negative points
 
     // This is different for integral and floating point types.
-    if (coot_is_fp((eT1) 0))
+    if (coot_is_fp(TO_ET1(0)))
       {
       // Floating point implementation:
       // For negative values, we have things sorted in reverse order, so we need to reverse that in our final swap pass.

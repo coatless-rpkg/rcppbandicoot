@@ -43,9 +43,10 @@ var(dev_mem_t<eT> dest,
 
   const uword src_offset = src_row_offset + src_col_offset * src_M_n_rows;
 
-  const eT* dest_ptr      =      dest.cuda_mem_ptr + dest_offset;
-  const eT* src_ptr       =       src.cuda_mem_ptr + src_offset;
-  const eT* src_means_ptr = src_means.cuda_mem_ptr + src_means_offset;
+  typedef typename cuda_type<eT>::type ceT;
+  const ceT* dest_ptr      =      dest.cuda_mem_ptr + dest_offset;
+  const ceT* src_ptr       =       src.cuda_mem_ptr + src_offset;
+  const ceT* src_means_ptr = src_means.cuda_mem_ptr + src_means_offset;
 
   const void* args[] = {
       &dest_ptr,
@@ -91,7 +92,7 @@ var_vec(const dev_mem_t<eT> mem, const eT mean, const uword n_elem, const uword 
                                            "var_vec",
                                            k,
                                            k_small,
-                                           std::make_tuple(mean),
+                                           std::make_tuple(to_cuda_type(mean)),
                                            accu_k,
                                            accu_k_small,
                                            std::make_tuple(/* no extra args for second and later passes */));
@@ -119,7 +120,7 @@ var_vec_subview(const dev_mem_t<eT> mem, const eT mean, const uword M_n_rows, co
                                            "var_vec_subview",
                                            k,
                                            k_small,
-                                           std::make_tuple(mean, M_n_rows, aux_row1, aux_col1, n_rows, n_cols));
+                                           std::make_tuple(to_cuda_type(mean), M_n_rows, aux_row1, aux_col1, n_rows, n_cols));
   const uword norm_correction = (norm_type == 0) ? 1 : 0;
   return result / ((eT) (submat_n_elem - norm_correction));
   }

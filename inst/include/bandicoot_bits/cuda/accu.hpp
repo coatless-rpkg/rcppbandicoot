@@ -53,7 +53,8 @@ accu_subview(dev_mem_t<eT> mem, const uword m_n_rows, const uword aux_row1, cons
 
   dev_mem_t<eT> tmp_mem = tmp.get_dev_mem(false);
 
-  const eT* src_ptr = mem.cuda_mem_ptr + src_offset;
+  typedef typename cuda_type<eT>::type ceT;
+  const ceT* src_ptr = mem.cuda_mem_ptr + src_offset;
   const uword dest_mem_incr = 1;
 
   const void* args[] = {

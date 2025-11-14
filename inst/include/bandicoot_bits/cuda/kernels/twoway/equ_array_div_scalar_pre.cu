@@ -36,18 +36,18 @@ COOT_FN(PREFIX,equ_array_div_scalar_pre)(eT2* dest,
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
     // if both are 0, we take it as val_pre == 0 and val_post unused
-    if (val_post == (eT2) (0))
+    if (val_post == TO_ET2(0))
       {
-      dest[dest_index] = (eT2) (val_pre / src[src_index]);
+      dest[dest_index] = TO_ET2(val_pre / src[src_index]);
       }
-    else if (val_pre == (eT1) (0) && val_post != (eT2) (0))
+    else if (val_pre == TO_ET1(0) && val_post != TO_ET2(0))
       {
-      dest[dest_index] = val_post / ((eT2) src[src_index]);
+      dest[dest_index] = val_post / (TO_ET2(src[src_index]));
       }
     else
       {
       // if both are nonzero, we apply sequentially----be careful!
-      dest[dest_index] = val_post / ((eT2) (val_pre / src[src_index]));
+      dest[dest_index] = val_post / TO_ET2(val_pre / src[src_index]);
       }
     }
   }

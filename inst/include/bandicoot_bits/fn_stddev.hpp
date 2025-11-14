@@ -31,7 +31,7 @@ stddev(const T1& X, const uword norm_type = 0)
   {
   coot_extra_debug_sigprint();
 
-  return std::sqrt( op_var::var_vec(X, norm_type) );
+  return coot_sqrt( op_var::var_vec(X, norm_type) );
   }
 
 

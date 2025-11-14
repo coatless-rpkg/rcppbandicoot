@@ -15,6 +15,29 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
+typedef Mat <u8>  u8_mat;
+typedef Col <u8>  u8_vec;
+typedef Col <u8>  u8_colvec;
+typedef Row <u8>  u8_rowvec;
+typedef Cube<u8>  u8_cube;
+
+typedef Mat <s8>  s8_mat;
+typedef Col <s8>  s8_vec;
+typedef Col <s8>  s8_colvec;
+typedef Row <s8>  s8_rowvec;
+typedef Cube<s8>  s8_cube;
+
+typedef Mat <u16> u16_mat;
+typedef Col <u16> u16_vec;
+typedef Col <u16> u16_colvec;
+typedef Row <u16> u16_rowvec;
+typedef Cube<u16> u16_cube;
+
+typedef Mat <s16> s16_mat;
+typedef Col <s16> s16_vec;
+typedef Col <s16> s16_colvec;
+typedef Row <s16> s16_rowvec;
+typedef Cube<s16> s16_cube;
 
 typedef Mat <u32> u32_mat;
 typedef Col <u32> u32_vec;
@@ -51,6 +74,12 @@ typedef Col <sword> ivec;
 typedef Col <sword> icolvec;
 typedef Row <sword> irowvec;
 typedef Cube<sword> icube;
+
+typedef Mat <fp16> hmat;
+typedef Col <fp16> hvec;
+typedef Col <fp16> hcolvec;
+typedef Row <fp16> hrowvec;
+typedef Cube<fp16> hcube;
 
 typedef Mat <float> fmat;
 typedef Col <float> fvec;

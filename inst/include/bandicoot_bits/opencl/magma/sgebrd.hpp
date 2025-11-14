@@ -56,7 +56,7 @@
 
 inline
 magma_int_t
-magma_get_sgebrd_nb(magma_int_t m, magma_int_t n)
+magma_get_sgebrd_nb(magma_int_t /* m */, magma_int_t /* n */)
   {
   return 32;
   }
@@ -112,7 +112,7 @@ magma_sgebrd
     }
   else if (lquery)
     {
-    return *info;\
+    return *info;
     }
 
   /* Quick return if possible */

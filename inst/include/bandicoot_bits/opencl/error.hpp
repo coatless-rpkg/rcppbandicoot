@@ -92,6 +92,7 @@ struct coot_cl_error
 
 
 
+#if defined(COOT_USE_CLBLAS)
 struct coot_clblas_error
   {
   coot_cold
@@ -137,3 +138,87 @@ struct coot_clblas_error
       }
     }
   };
+#endif
+
+
+
+#if defined(COOT_USE_CLBLAST)
+struct coot_clblast_error
+  {
+  coot_cold
+  static
+  inline
+  std::string
+  as_string(const CLBlastStatusCode error_code)
+    {
+    switch(error_code)
+      {
+      // Status codes in common with the OpenCL standard
+      case CLBlastSuccess:                    return coot_cl_error::as_string(CL_SUCCESS);
+      case CLBlastOpenCLCompilerNotAvailable: return coot_cl_error::as_string(CL_COMPILER_NOT_AVAILABLE);
+      case CLBlastTempBufferAllocFailure:     return coot_cl_error::as_string(CL_MEM_OBJECT_ALLOCATION_FAILURE);
+      case CLBlastOpenCLOutOfResources:       return coot_cl_error::as_string(CL_OUT_OF_RESOURCES);
+      case CLBlastOpenCLOutOfHostMemory:      return coot_cl_error::as_string(CL_OUT_OF_HOST_MEMORY);
+      case CLBlastOpenCLBuildProgramFailure:  return coot_cl_error::as_string(CL_BUILD_PROGRAM_FAILURE);
+      case CLBlastInvalidValue:               return coot_cl_error::as_string(CL_INVALID_VALUE);
+      case CLBlastInvalidCommandQueue:        return coot_cl_error::as_string(CL_INVALID_COMMAND_QUEUE);
+      case CLBlastInvalidMemObject:           return coot_cl_error::as_string(CL_INVALID_MEM_OBJECT);
+      case CLBlastInvalidBinary:              return coot_cl_error::as_string(CL_INVALID_BINARY);
+      case CLBlastInvalidBuildOptions:        return coot_cl_error::as_string(CL_INVALID_BUILD_OPTIONS);
+      case CLBlastInvalidProgram:             return coot_cl_error::as_string(CL_INVALID_PROGRAM);
+      case CLBlastInvalidProgramExecutable:   return coot_cl_error::as_string(CL_INVALID_PROGRAM_EXECUTABLE);
+      case CLBlastInvalidKernelName:          return coot_cl_error::as_string(CL_INVALID_KERNEL_NAME);
+      case CLBlastInvalidKernelDefinition:    return coot_cl_error::as_string(CL_INVALID_KERNEL_DEFINITION);
+      case CLBlastInvalidKernel:              return coot_cl_error::as_string(CL_INVALID_KERNEL);
+      case CLBlastInvalidArgIndex:            return coot_cl_error::as_string(CL_INVALID_ARG_INDEX);
+      case CLBlastInvalidArgValue:            return coot_cl_error::as_string(CL_INVALID_ARG_VALUE);
+      case CLBlastInvalidArgSize:             return coot_cl_error::as_string(CL_INVALID_ARG_SIZE);
+      case CLBlastInvalidKernelArgs:          return coot_cl_error::as_string(CL_INVALID_KERNEL_ARGS);
+      case CLBlastInvalidLocalNumDimensions:  return coot_cl_error::as_string(CL_INVALID_WORK_DIMENSION);
+      case CLBlastInvalidLocalThreadsTotal:   return coot_cl_error::as_string(CL_INVALID_WORK_GROUP_SIZE);
+      case CLBlastInvalidLocalThreadsDim:     return coot_cl_error::as_string(CL_INVALID_WORK_ITEM_SIZE);
+      case CLBlastInvalidGlobalOffset:        return coot_cl_error::as_string(CL_INVALID_GLOBAL_OFFSET);
+      case CLBlastInvalidEventWaitList:       return coot_cl_error::as_string(CL_INVALID_EVENT_WAIT_LIST);
+      case CLBlastInvalidEvent:               return coot_cl_error::as_string(CL_INVALID_EVENT);
+      case CLBlastInvalidOperation:           return coot_cl_error::as_string(CL_INVALID_OPERATION);
+      case CLBlastInvalidBufferSize:          return coot_cl_error::as_string(CL_INVALID_BUFFER_SIZE);
+      case CLBlastInvalidGlobalWorkSize:      return coot_cl_error::as_string(CL_INVALID_GLOBAL_WORK_SIZE);
+
+      // Status codes in common with the clBLAS library
+      case CLBlastNotImplemented:             return "routine or functionality not implemented yet";
+      case CLBlastInvalidMatrixA:             return "matrix A is not a valid OpenCL buffer";
+      case CLBlastInvalidMatrixB:             return "matrix B is not a valid OpenCL buffer";
+      case CLBlastInvalidMatrixC:             return "matrix C is not a valid OpenCL buffer";
+      case CLBlastInvalidVectorX:             return "vector X is not a valid OpenCL buffer";
+      case CLBlastInvalidVectorY:             return "vector Y is not a valid OpenCL buffer";
+      case CLBlastInvalidDimension:           return "dimensions M, N, and K have to be larger than zero";
+      case CLBlastInvalidLeadDimA:            return "leading dimension of A is smaller than the matrix's first dimension";
+      case CLBlastInvalidLeadDimB:            return "leading dimension of B is smaller than the matrix's first dimension";
+      case CLBlastInvalidLeadDimC:            return "leading dimension of C is smaller than the matrix's first dimension";
+      case CLBlastInvalidIncrementX:          return "increment of vector X cannot be zero";
+      case CLBlastInvalidIncrementY:          return "increment of vector Y cannot be zero";
+      case CLBlastInsufficientMemoryA:        return "matrix A's OpenCL buffer is too small";
+      case CLBlastInsufficientMemoryB:        return "matrix B's OpenCL buffer is too small";
+      case CLBlastInsufficientMemoryC:        return "matrix C's OpenCL buffer is too small";
+      case CLBlastInsufficientMemoryX:        return "vector X's OpenCL buffer is too small";
+      case CLBlastInsufficientMemoryY:        return "vector Y's OpenCL buffer is too small";
+
+      // Custom additional status codes for CLBlast
+      case CLBlastInsufficientMemoryTemp:     return "temporary buffer provided to GEMM routine is too small";
+      case CLBlastInvalidBatchCount:          return "the batch count needs to be positive";
+      case CLBlastInvalidOverrideKernel:      return "trying to override parameters for an invalid kernel";
+      case CLBlastMissingOverrideParameter:   return "missing override parameter(s) for the target kernel";
+      case CLBlastInvalidLocalMemUsage:       return "not enough local memory available on this device";
+      case CLBlastNoHalfPrecision:            return "half precision (16-bits) not supported by the device";
+      case CLBlastNoDoublePrecision:          return "double precision (64-bits) not supported by the device";
+      case CLBlastInvalidVectorScalar:        return "the unit-sized vector is not a valid OpenCL buffer";
+      case CLBlastInsufficientMemoryScalar:   return "the unit-sized vector's OpenCL buffer is too small";
+      case CLBlastDatabaseError:              return "entry for the device was not found in the database";
+      case CLBlastUnknownError:               return "unspecified error";
+      case CLBlastUnexpectedError:            return "unexpected exception";
+
+      default:                                return "unknown CLBlast error code";
+      }
+    }
+  };
+#endif

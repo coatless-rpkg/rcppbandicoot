@@ -37,6 +37,6 @@ COOT_FN(PREFIX,equ_array_minus_scalar_pre_pre)(eT2* dest,
 
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
-    dest[dest_index] = val_post - ((eT2) src[src_index]);
+    dest[dest_index] = val_post - (TO_ET2(src[src_index]));
     }
   }

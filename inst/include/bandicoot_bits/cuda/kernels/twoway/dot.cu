@@ -12,6 +12,22 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
+
+
+__device__
+void
+COOT_FN(PREFIX,dot_subgroup_reduce)(volatile twoway_promoted_eT* data, int tid)
+  {
+  data[tid] += data[tid + 32];
+  data[tid] += data[tid + 16];
+  data[tid] += data[tid + 8];
+  data[tid] += data[tid + 4];
+  data[tid] += data[tid + 2];
+  data[tid] += data[tid + 1];
+  }
+
+
+
 // this kernel is technically incorrect if the size is not a factor of 2!
 __global__
 void
@@ -30,19 +46,19 @@ COOT_FN(PREFIX,dot)(twoway_promoted_eT* out_mem,
 
   while (i + blockDim.x < n_elem)
     {
-    const twoway_promoted_eT A_i1 = (twoway_promoted_eT) A[i];
-    const twoway_promoted_eT B_i1 = (twoway_promoted_eT) B[i];
+    const twoway_promoted_eT A_i1 = TO_TWOWAY_PROMOTED_ET(A[i]);
+    const twoway_promoted_eT B_i1 = TO_TWOWAY_PROMOTED_ET(B[i]);
 
-    const twoway_promoted_eT A_i2 = (twoway_promoted_eT) A[i + blockDim.x];
-    const twoway_promoted_eT B_i2 = (twoway_promoted_eT) B[i + blockDim.x];
+    const twoway_promoted_eT A_i2 = TO_TWOWAY_PROMOTED_ET(A[i + blockDim.x]);
+    const twoway_promoted_eT B_i2 = TO_TWOWAY_PROMOTED_ET(B[i + blockDim.x]);
 
     aux_mem[tid] += (A_i1 * B_i1) + (A_i2 * B_i2); // copy to local shared memory
     i += grid_size;
     }
   if (i < n_elem)
     {
-    const twoway_promoted_eT A_i1 = (twoway_promoted_eT) A[i];
-    const twoway_promoted_eT B_i1 = (twoway_promoted_eT) B[i];
+    const twoway_promoted_eT A_i1 = TO_TWOWAY_PROMOTED_ET(A[i]);
+    const twoway_promoted_eT B_i1 = TO_TWOWAY_PROMOTED_ET(B[i]);
 
     aux_mem[tid] += (A_i1 * B_i1);
     }
@@ -59,7 +75,7 @@ COOT_FN(PREFIX,dot)(twoway_promoted_eT* out_mem,
 
   if (tid < 32) // unroll last warp's worth of work
     {
-    COOT_FN(PREFIX,dot_warp_reduce)(aux_mem, tid);
+    COOT_FN(PREFIX,dot_subgroup_reduce)(aux_mem, tid);
     }
 
   if (tid == 0)

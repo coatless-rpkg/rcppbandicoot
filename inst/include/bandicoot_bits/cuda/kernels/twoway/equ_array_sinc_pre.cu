@@ -38,18 +38,18 @@ COOT_FN(PREFIX,equ_array_sinc_pre)(eT2* dest,
 
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
-    const eT2 val = (eT2) src[src_index];
+    const eT2 val = TO_ET2(src[src_index]);
     // To imitate Armadillo correctly, we use double if the type is not floating point.
     if (coot_is_fp(val))
       {
       const fp_eT2 tmp = val * COOT_PI;
-      dest[dest_index] = (tmp == (eT2) 0.0) ? (eT2) 1.0 : (eT2) (sin(tmp) / tmp);
+      dest[dest_index] = (tmp == TO_ET2(0)) ? TO_ET2(1) : TO_ET2(sin(tmp) / tmp);
       }
     else
       {
       const double fp_val = (double) val;
       const double tmp = fp_val * COOT_PI;
-      dest[dest_index] = (tmp == 0.0) ? (eT2) 1.0 : (eT2) (sin(tmp) / tmp);
+      dest[dest_index] = (tmp == 0) ? TO_ET2(1) : TO_ET2(sin(tmp) / tmp);
       }
     }
   }

@@ -24,12 +24,12 @@ COOT_FN(PREFIX,min_rowwise_conv_post)(eT2* dest,
   const UWORD row = blockIdx.x * blockDim.x + threadIdx.x;
   if(row < n_rows)
     {
-    eT1 acc = (eT1) src[row];
+    eT1 acc = src[row];
     for (UWORD i = 1; i < n_cols; ++i)
       {
       acc = min(acc, src[(i * src_M_n_rows) + row]);
       }
 
-    dest[row * dest_mem_incr] = (eT2) (acc);
+    dest[row * dest_mem_incr] = TO_ET2(acc);
     }
   }

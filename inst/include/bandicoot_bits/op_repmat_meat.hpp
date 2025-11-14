@@ -31,7 +31,7 @@ op_repmat::apply(Mat<out_eT>& out, const Op<T1, op_repmat>& in)
   alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type> W(out, U.M);
 
   // Skip if there is nothing to do.
-  if (W.using_aux && copies_per_row == 1 && copies_per_col == 1 && std::is_same<out_eT, typename T1::elem_type>::value)
+  if (W.using_aux && copies_per_row == 1 && copies_per_col == 1 && is_same_type<out_eT, typename T1::elem_type>::yes)
     {
     W.using_aux = false; // disable steal_mem() in destructor
     return;
@@ -78,7 +78,7 @@ op_repmat::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_r
   alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type> W(out, U.M);
 
   // Skip if there is nothing to do.
-  if (W.using_aux && copies_per_row == 1 && copies_per_col == 1 && std::is_same<out_eT, typename T1::elem_type>::value)
+  if (W.using_aux && copies_per_row == 1 && copies_per_col == 1 && is_same_type<out_eT, typename T1::elem_type>::yes)
     {
     W.using_aux = false; // disable steal_mem() in destructor
     return;

@@ -213,11 +213,11 @@ coot_rt_t::acquire_memory(const uword n_elem)
 
 //  coot_check_runtime_error( (valid == false), "coot_rt::acquire_memory(): runtime not valid" );
 
-  if(n_elem == 0)  { return dev_mem_t<eT>({ NULL }); }
+  if(n_elem == 0)  { return dev_mem_t<eT>({ NULL, 0 }); }
 
   coot_debug_check
    (
-   ( size_t(n_elem) > (std::numeric_limits<size_t>::max() / sizeof(eT)) ),
+   ( size_t(n_elem) > (Datum<size_t>::max / sizeof(eT)) ),
    "coot_rt::acquire_memory(): requested size is too large"
    );
 
@@ -542,17 +542,41 @@ coot_rt_t::fill(dev_mem_t<eT> dest,
 
 
 
-template<typename eT>
+template<typename eT1, typename eT2>
 inline
 void
-coot_rt_t::replace(dev_mem_t<eT> mem, const uword n_elem, const eT val_find, const eT val_replace)
+coot_rt_t::replace(dev_mem_t<eT2> mem_out,
+                   const dev_mem_t<eT1> mem_in,
+                   const eT1 val_find,
+                   const eT1 val_replace,
+                   // logical size of matrix
+                   const uword n_rows,
+                   const uword n_cols,
+                   const uword n_slices,
+                   // submatrix destination offsets (set to 0, 0, and n_rows if not a subview)
+                   const uword dest_row_offset,
+                   const uword dest_col_offset,
+                   const uword dest_slice_offset,
+                   const uword dest_M_n_rows,
+                   const uword dest_M_n_cols,
+                   // submatrix source offsets (set to 0, 0, and n_rows if not a subview)
+                   const uword src_row_offset,
+                   const uword src_col_offset,
+                   const uword src_slice_offset,
+                   const uword src_M_n_rows,
+                   const uword src_M_n_cols)
   {
   coot_extra_debug_sigprint();
 
   if (get_rt().backend == CL_BACKEND)
     {
     #if defined(COOT_USE_OPENCL)
-    opencl::replace(mem, n_elem, val_find, val_replace);
+    opencl::replace(mem_out, mem_in, val_find, val_replace,
+                    n_rows, n_cols, n_slices,
+                    dest_row_offset, dest_col_offset, dest_slice_offset,
+                    dest_M_n_rows, dest_M_n_cols,
+                    src_row_offset, src_col_offset, src_slice_offset,
+                    src_M_n_rows, src_M_n_cols);
     #else
     coot_stop_runtime_error("coot_rt::replace(): OpenCL backend not enabled");
     #endif
@@ -560,7 +584,12 @@ coot_rt_t::replace(dev_mem_t<eT> mem, const uword n_elem, const eT val_find, con
   else if (get_rt().backend == CUDA_BACKEND)
     {
     #if defined(COOT_USE_CUDA)
-    cuda::replace(mem, n_elem, val_find, val_replace);
+    cuda::replace(mem_out, mem_in, val_find, val_replace,
+                  n_rows, n_cols, n_slices,
+                  dest_row_offset, dest_col_offset, dest_slice_offset,
+                  dest_M_n_rows, dest_M_n_cols,
+                  src_row_offset, src_col_offset, src_slice_offset,
+                  src_M_n_rows, src_M_n_cols);
     #else
     coot_stop_runtime_error("coot_rt::replace(): CUDA backend not enabled");
     #endif

@@ -39,21 +39,21 @@ COOT_FN(PREFIX,equ_array_trunc_log_pre)(eT2* dest,
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
     // To match Armadillo, we always use `double` as the intermediate type for any non-floating point type.
-    const eT2 val = (eT2) src[src_index];
+    const eT2 val = TO_ET2(src[src_index]);
     if (coot_is_fp(val))
       {
-      const fp_eT2 fp_val = (fp_eT2) val;
-      if (fp_val <= (fp_eT2) 0)
+      const fp_eT2 fp_val = TO_FP_ET2(val);
+      if (fp_val <= TO_FP_ET2(0))
         {
-        dest[dest_index] = (eT2) log(coot_type_min((fp_eT2) 0));
+        dest[dest_index] = TO_ET2(log(coot_type_minpos(TO_FP_ET2(0))));
         }
-      else if (isinf(fp_val))
+      else if (coot_isinf(fp_val))
         {
-        dest[dest_index] = (eT2) log(coot_type_max((fp_eT2) 0));
+        dest[dest_index] = TO_ET2(log(coot_type_max(TO_FP_ET2(0))));
         }
       else
         {
-        dest[dest_index] = (eT2) log(fp_val);
+        dest[dest_index] = TO_ET2(log(fp_val));
         }
       }
     else
@@ -61,15 +61,15 @@ COOT_FN(PREFIX,equ_array_trunc_log_pre)(eT2* dest,
       const double fp_val = (double) val;
       if (fp_val <= (double) 0)
         {
-        dest[dest_index] = (eT2) log(coot_type_min((double) 0));
+        dest[dest_index] = TO_ET2(log(DBL_MIN));
         }
       else if (isinf(fp_val))
         {
-        dest[dest_index] = (eT2) log(coot_type_max((double) 0));
+        dest[dest_index] = TO_ET2(log(DBL_MAX));
         }
       else
         {
-        dest[dest_index] = (eT2) log(fp_val);
+        dest[dest_index] = TO_ET2(log(fp_val));
         }
       }
     }

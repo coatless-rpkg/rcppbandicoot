@@ -27,7 +27,7 @@ COOT_FN(PREFIX,rel_all_neq_colwise)(UWORD* out,
     UWORD result = 1;
     for (UWORD i = 0; i < A_n_rows; ++i)
       {
-      const eT2 val1 = (eT2) colptr[i];
+      const eT2 val1 = TO_ET2(colptr[i]);
       result &= (val1 != val);
       }
 

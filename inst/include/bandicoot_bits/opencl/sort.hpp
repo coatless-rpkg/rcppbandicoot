@@ -117,11 +117,10 @@ sort_vec_multiple_workgroups(dev_mem_t<eT> A, const uword n_elem, const uword so
 
   runtime_t::adapt_uword cl_n_elem(n_elem);
 
-  typedef typename uint_type<eT>::result ueT;
-  dev_mem_t<ueT> hist;
+  dev_mem_t<uword> hist;
   dev_mem_t<eT> A_temp;
 
-  hist.cl_mem_ptr      = get_rt().cl_rt.acquire_memory<ueT>(4 * total_num_threads);
+  hist.cl_mem_ptr      = get_rt().cl_rt.acquire_memory<uword>(4 * total_num_threads);
   A_temp.cl_mem_ptr    = get_rt().cl_rt.acquire_memory<eT>(n_elem);
 
   dev_mem_t<eT>* A_in = &A;
@@ -134,11 +133,11 @@ sort_vec_multiple_workgroups(dev_mem_t<eT> A, const uword n_elem, const uword so
     // we need to sort in a slightly different order to handle the sign bit.
     if (b == (8 * sizeof(eT) - 2))
       {
-      if (std::is_signed<eT>::value && !std::is_floating_point<eT>::value)
+      if (is_signed<eT>::value && !is_real<eT>::value)
         {
         step_sort_type = 2 + sort_type; // 2 for ascending, 3 for descending
         }
-      else if (std::is_floating_point<eT>::value)
+      else if (is_real<eT>::value)
         {
         step_sort_type = 4 + sort_type; // 4 for ascending, 5 for descending
         }
@@ -231,11 +230,11 @@ sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
   runtime_t::adapt_uword cl_n_elem(n_elem);
   runtime_t::adapt_uword cl_mem_offset(A.cl_mem_ptr.offset);
 
-  status |= coot_wrapper(clSetKernelArg)(k, 0, sizeof(cl_mem),                    &(A.cl_mem_ptr.ptr));
-  status |= coot_wrapper(clSetKernelArg)(k, 1, cl_mem_offset.size,                cl_mem_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(k, 2, sizeof(cl_mem),                    &(tmp_mem.cl_mem_ptr.ptr));
-  status |= coot_wrapper(clSetKernelArg)(k, 3, cl_n_elem.size,                    cl_n_elem.addr);
-  status |= coot_wrapper(clSetKernelArg)(k, 4, 2 * sizeof(eT) * pow2_num_threads, NULL);
+  status |= coot_wrapper(clSetKernelArg)(k, 0, sizeof(cl_mem),                       &(A.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(k, 1, cl_mem_offset.size,                   cl_mem_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(k, 2, sizeof(cl_mem),                       &(tmp_mem.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(k, 3, cl_n_elem.size,                       cl_n_elem.addr);
+  status |= coot_wrapper(clSetKernelArg)(k, 4, 2 * sizeof(uword) * pow2_num_threads, NULL);
   coot_check_cl_error(status, "coot::opencl::sort(): failed to set kernel arguments");
 
   status = coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), k, 1, NULL, &pow2_num_threads, &local_group_size, 0, NULL, NULL);

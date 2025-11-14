@@ -21,175 +21,30 @@
 
 struct kernel_src
   {
-  static inline const std::string&  get_src_preamble(const bool has_float64, const bool has_subgroups, const size_t subgroup_size, const bool must_synchronise_subgroups, const bool need_subgroup_extension);
+  static inline       std::string   init_src_preamble(const bool has_float64, const bool has_float16, const bool has_sizet64, const bool has_subgroups, const size_t subgroup_size, const bool must_synchronise_subgroups, const bool need_subgroup_extension);
 
-  static inline const std::string&  get_zeroway_source();
-  static inline       std::string  init_zeroway_source();
+  static inline       std::string   get_zeroway_source(const zeroway_kernel_id::enum_id num);
 
-  static inline const std::string&  get_oneway_source();
-  static inline       std::string  init_oneway_source();
+  template<typename eT>
+  static inline       std::string   get_oneway_defines();
+  static inline       std::string   get_oneway_source(const oneway_kernel_id::enum_id num);
 
-  static inline const std::string&  get_oneway_real_source();
-  static inline       std::string  init_oneway_real_source();
+  static inline       std::string   get_oneway_real_source(const oneway_real_kernel_id::enum_id num);
 
-  static inline const std::string&  get_oneway_integral_source();
-  static inline       std::string  init_oneway_integral_source();
+  static inline       std::string   get_oneway_integral_source(const oneway_integral_kernel_id::enum_id num);
 
-  static inline const std::string&  get_twoway_source();
-  static inline       std::string  init_twoway_source();
+  template<typename eT1, typename eT2>
+  static inline       std::string   get_twoway_defines();
+  static inline       std::string   get_twoway_source(const twoway_kernel_id::enum_id num);
 
-  static inline const std::string&  get_threeway_source();
-  static inline       std::string  init_threeway_source();
+  template<typename eT1, typename eT2, typename eT3>
+  static inline       std::string   get_threeway_defines();
+  static inline       std::string   get_threeway_source(const threeway_kernel_id::enum_id num);
 
-  static inline const std::string&  get_magma_real_source();
-  static inline       std::string  init_magma_real_source();
-
-  static inline const std::string&  get_src_epilogue();
+  static inline       std::string   init_magma_defines();
+  static inline const std::string&  get_magma_defines();
+  static inline       std::string   get_magma_real_source(const magma_real_kernel_id::enum_id num);
   };
-
-
-
-inline
-const std::string&
-kernel_src::get_src_preamble(const bool has_float64, const bool has_subgroups, const size_t subgroup_size, const bool must_synchronise_subgroups, const bool need_subgroup_extension)
-  {
-  char u32_max[32];
-  char u64_max[32];
-  snprintf(u32_max, 32, "%llu", (unsigned long long) std::numeric_limits<u32>::max());
-  snprintf(u64_max, 32, "%llu", (unsigned long long) std::numeric_limits<u64>::max());
-
-  char s32_min[32];
-  char s64_min[32];
-  snprintf(s32_min, 32, "%llu", (unsigned long long) std::numeric_limits<s32>::min());
-  snprintf(s64_min, 32, "%llu", (unsigned long long) std::numeric_limits<s64>::min());
-
-  char s32_max[32];
-  char s64_max[32];
-  snprintf(s32_max, 32, "%llu", (unsigned long long) std::numeric_limits<s32>::max());
-  snprintf(s64_max, 32, "%llu", (unsigned long long) std::numeric_limits<s64>::max());
-
-  char subgroup_size_str[32];
-  snprintf(subgroup_size_str, 32, "%zu", subgroup_size);
-
-  static const std::string source = \
-
-  "#ifdef cl_khr_pragma_unroll \n"
-  "#pragma OPENCL EXTENSION cl_khr_pragma_unroll : enable \n"
-  "#endif \n"
-  "#ifdef cl_amd_pragma_unroll \n"
-  "#pragma OPENCL EXTENSION cl_amd_pragma_unroll : enable \n"
-  "#endif \n"
-  "#ifdef cl_nv_pragma_unroll \n"
-  "#pragma OPENCL EXTENSION cl_nv_pragma_unroll : enable \n"
-  "#endif \n"
-  "#ifdef cl_intel_pragma_unroll \n"
-  "#pragma OPENCL EXTENSION cl_intel_pragma_unroll : enable \n"
-  "#endif \n" +
-  ((need_subgroup_extension) ?
-      std::string("#pragma OPENCL EXTENSION cl_khr_subgroups : enable \n") :
-      std::string("")) +
-  "\n"
-  "#define COOT_FN2(ARG1,ARG2)  ARG1 ## ARG2 \n"
-  "#define COOT_FN(ARG1,ARG2) COOT_FN2(ARG1,ARG2) \n"
-  "\n"
-  "#define COOT_FN_3_2(ARG1,ARG2,ARG3) ARG1 ## ARG2 ## ARG3 \n"
-  "#define COOT_FN_3(ARG1,ARG2,ARG3) COOT_FN_3_2(ARG1,ARG2,ARG3) \n" +
-  ((has_float64) ?
-      std::string("#define COOT_HAS_FP64 \n") :
-      std::string("")) +
-  "\n"
-  // Define cx_float and cx_double in the same way that clMAGMA does.
-  "typedef float2 cx_float; \n" +
-  ((has_float64) ? "typedef double2 cx_double; \n" : "") +
-  "\n"
-  // Utility functions to return the correct min/max value for a given type.
-  "inline uint coot_type_min_uint() { return 0; } \n"
-  "inline ulong coot_type_min_ulong() { return 0; } \n"
-  "inline uint coot_type_max_uint() { return " + std::string(u32_max) + "; } \n"
-  "inline ulong coot_type_max_ulong() { return " + std::string(u64_max) + "; } \n"
-  "\n"
-  "inline int coot_type_min_int() { return " + std::string(s32_min) + "; } \n"
-  "inline long coot_type_min_long() { return " + std::string(s64_min) + "; } \n"
-  "inline int coot_type_max_int() { return " + std::string(s32_max) + "; } \n"
-  "inline long coot_type_max_long() { return " + std::string(s64_max) + "; } \n"
-  "\n"
-  "inline float coot_type_min_float() { return FLT_MIN; } \n"
-  "inline float coot_type_max_float() { return FLT_MAX; } \n" +
-  ((has_float64) ?
-      std::string("inline double coot_type_min_double() { return DBL_MIN; } \n"
-                  "inline double coot_type_max_double() { return DBL_MAX; } \n") :
-      std::string("")) +
-  "\n"
-  "inline bool coot_is_fp_uint() { return false; } \n"
-  "inline bool coot_is_fp_int() { return false; } \n"
-  "inline bool coot_is_fp_ulong() { return false; } \n"
-  "inline bool coot_is_fp_long() { return false; } \n"
-  "inline bool coot_is_fp_float() { return true; } \n" +
-  ((has_float64) ?
-      std::string("inline bool coot_is_fp_double() { return true; } \n") :
-      std::string("")) +
-  "\n"
-  "inline bool coot_is_signed_uint() { return false; } \n"
-  "inline bool coot_is_signed_int() { return true; } \n"
-  "inline bool coot_is_signed_ulong() { return false; } \n"
-  "inline bool coot_is_signed_long() { return true; } \n"
-  "inline bool coot_is_signed_float() { return true; } \n" +
-  ((has_float64) ?
-      std::string("inline bool coot_is_signed_double() { return true; } \n") :
-      std::string("")) +
-  "\n"
-  "inline bool coot_isnan_uint(const uint x)     { return false;    } \n"
-  "inline bool coot_isnan_int(const int x)       { return false;    } \n"
-  "inline bool coot_isnan_ulong(const ulong x)   { return false;    } \n"
-  "inline bool coot_isnan_long(const long x)     { return false;    } \n"
-  "inline bool coot_isnan_float(const float x)   { return isnan(x); } \n" +
-  ((has_float64) ?
-      std::string("inline bool coot_isnan_double(const double x) { return isnan(x); } \n") :
-      std::string("")) +
-  "\n"
-  // MAGMA-specific macros.
-  "#define MAGMABLAS_BLK_X " COOT_STRINGIFY(MAGMABLAS_BLK_X) " \n"
-  "#define MAGMABLAS_BLK_Y " COOT_STRINGIFY(MAGMABLAS_BLK_Y) " \n"
-  "#define MAGMABLAS_TRANS_NX " COOT_STRINGIFY(MAGMABLAS_TRANS_NX) " \n"
-  "#define MAGMABLAS_TRANS_NY " COOT_STRINGIFY(MAGMABLAS_TRANS_NY) " \n"
-  "#define MAGMABLAS_TRANS_NB " COOT_STRINGIFY(MAGMABLAS_TRANS_NB) " \n"
-  "#define MAGMABLAS_TRANS_INPLACE_NB " COOT_STRINGIFY(MAGMABLAS_TRANS_INPLACE_NB) " \n"
-  "#define MAGMABLAS_LASWP_MAX_PIVOTS " COOT_STRINGIFY(MAGMABLAS_LASWP_MAX_PIVOTS) " \n"
-  "#define MAGMABLAS_LASWP_NTHREADS " COOT_STRINGIFY(MAGMABLAS_LASWP_NTHREADS) " \n"
-  "#define MAGMABLAS_LASCL_NB " COOT_STRINGIFY(MAGMABLAS_LASCL_NB) " \n"
-  "#define MAGMABLAS_LASET_BAND_NB " COOT_STRINGIFY(MAGMABLAS_LASET_BAND_NB) " \n"
-  "#define MAGMABLAS_LANSY_INF_BS " COOT_STRINGIFY(MAGMABLAS_LANSY_INF_BS) " \n"
-  "#define MAGMABLAS_LANSY_MAX_BS " COOT_STRINGIFY(MAGMABLAS_LANSY_MAX_BS) " \n"
-  "\n"
-  "typedef struct \n"
-  "  { \n"
-  "  int npivots; \n"
-  "  int ipiv[" COOT_STRINGIFY(MAGMABLAS_LASWP_MAX_PIVOTS) "]; \n"
-  "  } magmablas_laswp_params_t; \n"
-  "\n"
-  // Sometimes we need to approximate Armadillo functionality that uses
-  // double---but double may not be available.  So we do our best...
-  "#define ARMA_FP_TYPE " + ((has_float64) ? std::string("double") : std::string("float")) + " \n" +
-  // Utility function for subgroup barriers; this is needed in case subgroups
-  // are not available.
-  ((has_subgroups) ?
-      ((must_synchronise_subgroups) ? std::string("#define SUBGROUP_BARRIER sub_group_barrier") : std::string("#define SUBGROUP_BARRIER(x) ")) :
-      std::string("#define SUBGROUP_BARRIER barrier")) + " \n"
-  "#define SUBGROUP_SIZE " + std::string(subgroup_size_str) + " \n"
-  "#define SUBGROUP_SIZE_NAME " + ((has_subgroups && subgroup_size < 128) ? std::string(subgroup_size_str) : "other") +
-  "\n"
-  // Forward declarations that may be needed.
-  "void u32_or_subgroup_reduce_other(__local volatile uint* data, UWORD tid); \n"
-  "void u32_or_subgroup_reduce_8(__local volatile uint* data, UWORD tid); \n"
-  "void u32_or_subgroup_reduce_16(__local volatile uint* data, UWORD tid); \n"
-  "void u32_or_subgroup_reduce_32(__local volatile uint* data, UWORD tid); \n"
-  "void u32_or_subgroup_reduce_64(__local volatile uint* data, UWORD tid); \n"
-  "void u32_or_subgroup_reduce_128(__local volatile uint* data, UWORD tid); \n"
-  "\n"
-  ;
-
-  return source;
-  }
 
 
 
@@ -224,10 +79,84 @@ read_file(const std::string& filename)
 
 
 inline
-const std::string&
-kernel_src::get_zeroway_source()
+std::string
+kernel_src::init_src_preamble(const bool has_float64, const bool has_float16, const bool has_sizet64, const bool has_subgroups, const size_t subgroup_size, const bool must_synchronise_subgroups, const bool need_subgroup_extension)
   {
-  static const std::string source = init_zeroway_source();
+  char u8_max[32];
+  char u16_max[32];
+  char u32_max[32];
+  char u64_max[32];
+  snprintf(u8_max,  32, "%hu",     (unsigned int) Datum<u8>::max);
+  snprintf(u16_max, 32, "%hu",     (unsigned int) Datum<u16>::max);
+  snprintf(u32_max, 32, "%uu",     (unsigned int) Datum<u32>::max);
+  snprintf(u64_max, 32, "%llullu", (unsigned long long) Datum<u64>::max);
+
+  char s8_min[32];
+  char s16_min[32];
+  char s32_min[32];
+  char s64_min[32];
+  snprintf(s8_min,  32, "%hd",    (int) std::numeric_limits<s8>::lowest());
+  snprintf(s16_min, 32, "%hd",    (int) std::numeric_limits<s16>::lowest());
+  snprintf(s32_min, 32, "%d",     (int) std::numeric_limits<s32>::lowest());
+  snprintf(s64_min, 32, "%lldll", (long long) std::numeric_limits<s64>::lowest());
+
+  char s8_max[32];
+  char s16_max[32];
+  char s32_max[32];
+  char s64_max[32];
+  snprintf(s8_max,  32, "%hd",    (int) Datum<s8>::max);
+  snprintf(s16_max, 32, "%hd",    (int) Datum<s16>::max);
+  snprintf(s32_max, 32, "%d",     (int) Datum<s32>::max);
+  snprintf(s64_max, 32, "%lldll", (long long) Datum<s64>::max);
+
+  char subgroup_size_str[32];
+  snprintf(subgroup_size_str, 32, "%zu", subgroup_size);
+
+  std::string source = \
+
+  ((need_subgroup_extension) ?
+      std::string("#pragma OPENCL EXTENSION cl_khr_subgroups : enable \n") :
+      std::string("")) +
+  "\n" +
+  ((has_float64) ?
+      std::string("#define COOT_HAVE_FP64 \n") :
+      std::string("")) +
+  ((has_float16) ?
+      std::string("#pragma OPENCL EXTENSION cl_khr_fp16 : enable \n"
+                  "#define COOT_HAVE_FP16 \n") :
+      std::string("")) +
+  "\n"
+  "\n"
+  "#define COOT_S8_MIN "  + std::string(s8_min)  + " \n"
+  "#define COOT_S16_MIN " + std::string(s16_min) + " \n"
+  "#define COOT_S32_MIN " + std::string(s32_min) + " \n"
+  "#define COOT_S64_MIN " + std::string(s64_min) + " \n"
+  "\n"
+  "#define COOT_U8_MAX "  + std::string(u8_max)  + " \n"
+  "#define COOT_U16_MAX " + std::string(u16_max) + " \n"
+  "#define COOT_U32_MAX " + std::string(u32_max) + " \n"
+  "#define COOT_U64_MAX " + std::string(u64_max) + " \n"
+  "#define COOT_S8_MAX "  + std::string(s8_max)  + " \n"
+  "#define COOT_S16_MAX " + std::string(s16_max) + " \n"
+  "#define COOT_S32_MAX " + std::string(s32_max) + " \n"
+  "#define COOT_S64_MAX " + std::string(s64_max) + " \n" +
+
+  ((has_sizet64) ?
+      std::string("#define UWORD ulong \n"
+                  "#define COOT_UWORD_MAX COOT_U64_MAX \n") :
+      std::string("#define UWORD uint \n"
+                  "#define COOT_UWORD_MAX COOT_U32_MAX \n")) +
+
+  // Utility function for subgroup barriers; this is needed in case subgroups
+  // are not available.
+  ((has_subgroups) ?
+      ((must_synchronise_subgroups) ? std::string("#define SUBGROUP_BARRIER sub_group_barrier") : std::string("#define SUBGROUP_BARRIER(x) ")) :
+      std::string("#define SUBGROUP_BARRIER barrier")) + " \n"
+  "#define SUBGROUP_SIZE " + std::string(subgroup_size_str) + " \n"
+  "#define SUBGROUP_SIZE_NAME " + ((has_subgroups && subgroup_size < 128) ? std::string(subgroup_size_str) : "other") +
+  "\n";
+
+  source += read_file("defs/opencl_prelims.cl");
 
   return source;
   }
@@ -236,100 +165,48 @@ kernel_src::get_zeroway_source()
 
 inline
 std::string
-kernel_src::init_zeroway_source()
+kernel_src::get_zeroway_source(const zeroway_kernel_id::enum_id num)
   {
-  // NOTE: kernel names must match the list in the kernel_id struct
+  const std::string kernel_name = zeroway_kernel_id::get_names()[num];
+  const std::string filename = "zeroway/" + kernel_name + ".cl";
 
-  std::vector<std::string> aux_function_filenames = {
-      "xorwow_rng.cl",
-      "philox_rng.cl",
-      "absdiff.cl",
-      "var_philox.cl",
-      "conj.cl"
-  };
+  std::string source;
 
-  std::string source = "";
-
-  // First, load any auxiliary functions.
-  for (const std::string& filename : aux_function_filenames)
+  if (zeroway_kernel_id::get_deps().count(num) > 0)
     {
-    std::string full_filename = "zeroway/" + filename;
-    source += read_file(full_filename);
+    const std::vector<std::string>& deps = zeroway_kernel_id::get_deps().at(num);
+    for (const std::string& dep_f : deps)
+      {
+      source += read_file("deps/" + dep_f + ".cl");
+      }
     }
 
-  // Now, load each file for each kernel.
-  for (const std::string& kernel_name : zeroway_kernel_id::get_names())
-    {
-    std::string filename = "zeroway/" + kernel_name + ".cl";
-    source += read_file(filename);
-    }
-
+  source += read_file(filename);
   return source;
   }
 
 
 
-inline
-const std::string&
-kernel_src::get_oneway_source()
-  {
-  static const std::string source = init_oneway_source();
-
-  return source;
-  }
-
-
-
-// TODO: inplace_set_scalar() could be replaced with explicit call to clEnqueueFillBuffer()
-// present in OpenCL 1.2: http://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/clEnqueueFillBuffer.html
-
-// TODO: need submat analogues of all functions
-
-// TODO: need specialised handling for cx_float and cx_double
-// for example (cx_double * cx_double) is not simply (double2 * double2)
-
-
+template<typename eT>
 inline
 std::string
-kernel_src::init_oneway_source()
+kernel_src::get_oneway_defines()
   {
-  // NOTE: kernel names must match the list in the kernel_id struct
+  typedef typename promote_type<eT, float>::result fp_eT;
+  typedef typename uint_type<eT>::result           uint_eT;
 
-  std::vector<std::string> aux_function_filenames = {
-      "accu_subgroup_reduce.cl",
-      "min_subgroup_reduce.cl",
-      "max_subgroup_reduce.cl",
-      "index_min_subgroup_reduce.cl",
-      "index_max_subgroup_reduce.cl",
-      "prod_subgroup_reduce.cl"
-  };
+  std::string source = \
+      "#define PREFIX " + type_prefix<eT>() + "_ \n" +
+      "#define eT1 " + type_to_dev_string::map<eT>() + " \n" +
+      "#define fp_eT1 " + type_to_dev_string::map<fp_eT>() + " \n" +
+      "#define uint_eT1 " + type_to_dev_string::map<uint_eT>() + " \n" +
+      "#define ET1_ABS " + type_to_dev_string::abs_func<eT>() + " \n";
 
-  std::string source = "";
-
-  // First, load any auxiliary functions (e.g. device-specific functions).
-  for (const std::string& filename : aux_function_filenames)
-    {
-    std::string full_filename = "oneway/" + filename;
-    source += read_file(full_filename);
-    }
-
-  // Now, load each file for each kernel.
-  for (const std::string& kernel_name : oneway_kernel_id::get_names())
-    {
-    std::string filename = "oneway/" + kernel_name + ".cl";
-    source += read_file(filename);
-    }
-
-  return source;
-  }
-
-
-
-inline
-const std::string&
-kernel_src::get_oneway_real_source()
-  {
-  static const std::string source = init_oneway_real_source();
+  source += read_file("defs/" + type_prefix<eT>() + "_defs.cl");
+  if (is_same_type<eT, fp_eT>::no)
+    source += read_file("defs/" + type_prefix<fp_eT>() + "_defs.cl");
+  if (is_same_type<eT, uint_eT>::no)
+    source += read_file("defs/" + type_prefix<uint_eT>() + "_defs.cl");
 
   return source;
   }
@@ -338,29 +215,254 @@ kernel_src::get_oneway_real_source()
 
 inline
 std::string
-kernel_src::init_oneway_real_source()
+kernel_src::get_oneway_source(const oneway_kernel_id::enum_id num)
   {
-  // NOTE: kernel names must match the list in the kernel_id struct
+  const std::string kernel_name = oneway_kernel_id::get_names()[num];
+  const std::string filename = "oneway/" + kernel_name + ".cl";
 
-  std::string source = "";
+  std::string source;
 
-  // Load each file for each kernel.
-  for (const std::string& kernel_name : oneway_real_kernel_id::get_names())
+  if (oneway_kernel_id::get_deps().count(num) > 0)
     {
-    std::string filename = "oneway_real/" + kernel_name + ".cl";
-    source += read_file(filename);
+    const std::vector<std::string>& deps = oneway_kernel_id::get_deps().at(num);
+    for (const std::string& dep_f : deps)
+      {
+      source += read_file("deps/" + dep_f + ".cl");
+      }
     }
 
+  source += read_file(filename);
   return source;
   }
 
 
 
 inline
-const std::string&
-kernel_src::get_oneway_integral_source()
+std::string
+kernel_src::get_oneway_real_source(const oneway_real_kernel_id::enum_id num)
   {
-  static const std::string source = init_oneway_integral_source();
+  const std::string kernel_name = oneway_real_kernel_id::get_names()[num];
+  const std::string filename = "oneway_real/" + kernel_name + ".cl";
+
+  std::string source;
+
+  if (oneway_real_kernel_id::get_deps().count(num) > 0)
+    {
+    const std::vector<std::string>& deps = oneway_real_kernel_id::get_deps().at(num);
+    for (const std::string& dep_f : deps)
+      {
+      source += read_file("deps/" + dep_f + ".cl");
+      }
+    }
+
+  source += read_file(filename);
+  return source;
+  }
+
+
+
+inline
+std::string
+kernel_src::get_oneway_integral_source(const oneway_integral_kernel_id::enum_id num)
+  {
+  const std::string kernel_name = oneway_integral_kernel_id::get_names()[num];
+  const std::string filename = "oneway_integral/" + kernel_name + ".cl";
+
+  std::string source;
+
+  if (oneway_integral_kernel_id::get_deps().count(num) > 0)
+    {
+    const std::vector<std::string>& deps = oneway_integral_kernel_id::get_deps().at(num);
+    for (const std::string& dep_f : deps)
+      {
+      source += read_file("deps/" + dep_f + ".cl");
+      }
+    }
+
+  source += read_file(filename);
+  return source;
+  }
+
+
+
+template<typename eT1, typename eT2>
+inline
+std::string
+kernel_src::get_twoway_defines()
+  {
+  typedef typename promote_type<eT1, float>::result fp_eT1;
+  typedef typename uint_type<eT1>::result           uint_eT1;
+  typedef typename promote_type<eT2, float>::result fp_eT2;
+  typedef typename uint_type<eT2>::result           uint_eT2;
+  typedef typename promote_type<eT1, eT2>::result   twoway_promoted_eT;
+
+  std::string source =
+      "#define PREFIX " + type_prefix<eT1>() + "_" + type_prefix<eT2>() + "_\n" +
+      "#define eT1 " + type_to_dev_string::map<eT1>() + "\n" +
+      "#define fp_eT1 " + type_to_dev_string::map<fp_eT1>() + "\n" +
+      "#define uint_eT1 " + type_to_dev_string::map<uint_eT1>() + "\n" +
+      "#define ET1_ABS " + type_to_dev_string::abs_func<eT1>() + "\n" +
+      "#define eT2 " + type_to_dev_string::map<eT2>() + "\n" +
+      "#define fp_eT2 " + type_to_dev_string::map<fp_eT2>() + "\n" +
+      "#define uint_eT2 " + type_to_dev_string::map<uint_eT2>() + "\n" +
+      "#define twoway_promoted_eT " + type_to_dev_string::map<twoway_promoted_eT>() + "\n";
+
+  source += read_file("defs/" + type_prefix<eT1>() + "_defs.cl");
+
+  if (is_same_type<eT1, fp_eT1>::no)
+    source += read_file("defs/" + type_prefix<fp_eT1>() + "_defs.cl");
+
+  if (is_same_type<eT1, uint_eT1>::no)
+    source += read_file("defs/" + type_prefix<uint_eT1>() + "_defs.cl");
+
+  if (is_same_type<eT2, eT1>::no &&
+      is_same_type<eT2, fp_eT1>::no &&
+      is_same_type<eT2, uint_eT1>::no)
+    source += read_file("defs/" + type_prefix<eT2>() + "_defs.cl");
+
+  if (is_same_type<eT2, fp_eT2>::no &&
+      is_same_type<eT1, fp_eT2>::no &&
+      is_same_type<fp_eT1, fp_eT2>::no)
+    source += read_file("defs/" + type_prefix<fp_eT2>() + "_defs.cl");
+
+  if (is_same_type<eT2, uint_eT2>::no &&
+      is_same_type<eT1, uint_eT2>::no &&
+      is_same_type<uint_eT1, uint_eT2>::no)
+    source += read_file("defs/" + type_prefix<uint_eT2>() + "_defs.cl");
+
+  if (is_same_type<eT1, twoway_promoted_eT>::no &&
+      is_same_type<eT2, twoway_promoted_eT>::no &&
+      is_same_type<fp_eT1, twoway_promoted_eT>::no &&
+      is_same_type<fp_eT2, twoway_promoted_eT>::no &&
+      is_same_type<uint_eT1, twoway_promoted_eT>::no &&
+      is_same_type<uint_eT2, twoway_promoted_eT>::no)
+    source += read_file("defs/" + type_prefix<twoway_promoted_eT>() + "_defs.cl");
+
+  return source;
+  }
+
+
+inline
+std::string
+kernel_src::get_twoway_source(const twoway_kernel_id::enum_id num)
+  {
+  const std::string kernel_name = twoway_kernel_id::get_names()[num];
+  const std::string filename = "twoway/" + kernel_name + ".cl";
+
+  std::string source;
+
+  if (twoway_kernel_id::get_deps().count(num) > 0)
+    {
+    const std::vector<std::string>& deps = twoway_kernel_id::get_deps().at(num);
+    for (const std::string& dep_f : deps)
+      {
+      source += read_file("deps/" + dep_f + ".cl");
+      }
+    }
+
+  source += read_file(filename);
+  return source;
+  }
+
+
+
+template<typename eT1, typename eT2, typename eT3>
+inline
+std::string
+kernel_src::get_threeway_defines()
+  {
+  typedef typename promote_type<eT1, float>::result fp_eT1;
+  typedef typename uint_type<eT1>::result           uint_eT1;
+  typedef typename promote_type<eT2, float>::result fp_eT2;
+  typedef typename uint_type<eT2>::result           uint_eT2;
+  typedef typename promote_type<eT3, float>::result fp_eT3;
+  typedef typename uint_type<eT3>::result           uint_eT3;
+
+  typedef typename promote_type<eT1, eT2>::result                twoway_promoted_eT;
+  typedef typename promote_type<twoway_promoted_eT, eT3>::result threeway_promoted_eT;
+
+  std::string source =
+      "#define PREFIX " + type_prefix<eT1>() + "_" + type_prefix<eT2>() + "_" + type_prefix<eT3>() + "_\n" +
+      "#define eT1 " + type_to_dev_string::map<eT1>() + "\n" +
+      "#define fp_eT1 " + type_to_dev_string::map<fp_eT1>() + "\n" +
+      "#define uint_eT1 " + type_to_dev_string::map<uint_eT1>() + "\n" +
+      "#define ET1_ABS " + type_to_dev_string::abs_func<eT1>() + "\n" +
+      "#define eT2 " + type_to_dev_string::map<eT2>() + "\n" +
+      "#define fp_eT2 " + type_to_dev_string::map<fp_eT2>() + "\n" +
+      "#define uint_eT2 " + type_to_dev_string::map<uint_eT2>() + "\n" +
+      "#define twoway_promoted_eT " + type_to_dev_string::map<twoway_promoted_eT>() + "\n" +
+      "#define eT3 " + type_to_dev_string::map<eT3>() + "\n" +
+      "#define fp_eT3 " + type_to_dev_string::map<fp_eT3>() + "\n" +
+      "#define uint_eT3 " + type_to_dev_string::map<uint_eT3>() + "\n" +
+      "#define threeway_promoted_eT " + type_to_dev_string::map<threeway_promoted_eT>() + "\n";
+
+  source += read_file("defs/" + type_prefix<eT1>() + "_defs.cl");
+
+  if (is_same_type<eT1, fp_eT1>::no)
+    source += read_file("defs/" + type_prefix<fp_eT1>() + "_defs.cl");
+
+  if (is_same_type<eT1, uint_eT1>::no)
+    source += read_file("defs/" + type_prefix<uint_eT1>() + "_defs.cl");
+
+  if (is_same_type<eT2, eT1>::no &&
+      is_same_type<eT2, fp_eT1>::no &&
+      is_same_type<eT2, uint_eT1>::no)
+    source += read_file("defs/" + type_prefix<eT2>() + "_defs.cl");
+
+  if (is_same_type<eT2, fp_eT2>::no &&
+      is_same_type<eT1, fp_eT2>::no &&
+      is_same_type<fp_eT1, fp_eT2>::no)
+    source += read_file("defs/" + type_prefix<fp_eT2>() + "_defs.cl");
+
+  if (is_same_type<eT2, uint_eT2>::no &&
+      is_same_type<eT1, uint_eT2>::no &&
+      is_same_type<uint_eT1, uint_eT2>::no)
+    source += read_file("defs/" + type_prefix<uint_eT2>() + "_defs.cl");
+
+  if (is_same_type<eT1, twoway_promoted_eT>::no &&
+      is_same_type<eT2, twoway_promoted_eT>::no &&
+      is_same_type<fp_eT1, twoway_promoted_eT>::no &&
+      is_same_type<fp_eT2, twoway_promoted_eT>::no &&
+      is_same_type<uint_eT1, twoway_promoted_eT>::no &&
+      is_same_type<uint_eT2, twoway_promoted_eT>::no)
+    source += read_file("defs/" + type_prefix<twoway_promoted_eT>() + "_defs.cl");
+
+  if (is_same_type<eT3, eT2>::no &&
+      is_same_type<eT3, fp_eT2>::no &&
+      is_same_type<eT3, uint_eT2>::no &&
+      is_same_type<eT3, eT1>::no &&
+      is_same_type<eT3, fp_eT1>::no &&
+      is_same_type<eT3, uint_eT1>::no &&
+      is_same_type<eT3, twoway_promoted_eT>::no)
+    source += read_file("defs/" + type_prefix<eT3>() + "_defs.cl");
+
+  if (is_same_type<eT3, fp_eT3>::no &&
+      is_same_type<eT2, fp_eT3>::no &&
+      is_same_type<eT1, fp_eT3>::no &&
+      is_same_type<fp_eT2, fp_eT3>::no &&
+      is_same_type<fp_eT1, fp_eT3>::no &&
+      is_same_type<twoway_promoted_eT, fp_eT3>::no)
+    source += read_file("defs/" + type_prefix<fp_eT3>() + "_defs.cl");
+
+  if (is_same_type<eT3, uint_eT3>::no &&
+      is_same_type<eT2, uint_eT3>::no &&
+      is_same_type<eT1, uint_eT3>::no &&
+      is_same_type<uint_eT2, uint_eT3>::no &&
+      is_same_type<uint_eT1, uint_eT3>::no &&
+      is_same_type<twoway_promoted_eT, uint_eT3>::no)
+    source += read_file("defs/" + type_prefix<uint_eT3>() + "_defs.cl");
+
+  if (is_same_type<eT1, threeway_promoted_eT>::no &&
+      is_same_type<eT2, threeway_promoted_eT>::no &&
+      is_same_type<eT3, threeway_promoted_eT>::no &&
+      is_same_type<fp_eT1, threeway_promoted_eT>::no &&
+      is_same_type<fp_eT2, threeway_promoted_eT>::no &&
+      is_same_type<fp_eT3, threeway_promoted_eT>::no &&
+      is_same_type<uint_eT1, threeway_promoted_eT>::no &&
+      is_same_type<uint_eT2, threeway_promoted_eT>::no &&
+      is_same_type<uint_eT3, threeway_promoted_eT>::no &&
+      is_same_type<twoway_promoted_eT, threeway_promoted_eT>::no)
+    source += read_file("defs/" + type_prefix<threeway_promoted_eT>() + "_defs.cl");
 
   return source;
   }
@@ -369,42 +471,23 @@ kernel_src::get_oneway_integral_source()
 
 inline
 std::string
-kernel_src::init_oneway_integral_source()
+kernel_src::get_threeway_source(const threeway_kernel_id::enum_id num)
   {
-  // NOTE: kernel names must match the list in the kernel_id struct
+  const std::string kernel_name = threeway_kernel_id::get_names()[num];
+  const std::string filename = "threeway/" + kernel_name + ".cl";
 
-  std::vector<std::string> aux_function_filenames = {
-      "and_subgroup_reduce.cl",
-      "or_subgroup_reduce.cl"
-  };
+  std::string source;
 
-  std::string source = "";
-
-  // First, load any auxiliary functions (e.g. device-specific functions).
-  for (const std::string& filename : aux_function_filenames)
+  if (threeway_kernel_id::get_deps().count(num) > 0)
     {
-    std::string full_filename = "oneway_integral/" + filename;
-    source += read_file(full_filename);
+    const std::vector<std::string>& deps = threeway_kernel_id::get_deps().at(num);
+    for (const std::string& dep_f : deps)
+      {
+      source += read_file("deps/" + dep_f + ".cl");
+      }
     }
 
-  // Load each file for each kernel.
-  for (const std::string& kernel_name : oneway_integral_kernel_id::get_names())
-    {
-    std::string filename = "oneway_integral/" + kernel_name + ".cl";
-    source += read_file(filename);
-    }
-
-  return source;
-  }
-
-
-
-inline
-const std::string&
-kernel_src::get_twoway_source()
-  {
-  static const std::string source = init_twoway_source();
-
+  source += read_file(filename);
   return source;
   }
 
@@ -412,102 +495,50 @@ kernel_src::get_twoway_source()
 
 inline
 std::string
-kernel_src::init_twoway_source()
+kernel_src::init_magma_defines()
   {
-  // NOTE: kernel names must match the list in the kernel_id struct
+  return
 
-  std::vector<std::string> aux_function_filenames = {
-      "dot_subgroup_reduce.cl"
-  };
-
-  std::string source = "";
-
-  // First, load any auxiliary functions (e.g. device-specific functions).
-  for (const std::string& filename : aux_function_filenames)
-    {
-    std::string full_filename = "twoway/" + filename;
-    source += read_file(full_filename);
-    }
-
-  // Now, load each file for each kernel.
-  for (const std::string& kernel_name : twoway_kernel_id::get_names())
-    {
-    std::string filename = "twoway/" + kernel_name + ".cl";
-    source += read_file(filename);
-    }
-
-  return source;
+  "typedef struct \n"
+  "  { \n"
+  "  int npivots; \n"
+  "  int ipiv[" COOT_STRINGIFY(MAGMABLAS_LASWP_MAX_PIVOTS) "]; \n"
+  "  } magmablas_laswp_params_t; \n"
+  "\n"
+  // MAGMA-specific macros.
+  "#define MAGMABLAS_BLK_X " COOT_STRINGIFY(MAGMABLAS_BLK_X) " \n"
+  "#define MAGMABLAS_BLK_Y " COOT_STRINGIFY(MAGMABLAS_BLK_Y) " \n"
+  "#define MAGMABLAS_TRANS_NX " COOT_STRINGIFY(MAGMABLAS_TRANS_NX) " \n"
+  "#define MAGMABLAS_TRANS_NY " COOT_STRINGIFY(MAGMABLAS_TRANS_NY) " \n"
+  "#define MAGMABLAS_TRANS_NB " COOT_STRINGIFY(MAGMABLAS_TRANS_NB) " \n"
+  "#define MAGMABLAS_TRANS_INPLACE_NB " COOT_STRINGIFY(MAGMABLAS_TRANS_INPLACE_NB) " \n"
+  "#define MAGMABLAS_LASWP_MAX_PIVOTS " COOT_STRINGIFY(MAGMABLAS_LASWP_MAX_PIVOTS) " \n"
+  "#define MAGMABLAS_LASWP_NTHREADS " COOT_STRINGIFY(MAGMABLAS_LASWP_NTHREADS) " \n"
+  "#define MAGMABLAS_LASCL_NB " COOT_STRINGIFY(MAGMABLAS_LASCL_NB) " \n"
+  "#define MAGMABLAS_LASET_BAND_NB " COOT_STRINGIFY(MAGMABLAS_LASET_BAND_NB) " \n"
+  "#define MAGMABLAS_LANSY_INF_BS " COOT_STRINGIFY(MAGMABLAS_LANSY_INF_BS) " \n"
+  "#define MAGMABLAS_LANSY_MAX_BS " COOT_STRINGIFY(MAGMABLAS_LANSY_MAX_BS) " \n";
   }
 
 
 
 inline
 const std::string&
-kernel_src::get_threeway_source()
+kernel_src::get_magma_defines()
   {
-  static const std::string source = init_threeway_source();
+  static const std::string defines = init_magma_defines();
 
-  return source;
+  return defines;
   }
 
 
 
 inline
 std::string
-kernel_src::init_threeway_source()
+kernel_src::get_magma_real_source(const magma_real_kernel_id::enum_id num)
   {
-  // NOTE: kernel names must match the list in the kernel_id struct
+  const std::string kernel_name = magma_real_kernel_id::get_names()[num];
+  const std::string filename = "magma_real/" + kernel_name + ".cl";
 
-  std::string source = "";
-
-  // Load each file for each kernel.
-  for (const std::string& kernel_name : threeway_kernel_id::get_names())
-    {
-    std::string filename = "threeway/" + kernel_name + ".cl";
-    source += read_file(filename);
-    }
-
-  return source;
-  }
-
-
-
-inline
-const std::string&
-kernel_src::get_magma_real_source()
-  {
-  static const std::string source = init_magma_real_source();
-
-  return source;
-  }
-
-
-
-inline
-std::string
-kernel_src::init_magma_real_source()
-  {
-  // NOTE: kernel names must match the list in the kernel_id struct
-
-  std::string source = "";
-
-  // Load each file for each kernel.
-  for (const std::string& kernel_name : magma_real_kernel_id::get_names())
-    {
-    std::string filename = "magma_real/" + kernel_name + ".cl";
-    source += read_file(filename);
-    }
-
-  return source;
-  }
-
-
-
-inline
-const std::string&
-kernel_src::get_src_epilogue()
-  {
-  static const std::string source = "";
-
-  return source;
+  return read_file(filename);
   }

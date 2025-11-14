@@ -26,7 +26,7 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(eT1* A,
   // We do this by adapting the regular radix sort to also consider the highest bit (the sign bit for signed types).
   // This alleviates the need to ever unpack points in a reverse order, and so the sort is stable.
 
-  uint_eT1* aux_mem = (uint_eT1*) aux_shared_mem;
+  UWORD* aux_mem = (UWORD*) aux_shared_mem;
 
   const UWORD tid = threadIdx.x;
 
@@ -94,7 +94,7 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(eT1* A,
     // Note that the notation "11" indicates, e.g., a point whose sign is 1 and bit value in bit b is 1.
     // For unsigned integers, we treat the top bit as a "sign" bit even though it's not---but we choose an ordering that's still correct.
 
-    if (!coot_is_signed((eT1) 0))
+    if (!coot_is_signed(TO_ET1(0)))
       {
       // Unsigned integer (00, 01, 10, 11)
       aux_mem[tid                  ] = local_counts[0];
@@ -102,7 +102,7 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(eT1* A,
       aux_mem[tid + 2 * num_threads] = local_counts[2];
       aux_mem[tid + 3 * num_threads] = local_counts[3];
       }
-    else if (coot_is_fp((eT1) 0))
+    else if (coot_is_fp(TO_ET1(0)))
       {
       // Floating point (11, 10, 00, 01)
       aux_mem[tid                  ] = local_counts[3];
@@ -168,7 +168,7 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(eT1* A,
         {
         const UWORD ai = offset * (2 * tid + 1) - 1;
         const UWORD bi = offset * (2 * tid + 2) - 1;
-        uint_eT1 tmp = aux_mem[ai];
+        UWORD tmp = aux_mem[ai];
         aux_mem[ai] = aux_mem[bi];
         aux_mem[bi] += tmp;
         }
@@ -179,13 +179,13 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(eT1* A,
     offset >>= 1;
     const UWORD ai3 = offset * (2 * tid + 1) - 1;
     const UWORD bi3 = offset * (2 * tid + 2) - 1;
-    uint_eT1 tmp3 = aux_mem[ai3];
+    UWORD tmp3 = aux_mem[ai3];
     aux_mem[ai3] = aux_mem[bi3];
     aux_mem[bi3] += tmp3;
 
     const UWORD ai4 = offset * (2 * (tid + num_threads) + 1) - 1;
     const UWORD bi4 = offset * (2 * (tid + num_threads) + 2) - 1;
-    uint_eT1 tmp4 = aux_mem[ai4];
+    UWORD tmp4 = aux_mem[ai4];
     aux_mem[ai4] = aux_mem[bi4];
     aux_mem[bi4] += tmp4;
     __syncthreads();
@@ -196,7 +196,7 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(eT1* A,
     //  * Unsigned integer:      [00, 01, 10, 11]
     //  * Signed integer:        [10, 11, 00, 01]
 
-    if (!coot_is_signed((eT1) 0))
+    if (!coot_is_signed(TO_ET1(0)))
       {
       // Unsigned integer (00, 01, 10, 11)
       local_counts[0] = aux_mem[tid                  ];
@@ -204,7 +204,7 @@ COOT_FN(PREFIX,stable_radix_sort_index_ascending)(eT1* A,
       local_counts[2] = aux_mem[tid + 2 * num_threads];
       local_counts[3] = aux_mem[tid + 3 * num_threads];
       }
-    else if (coot_is_fp((eT1) 0))
+    else if (coot_is_fp(TO_ET1(0)))
       {
       // Floating point (11, 10, 00, 01)
       local_counts[0] = aux_mem[tid + 2 * num_threads];

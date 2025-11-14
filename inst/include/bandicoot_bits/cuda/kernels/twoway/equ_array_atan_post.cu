@@ -38,7 +38,7 @@ COOT_FN(PREFIX,equ_array_atan_post)(eT2* dest,
 
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
-    const fp_eT1 val = (fp_eT1) src[src_index];
-    dest[dest_index] = (eT2) atan(val);
+    const fp_eT1 val = TO_FP_ET1(src[src_index]);
+    dest[dest_index] = TO_ET2(atan(val));
     }
   }

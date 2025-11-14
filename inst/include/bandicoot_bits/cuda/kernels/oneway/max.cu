@@ -27,7 +27,7 @@ COOT_FN(PREFIX,max)(const eT1* in_mem,
 
   // Make sure all auxiliary memory is initialized to something that won't
   // screw up the final reduce.
-  aux_mem[tid] = coot_type_min((eT1) 0);
+  aux_mem[tid] = coot_type_min(TO_ET1(0));
 
   if (i < n_elem)
     {
@@ -62,7 +62,7 @@ COOT_FN(PREFIX,max)(const eT1* in_mem,
 
   if (tid < 32) // unroll last warp's worth of work
     {
-    COOT_FN(PREFIX,max_warp_reduce)(aux_mem, tid);
+    COOT_FN(PREFIX,max_subgroup_reduce)(aux_mem, tid);
     }
 
   if (tid == 0)

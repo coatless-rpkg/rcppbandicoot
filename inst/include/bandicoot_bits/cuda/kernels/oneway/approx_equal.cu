@@ -12,6 +12,8 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
+
+
 // this kernel is technically incorrect if the size is not a factor of 2!
 __global__
 void
@@ -58,8 +60,8 @@ COOT_FN(PREFIX,approx_equal)(uint* out_mem,
       aux_mem[tid] &= 0;
       }
 
-    const eT1 absdiff1 = COOT_FN(PREFIX,absdiff)(A_val1, B_val1);
-    const eT1 absdiff2 = COOT_FN(PREFIX,absdiff)(A_val2, B_val2);
+    const eT1 absdiff1 = coot_absdiff(A_val1, B_val1);
+    const eT1 absdiff2 = coot_absdiff(A_val2, B_val2);
 
     if ((mode & 1) == 1) // absolute
       {
@@ -72,7 +74,7 @@ COOT_FN(PREFIX,approx_equal)(uint* out_mem,
       const eT1 max_val1 = max(ET1_ABS(A_val1), ET1_ABS(B_val1));
       const eT1 max_val2 = max(ET1_ABS(A_val2), ET1_ABS(B_val2));
 
-      if (max_val1 >= (eT1) 1)
+      if (max_val1 >= TO_ET1(1))
         {
         aux_mem[tid] &= (absdiff1 <= rel_tol * max_val1);
         aux_mem[tid] &= (absdiff2 <= rel_tol * max_val2);
@@ -103,7 +105,7 @@ COOT_FN(PREFIX,approx_equal)(uint* out_mem,
       aux_mem[tid] &= 0;
       }
 
-    const eT1 absdiff = COOT_FN(PREFIX,absdiff)(A_val, B_val);
+    const eT1 absdiff = coot_absdiff(A_val, B_val);
 
     if ((mode & 1) == 1) // absolute
       {
@@ -114,7 +116,7 @@ COOT_FN(PREFIX,approx_equal)(uint* out_mem,
       {
       const eT1 max_val = max(ET1_ABS(A_val), ET1_ABS(B_val));
 
-      if (max_val >= (eT1) 1)
+      if (max_val >= TO_ET1(1))
         {
         aux_mem[tid] &= (absdiff <= rel_tol * max_val);
         }
@@ -137,7 +139,7 @@ COOT_FN(PREFIX,approx_equal)(uint* out_mem,
 
   if (tid < 32) // unroll last warp's worth of work
     {
-    u32_and_warp_reduce(aux_mem, tid);
+    and_subgroup_reduce_u32(aux_mem, tid);
     }
 
   if (tid == 0)

@@ -18,7 +18,7 @@ COOT_FN(PREFIX,radix_sort_index_multi_wg_shuffle)(eT1* A,
                                                   UWORD* A_index,
                                                   eT1* out,
                                                   UWORD* out_index,
-                                                  uint_eT1* counts,
+                                                  UWORD* counts,
                                                   const UWORD n_elem,
                                                   const UWORD sort_type,
                                                   const UWORD start_bit)

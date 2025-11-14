@@ -73,7 +73,7 @@ inline void coot_rng::fill_randi(dev_mem_t<eT> dest, const uword n, const distr_
 
   if (param.state == 0)
     {
-    b = std::numeric_limits<int>::max();
+    b = Datum<int>::max;
     }
   else if (param.state == 1)
     {

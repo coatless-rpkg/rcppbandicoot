@@ -34,8 +34,12 @@ struct is_promotable_ok
 template<typename T> struct is_promotable<T,               T> : public is_promotable_ok { typedef T               result; };
 template<typename T> struct is_promotable<std::complex<T>, T> : public is_promotable_ok { typedef std::complex<T> result; };
 
+template<> struct is_promotable<std::complex<double>, std::complex<fp16>  > : public is_promotable_ok { typedef std::complex<double> result; };
 template<> struct is_promotable<std::complex<double>, std::complex<float> > : public is_promotable_ok { typedef std::complex<double> result; };
+template<> struct is_promotable<std::complex<float>,  std::complex<fp16>  > : public is_promotable_ok { typedef std::complex<float>  result; };
+template<> struct is_promotable<std::complex<double>, fp16>                 : public is_promotable_ok { typedef std::complex<double> result; };
 template<> struct is_promotable<std::complex<double>, float>                : public is_promotable_ok { typedef std::complex<double> result; };
+template<> struct is_promotable<std::complex<float>,  fp16>                 : public is_promotable_ok { typedef std::complex<float>  result; };
 template<> struct is_promotable<std::complex<float>,  double>               : public is_promotable_ok { typedef std::complex<double> result; };
 
 
@@ -54,6 +58,7 @@ template<typename T> struct is_promotable<std::complex<T>, u8>     : public is_p
 
 
 template<> struct is_promotable<double, float > : public is_promotable_ok { typedef double result; };
+template<> struct is_promotable<double, fp16  > : public is_promotable_ok { typedef double result; };
 template<> struct is_promotable<double, s64   > : public is_promotable_ok { typedef double result; };
 template<> struct is_promotable<double, u64   > : public is_promotable_ok { typedef double result; };
 #if defined(COOT_ALLOW_LONG)
@@ -67,6 +72,7 @@ template<> struct is_promotable<double, u16   > : public is_promotable_ok { type
 template<> struct is_promotable<double, s8    > : public is_promotable_ok { typedef double result; };
 template<> struct is_promotable<double, u8    > : public is_promotable_ok { typedef double result; };
 
+template<> struct is_promotable<float, fp16  > : public is_promotable_ok { typedef float result; };
 template<> struct is_promotable<float, s64   > : public is_promotable_ok { typedef float result; };
 template<> struct is_promotable<float, u64   > : public is_promotable_ok { typedef float result; };
 #if defined(COOT_ALLOW_LONG)
@@ -79,6 +85,19 @@ template<> struct is_promotable<float, s16   > : public is_promotable_ok { typed
 template<> struct is_promotable<float, u16   > : public is_promotable_ok { typedef float result; };
 template<> struct is_promotable<float, s8    > : public is_promotable_ok { typedef float result; };
 template<> struct is_promotable<float, u8    > : public is_promotable_ok { typedef float result; };
+
+template<> struct is_promotable<fp16, s64   > : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<fp16, u64   > : public is_promotable_ok { typedef fp16 result; };
+#if defined(COOT_ALLOW_LONG)
+template<> struct is_promotable<fp16, slng_t> : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<fp16, ulng_t> : public is_promotable_ok { typedef fp16 result; };
+#endif
+template<> struct is_promotable<fp16, s32   > : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<fp16, u32   > : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<fp16, s16   > : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<fp16, u16   > : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<fp16, s8    > : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<fp16, u8    > : public is_promotable_ok { typedef fp16 result; };
 
 template<> struct is_promotable<u64, u32> : public is_promotable_ok { typedef u64 result; };
 template<> struct is_promotable<u64, u16> : public is_promotable_ok { typedef u64 result; };
@@ -120,8 +139,12 @@ template<> struct is_promotable<s8, u8> : public is_promotable_ok { typedef s8 r
 
 template<typename T> struct is_promotable<T, std::complex<T> > : public is_promotable_ok { typedef std::complex<T> result; };
 
+template<> struct is_promotable<std::complex<fp16>,  std::complex<double> > : public is_promotable_ok { typedef std::complex<double> result; };
 template<> struct is_promotable<std::complex<float>, std::complex<double> > : public is_promotable_ok { typedef std::complex<double> result; };
+template<> struct is_promotable<std::complex<fp16>,  std::complex<float>  > : public is_promotable_ok { typedef std::complex<float>  result; };
+template<> struct is_promotable<fp16,                std::complex<double> > : public is_promotable_ok { typedef std::complex<double> result; };
 template<> struct is_promotable<float,               std::complex<double> > : public is_promotable_ok { typedef std::complex<double> result; };
+template<> struct is_promotable<fp16,                std::complex<float>  > : public is_promotable_ok { typedef std::complex<float>  result; };
 template<> struct is_promotable<double,              std::complex<float>  > : public is_promotable_ok { typedef std::complex<double> result; };
 
 template<typename T> struct is_promotable<s64,    std::complex<T> > : public is_promotable_ok { typedef std::complex<T> result; };
@@ -139,6 +162,7 @@ template<typename T> struct is_promotable<u8,     std::complex<T> > : public is_
 
 
 template<> struct is_promotable<float,  double> : public is_promotable_ok { typedef double result; };
+template<> struct is_promotable<fp16,   double> : public is_promotable_ok { typedef double result; };
 template<> struct is_promotable<s64,    double> : public is_promotable_ok { typedef double result; };
 template<> struct is_promotable<u64,    double> : public is_promotable_ok { typedef double result; };
 #if defined(COOT_ALLOW_LONG)
@@ -152,6 +176,7 @@ template<> struct is_promotable<u16,    double> : public is_promotable_ok { type
 template<> struct is_promotable<s8,     double> : public is_promotable_ok { typedef double result; };
 template<> struct is_promotable<u8,     double> : public is_promotable_ok { typedef double result; };
 
+template<> struct is_promotable<fp16,   float> : public is_promotable_ok { typedef float result; };
 template<> struct is_promotable<s64,    float> : public is_promotable_ok { typedef float result; };
 template<> struct is_promotable<u64,    float> : public is_promotable_ok { typedef float result; };
 #if defined(COOT_ALLOW_LONG)
@@ -164,6 +189,19 @@ template<> struct is_promotable<s16,    float> : public is_promotable_ok { typed
 template<> struct is_promotable<u16,    float> : public is_promotable_ok { typedef float result; };
 template<> struct is_promotable<s8,     float> : public is_promotable_ok { typedef float result; };
 template<> struct is_promotable<u8,     float> : public is_promotable_ok { typedef float result; };
+
+template<> struct is_promotable<s64,    fp16> : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<u64,    fp16> : public is_promotable_ok { typedef fp16 result; };
+#if defined(COOT_ALLOW_LONG)
+template<> struct is_promotable<slng_t, fp16> : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<ulng_t, fp16> : public is_promotable_ok { typedef fp16 result; };
+#endif
+template<> struct is_promotable<s32,    fp16> : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<u32,    fp16> : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<s16,    fp16> : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<u16,    fp16> : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<s8,     fp16> : public is_promotable_ok { typedef fp16 result; };
+template<> struct is_promotable<u8,     fp16> : public is_promotable_ok { typedef fp16 result; };
 
 template<> struct is_promotable<u32, u64> : public is_promotable_ok { typedef u64 result; };
 template<> struct is_promotable<u16, u64> : public is_promotable_ok { typedef u64 result; };

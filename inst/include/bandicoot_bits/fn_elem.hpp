@@ -728,7 +728,7 @@ hypot(const T1& X, const T2& Y)
 template<typename T1>
 coot_warn_unused
 inline
-typename enable_if2< is_coot_type<T1>::value && std::is_signed<typename T1::elem_type>::value, const eOp<T1, eop_abs> >::result
+typename enable_if2< is_coot_type<T1>::value && is_signed<typename T1::elem_type>::value, const eOp<T1, eop_abs> >::result
 abs(const T1& A)
   {
   coot_extra_debug_sigprint();
@@ -741,7 +741,7 @@ abs(const T1& A)
 template<typename T1>
 coot_warn_unused
 inline
-typename enable_if2< std::is_signed<typename T1::elem_type>::value, const eOpCube<T1, eop_abs> >::result
+typename enable_if2< is_signed<typename T1::elem_type>::value, const eOpCube<T1, eop_abs> >::result
 abs(const BaseCube<typename T1::elem_type, T1>& A)
   {
   coot_extra_debug_sigprint();
@@ -755,7 +755,7 @@ abs(const BaseCube<typename T1::elem_type, T1>& A)
 template<typename T1>
 coot_warn_unused
 inline
-typename enable_if2< is_coot_type<T1>::value && !std::is_signed<typename T1::elem_type>::value, const T1&>::result
+typename enable_if2< is_coot_type<T1>::value && !is_signed<typename T1::elem_type>::value, const T1&>::result
 abs(const T1& A)
   {
   coot_extra_debug_sigprint();
@@ -768,7 +768,7 @@ abs(const T1& A)
 template<typename T1>
 coot_warn_unused
 inline
-typename enable_if2< !std::is_signed<typename T1::elem_type>::value, const T1&>::result
+typename enable_if2< !is_signed<typename T1::elem_type>::value, const T1&>::result
 abs(const BaseCube<typename T1::elem_type, T1>& A)
   {
   coot_extra_debug_sigprint();
@@ -1161,4 +1161,32 @@ imag(const T1& A)
   coot_extra_debug_sigprint();
 
   return mtOp<typename T1::pod_type, T1, mtop_imag>(A);
+  }
+
+
+//
+// replace
+
+template<typename T1>
+coot_warn_unused
+inline
+typename enable_if2< is_coot_type<T1>::value, const Op<T1, op_replace> >::result
+replace(const T1& X, typename T1::elem_type old_val, typename T1::elem_type new_val)
+  {
+  coot_extra_debug_sigprint();
+
+  return Op<T1, op_replace>(X, 'j', old_val, new_val);
+  }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+const OpCube<T1, op_replace>
+replace(const BaseCube<typename T1::elem_type, T1>& X, typename T1::elem_type old_val, typename T1::elem_type new_val)
+  {
+  coot_extra_debug_sigprint();
+
+  return OpCube<T1, op_replace>(X, 'j', old_val, new_val);
   }

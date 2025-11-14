@@ -15,7 +15,7 @@
 __global__
 void
 COOT_FN(PREFIX,radix_sort_multi_wg_bit_count)(eT1* A,
-                                              uint_eT1* counts,
+                                              UWORD* counts,
                                               const UWORD n_elem,
                                               const UWORD sort_type,
                                               const UWORD start_bit)

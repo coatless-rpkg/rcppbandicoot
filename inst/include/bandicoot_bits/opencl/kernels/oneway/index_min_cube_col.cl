@@ -29,7 +29,9 @@ COOT_FN(PREFIX,index_min_cube_col)(__global UWORD* dest,
     {
     eT1 best_val = src[src_offset + row + slice * n_rows * n_cols];
     UWORD best_index = 0;
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for(UWORD i=1; i < n_cols; ++i)
       {
       if (src[src_offset + (i * n_rows) + row + slice * n_rows * n_cols] < best_val)

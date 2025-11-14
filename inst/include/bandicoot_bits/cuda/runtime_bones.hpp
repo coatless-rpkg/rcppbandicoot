@@ -22,13 +22,28 @@ struct runtime_t
 
   inline ~runtime_t();
 
-  inline std::string unique_host_device_id() const;
+  inline void generate_unique_host_device_id();
 
-  inline bool load_cached_kernels(const std::string& unique_host_device_id, const size_t kernel_size);
+  inline bool load_cached_kernel(const std::string& kernel_name, CUfunction& kernel);
 
-  inline bool compile_kernels(const std::string& unique_host_device_id);
+  inline std::string generate_kernel(const zeroway_kernel_id::enum_id num);
 
-  inline bool create_kernels(const std::vector<std::pair<std::string, CUfunction*>>& name_map, char* cubin);
+  template<typename eT>
+  inline std::string generate_kernel(const oneway_kernel_id::enum_id num);
+
+  template<typename eT>
+  inline std::string generate_kernel(const oneway_real_kernel_id::enum_id num);
+
+  template<typename eT>
+  inline std::string generate_kernel(const oneway_integral_kernel_id::enum_id num);
+
+  template<typename eT1, typename eT2>
+  inline std::string generate_kernel(const twoway_kernel_id::enum_id num);
+
+  template<typename eT1, typename eT2, typename eT3>
+  inline std::string generate_kernel(const threeway_kernel_id::enum_id num);
+
+  inline void compile_kernel(const std::string& kernel_name, const std::string& source, CUfunction& function);
 
   inline const CUfunction& get_kernel(const zeroway_kernel_id::enum_id num);
 
@@ -48,7 +63,7 @@ struct runtime_t
   inline const CUfunction& get_kernel(const threeway_kernel_id::enum_id num);
 
   template<typename eT>
-  inline eT* acquire_memory(const uword n_elem);
+  inline typename cuda_type<eT>::type* acquire_memory(const uword n_elem);
 
   template<typename eT>
   inline void release_memory(eT* cuda_mem);
@@ -59,9 +74,8 @@ struct runtime_t
 
   inline void set_rng_seed(const u64 seed);
 
-  // all types are currently supported by CUDA
   template<typename eT>
-  inline constexpr bool is_supported_type() { return true; }
+  inline bool is_supported_type() const;
 
   // use CURAND_ORDERING_PSEUDO_SEEDED with XORWOW / CURAND_ORDERING_PSEUDO_BEST
   // We use XORWOW for uniform distributions, and Philox for normal distributions.
@@ -82,22 +96,31 @@ struct runtime_t
 
   template<typename eT1, typename... eTs, typename HeldType, typename EnumType>
   inline
-  const CUfunction&
-  get_kernel(const rt_common::kernels_t<HeldType>& k, const EnumType num);
+  std::tuple<bool, CUfunction&>
+  get_kernel(rt_common::kernels_t<HeldType>& k, const EnumType num);
 
-  template<typename eT, typename EnumType>
+  template<typename EnumType>
   inline
-  const CUfunction&
-  get_kernel(const rt_common::kernels_t<std::vector<CUfunction>>& k, const EnumType num);
+  std::tuple<bool, CUfunction&>
+  get_kernel(std::unordered_map<EnumType, CUfunction>& kernels, const EnumType num);
+
+
 
   coot_aligned bool                     valid;
 
-  coot_aligned std::vector<CUfunction>                                                                   zeroway_kernels;
-  coot_aligned rt_common::kernels_t<std::vector<CUfunction>>                                             oneway_kernels;
-  coot_aligned rt_common::kernels_t<std::vector<CUfunction>>                                             oneway_real_kernels;
-  coot_aligned rt_common::kernels_t<std::vector<CUfunction>>                                             oneway_integral_kernels;
-  coot_aligned rt_common::kernels_t<rt_common::kernels_t<std::vector<CUfunction>>>                       twoway_kernels;
-  coot_aligned rt_common::kernels_t<rt_common::kernels_t<rt_common::kernels_t<std::vector<CUfunction>>>> threeway_kernels;
+  coot_aligned bool                     has_fp16;
+
+  coot_aligned std::vector<std::string> nvrtc_opts;
+  std::string                           unique_host_device_id;
+  std::string                           gpu_arch_str;
+  std::string                           src_preamble;
+
+  coot_aligned std::unordered_map<zeroway_kernel_id::enum_id, CUfunction>                                                                    zeroway_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_kernel_id::enum_id, CUfunction>>                                               oneway_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_real_kernel_id::enum_id, CUfunction>>                                          oneway_real_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_integral_kernel_id::enum_id, CUfunction>>                                      oneway_integral_kernels;
+  coot_aligned rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<twoway_kernel_id::enum_id, CUfunction>>>                         twoway_kernels;
+  coot_aligned rt_common::kernels_t<rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<threeway_kernel_id::enum_id, CUfunction>>>> threeway_kernels;
 
   coot_aligned CUdevice cuDevice;
   coot_aligned CUcontext context;

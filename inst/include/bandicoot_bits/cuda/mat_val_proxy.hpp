@@ -26,16 +26,17 @@ get_val(const dev_mem_t<eT> mem, const uword index)
   // This is inefficient, but without using Unified Memory, I don't see
   // an alternative.
 
-  eT val = eT(0);
+  typedef typename cuda_type<eT>::type ceT;
+  ceT val = to_cuda_type(eT(0));
 
   cudaError_t status = coot_wrapper(cudaMemcpy)((void*) &val,
                                                 (void*) (mem.cuda_mem_ptr + index),
-                                                sizeof(eT),
+                                                sizeof(ceT),
                                                 cudaMemcpyDeviceToHost);
 
   coot_check_cuda_error(status, "coot::cuda::get_val(): couldn't access device memory");
 
-  return val;
+  return from_cuda_type(val);
   }
 
 
@@ -49,8 +50,10 @@ set_val(dev_mem_t<eT> mem, const uword index, const eT in_val)
 
   // We'll just use cudaMemcpy() to copy over the single value.
 
+  typedef typename cuda_type<eT>::type ceT;
+  ceT cast_in_val = to_cuda_type(in_val);
   cudaError_t status = coot_wrapper(cudaMemcpy)((void*) (mem.cuda_mem_ptr + index),
-                                                (void*) &in_val,
+                                                (void*) &cast_in_val,
                                                 sizeof(eT),
                                                 cudaMemcpyHostToDevice);
 

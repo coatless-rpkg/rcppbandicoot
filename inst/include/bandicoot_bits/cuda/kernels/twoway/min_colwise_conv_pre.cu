@@ -25,10 +25,10 @@ COOT_FN(PREFIX,min_colwise_conv_pre)(eT2* dest,
   if(col < n_cols)
     {
     const eT1* colptr = &(src[col * src_M_n_rows]);
-    eT2 acc = (eT2) colptr[0];
+    eT2 acc = TO_ET2(colptr[0]);
     for (UWORD i = 1; i < n_rows; ++i)
       {
-      acc = min(acc, (eT2) (colptr[i]));
+      acc = min(acc, TO_ET2(colptr[i]));
       }
 
     dest[col * dest_mem_incr] = acc;

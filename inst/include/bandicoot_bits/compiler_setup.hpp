@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2008-2023 Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2008-2025 Conrad Sanderson (https://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,7 @@
 #undef coot_align_mem
 #undef coot_warn_unused
 #undef coot_deprecated
+#undef coot_frown
 #undef coot_malloc
 #undef coot_inline
 #undef coot_noinline
@@ -34,6 +35,7 @@
 #define coot_align_mem
 #define coot_warn_unused
 #define coot_deprecated
+#define coot_frown(msg)
 #define coot_malloc
 #define coot_inline            inline
 #define coot_noinline
@@ -130,10 +132,13 @@
   #undef  COOT_GCC_VERSION
   #define COOT_GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
-  #if (COOT_GCC_VERSION < 40800)
-    #error "*** newer compiler required; need gcc 4.8 or later ***"
+  #if (COOT_GCC_VERSION < 60100)
+    #error "*** newer compiler required; need gcc 6.1 or newer ***"
   #endif
-
+  
+  // gcc 6.1 has proper C++14 support and fixes an OpenMP related bug:
+  // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57580
+  
   #define COOT_GOOD_COMPILER
 
   #undef  coot_hot
@@ -142,6 +147,7 @@
   #undef  coot_align_mem
   #undef  coot_warn_unused
   #undef  coot_deprecated
+  #undef  coot_frown
   #undef  coot_malloc
   #undef  coot_inline
   #undef  coot_noinline
@@ -152,6 +158,7 @@
   #define coot_align_mem   __attribute__((__aligned__(16)))
   #define coot_warn_unused __attribute__((__warn_unused_result__))
   #define coot_deprecated  __attribute__((__deprecated__))
+  #define coot_frown(msg)  __attribute__((__deprecated__(msg)))
   #define coot_malloc      __attribute__((__malloc__))
   #define coot_inline      __attribute__((__always_inline__)) inline 
   #define coot_noinline    __attribute__((__noinline__))
@@ -193,7 +200,12 @@
     #undef  coot_deprecated
     #define coot_deprecated __attribute__((__deprecated__))
   #endif
-
+  
+  #if __has_attribute(__deprecated__)
+    #undef  coot_frown
+    #define coot_frown(msg) __attribute__((__deprecated__(msg)))
+  #endif
+  
   #if __has_attribute(__malloc__)
     #undef  coot_malloc
     #define coot_malloc __attribute__((__malloc__))
@@ -355,17 +367,6 @@
   #if (defined(_OPENMP) && (_OPENMP < 201107))
     #pragma message ("NOTE: your compiler has an outdated version of OpenMP")
     #pragma message ("NOTE: consider upgrading to a better compiler")
-  #endif
-#endif
-
-
-#if defined(COOT_USE_OPENMP)
-  #if (defined(COOT_GCC_VERSION) && (COOT_GCC_VERSION < 50400))
-    // due to https://gcc.gnu.org/bugzilla/show_bug.cgi?id=57580
-    #undef COOT_USE_OPENMP
-    #if !defined(COOT_DONT_PRINT_OPENMP_WARNING)
-      #pragma message ("WARNING: use of OpenMP disabled due to compiler bug in gcc <= 5.3")
-    #endif
   #endif
 #endif
 

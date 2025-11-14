@@ -49,14 +49,20 @@ clamp(dev_mem_t<eT2> dest,
   const uword dest_offset = dest_row_offset + dest_col_offset * dest_M_n_rows;
   const uword  src_offset =  src_row_offset +  src_col_offset * src_M_n_rows;
 
-  const eT2* dest_ptr = dest.cuda_mem_ptr + dest_offset;
-  const eT1*  src_ptr =  src.cuda_mem_ptr + src_offset;
+  typedef typename cuda_type<eT1>::type ceT1;
+  typedef typename cuda_type<eT2>::type ceT2;
+
+  const ceT2* dest_ptr = dest.cuda_mem_ptr + dest_offset;
+  const ceT1*  src_ptr =  src.cuda_mem_ptr + src_offset;
+
+  const ceT1 conv_min_val = to_cuda_type(min_val);
+  const ceT1 conv_max_val = to_cuda_type(max_val);
 
   const void* args[] = {
       &dest_ptr,
       &src_ptr,
-      (eT1*) &min_val,
-      (eT1*) &max_val,
+      (ceT1*) &min_val,
+      (ceT1*) &max_val,
       (uword*) &n_rows,
       (uword*) &n_cols,
       (uword*) &dest_M_n_rows,

@@ -17,10 +17,15 @@
 template<typename HeldType>
 struct kernels_t
   {
-  HeldType   u32_kernels;
-  HeldType   s32_kernels;
-  HeldType   u64_kernels;
-  HeldType   s64_kernels;
-  HeldType     f_kernels;
-  HeldType     d_kernels;
+  HeldType  u8_kernels;
+  HeldType  s8_kernels;
+  HeldType u16_kernels;
+  HeldType s16_kernels;
+  HeldType u32_kernels;
+  HeldType s32_kernels;
+  HeldType u64_kernels;
+  HeldType s64_kernels;
+  HeldType   h_kernels;
+  HeldType   f_kernels;
+  HeldType   d_kernels;
   };

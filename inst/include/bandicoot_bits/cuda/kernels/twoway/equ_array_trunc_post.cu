@@ -41,11 +41,11 @@ COOT_FN(PREFIX,equ_array_trunc_post)(eT2* dest,
     const eT1 val = src[src_index];
     if (coot_is_fp(val))
       {
-      dest[dest_index] = (eT2) trunc((fp_eT1) val);
+      dest[dest_index] = TO_ET2(trunc(TO_FP_ET1(val)));
       }
     else
       {
-      dest[dest_index] = (eT2) val;
+      dest[dest_index] = TO_ET2(val);
       }
     }
   }

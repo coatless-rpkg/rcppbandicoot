@@ -114,8 +114,11 @@ copy_mat(dev_mem_t<eT2> dest,
   const uword dest_offset = dest_row_offset + dest_col_offset * dest_M_n_rows;
   const uword  src_offset =  src_row_offset +  src_col_offset * src_M_n_rows;
 
-  const eT2* dest_ptr = dest.cuda_mem_ptr + dest_offset;
-  const eT1*  src_ptr =  src.cuda_mem_ptr + src_offset;
+  typedef typename cuda_type<eT1>::type ceT1;
+  typedef typename cuda_type<eT2>::type ceT2;
+
+  const ceT2* dest_ptr = dest.cuda_mem_ptr + dest_offset;
+  const ceT1*  src_ptr =  src.cuda_mem_ptr + src_offset;
 
   const void* args[] = {
       &dest_ptr,
@@ -172,8 +175,11 @@ copy_cube(dev_mem_t<eT2> dest,
   const uword dest_offset = dest_row_offset + dest_col_offset * dest_M_n_rows + dest_slice_offset * dest_M_n_rows * dest_M_n_cols;
   const uword  src_offset =  src_row_offset +  src_col_offset * src_M_n_rows  +  src_slice_offset * src_M_n_rows * src_M_n_cols;
 
-  const eT2* dest_ptr = dest.cuda_mem_ptr + dest_offset;
-  const eT1*  src_ptr =  src.cuda_mem_ptr + src_offset;
+  typedef typename cuda_type<eT1>::type ceT1;
+  typedef typename cuda_type<eT2>::type ceT2;
+
+  const ceT2* dest_ptr = dest.cuda_mem_ptr + dest_offset;
+  const ceT1*  src_ptr =  src.cuda_mem_ptr + src_offset;
 
   const void* args[] = {
       &dest_ptr,

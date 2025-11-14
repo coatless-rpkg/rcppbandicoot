@@ -35,7 +35,7 @@ any_vec(const dev_mem_t<eT1> mem, const uword n_elem, const eT2 val, const twowa
                                         "any_vec",
                                         k,
                                         k_small,
-                                        std::make_tuple(val),
+                                        std::make_tuple(to_cuda_type(val)),
                                         second_k,
                                         second_k_small,
                                         std::make_tuple(/* no extra args for second pass */));
@@ -64,7 +64,7 @@ any_vec(const dev_mem_t<eT> mem, const uword n_elem, const eT val, const oneway_
                                        "any_vec",
                                        k,
                                        k_small,
-                                       std::make_tuple(val),
+                                       std::make_tuple(to_cuda_type(val)),
                                        second_k,
                                        second_k_small,
                                        std::make_tuple(/* no extra args for second pass */));

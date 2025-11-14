@@ -37,12 +37,12 @@ struct special_cor_cov_unwrap : public no_conv_unwrap<T1>
 
   typedef typename no_conv_unwrap<T1>::stored_type::elem_type eT;
 
-  const uword         get_n_rows()                 const { return (use_local_mat) ? local_mat.n_rows            : no_conv_unwrap<T1>::M.n_rows;          }
-  const uword         get_n_cols()                 const { return (use_local_mat) ? local_mat.n_cols            : no_conv_unwrap<T1>::M.n_cols;          }
-  const dev_mem_t<eT> get_dev_mem(const bool sync) const { return (use_local_mat) ? local_mat.get_dev_mem(sync) : no_conv_unwrap<T1>::get_dev_mem(sync); }
-  const uword         get_row_offset()             const { return (use_local_mat) ? 0                           : no_conv_unwrap<T1>::get_row_offset();  }
-  const uword         get_col_offset()             const { return (use_local_mat) ? 0                           : no_conv_unwrap<T1>::get_col_offset();  }
-  const uword         get_M_n_rows()               const { return (use_local_mat) ? local_mat.n_rows            : no_conv_unwrap<T1>::get_M_n_rows();    }
+  uword         get_n_rows()                 const { return (use_local_mat) ? local_mat.n_rows            : no_conv_unwrap<T1>::M.n_rows;          }
+  uword         get_n_cols()                 const { return (use_local_mat) ? local_mat.n_cols            : no_conv_unwrap<T1>::M.n_cols;          }
+  dev_mem_t<eT> get_dev_mem(const bool sync) const { return (use_local_mat) ? local_mat.get_dev_mem(sync) : no_conv_unwrap<T1>::get_dev_mem(sync); }
+  uword         get_row_offset()             const { return (use_local_mat) ? 0                           : no_conv_unwrap<T1>::get_row_offset();  }
+  uword         get_col_offset()             const { return (use_local_mat) ? 0                           : no_conv_unwrap<T1>::get_col_offset();  }
+  uword         get_M_n_rows()               const { return (use_local_mat) ? local_mat.n_rows            : no_conv_unwrap<T1>::get_M_n_rows();    }
 
   const bool use_local_mat;
   const Mat<eT> local_mat;

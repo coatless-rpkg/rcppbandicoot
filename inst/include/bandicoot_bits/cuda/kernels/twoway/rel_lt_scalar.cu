@@ -22,7 +22,7 @@ COOT_FN(PREFIX,rel_lt_scalar)(UWORD* out,
   const UWORD i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < n_elem)
     {
-    const eT2 val1 = (eT2) X[i];
+    const eT2 val1 = TO_ET2(X[i]);
     out[i] = (val1 < val);
     }
   }

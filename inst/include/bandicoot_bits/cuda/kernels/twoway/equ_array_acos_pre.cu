@@ -38,7 +38,7 @@ COOT_FN(PREFIX,equ_array_acos_pre)(eT2* dest,
 
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
-    const fp_eT2 val = (fp_eT2) (eT2) src[src_index];
-    dest[dest_index] = (eT2) acos(val);
+    const fp_eT2 val = TO_FP_ET2(TO_ET2(src[src_index]));
+    dest[dest_index] = TO_ET2(acos(val));
     }
   }

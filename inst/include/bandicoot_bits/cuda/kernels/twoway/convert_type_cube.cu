@@ -37,6 +37,6 @@ COOT_FN(PREFIX,convert_type_cube)(eT2* dest,
     const UWORD dest_index = row + col * dest_M_n_rows + slice * dest_M_n_rows * dest_M_n_cols;
 
     const eT1 in_val = src[src_index];
-    dest[dest_index] = (eT2) (in_val);
+    dest[dest_index] = TO_ET2(in_val);
     }
   }

@@ -635,6 +635,16 @@ struct is_sword<sword>
 
 
 template<typename T1>
+struct is_fp16
+  { static constexpr bool value = false; };
+
+template<>
+struct is_fp16<fp16>
+  { static constexpr bool value = true; };
+
+
+
+template<typename T1>
 struct is_float
   { static constexpr bool value = false; };
 
@@ -657,6 +667,10 @@ struct is_double<double>
 template<typename T1>
 struct is_real
   { static constexpr bool value = false; };
+
+template<>
+struct is_real<fp16>
+  { static constexpr bool value = true; };
 
 template<>
 struct is_real<float>
@@ -778,6 +792,7 @@ struct is_supported_elem_type
     is_s64<T1>::value ||
     is_uword<T1>::value ||
     is_sword<T1>::value ||
+    is_fp16<T1>::value ||
     is_float<T1>::value ||
     is_double<T1>::value ||
     is_supported_complex_float<T1>::value ||
@@ -808,21 +823,6 @@ struct is_supported_real_blas_type
 
 
 
-template<typename T1>
-struct is_supported_kernel_elem_type
-  {
-  static constexpr bool value = \
-    is_u32<T1>::value ||
-    is_s32<T1>::value ||
-    is_u64<T1>::value ||
-    is_s64<T1>::value ||
-    is_uword<T1>::value ||
-    is_sword<T1>::value ||
-    is_float<T1>::value ||
-    is_double<T1>::value;
-  };
-
-
 template<typename T, bool is_integral>
 struct is_signed_helper
   {
@@ -838,7 +838,7 @@ struct is_signed_helper<T, true>
 template<typename T>
 struct is_signed
   {
-  static constexpr bool value = is_signed_helper<T, std::is_integral<T>::value>::value;
+  static constexpr bool value = is_signed_helper<T, !is_real<T>::value>::value;
   };
 
 
@@ -850,6 +850,7 @@ struct is_non_integral
   };
 
 
+template<> struct is_non_integral<              fp16    > { static constexpr bool value = true; };
 template<> struct is_non_integral<              float   > { static constexpr bool value = true; };
 template<> struct is_non_integral<              double  > { static constexpr bool value = true; };
 template<> struct is_non_integral< std::complex<float>  > { static constexpr bool value = true; };

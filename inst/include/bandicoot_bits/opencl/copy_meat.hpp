@@ -16,7 +16,12 @@
 
 template<typename eT>
 inline
-void
+typename
+enable_if2
+  <
+  is_same_type< eT, typename cl_type<eT>::type >::yes,
+  void
+  >::result
 copy_from_dev_mem(eT* dest,
                   const dev_mem_t<eT> src,
                   const uword n_rows,
@@ -55,7 +60,70 @@ copy_from_dev_mem(eT* dest,
 
 template<typename eT>
 inline
-void
+typename
+enable_if2
+  <
+  is_same_type< eT, typename cl_type<eT>::type >::no,
+  void
+  >::result
+copy_from_dev_mem(eT* dest,
+                  const dev_mem_t<eT> src,
+                  const uword n_rows,
+                  const uword n_cols,
+                  const uword src_row_offset,
+                  const uword src_col_offset,
+                  const uword src_M_n_rows)
+  {
+  coot_extra_debug_sigprint();
+
+  typedef typename cl_type<eT>::type ceT;
+  ceT* tmp_mem = cpu_memory::acquire<ceT>(n_rows * n_cols);
+
+  runtime_t::cq_guard guard;
+
+  const size_t buffer_origin[3] = { sizeof(ceT) * src_row_offset + src.cl_mem_ptr.offset, src_col_offset, 0 };
+  const size_t host_origin[3]   = { 0,                                                    0,              0 };
+  const size_t region[3]        = { sizeof(ceT) * n_rows,                                 n_cols,         1 };
+  // use a blocking call
+  const cl_int status = coot_wrapper(clEnqueueReadBufferRect)(get_rt().cl_rt.get_cq(),
+                                                              src.cl_mem_ptr.ptr,
+                                                              CL_TRUE,
+                                                              buffer_origin,
+                                                              host_origin,
+                                                              region,
+                                                              sizeof(ceT) * src_M_n_rows,
+                                                              0,
+                                                              sizeof(ceT) * n_rows,
+                                                              0,
+                                                              tmp_mem,
+                                                              0,
+                                                              NULL,
+                                                              NULL);
+
+  if (status == 0)
+    {
+    for (uword i = 0; i < n_rows * n_cols; ++i)
+      {
+      dest[i] = from_cl_type<eT, ceT>(tmp_mem[i]);
+      }
+    }
+
+  cpu_memory::release(tmp_mem);
+
+  coot_check_cl_error(status, "Mat::copy_from_dev_mem(): couldn't access device memory" );
+
+  }
+
+
+
+template<typename eT>
+inline
+typename
+enable_if2
+  <
+  is_same_type< eT, typename cl_type<eT>::type >::yes,
+  void
+  >::result
 copy_into_dev_mem(dev_mem_t<eT> dest, const eT* src, const uword N)
   {
   coot_extra_debug_sigprint();
@@ -63,9 +131,42 @@ copy_into_dev_mem(dev_mem_t<eT> dest, const eT* src, const uword N)
   runtime_t::cq_guard guard;
 
   // use a blocking call
-  cl_int status = coot_wrapper(clEnqueueWriteBuffer)(get_rt().cl_rt.get_cq(), dest.cl_mem_ptr.ptr, CL_TRUE, dest.cl_mem_ptr.offset, sizeof(eT)*N, src, 0, NULL, NULL);
+  cl_int status = coot_wrapper(clEnqueueWriteBuffer)(get_rt().cl_rt.get_cq(), dest.cl_mem_ptr.ptr, CL_TRUE, dest.cl_mem_ptr.offset, sizeof(eT) * N, src, 0, NULL, NULL);
 
-  coot_check_cl_error(status, "Mat::write_dev_mem(): couldn't access device memory" );
+  coot_check_cl_error(status, "Mat::write_dev_mem(): couldn't access device memory");
+  }
+
+
+
+// Tediously convert all host values to the correct device value.
+template<typename eT>
+inline
+typename
+enable_if2
+  <
+  is_same_type< eT, typename cl_type<eT>::type >::no,
+  void
+  >::result
+copy_into_dev_mem(dev_mem_t<eT> dest, const eT* src, const uword N)
+  {
+  coot_extra_debug_sigprint();
+
+  typedef typename cl_type<eT>::type ceT;
+  ceT* tmp_mem = cpu_memory::acquire<ceT>(N);
+
+  for (uword i = 0; i < N; ++i)
+    {
+    tmp_mem[i] = to_cl_type(src[i]);
+    }
+
+  runtime_t::cq_guard guard;
+
+  // use a blocking call
+  cl_int status = coot_wrapper(clEnqueueWriteBuffer)(get_rt().cl_rt.get_cq(), dest.cl_mem_ptr.ptr, CL_TRUE, dest.cl_mem_ptr.offset, sizeof(ceT) * N, tmp_mem, 0, NULL, NULL);
+
+  cpu_memory::release(tmp_mem);
+
+  coot_check_cl_error(status, "Mat::write_dev_mem(): couldn't access device memory");
   }
 
 

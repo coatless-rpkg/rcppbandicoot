@@ -45,11 +45,11 @@ find(dev_mem_t<uword>& out, uword& out_len, const dev_mem_t<eT> A, const uword n
   runtime_t::adapt_uword cl_A_offset(A.cl_mem_ptr.offset);
 
   cl_int status;
-  status  = coot_wrapper(clSetKernelArg)(nnz_k, 0, sizeof(cl_mem),                 &(A.cl_mem_ptr.ptr));
-  status |= coot_wrapper(clSetKernelArg)(nnz_k, 1, cl_A_offset.size,               cl_A_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(nnz_k, 2, sizeof(cl_mem),                 &(counts_mem.cl_mem_ptr.ptr));
-  status |= coot_wrapper(clSetKernelArg)(nnz_k, 3, cl_n_elem.size,                 cl_n_elem.addr);
-  status |= coot_wrapper(clSetKernelArg)(nnz_k, 4, sizeof(eT) * (num_threads + 1), NULL);
+  status  = coot_wrapper(clSetKernelArg)(nnz_k, 0, sizeof(cl_mem),                    &(A.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(nnz_k, 1, cl_A_offset.size,                  cl_A_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(nnz_k, 2, sizeof(cl_mem),                    &(counts_mem.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(nnz_k, 3, cl_n_elem.size,                    cl_n_elem.addr);
+  status |= coot_wrapper(clSetKernelArg)(nnz_k, 4, sizeof(uword) * (num_threads + 1), NULL);
 
   coot_check_cl_error(status, "coot::opencl::find(): could not set kernel arguments for count_nonzeros kernel");
 

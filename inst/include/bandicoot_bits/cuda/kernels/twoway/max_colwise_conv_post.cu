@@ -25,12 +25,12 @@ COOT_FN(PREFIX,max_colwise_conv_post)(eT2* dest,
   if(col < n_cols)
     {
     const eT1* colptr = &(src[col * src_M_n_rows]);
-    eT1 acc = (eT1) colptr[0];
+    eT1 acc = colptr[0];
     for (UWORD i = 1; i < n_rows; ++i)
       {
       acc = max(acc, colptr[i]);
       }
 
-    dest[col * dest_mem_incr] = (eT2) (acc);
+    dest[col * dest_mem_incr] = TO_ET2(acc);
     }
   }

@@ -50,13 +50,20 @@ eop_scalar(const twoway_kernel_id::enum_id num,
   const uword dest_offset = dest_row_offset + dest_col_offset * dest_M_n_rows + dest_slice_offset * dest_M_n_rows * dest_M_n_cols;
   const uword src_offset  =  src_row_offset +  src_col_offset * src_M_n_rows  +  src_slice_offset * src_M_n_rows * src_M_n_cols;
 
-  const eT1* src_ptr  =  src.cuda_mem_ptr + src_offset;
-  const eT2* dest_ptr = dest.cuda_mem_ptr + dest_offset;
+  typedef typename cuda_type<eT1>::type ceT1;
+  typedef typename cuda_type<eT2>::type ceT2;
+
+  const ceT1* src_ptr  =  src.cuda_mem_ptr + src_offset;
+  const ceT2* dest_ptr = dest.cuda_mem_ptr + dest_offset;
+
+  const ceT1 cuda_aux_val_pre = to_cuda_type(aux_val_pre);
+  const ceT2 cuda_aux_val_post = to_cuda_type(aux_val_post);
+
   const void* args[] = {
       &dest_ptr,
       &src_ptr,
-      &aux_val_pre,
-      &aux_val_post,
+      &cuda_aux_val_pre,
+      &cuda_aux_val_post,
       (uword*) &n_rows,
       (uword*) &n_cols,
       (uword*) &n_slices,
@@ -114,9 +121,13 @@ eop_mat(const threeway_kernel_id::enum_id num,
   const uword src_B_offset = src_B_row_offset + src_B_col_offset * src_B_M_n_rows;
   const uword dest_offset  =  dest_row_offset +  dest_col_offset * dest_M_n_rows;
 
-  const eT1* src_A_ptr = src_A.cuda_mem_ptr + src_A_offset;
-  const eT2* src_B_ptr = src_B.cuda_mem_ptr + src_B_offset;
-  const eT3* dest_ptr  =  dest.cuda_mem_ptr + dest_offset;
+  typedef typename cuda_type<eT1>::type ceT1;
+  typedef typename cuda_type<eT2>::type ceT2;
+  typedef typename cuda_type<eT3>::type ceT3;
+
+  const ceT1* src_A_ptr = src_A.cuda_mem_ptr + src_A_offset;
+  const ceT2* src_B_ptr = src_B.cuda_mem_ptr + src_B_offset;
+  const ceT3* dest_ptr  =  dest.cuda_mem_ptr + dest_offset;
 
   const void* args[] = {
       &dest_ptr,
@@ -184,9 +195,12 @@ eop_cube(const twoway_kernel_id::enum_id num,
   const uword src_B_offset = src_B_row_offset + src_B_col_offset * src_B_M_n_rows + src_B_slice_offset * src_B_M_n_rows * src_B_M_n_cols;
   const uword dest_offset  =  dest_row_offset +  dest_col_offset * dest_M_n_rows  +  dest_slice_offset * dest_M_n_rows * dest_M_n_cols;
 
-  const eT2* src_A_ptr = src_A.cuda_mem_ptr + src_A_offset;
-  const eT1* src_B_ptr = src_B.cuda_mem_ptr + src_B_offset;
-  const eT2* dest_ptr  =  dest.cuda_mem_ptr + dest_offset;
+  typedef typename cuda_type<eT1>::type ceT1;
+  typedef typename cuda_type<eT2>::type ceT2;
+
+  const ceT2* src_A_ptr = src_A.cuda_mem_ptr + src_A_offset;
+  const ceT1* src_B_ptr = src_B.cuda_mem_ptr + src_B_offset;
+  const ceT2* dest_ptr  =  dest.cuda_mem_ptr + dest_offset;
 
   const void* args[] = {
       &dest_ptr,

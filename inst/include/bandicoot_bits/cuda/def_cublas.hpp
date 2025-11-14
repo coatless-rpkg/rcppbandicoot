@@ -66,6 +66,21 @@ extern "C"
 
 
 
+  extern cublasStatus_t coot_wrapper(cublasHgemv)(cublasHandle_t handle,
+                                                  cublasOperation_t trans,
+                                                  int m,
+                                                  int n,
+                                                  const __half* alpha,
+                                                  const __half* A,
+                                                  int lda,
+                                                  const __half* x,
+                                                  int incx,
+                                                  const __half* beta,
+                                                  __half* y,
+                                                  int incy);
+
+
+
   //
   // matrix-matrix multiplications
   //
@@ -102,6 +117,23 @@ extern "C"
                                                   int ldb,
                                                   const double* beta,
                                                   double* C,
+                                                  int ldc);
+
+
+
+  extern cublasStatus_t coot_wrapper(cublasHgemm)(cublasHandle_t handle,
+                                                  cublasOperation_t transa,
+                                                  cublasOperation_t transb,
+                                                  int m,
+                                                  int n,
+                                                  int k,
+                                                  const __half* alpha,
+                                                  const __half* A,
+                                                  int lda,
+                                                  const __half* B,
+                                                  int ldb,
+                                                  const __half* beta,
+                                                  __half* C,
                                                   int ldc);
 
 

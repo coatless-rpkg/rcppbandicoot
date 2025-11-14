@@ -99,7 +99,7 @@ unpack_args
   {
   inline static void apply(const void** args, const std::tuple<Args...>& args_tuple)
     {
-    args[offset + i] = &std::get<i - 1>(args_tuple);
+    args[offset + i - 1] = &std::get<i - 1>(args_tuple);
     unpack_args<i - 1, offset, Args...>::apply(args, args_tuple);
     }
   };

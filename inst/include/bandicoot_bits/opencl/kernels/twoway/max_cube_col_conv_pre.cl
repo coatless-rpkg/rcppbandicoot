@@ -28,7 +28,9 @@ COOT_FN(PREFIX,max_cube_col_conv_pre)(__global eT2* dest,
   if(row < n_rows && slice < n_slices)
     {
     eT2 acc = (eT2) src[src_offset + row + slice * n_rows * n_cols];
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for(UWORD i=1; i < n_cols; ++i)
       {
       acc = max(acc, (eT2) (src[src_offset + (i * n_rows) + row + slice * n_rows * n_cols]));

@@ -22,7 +22,7 @@ COOT_FN(PREFIX,radix_sort_index_descending)(eT1* A,
                                             UWORD* tmp_mem_index,
                                             const UWORD n_elem)
   {
-  uint_eT1* aux_mem = (uint_eT1*) aux_shared_mem;
+  UWORD* aux_mem = (UWORD*) aux_shared_mem;
 
   const UWORD tid = threadIdx.x;
 
@@ -54,7 +54,7 @@ COOT_FN(PREFIX,radix_sort_index_descending)(eT1* A,
   UWORD* sorted_index_memptr = tmp_mem_index;
 
   // If the type is unsigned, all the work will be done the same way.
-  const UWORD max_bit = coot_is_signed((eT1) 0) ? 8 * sizeof(eT1) - 1 : 8 * sizeof(eT1);
+  const UWORD max_bit = coot_is_signed(TO_ET1(0)) ? 8 * sizeof(eT1) - 1 : 8 * sizeof(eT1);
 
   for (UWORD b = 0; b < max_bit; ++b)
     {
@@ -120,7 +120,7 @@ COOT_FN(PREFIX,radix_sort_index_descending)(eT1* A,
         {
         const UWORD ai = offset * (2 * tid + 1) - 1;
         const UWORD bi = offset * (2 * tid + 2) - 1;
-        uint_eT1 tmp = aux_mem[ai];
+        UWORD tmp = aux_mem[ai];
         aux_mem[ai] = aux_mem[bi];
         aux_mem[bi] += tmp;
         }
@@ -168,7 +168,7 @@ COOT_FN(PREFIX,radix_sort_index_descending)(eT1* A,
     }
 
   // If the type is integral, we're now done---we don't have to handle a sign bit differently.
-  if (!coot_is_signed((eT1) 0))
+  if (!coot_is_signed(TO_ET1(0)))
     {
     return;
     }
@@ -230,7 +230,7 @@ COOT_FN(PREFIX,radix_sort_index_descending)(eT1* A,
       {
       const UWORD ai = offset * (2 * tid + 1) - 1;
       const UWORD bi = offset * (2 * tid + 2) - 1;
-      uint_eT1 tmp = aux_mem[ai];
+      UWORD tmp = aux_mem[ai];
       aux_mem[ai] = aux_mem[bi];
       aux_mem[bi] += tmp;
       }
@@ -239,7 +239,7 @@ COOT_FN(PREFIX,radix_sort_index_descending)(eT1* A,
 
   // Step 3: move points into the correct place.
   // This is different for integral and floating point types.
-  if (coot_is_fp((eT1) 0))
+  if (coot_is_fp(TO_ET1(0)))
     {
     // Floating point implementation:
     // For negative values, we already have things sorted in reverse order, so we need to reverse that in our final swap pass.

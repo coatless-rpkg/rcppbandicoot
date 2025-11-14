@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// 
+//
 // Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,5 +32,12 @@ template<typename eT>
 union dev_mem_t
   {
   coot_cl_mem cl_mem_ptr;
-  eT* cuda_mem_ptr;
+  typename cuda_type<eT>::type* cuda_mem_ptr;
+
+  // Manual overloading when we set a CUDA pointer: ensure the last bytes of dev_mem_t are 0 so that comparisons work.
+  dev_mem_t& operator=(const eT* cuda_other_mem)
+    {
+    cl_mem_ptr.offset = 0;
+    cuda_mem_ptr = cuda_other_mem;
+    }
   };

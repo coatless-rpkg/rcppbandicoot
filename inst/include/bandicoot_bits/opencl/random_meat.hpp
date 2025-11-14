@@ -87,7 +87,8 @@ fill_randu(dev_mem_t<eT> dest, const uword n)
   // For integral types, truncate to [0, 1] just like Armadillo.
 
   // Get the kernel and set up to run it.
-  cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::inplace_xorwow_randu);
+  cl_kernel kernel = (sizeof(eT) > 4) ? get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::inplace_xorwow64_randu)
+                                      : get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::inplace_xorwow32_randu);
 
   runtime_t::cq_guard guard;
   runtime_t::adapt_uword n_cl(n);
@@ -136,7 +137,7 @@ fill_randn(dev_mem_t<eT> dest, const uword n, const double mu, const double sd)
 
   coot_cl_mem philox_state = get_rt().cl_rt.get_philox_state();
 
-  typedef typename promote_type<eT, float>::result fp_eT1;
+  typedef typename cl_type<typename promote_type<eT, float>::result>::type fp_eT1;
   fp_eT1 cl_mu(mu);
   fp_eT1 cl_sd(sd);
 
@@ -169,7 +170,8 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi)
   if (n == 0) { return; }
 
   // Get the kernel and set up to run it.
-  cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::inplace_xorwow_randi);
+  cl_kernel kernel = (sizeof(eT) > 4) ? get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::inplace_xorwow64_randi)
+                                      : get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::inplace_xorwow32_randi);
 
   runtime_t::cq_guard guard;
   runtime_t::adapt_uword n_cl(n);
@@ -181,9 +183,9 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi)
 
   typedef typename uint_type<eT>::result uint_eT;
   uint_eT range;
-  if (std::is_same<uint_eT, u32>::value)
+  if (is_same_type<uint_eT, u32>::yes)
     {
-    uint_eT bounded_hi = (std::is_floating_point<eT>::value) ? hi : std::min((u32) hi, (u32) std::numeric_limits<eT>::max());
+    uint_eT bounded_hi = (is_real<eT>::value) ? hi : std::min((u32) hi, (u32) Datum<eT>::max);
     range = (bounded_hi - lo);
     }
   else
@@ -191,14 +193,16 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi)
     range = (hi - lo);
     }
   // OpenCL kernels cannot use `bool` arguments.
-  char needs_modulo = (range != std::numeric_limits<uint_eT>::max());
-  eT cl_lo = eT(lo);
+  char needs_modulo = (range != Datum<uint_eT>::max);
+
+  typedef typename cl_type<eT>::type ceT;
+  ceT cl_lo = to_cl_type(eT(lo));
 
   status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),  &(dest.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(kernel, 1, mem_offset.size, mem_offset.addr       );
   status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),  &(xorwow_state.ptr)   );
   status |= coot_wrapper(clSetKernelArg)(kernel, 3, n_cl.size,       n_cl.addr             );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(eT),      &cl_lo                );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(ceT),     &cl_lo                );
   status |= coot_wrapper(clSetKernelArg)(kernel, 5, sizeof(uint_eT), &range                );
   status |= coot_wrapper(clSetKernelArg)(kernel, 6, sizeof(char),    &needs_modulo         );
 

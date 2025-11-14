@@ -28,7 +28,9 @@ COOT_FN(PREFIX,index_max_rowwise)(__global UWORD* dest,
     {
     eT1 best_val = src[src_offset + row];
     UWORD best_index = 0;
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for(UWORD i=1; i < n_cols; ++i)
       {
       if (src[src_offset + (i * src_M_n_rows) + row] > best_val)

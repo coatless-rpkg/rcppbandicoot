@@ -30,6 +30,6 @@ COOT_FN(PREFIX,htrans)(__global eT2* out,
   if( (row < in_n_rows) && (col < in_n_cols) )
     {
     const eT2 element = (eT2) in[in_total_offset];
-    out[out_total_offset] = COOT_FN(conj_,eT2)(element);
+    out[out_total_offset] = COOT_FN(coot_conj_,eT2)(element);
     }
   }

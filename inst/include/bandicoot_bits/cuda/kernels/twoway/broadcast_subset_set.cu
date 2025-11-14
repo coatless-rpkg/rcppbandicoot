@@ -41,6 +41,6 @@ COOT_FN(PREFIX,broadcast_subset_set)(eT2* out,
         out_col * out_M_n_rows + indices[out_row * indices_incr];
     const UWORD  in_loc = in_col * in_M_n_rows + in_row;
 
-    out[out_loc] = ((eT2) in[in_loc]);
+    out[out_loc] = (TO_ET2(in[in_loc]));
     }
   }

@@ -23,6 +23,6 @@ COOT_FN(PREFIX,logspace)(eT1* out_mem,
   UWORD idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx < num)
     {
-    out_mem[idx * mem_incr] = (eT1) pow((fp_eT1) 10, (fp_eT1) (start + step * idx));
+    out_mem[idx * mem_incr] = TO_ET1(pow(TO_FP_ET1(10), TO_FP_ET1(start + step * (TO_ET1(idx)))));
     }
   }

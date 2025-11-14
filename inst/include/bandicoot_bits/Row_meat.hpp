@@ -149,7 +149,7 @@ Row<eT>::Row(cl_mem aux_dev_mem, const uword N)
 
 template<typename eT>
 inline
-Row<eT>::Row(eT* aux_dev_mem, const uword N)
+Row<eT>::Row(typename cuda_type<eT>::type* aux_dev_mem, const uword N)
   : Mat<eT>(aux_dev_mem, 1, N)
   {
   coot_extra_debug_sigprint();

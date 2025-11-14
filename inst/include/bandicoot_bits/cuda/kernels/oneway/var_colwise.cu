@@ -29,13 +29,13 @@ COOT_FN(PREFIX,var_colwise)(eT1* dest,
     {
     const eT1* colptr = &(src[col * src_M_n_rows]);
     const eT1 mean_val = src_means[col * src_means_mem_incr];
-    eT1 acc = (eT1) (0);
+    eT1 acc = TO_ET1(0);
     for (UWORD i = 0; i < n_rows; ++i)
       {
       eT1 val = (colptr[i] - mean_val);
       acc += (val * val);
       }
 
-    dest[col * dest_mem_incr] = (acc / (eT1) (n_rows - norm_correction));
+    dest[col * dest_mem_incr] = (acc / TO_ET1(n_rows - norm_correction));
     }
   }

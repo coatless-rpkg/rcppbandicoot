@@ -25,10 +25,10 @@ COOT_FN(PREFIX,max_cube_col_conv_pre)(eT2* dest,
 
   if(row < n_rows && slice < n_slices)
     {
-    eT2 acc = (eT2) src[row + slice * n_rows * n_cols];
+    eT2 acc = TO_ET2(src[row + slice * n_rows * n_cols]);
     for (UWORD i = 1; i < n_cols; ++i)
       {
-      acc = max(acc, (eT2) (src[(i * n_rows) + row + slice * n_rows * n_cols]));
+      acc = max(acc, TO_ET2(src[(i * n_rows) + row + slice * n_rows * n_cols]));
       }
 
     dest[row + slice * n_rows] = acc;

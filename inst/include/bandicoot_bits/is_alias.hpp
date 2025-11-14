@@ -21,7 +21,7 @@ template<typename T1>
 struct alias_details
   {
   static coot_inline dev_mem_t<typename T1::elem_type> get_dev_mem(const T1& M) { return M.get_dev_mem(false); }
-  static constexpr   uword                             get_offset(const T1& M)  { return 0; }
+  static constexpr   uword                             get_offset(const T1&)    { return 0; }
   static coot_inline uword                             get_n_elem(const T1& M)  { return M.n_elem; }
   };
 
@@ -33,6 +33,26 @@ struct alias_details< subview<eT> >
   static coot_inline dev_mem_t<eT>                     get_dev_mem(const subview<eT>& M) { return M.m.get_dev_mem(false); }
   static coot_inline uword                             get_offset(const subview<eT>& M)  { return M.aux_row1 + M.aux_col1 * M.m.n_rows; }
   static coot_inline uword                             get_n_elem(const subview<eT>& M)  { return M.n_rows + M.n_cols * M.m.n_rows; }
+  };
+
+
+
+template<typename eT>
+struct alias_details< subview_col<eT> >
+  {
+  static coot_inline dev_mem_t<eT>                     get_dev_mem(const subview_col<eT>& M) { return M.m.get_dev_mem(false); }
+  static coot_inline uword                             get_offset(const subview_col<eT>& M)  { return M.aux_row1 + M.aux_col1 * M.m.n_rows; }
+  static coot_inline uword                             get_n_elem(const subview_col<eT>& M)  { return M.n_rows + M.n_cols * M.m.n_rows; }
+  };
+
+
+
+template<typename eT>
+struct alias_details< subview_row<eT> >
+  {
+  static coot_inline dev_mem_t<eT>                     get_dev_mem(const subview_row<eT>& M) { return M.m.get_dev_mem(false); }
+  static coot_inline uword                             get_offset(const subview_row<eT>& M)  { return M.aux_row1 + M.aux_col1 * M.m.n_rows; }
+  static coot_inline uword                             get_n_elem(const subview_row<eT>& M)  { return M.n_rows + M.n_cols * M.m.n_rows; }
   };
 
 

@@ -124,7 +124,7 @@ median_vec(dev_mem_t<eT> in, const uword n_elem)
     // Even number of elements: average the two middle elements.
     eT val1 = get_val(in, middle_element - 1);
     eT val2 = get_val(in, middle_element);
-    return (val1 + val2) / 2;
+    return (val1 + val2) / eT(2);
     }
   else
     {

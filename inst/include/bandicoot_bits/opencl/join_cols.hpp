@@ -58,11 +58,13 @@ join_cols(dev_mem_t<eT> out,
   const size_t C_offset   = C_row_offset + C.cl_mem_ptr.offset;
   const size_t D_offset   = D_row_offset + D.cl_mem_ptr.offset;
 
+  typedef typename cl_type<eT>::type ceT;
+
   if (A_n_rows > 0 && A_n_cols > 0)
     {
-    const size_t out_origin[3] = { sizeof(eT) * out_offset, out_col_offset, 0 };
-    const size_t A_origin[3]   = { sizeof(eT) * A_offset,   A_col_offset,   0 };
-    const size_t region[3]     = { A_n_rows * sizeof(eT),   A_n_cols,       1 };
+    const size_t out_origin[3] = { sizeof(ceT) * out_offset, out_col_offset, 0 };
+    const size_t A_origin[3]   = { sizeof(ceT) * A_offset,   A_col_offset,   0 };
+    const size_t region[3]     = { A_n_rows * sizeof(ceT),   A_n_cols,       1 };
 
     status = coot_wrapper(clEnqueueCopyBufferRect)(get_rt().cl_rt.get_cq(),
                                                    A.cl_mem_ptr.ptr,
@@ -70,9 +72,9 @@ join_cols(dev_mem_t<eT> out,
                                                    A_origin,
                                                    out_origin,
                                                    region,
-                                                   A_M_n_rows * sizeof(eT),
+                                                   A_M_n_rows * sizeof(ceT),
                                                    0,
-                                                   out_M_n_rows * sizeof(eT),
+                                                   out_M_n_rows * sizeof(ceT),
                                                    0,
                                                    0,
                                                    NULL,
@@ -82,9 +84,9 @@ join_cols(dev_mem_t<eT> out,
 
   if (B_n_rows > 0 && B_n_cols > 0)
     {
-    const size_t out_origin[3] = { sizeof(eT) * (A_n_rows + out_offset), out_col_offset, 0 };
-    const size_t B_origin[3]   = { sizeof(eT) * B_offset,                B_col_offset,   0 };
-    const size_t region[3]     = { B_n_rows * sizeof(eT),                B_n_cols,       1 };
+    const size_t out_origin[3] = { sizeof(ceT) * (A_n_rows + out_offset), out_col_offset, 0 };
+    const size_t B_origin[3]   = { sizeof(ceT) * B_offset,                B_col_offset,   0 };
+    const size_t region[3]     = { B_n_rows * sizeof(ceT),                B_n_cols,       1 };
 
     status = coot_wrapper(clEnqueueCopyBufferRect)(get_rt().cl_rt.get_cq(),
                                                    B.cl_mem_ptr.ptr,
@@ -92,9 +94,9 @@ join_cols(dev_mem_t<eT> out,
                                                    B_origin,
                                                    out_origin,
                                                    region,
-                                                   B_M_n_rows * sizeof(eT),
+                                                   B_M_n_rows * sizeof(ceT),
                                                    0,
-                                                   out_M_n_rows * sizeof(eT),
+                                                   out_M_n_rows * sizeof(ceT),
                                                    0,
                                                    0,
                                                    NULL,
@@ -104,9 +106,9 @@ join_cols(dev_mem_t<eT> out,
 
   if (C_n_rows > 0 && C_n_cols > 0)
     {
-    const size_t out_origin[3] = { sizeof(eT) * (A_n_rows + B_n_rows + out_offset), out_col_offset, 0 };
-    const size_t C_origin[3]   = { sizeof(eT) * C_offset,                           C_col_offset,   0 };
-    const size_t region[3]     = { C_n_rows * sizeof(eT),                           C_n_cols,       1 };
+    const size_t out_origin[3] = { sizeof(ceT) * (A_n_rows + B_n_rows + out_offset), out_col_offset, 0 };
+    const size_t C_origin[3]   = { sizeof(ceT) * C_offset,                           C_col_offset,   0 };
+    const size_t region[3]     = { C_n_rows * sizeof(ceT),                           C_n_cols,       1 };
 
     status = coot_wrapper(clEnqueueCopyBufferRect)(get_rt().cl_rt.get_cq(),
                                                    C.cl_mem_ptr.ptr,
@@ -114,9 +116,9 @@ join_cols(dev_mem_t<eT> out,
                                                    C_origin,
                                                    out_origin,
                                                    region,
-                                                   C_M_n_rows * sizeof(eT),
+                                                   C_M_n_rows * sizeof(ceT),
                                                    0,
-                                                   out_M_n_rows * sizeof(eT),
+                                                   out_M_n_rows * sizeof(ceT),
                                                    0,
                                                    0,
                                                    NULL,
@@ -126,9 +128,9 @@ join_cols(dev_mem_t<eT> out,
 
   if (D_n_rows > 0 && D_n_cols > 0)
     {
-    const size_t out_origin[3] = { sizeof(eT) * (A_n_rows + B_n_rows + C_n_rows + out_offset), out_col_offset, 0 };
-    const size_t D_origin[3]   = { sizeof(eT) * D_offset,                                      D_col_offset,   0 };
-    const size_t region[3]     = { D_n_rows * sizeof(eT),                                      D_n_cols,       1 };
+    const size_t out_origin[3] = { sizeof(ceT) * (A_n_rows + B_n_rows + C_n_rows + out_offset), out_col_offset, 0 };
+    const size_t D_origin[3]   = { sizeof(ceT) * D_offset,                                      D_col_offset,   0 };
+    const size_t region[3]     = { D_n_rows * sizeof(ceT),                                      D_n_cols,       1 };
 
     status = coot_wrapper(clEnqueueCopyBufferRect)(get_rt().cl_rt.get_cq(),
                                                    D.cl_mem_ptr.ptr,
@@ -136,9 +138,9 @@ join_cols(dev_mem_t<eT> out,
                                                    D_origin,
                                                    out_origin,
                                                    region,
-                                                   D_M_n_rows * sizeof(eT),
+                                                   D_M_n_rows * sizeof(ceT),
                                                    0,
-                                                   out_M_n_rows * sizeof(eT),
+                                                   out_M_n_rows * sizeof(ceT),
                                                    0,
                                                    0,
                                                    NULL,
