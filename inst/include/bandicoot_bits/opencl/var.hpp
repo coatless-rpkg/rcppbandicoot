@@ -103,7 +103,7 @@ var_vec(const dev_mem_t<eT> mem, const eT mean, const uword n_elem, const uword 
                                            "var_vec",
                                            k,
                                            k_small,
-                                           std::make_tuple(mean),
+                                           std::make_tuple(to_cl_type(mean)),
                                            accu_k,
                                            accu_k_small,
                                            std::make_tuple(/* no extra args for second and later passes */));
@@ -134,7 +134,7 @@ var_vec_subview(const dev_mem_t<eT> mem, const eT mean, const uword M_n_rows, co
                                            "var_vec_subview",
                                            k,
                                            k_small,
-                                           std::make_tuple(mean, M_n_rows, aux_row1, aux_col1, n_rows, n_cols),
+                                           std::make_tuple(to_cl_type(mean), M_n_rows, aux_row1, aux_col1, n_rows, n_cols),
                                            accu_k,
                                            accu_k_small,
                                            std::make_tuple(/* no extra args for second and later passes */));

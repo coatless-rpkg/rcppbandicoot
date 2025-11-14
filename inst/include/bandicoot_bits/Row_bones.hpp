@@ -41,9 +41,9 @@ class Row : public Mat<eT>
   template<typename fill_type> inline Row(const uword in_rows, const uword in_cols, const fill::fill_class<fill_type>& f);
   template<typename fill_type> inline Row(const SizeMat& s,                         const fill::fill_class<fill_type>& f);
 
-  inline Row(dev_mem_t<eT> aux_dev_mem, const uword N);
-  inline Row(cl_mem        aux_dev_mem, const uword N);
-  inline Row(eT*           aux_dev_mem, const uword N);
+  inline Row(dev_mem_t<eT>                 aux_dev_mem, const uword N);
+  inline Row(cl_mem                        aux_dev_mem, const uword N);
+  inline Row(typename cuda_type<eT>::type* aux_dev_mem, const uword N);
 
   inline                  Row(const Row& X);
   inline const Row& operator=(const Row& X);

@@ -157,7 +157,7 @@ op_pinv::apply_direct_diag(Mat<eT>& out, const Mat<eT>& in, const eT tol)
   if (tol == (eT) 0)
     {
     const eT max_val = coot_rt_t::max_vec(abs_in.get_dev_mem(false), abs_in.n_elem);
-    tol_use = abs_in.n_elem * max_val * std::numeric_limits<eT>::epsilon();
+    tol_use = abs_in.n_elem * max_val * Datum<eT>::eps;
     }
 
   Mat<uword> tol_indicator(in.n_rows, in.n_cols);
@@ -169,7 +169,11 @@ op_pinv::apply_direct_diag(Mat<eT>& out, const Mat<eT>& in, const eT tol)
                       out_vec.n_rows, out_vec.n_cols,
                       0, 0, out_vec.n_rows,
                       0, 0, in.n_rows);
-  coot_rt_t::replace(out_vec.get_dev_mem(false), out_vec.n_elem, (eT) 0.0, (eT) 1.0);
+  coot_rt_t::replace(out_vec.get_dev_mem(false), out_vec.get_dev_mem(false),
+                     (eT) 0.0, (eT) 1.0,
+                     out_vec.n_rows, out_vec.n_cols, 1,
+                     0, 0, 0, out_vec.n_rows, out_vec.n_cols,
+                     0, 0, 0, out_vec.n_rows, out_vec.n_cols);
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
                         out_vec.get_dev_mem(false), out_vec.get_dev_mem(false),
                         (eT) 0, (eT) 1,
@@ -240,7 +244,7 @@ op_pinv::apply_direct_diag(Mat<eT2>& out, const Mat<eT1>& in, const eT1 tol, con
   if (tol == (eT1) 0)
     {
     const eT1 max_val = coot_rt_t::max_vec(abs_in.get_dev_mem(false), abs_in.n_elem);
-    tol_use = abs_in.n_elem * max_val * std::numeric_limits<eT1>::epsilon();
+    tol_use = abs_in.n_elem * max_val * Datum<eT1>::eps;
     }
 
   Mat<uword> tol_indicator(in.n_rows, in.n_cols);
@@ -252,7 +256,11 @@ op_pinv::apply_direct_diag(Mat<eT2>& out, const Mat<eT1>& in, const eT1 tol, con
                       out_vec.n_rows, out_vec.n_cols,
                       0, 0, out_vec.n_rows,
                       0, 0, in.n_rows);
-  coot_rt_t::replace(out_vec.get_dev_mem(false), out_vec.n_elem, (eT1) 0.0, (eT1) 1.0);
+  coot_rt_t::replace(out_vec.get_dev_mem(false), out_vec.get_dev_mem(false),
+                     (eT1) 0.0, (eT1) 1.0,
+                     out_vec.n_rows, out_vec.n_cols, 1,
+                     0, 0, 0, out_vec.n_rows, out_vec.n_cols,
+                     0, 0, 0, out_vec.n_rows, out_vec.n_cols);
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
                         out_vec.get_dev_mem(false), out_vec.get_dev_mem(false),
                         (eT1) 0, (eT1) 1,
@@ -322,7 +330,7 @@ op_pinv::apply_direct_sym(Mat<eT>& out, Mat<eT>& in, const eT tol)
   //
   // Step 2. keep all eigenvalues greater than the tolerance.
   //
-  const eT tol_use = (tol == eT(0)) ? in.n_rows * abs_eigvals[0] * std::numeric_limits<eT>::epsilon() : tol;
+  const eT tol_use = (tol == eT(0)) ? in.n_rows * abs_eigvals[0] * Datum<eT>::eps : tol;
 
   Col<uword> tol_indicators(eigval_order.n_elem);
   coot_rt_t::relational_scalar_op(tol_indicators.get_dev_mem(false), abs_eigvals.get_dev_mem(false), eigval_order.n_elem, tol_use, twoway_kernel_id::rel_gteq_scalar, "pinv()");
@@ -342,7 +350,11 @@ op_pinv::apply_direct_sym(Mat<eT>& out, Mat<eT>& in, const eT tol)
   //
   // 3. Invert the eigenvalues we kept.
   //
-  coot_rt_t::replace(filtered_eigvals.get_dev_mem(false), num_eigvals, (eT) 0, (eT) 1); // avoid divergence
+  coot_rt_t::replace(filtered_eigvals.get_dev_mem(false), filtered_eigvals.get_dev_mem(false),
+                     (eT) 0, (eT) 1,
+                     num_eigvals, 1, 1,
+                     0, 0, 0, num_eigvals, 1,
+                     0, 0, 0, num_eigvals, 1); // avoid divergence
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
                         filtered_eigvals.get_dev_mem(false), filtered_eigvals.get_dev_mem(false),
                         (eT) 0, (eT) 1,
@@ -448,7 +460,7 @@ op_pinv::apply_direct_gen(Mat<eT>& out, Mat<eT>& in, const eT tol)
   // 2. Compute tolerance.  Note that the singular values are returned in descending order already.
   //
   const eT largest_sv = S[0];
-  const eT tol_use = (tol == eT(0)) ? in_use.n_rows * largest_sv * std::numeric_limits<eT>::epsilon() : tol;
+  const eT tol_use = (tol == eT(0)) ? in_use.n_rows * largest_sv * Datum<eT>::eps : tol;
 
   //
   // 3. Keep singular values that are greater than the tolerance.
@@ -483,7 +495,11 @@ op_pinv::apply_direct_gen(Mat<eT>& out, Mat<eT>& in, const eT tol)
   //
   // 4. Invert singular values.
   //
-  coot_rt_t::replace(filtered_S.get_dev_mem(false), num_svs, (eT) 0, (eT) 1); // avoid divergence
+  coot_rt_t::replace(filtered_S.get_dev_mem(false), filtered_S.get_dev_mem(false),
+                     (eT) 0, (eT) 1,
+                     num_svs, 1, 1,
+                     0, 0, 0, num_svs, 1,
+                     0, 0, 0, num_svs, 1); // avoid divergence
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
                         filtered_S.get_dev_mem(false), filtered_S.get_dev_mem(false),
                         (eT) 0, (eT) 1,

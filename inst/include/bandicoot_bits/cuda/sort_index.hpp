@@ -60,7 +60,7 @@ sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const 
     kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_index_descending);
     }
 
-  const size_t aux_mem_size = (stable_sort == 0) ? 2 * pow2_num_threads * sizeof(eT) : 4 * pow2_num_threads * sizeof(eT);
+  const size_t aux_mem_size = (stable_sort == 0) ? 2 * pow2_num_threads * sizeof(uword) : 4 * pow2_num_threads * sizeof(uword);
 
   const void* args[] = {
       &(A.cuda_mem_ptr),

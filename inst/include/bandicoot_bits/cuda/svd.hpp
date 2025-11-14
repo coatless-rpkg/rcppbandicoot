@@ -26,6 +26,35 @@ svd_cleanup(char* device_buffer, char* host_buffer, int* dev_info)
 
 
 
+template<typename eT>
+inline
+typename enable_if2<
+  !is_double<eT>::value && !is_float<eT>::value,
+  std::tuple<bool, std::string>
+>::result
+svd(dev_mem_t<eT> U,
+    dev_mem_t<eT> S,
+    dev_mem_t<eT> V,
+    dev_mem_t<eT> A,
+    const uword n_rows,
+    const uword n_cols,
+    const bool compute_u_vt)
+  {
+  coot_ignore(U);
+  coot_ignore(S);
+  coot_ignore(V);
+  coot_ignore(A);
+  coot_ignore(n_rows);
+  coot_ignore(n_cols);
+  coot_ignore(compute_u_vt);
+
+  coot_stop_runtime_error("cuda::svd(): unsupported type");
+
+  return std::make_tuple(false, "unsupported type");
+  }
+
+
+
 /**
  * Compute the singular value decomposition using CUDA (cuSolverDn).
  *
@@ -35,7 +64,10 @@ svd_cleanup(char* device_buffer, char* host_buffer, int* dev_info)
  */
 template<typename eT>
 inline
-std::tuple<bool, std::string>
+typename enable_if2<
+  is_double<eT>::value || is_float<eT>::value,
+  std::tuple<bool, std::string>
+>::result
 svd(dev_mem_t<eT> U,
     dev_mem_t<eT> S,
     dev_mem_t<eT> V,

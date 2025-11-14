@@ -59,7 +59,7 @@
 
 inline
 magma_int_t
-magma_get_dsytrd_nb( magma_int_t n )
+magma_get_dsytrd_nb( magma_int_t /* n */ )
   {
   return 64;
   }

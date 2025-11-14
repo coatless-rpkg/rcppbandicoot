@@ -20,7 +20,7 @@ COOT_FN(PREFIX,count_nonzeros)(__global const eT1* A,
                                const UWORD A_offset,
                                __global UWORD* thread_counts,
                                const UWORD n_elem,
-                               __local volatile uint_eT1* aux_mem)
+                               __local volatile UWORD* aux_mem)
   {
   // We want to pass over the memory in A and count the number of nonzero elements.
   // This will give us a count for each individual thread; we then want to prefix-sum this.
@@ -92,7 +92,7 @@ COOT_FN(PREFIX,count_nonzeros)(__global const eT1* A,
       {
       const UWORD ai = offset * (2 * tid + 1) - 1;
       const UWORD bi = offset * (2 * tid + 2) - 1;
-      uint_eT1 tmp = aux_mem[ai];
+      UWORD tmp = aux_mem[ai];
       aux_mem[ai] = aux_mem[bi];
       aux_mem[bi] += tmp;
       }

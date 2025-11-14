@@ -24,7 +24,7 @@
 template<typename eT>
 coot_inline
 bool
-coot_isfinite(eT)
+coot_isfinite(const eT&)
   {
   return true;
   }
@@ -34,7 +34,7 @@ coot_isfinite(eT)
 template<>
 coot_inline
 bool
-coot_isfinite(float x)
+coot_isfinite(const float& x)
   {
   return std::isfinite(x);
   }
@@ -44,7 +44,7 @@ coot_isfinite(float x)
 template<>
 coot_inline
 bool
-coot_isfinite(double x)
+coot_isfinite(const double& x)
   {
   return std::isfinite(x);
   }
@@ -61,6 +61,44 @@ coot_isfinite(const std::complex<T>& x)
 
 
 
+template<>
+coot_inline
+bool
+coot_isfinite(const fp16_shim& x)
+  {
+  return coot_isfinite(x.x);
+  }
+
+
+
+#if defined(COOT_USE_CUDA)
+template<>
+coot_inline
+bool
+coot_isfinite(const __half& x)
+  {
+  #if CUDA_VERSION >= 12020
+  return !__hisinf(x) && !__hisnan(x);
+  #else
+  return !coot_cuda_half_isinf(x) && !coot_cuda_half_isnan(x);
+  #endif
+  }
+#endif
+
+
+
+#if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+template<>
+coot_inline
+bool
+coot_isfinite(const std::float16_t& x)
+  {
+  return std::isfinite(x);
+  }
+#endif
+
+
+
 //
 // wrappers for isinf
 
@@ -68,7 +106,7 @@ coot_isfinite(const std::complex<T>& x)
 template<typename eT>
 coot_inline
 bool
-coot_isinf(eT)
+coot_isinf(const eT&)
   {
   return false;
   }
@@ -78,7 +116,7 @@ coot_isinf(eT)
 template<>
 coot_inline
 bool
-coot_isinf(float x)
+coot_isinf(const float& x)
   {
   return std::isinf(x);
   }
@@ -88,7 +126,7 @@ coot_isinf(float x)
 template<>
 coot_inline
 bool
-coot_isinf(double x)
+coot_isinf(const double& x)
   {
   return std::isinf(x);
   }
@@ -105,6 +143,44 @@ coot_isinf(const std::complex<T>& x)
 
 
 
+template<>
+coot_inline
+bool
+coot_isinf(const fp16_shim& x)
+  {
+  return std::isinf(x.x);
+  }
+
+
+
+#if defined(COOT_USE_CUDA)
+template<>
+coot_inline
+bool
+coot_isinf(const __half& x)
+  {
+  #if CUDA_VERSION >= 12020
+  return __hisinf(x);
+  #else
+  return coot_cuda_half_isinf(x);
+  #endif
+  }
+#endif
+
+
+
+#if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+template<>
+coot_inline
+bool
+coot_isinf(const std::float16_t& x)
+  {
+  return std::isinf(x);
+  }
+#endif
+
+
+
 //
 // wrappers for isnan
 
@@ -112,7 +188,7 @@ coot_isinf(const std::complex<T>& x)
 template<typename eT>
 coot_inline
 bool
-coot_isnan(eT)
+coot_isnan(const eT&)
   {
   return false;
   }
@@ -122,7 +198,7 @@ coot_isnan(eT)
 template<>
 coot_inline
 bool
-coot_isnan(float x)
+coot_isnan(const float& x)
   {
   return std::isnan(x);
   }
@@ -132,7 +208,7 @@ coot_isnan(float x)
 template<>
 coot_inline
 bool
-coot_isnan(double x)
+coot_isnan(const double& x)
   {
   return std::isnan(x);
   }
@@ -149,3 +225,136 @@ coot_isnan(const std::complex<T>& x)
 
 
 
+template<>
+coot_inline
+bool
+coot_isnan(const fp16_shim& x)
+  {
+  return std::isnan(x.x);
+  }
+
+
+
+#if defined(COOT_USE_CUDA)
+template<>
+coot_inline
+bool
+coot_isnan(const __half& x)
+  {
+  #if CUDA_VERSION >= 12020
+  return __hisnan(x);
+  #else
+  return coot_cuda_half_isnan(x);
+  #endif
+  }
+#endif
+
+
+
+#if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+template<>
+coot_inline
+bool
+coot_isnan(const std::float16_t& x)
+  {
+  return std::isnan(x);
+  }
+#endif
+
+
+
+//
+// wrappers for pow
+
+
+
+template<typename eT>
+coot_inline
+eT
+coot_pow(const eT& x, const eT& pow)
+  {
+  return std::pow(x, pow);
+  }
+
+
+
+template<>
+coot_inline
+fp16_shim
+coot_pow(const fp16_shim& x, const fp16_shim& pow)
+  {
+  return fp16_shim(std::pow(x.x, pow.x));
+  }
+
+
+
+#if defined(COOT_USE_CUDA)
+template<>
+coot_inline
+__half
+coot_pow(const __half& x, const __half& p)
+  {
+  return __half(std::pow(float(x), float(p))); // no host __hpow() available in CUDA
+  }
+#endif
+
+
+
+#if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+template<>
+coot_inline
+std::float16_t
+coot_pow(const std::float16_t& x, const std::float16_t& p)
+  {
+  return std::pow(x, p);
+  }
+#endif
+
+
+
+//
+// wrappers for sqrt
+
+
+
+template<typename eT>
+coot_inline
+eT
+coot_sqrt(const eT& x)
+  {
+  return std::sqrt(x);
+  }
+
+
+
+template<>
+coot_inline
+fp16_shim
+coot_sqrt(const fp16_shim& x)
+  {
+  return fp16_shim(std::sqrt(x.x));
+  }
+
+
+
+#if defined(COOT_USE_CUDA)
+template<>
+coot_inline
+__half
+coot_sqrt(const __half& x)
+  {
+  return __half(std::sqrt(float(x))); // no host __hsqrt() available in CUDA
+  }
+#endif
+
+
+
+#if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+template<>
+coot_inline
+std::float16_t
+coot_sqrt(const std::float16_t& x)
+  {
+  return std::sqrt(x);
+  }
+#endif

@@ -162,6 +162,8 @@ generic_reduce_uword_aux_inner(const dev_mem_t<eT> mem,
     // We need to round total_num_threads up to the next power of 2.  (The kernel assumes this.)
     const uword pow2_total_num_threads = (total_num_threads % local_group_size == 0) ? total_num_threads : ((total_num_threads / local_group_size) + 1) * local_group_size;
 
+    typedef typename cl_type<aux_eT>::type aux_ceT;
+
     cl_int status;
     status  = coot_wrapper(clSetKernelArg)(first_kernel, 0,  sizeof(cl_mem),                     &mem.cl_mem_ptr.ptr);
     status |= coot_wrapper(clSetKernelArg)(first_kernel, 1,  dev_mem_offset.size,                dev_mem_offset.addr);
@@ -173,7 +175,7 @@ generic_reduce_uword_aux_inner(const dev_mem_t<eT> mem,
     status |= coot_wrapper(clSetKernelArg)(first_kernel, 7,  dev_aux_mem_offset.size,            dev_aux_mem_offset.addr);
     status |= coot_wrapper(clSetKernelArg)(first_kernel, 8,  sizeof(cl_mem),                     &aux_uword_mem.cl_mem_ptr.ptr);
     status |= coot_wrapper(clSetKernelArg)(first_kernel, 9,  dev_aux_uword_mem_offset.size,      dev_aux_uword_mem_offset.addr);
-    status |= coot_wrapper(clSetKernelArg)(first_kernel, 10, sizeof(aux_eT) * local_group_size,  NULL);
+    status |= coot_wrapper(clSetKernelArg)(first_kernel, 10, sizeof(aux_ceT) * local_group_size, NULL);
     status |= coot_wrapper(clSetKernelArg)(first_kernel, 11, dev_n_elem.size * local_group_size, NULL);
 
     // If we have any uwords in extra_args, we need to allocate adapt_uwords for them, which will be filled in set_extra_args().
@@ -246,6 +248,8 @@ generic_reduce_uword_aux_inner_small(const dev_mem_t<eT> mem,
   // only.
   cl_kernel* k_use = (local_group_size <= subgroup_size) ? &kernel_small : &kernel;
 
+  typedef typename cl_type<aux_eT>::type aux_ceT;
+
   cl_int status;
   status  = coot_wrapper(clSetKernelArg)(*k_use, 0,  sizeof(cl_mem),                     &mem.cl_mem_ptr.ptr);
   status |= coot_wrapper(clSetKernelArg)(*k_use, 1,  dev_mem_offset.size,                dev_mem_offset.addr);
@@ -257,7 +261,7 @@ generic_reduce_uword_aux_inner_small(const dev_mem_t<eT> mem,
   status |= coot_wrapper(clSetKernelArg)(*k_use, 7,  dev_aux_mem_offset.size,            dev_aux_mem_offset.addr);
   status |= coot_wrapper(clSetKernelArg)(*k_use, 8,  sizeof(cl_mem),                     &aux_uword_mem.cl_mem_ptr.ptr);
   status |= coot_wrapper(clSetKernelArg)(*k_use, 9,  dev_aux_uword_mem_offset.size,      dev_aux_uword_mem_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 10, sizeof(aux_eT) * local_group_size,  NULL);
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 10, sizeof(aux_ceT) * local_group_size, NULL);
   status |= coot_wrapper(clSetKernelArg)(*k_use, 11, dev_n_elem.size * local_group_size, NULL);
 
   // If we have any uwords in extra_args, we need to allocate adapt_uwords for them, which will be filled in set_extra_args().

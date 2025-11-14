@@ -27,7 +27,9 @@ COOT_FN(PREFIX,max_rowwise_conv_pre)(__global eT2* dest,
   if(row < n_rows)
     {
     eT2 acc = (eT2) src[src_offset + row];
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for(UWORD i=1; i < n_cols; ++i)
       {
       acc = max(acc, (eT2) (src[src_offset + (i * src_M_n_rows) + row]));

@@ -55,8 +55,14 @@
 #include <fstream>
 #include <complex>
 #include <vector>
+#include <unordered_map>
 #include <random>
 #include <cstring>
+#include <cstdint>
+#if defined(COOT_HAVE_CXX23)
+  #include <stdfloat>
+#endif
+#include <cfenv>
 
 #if ( defined(__unix__) || defined(__unix) || defined(_POSIX_C_SOURCE) || (defined(__APPLE__) && defined(__MACH__)) ) && !defined(_WIN32)
   #define COOT_HAS_POSIX_FILE_FUNCTIONS
@@ -81,6 +87,8 @@ namespace coot
   #include "bandicoot_bits/typedef_missing.hpp"
   #include "bandicoot_bits/coot_forward.hpp"
   #include "bandicoot_bits/coot_static_check.hpp"
+  #include "bandicoot_bits/enable_if.hpp"
+  #include "bandicoot_bits/fp16_shim.hpp"
   #include "bandicoot_bits/typedef_elem.hpp"
   #include "bandicoot_bits/typedef_mat.hpp"
   #include "bandicoot_bits/coot_str.hpp"
@@ -91,12 +99,15 @@ namespace coot
   #include "bandicoot_bits/glue_traits.hpp"
   #include "bandicoot_bits/promote_type.hpp"
   #include "bandicoot_bits/uint_type.hpp"
+  #include "bandicoot_bits/type_prefix.hpp"
   #include "bandicoot_bits/upgrade_val.hpp"
   #include "bandicoot_bits/next_pow2.hpp"
   #include "bandicoot_bits/restrictors.hpp"
   #include "bandicoot_bits/access.hpp"
   #include "bandicoot_bits/span.hpp"
   #include "bandicoot_bits/constants.hpp"
+  #include "bandicoot_bits/cl_type.hpp"
+  #include "bandicoot_bits/cuda_type.hpp"
   #include "bandicoot_bits/dev_mem_t.hpp"
   #include "bandicoot_bits/distr_param.hpp"
   #include "bandicoot_bits/fill.hpp"
@@ -131,6 +142,7 @@ namespace coot
 
   #include "bandicoot_bits/opencl/def_opencl.hpp"
   #include "bandicoot_bits/opencl/def_clblas.hpp"
+  #include "bandicoot_bits/opencl/def_clblast.hpp"
 
   namespace opencl
     {
@@ -174,10 +186,10 @@ namespace coot
   namespace cuda
     {
     #include "bandicoot_bits/cuda/runtime_bones.hpp"
+    #include "bandicoot_bits/cuda/type_to_dev_string.hpp"
     #include "bandicoot_bits/cuda/kernel_src.hpp"
     #include "bandicoot_bits/cuda/kernel_dims.hpp"
     #include "bandicoot_bits/cuda/error.hpp"
-    #include "bandicoot_bits/cuda/type_to_dev_string.hpp"
     #include "bandicoot_bits/cuda/cuda_data_type.hpp"
     #include "bandicoot_bits/cuda/copy_bones.hpp"
     #include "bandicoot_bits/cuda/generic_reduce_bones.hpp"
@@ -263,6 +275,7 @@ namespace coot
   #include "bandicoot_bits/op_shuffle_bones.hpp"
   #include "bandicoot_bits/op_row_as_mat_bones.hpp"
   #include "bandicoot_bits/op_col_as_mat_bones.hpp"
+  #include "bandicoot_bits/op_replace_bones.hpp"
 
   #include "bandicoot_bits/mtop_conv_to_bones.hpp"
   #include "bandicoot_bits/mtop_all_bones.hpp"
@@ -693,6 +706,7 @@ namespace coot
   #include "bandicoot_bits/op_shuffle_meat.hpp"
   #include "bandicoot_bits/op_row_as_mat_meat.hpp"
   #include "bandicoot_bits/op_col_as_mat_meat.hpp"
+  #include "bandicoot_bits/op_replace_meat.hpp"
 
   #include "bandicoot_bits/mtop_conv_to_meat.hpp"
   #include "bandicoot_bits/mtop_all_meat.hpp"

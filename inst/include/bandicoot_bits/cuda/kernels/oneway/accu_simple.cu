@@ -21,7 +21,7 @@ COOT_FN(PREFIX,accu_simple)(eT1* out,
   const UWORD id = blockIdx.x * blockDim.x + threadIdx.x;
   if(id == 0)
     {
-    eT1 acc = (eT1)(0); // runtime unrolling is not supported by CUDA
+    eT1 acc = TO_ET1(0); // runtime unrolling is not supported by CUDA
     for(UWORD i = 0; i < A_len; ++i)
       {
       acc += A[i];

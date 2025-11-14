@@ -28,7 +28,9 @@ COOT_FN(PREFIX,sum_colwise_conv_post)(__global eT2* dest,
     {
     __global const eT1* colptr = &(src[src_offset + col * src_M_n_rows]);
     eT1 acc = (eT1) (0);
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for(UWORD i = 0; i < n_rows; ++i)
       {
       acc += colptr[i];

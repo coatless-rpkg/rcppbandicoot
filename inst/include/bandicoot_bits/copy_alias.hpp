@@ -29,7 +29,7 @@ struct copy_alias
     }
 
   template<typename eT2>
-  explicit inline copy_alias(const Mat<eT>& in, const Mat<eT2>& out)
+  explicit inline copy_alias(const Mat<eT>& in, const Mat<eT2>& /* out */)
     : M_internal(NULL)
     , M(in)
     {

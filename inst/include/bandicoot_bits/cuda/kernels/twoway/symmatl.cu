@@ -25,7 +25,7 @@ COOT_FN(PREFIX,symmatl)(eT2* out,
 
   if (row < size && col < size && row >= col)
     {
-    const eT2 val = (eT2) A[row + size * col];
+    const eT2 val = TO_ET2(A[row + size * col]);
 
     out[col + size * row] = val;
     out[row + size * col] = val;

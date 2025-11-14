@@ -39,11 +39,11 @@ COOT_FN(PREFIX,find)(const eT1* A,
 
   while (i + 1 < end_elem)
     {
-    if (A[i] != (eT1) 0)
+    if (A[i] != TO_ET1(0))
       {
       out[out_index++] = i;
       }
-    if (A[i + 1] != (eT1) 0)
+    if (A[i + 1] != TO_ET1(0))
       {
       out[out_index++] = (i + 1);
       }
@@ -52,7 +52,7 @@ COOT_FN(PREFIX,find)(const eT1* A,
     }
   if (i < end_elem)
     {
-    if (A[i] != (eT1) 0)
+    if (A[i] != TO_ET1(0))
       {
       out[out_index++] = i;
       }

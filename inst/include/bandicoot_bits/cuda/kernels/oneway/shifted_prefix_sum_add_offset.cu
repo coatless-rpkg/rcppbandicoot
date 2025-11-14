@@ -34,8 +34,8 @@ COOT_FN(PREFIX,shifted_prefix_sum_add_offset)(eT1* mem,
 
   const eT1 offset = offsets[group_id];
 
-  const eT1 in_val1 = (mem_offset     < n_elem) ? mem[mem_offset    ] : (eT1) 0;
-  const eT1 in_val2 = (mem_offset + 1 < n_elem) ? mem[mem_offset + 1] : (eT1) 0;
+  const eT1 in_val1 = (mem_offset     < n_elem) ? mem[mem_offset    ] : TO_ET1(0);
+  const eT1 in_val2 = (mem_offset + 1 < n_elem) ? mem[mem_offset + 1] : TO_ET1(0);
 
   const eT1 out_val1 = in_val1 + offset;
   const eT1 out_val2 = in_val2 + offset;

@@ -82,7 +82,9 @@ COOT_FN(PREFIX,transpose_magma)(const UWORD m,
   A  += ibx + tx + (iby + ty) * lda;
   AT += iby + tx + (ibx + ty) * ldat;
 
-  #pragma unroll
+  #ifdef CL_VERSION_2_0
+  __attribute__((opencl_unroll_hint))
+  #endif
   for (int tile = 0; tile < MAGMABLAS_TRANS_NB / MAGMABLAS_TRANS_NX; ++tile)
     {
     // load NX-by-NB subtile transposed from A into sA
@@ -90,7 +92,9 @@ COOT_FN(PREFIX,transpose_magma)(const UWORD m,
     j = iby + ty;
     if (i < m)
       {
-      #pragma unroll
+      #ifdef CL_VERSION_2_0
+      __attribute__((opencl_unroll_hint))
+      #endif
       for (int j2=0; j2 < MAGMABLAS_TRANS_NB; j2 += MAGMABLAS_TRANS_NY)
         {
         if (j + j2 < n)
@@ -105,12 +109,16 @@ COOT_FN(PREFIX,transpose_magma)(const UWORD m,
     // save NB-by-NX subtile from sA into AT
     i = iby + tx;
     j = ibx + ty + tile * MAGMABLAS_TRANS_NX;
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for (int i2 = 0; i2 < MAGMABLAS_TRANS_NB; i2 += MAGMABLAS_TRANS_NX)
       {
       if (i + i2 < n)
         {
-        #pragma unroll
+        #ifdef CL_VERSION_2_0
+        __attribute__((opencl_unroll_hint))
+        #endif
         for (int j2 = 0; j2 < MAGMABLAS_TRANS_NX; j2 += MAGMABLAS_TRANS_NY)
           {
           if (j + j2 < m)

@@ -78,7 +78,9 @@ COOT_FN(PREFIX,laset_band_lower)(const UWORD m,
     value = diag;
     }
 
-  #pragma unroll
+  #ifdef CL_VERSION_2_0
+  __attribute__((opencl_unroll_hint))
+  #endif
   for (int j=0; j < MAGMABLAS_LASET_BAND_NB; j++)
     {
     if (ibx + j < n && ind + j < m)

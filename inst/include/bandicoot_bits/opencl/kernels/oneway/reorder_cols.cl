@@ -30,7 +30,9 @@ COOT_FN(PREFIX,reorder_cols)(__global eT1* out_mem,
           __global eT1* out_colptr = out_mem + out_mem_offset + (out_col * n_rows);
     const __global eT1* in_colptr  =  in_mem +  in_mem_offset + (in_col * n_rows);
 
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for (UWORD i = 0; i < n_rows; ++i)
       {
       out_colptr[i] = in_colptr[i];

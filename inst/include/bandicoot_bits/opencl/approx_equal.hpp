@@ -92,6 +92,10 @@ approx_equal(const dev_mem_t<eT> A,
   // If the number of threads is less than the subgroup size, we need to use the small kernel.
   cl_kernel* k_use = (pow2_group_size <= subgroup_size) ? &k_small : &k;
 
+  typedef typename cl_type<eT>::type ceT;
+  ceT cl_abs_tol = to_cl_type(abs_tol);
+  ceT cl_rel_tol = to_cl_type(rel_tol);
+
   status |= coot_wrapper(clSetKernelArg)(*k_use,  0, sizeof(cl_mem),                &(aux_mem.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(*k_use,  1, sizeof(cl_mem),                &(A.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(*k_use,  2, dev_A_offset.size,             dev_A_offset.addr);
@@ -103,8 +107,8 @@ approx_equal(const dev_mem_t<eT> A,
   status |= coot_wrapper(clSetKernelArg)(*k_use,  8, dev_n_elem.size,               dev_n_elem.addr);
   status |= coot_wrapper(clSetKernelArg)(*k_use,  9, sizeof(u32) * pow2_group_size, NULL);
   status |= coot_wrapper(clSetKernelArg)(*k_use, 10, dev_mode.size,                 dev_mode.addr);
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 11, sizeof(eT),                    &abs_tol);
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 12, sizeof(eT),                    &rel_tol);
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 11, sizeof(ceT),                   &cl_abs_tol);
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 12, sizeof(ceT),                   &cl_rel_tol);
   coot_check_cl_error(status, "coot::opencl::approx_equal(): could not set kernel arguments");
 
   status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), *k_use, k1_work_dim, &k1_work_offset, &pow2_total_num_threads, &pow2_group_size, 0, NULL, NULL);
@@ -219,6 +223,10 @@ approx_equal_cube(const dev_mem_t<eT> A,
     mode += 2;
   runtime_t::adapt_uword dev_mode(mode);
 
+  typedef typename cl_type<eT>::type ceT;
+  ceT cl_abs_tol = to_cl_type(abs_tol);
+  ceT cl_rel_tol = to_cl_type(rel_tol);
+
   // If the number of threads is less than the subgroup size, we need to use the small kernel.
   cl_kernel* k_use = (pow2_group_size <= subgroup_size) ? &k_small : &k;
 
@@ -236,8 +244,8 @@ approx_equal_cube(const dev_mem_t<eT> A,
   status |= coot_wrapper(clSetKernelArg)(*k_use, 11, dev_n_elem.size,               dev_n_elem.addr);
   status |= coot_wrapper(clSetKernelArg)(*k_use, 12, sizeof(u32) * pow2_group_size, NULL);
   status |= coot_wrapper(clSetKernelArg)(*k_use, 13, dev_mode.size,                 dev_mode.addr);
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 14, sizeof(eT),                    &abs_tol);
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 15, sizeof(eT),                    &rel_tol);
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 14, sizeof(ceT),                   &cl_abs_tol);
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 15, sizeof(ceT),                   &cl_rel_tol);
   coot_check_cl_error(status, "coot::opencl::approx_equal_cube(): could not set kernel arguments");
 
   status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), *k_use, k1_work_dim, &k1_work_offset, &pow2_total_num_threads, &pow2_group_size, 0, NULL, NULL);

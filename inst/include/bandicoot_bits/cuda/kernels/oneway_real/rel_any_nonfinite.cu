@@ -33,8 +33,8 @@ COOT_FN(PREFIX,rel_any_nonfinite)(const eT1* X,
     const eT1 val1 = X[i];
     const eT1 val2 = X[i + blockDim.x];
 
-    aux_mem[tid] |= isnan(val1) | isinf(val1);
-    aux_mem[tid] |= isnan(val2) | isinf(val2);
+    aux_mem[tid] |= !coot_isfinite(val1);
+    aux_mem[tid] |= !coot_isfinite(val2);
     if (aux_mem[tid] == 1)
       break;
     i += grid_size;
@@ -44,7 +44,7 @@ COOT_FN(PREFIX,rel_any_nonfinite)(const eT1* X,
     {
     const eT1 val1 = X[i];
 
-    aux_mem[tid] |= isnan(val1) | isinf(val1);
+    aux_mem[tid] |= !coot_isfinite(val1);
     }
   __syncthreads();
 
@@ -59,7 +59,7 @@ COOT_FN(PREFIX,rel_any_nonfinite)(const eT1* X,
 
   if (tid < 32) // unroll last warp's worth of work
     {
-    u32_or_warp_reduce(aux_mem, tid);
+    or_subgroup_reduce_u32(aux_mem, tid);
     }
 
   if (tid == 0)

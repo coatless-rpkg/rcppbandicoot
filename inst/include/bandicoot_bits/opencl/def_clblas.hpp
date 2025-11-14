@@ -14,6 +14,7 @@
 
 
 
+#if defined(COOT_USE_CLBLAS)
 extern "C"
   {
   //
@@ -465,3 +466,4 @@ extern "C"
 
 
   }
+#endif

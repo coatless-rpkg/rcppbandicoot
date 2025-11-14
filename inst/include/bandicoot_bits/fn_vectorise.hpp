@@ -52,3 +52,16 @@ vectorise(const T1& X, const uword dim)
 
   return Op<T1, op_vectorise_all>(X, dim, 0);
   }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+CubeToMatOp<T1, op_vectorise_cube_col>
+vectorise(const BaseCube<typename T1::elem_type, T1>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  return CubeToMatOp<T1, op_vectorise_cube_col>(X.get_ref());
+  }

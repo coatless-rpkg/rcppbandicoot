@@ -31,8 +31,8 @@ COOT_FN(PREFIX,shifted_prefix_sum_small)(eT1* mem,
   const UWORD group_offset = group_id * (2 * local_size);
   const UWORD mem_offset   = group_offset + 2 * local_tid;
 
-  aux_mem[mem_offset    ] = (mem_offset     < n_elem) ? mem[mem_offset    ] : (eT1) 0;
-  aux_mem[mem_offset + 1] = (mem_offset + 1 < n_elem) ? mem[mem_offset + 1] : (eT1) 0;
+  aux_mem[mem_offset    ] = (mem_offset     < n_elem) ? mem[mem_offset    ] : TO_ET1(0);
+  aux_mem[mem_offset + 1] = (mem_offset + 1 < n_elem) ? mem[mem_offset + 1] : TO_ET1(0);
 
   UWORD offset = 1;
   for (UWORD s = local_size; s > 0; s >>= 1)

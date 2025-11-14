@@ -45,7 +45,7 @@ Cube<eT>::Cube()
   , n_slices(0)
   , n_elem(0)
   , mem_state(0)
-  , dev_mem( { NULL, 0 })
+  , dev_mem({ NULL, 0 })
   , mat_ptrs(nullptr)
   {
   coot_extra_debug_sigprint_this(this);
@@ -309,7 +309,7 @@ Cube<eT>::init(const uword new_n_rows, const uword new_n_cols, const uword new_n
   // ensure that n_elem can hold the result of (n_rows * n_cols * n_slices)
   coot_debug_check(
     ( ( (new_n_rows > 0x0FFF) || (new_n_cols > 0x0FFF) || (new_n_slices > 0xFF) )
-      ? ( (double(new_n_rows) * double(new_n_cols) * double(new_n_slices)) > double(std::numeric_limits<uword>::max()) )
+      ? ( (double(new_n_rows) * double(new_n_cols) * double(new_n_slices)) > double(Datum<uword>::max) )
       : false
     ),
     "Cube::init(): requested size is too large"
@@ -386,6 +386,7 @@ Cube<eT>::delete_mat()
     if( n_slices > Cube_prealloc::mat_ptrs_size )
       {
       delete [] mat_ptrs;
+      access::rw(mat_ptrs) = nullptr;
       }
     }
   }
@@ -614,7 +615,7 @@ Cube<eT>::Cube(cl_mem aux_dev_mem, const uword in_n_rows, const uword in_n_cols,
 
 template<typename eT>
 inline
-Cube<eT>::Cube(eT* aux_dev_mem, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices)
+Cube<eT>::Cube(typename cuda_type<eT>::type* aux_dev_mem, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices)
   : n_rows(in_n_rows)
   , n_cols(in_n_cols)
   , n_slices(in_n_slices)
@@ -3764,7 +3765,11 @@ Cube<eT>::replace(const eT old_val, const eT new_val)
   {
   coot_extra_debug_sigprint();
 
-  coot_rt_t::replace(dev_mem, n_elem, old_val, new_val);
+  coot_rt_t::replace(dev_mem, dev_mem,
+                     old_val, new_val,
+                     n_rows, n_cols, n_slices,
+                     0, 0, 0, n_rows, n_cols,
+                     0, 0, 0, n_rows, n_cols);
 
   return *this;
   }

@@ -26,7 +26,7 @@ COOT_FN(PREFIX,min_small)(const eT1* in_mem,
 
   // Make sure all auxiliary memory is initialized to something that won't
   // screw up the final reduce.
-  aux_mem[tid] = coot_type_max((eT1) 0);
+  aux_mem[tid] = coot_type_max(TO_ET1(0));
 
   if (i < n_elem)
     {

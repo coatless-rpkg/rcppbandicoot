@@ -26,7 +26,11 @@ class op_vectorise_col
   template<typename out_eT, typename T1> inline static void apply(Mat<out_eT>& out, const Op<T1,op_vectorise_col>& in);
 
   // output_is_row is only used by op_vectorise_all in special situations
-  template<typename out_eT, typename T1> inline static void apply_direct(Mat<out_eT>& out, const T1& in, const bool output_is_row = false);
+  template<typename eT> inline static void apply_direct(Mat<eT>& out, const     Mat<eT>& in, const bool output_is_row = false);
+  template<typename eT> inline static void apply_direct(Mat<eT>& out, const subview<eT>& in, const bool output_is_row = false);
+
+  template<typename out_eT, typename in_eT> inline static void apply_direct(Mat<out_eT>& out, const     Mat<in_eT>& in, const bool output_is_row = false);
+  template<typename out_eT, typename in_eT> inline static void apply_direct(Mat<out_eT>& out, const subview<in_eT>& in, const bool output_is_row = false);
 
   template<typename T1> inline static uword compute_n_rows(const Op<T1, op_vectorise_col>& op, const uword in_n_rows, const uword in_n_cols);
   template<typename T1> inline static uword compute_n_cols(const Op<T1, op_vectorise_col>& op, const uword in_n_rows, const uword in_n_cols);
@@ -56,8 +60,20 @@ class op_vectorise_row
 
   template<typename T1> inline static void apply_direct(Mat<typename T1::elem_type>& out, const T1& in);
 
-  template<typename out_eT, typename T1> inline static void apply_direct(Mat<out_eT>& out, const T1& in, const typename enable_if<!std::is_same<out_eT, typename T1::elem_type>::value>::result* = 0);
+  template<typename out_eT, typename T1> inline static void apply_direct(Mat<out_eT>& out, const T1& in, const typename enable_if<is_same_type<out_eT, typename T1::elem_type>::no>::result* = 0);
 
   template<typename T1> inline static uword compute_n_rows(const Op<T1, op_vectorise_row>& op, const uword in_n_rows, const uword in_n_cols);
   template<typename T1> inline static uword compute_n_cols(const Op<T1, op_vectorise_row>& op, const uword in_n_rows, const uword in_n_cols);
   };
+
+
+
+struct op_vectorise_cube_col
+  : public traits_op_col
+  {
+  template<typename T1> inline static void apply(Mat<typename T1::elem_type>& out, const CubeToMatOp<T1, op_vectorise_cube_col>& in);
+
+  template<typename T1> inline static uword compute_n_rows(const CubeToMatOp<T1, op_vectorise_cube_col>& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices);
+  template<typename T1> inline static uword compute_n_cols(const CubeToMatOp<T1, op_vectorise_cube_col>& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices);
+  };
+

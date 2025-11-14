@@ -20,7 +20,7 @@ COOT_FN(PREFIX,radix_sort_ascending)(__global eT1* A,
                                      const UWORD A_offset,
                                      __global eT1* tmp_mem,
                                      const UWORD n_elem,
-                                     __local volatile uint_eT1* aux_mem)
+                                     __local volatile UWORD* aux_mem)
   {
   const UWORD tid = get_global_id(0);
 
@@ -99,7 +99,7 @@ COOT_FN(PREFIX,radix_sort_ascending)(__global eT1* A,
         {
         const UWORD ai = offset * (2 * tid + 1) - 1;
         const UWORD bi = offset * (2 * tid + 2) - 1;
-        uint_eT1 tmp = aux_mem[ai];
+        UWORD tmp = aux_mem[ai];
         aux_mem[ai] = aux_mem[bi];
         aux_mem[bi] += tmp;
         }
@@ -200,7 +200,7 @@ COOT_FN(PREFIX,radix_sort_ascending)(__global eT1* A,
       {
       const UWORD ai = offset * (2 * tid + 1) - 1;
       const UWORD bi = offset * (2 * tid + 2) - 1;
-      uint_eT1 tmp = aux_mem[ai];
+      UWORD tmp = aux_mem[ai];
       aux_mem[ai] = aux_mem[bi];
       aux_mem[bi] += tmp;
       }

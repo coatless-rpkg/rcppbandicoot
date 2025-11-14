@@ -34,7 +34,7 @@ COOT_FN(PREFIX,index_min_small)(__global const eT1* in_mem,
   // Make sure all auxiliary memory is initialized to something that won't
   // screw up the final reduce.
   aux_mem[tid] = COOT_FN(coot_type_min_,eT1)();
-  aux_uword_mem[tid] = COOT_FN(coot_type_min_,UWORD)();
+  aux_uword_mem[tid] = (UWORD) 0;
 
   if (i < n_elem)
     {

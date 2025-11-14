@@ -103,7 +103,7 @@ set_extra_args
                              const std::tuple<Args...> args)
     {
     cl_int status = set_extra_arg<offset>(kernel, i - 1, adapt_uwords, adapt_uword_index, std::get<i - 1>(args));
-    return status | set_extra_args<i - 1, offset, Args...>::apply(kernel, i - 1, adapt_uwords, adapt_uword_index, args);
+    return status | set_extra_args<i - 1, offset, Args...>::apply(kernel, adapt_uwords, adapt_uword_index, args);
     }
   };
 
@@ -262,16 +262,18 @@ generic_reduce_inner(const dev_mem_t<eT> mem,
     runtime_t::adapt_uword dev_aux_mem_offset(aux_mem.cl_mem_ptr.offset);
     runtime_t::adapt_uword dev_n_elem(n_elem);
 
+    typedef typename cl_type<aux_eT>::type aux_ceT;
+
     // We need to round total_num_threads up to the next power of 2.  (The kernel assumes this.)
     const uword pow2_total_num_threads = (total_num_threads % local_group_size == 0) ? total_num_threads : ((total_num_threads / local_group_size) + 1) * local_group_size;
 
     cl_int status;
-    status  = coot_wrapper(clSetKernelArg)(first_kernel, 0, sizeof(cl_mem),                    &mem.cl_mem_ptr.ptr    );
-    status |= coot_wrapper(clSetKernelArg)(first_kernel, 1, dev_mem_offset.size,               dev_mem_offset.addr    );
-    status |= coot_wrapper(clSetKernelArg)(first_kernel, 2, dev_n_elem.size,                   dev_n_elem.addr        );
-    status |= coot_wrapper(clSetKernelArg)(first_kernel, 3, sizeof(cl_mem),                    &aux_mem.cl_mem_ptr.ptr);
-    status |= coot_wrapper(clSetKernelArg)(first_kernel, 4, dev_aux_mem_offset.size,           dev_aux_mem_offset.addr);
-    status |= coot_wrapper(clSetKernelArg)(first_kernel, 5, sizeof(aux_eT) * local_group_size, NULL                   );
+    status  = coot_wrapper(clSetKernelArg)(first_kernel, 0, sizeof(cl_mem),                     &mem.cl_mem_ptr.ptr    );
+    status |= coot_wrapper(clSetKernelArg)(first_kernel, 1, dev_mem_offset.size,                dev_mem_offset.addr    );
+    status |= coot_wrapper(clSetKernelArg)(first_kernel, 2, dev_n_elem.size,                    dev_n_elem.addr        );
+    status |= coot_wrapper(clSetKernelArg)(first_kernel, 3, sizeof(cl_mem),                     &aux_mem.cl_mem_ptr.ptr);
+    status |= coot_wrapper(clSetKernelArg)(first_kernel, 4, dev_aux_mem_offset.size,            dev_aux_mem_offset.addr);
+    status |= coot_wrapper(clSetKernelArg)(first_kernel, 5, sizeof(aux_ceT) * local_group_size, NULL                   );
 
     // If we have any uwords in extra_args, we need to allocate adapt_uwords for them, which will be filled in set_extra_args().
     constexpr const uword num_uwords = count_uwords<void, A1...>();
@@ -333,13 +335,15 @@ generic_reduce_inner_small(const dev_mem_t<eT> mem,
   // only.
   cl_kernel* k_use = (local_group_size <= subgroup_size) ? &kernel_small : &kernel;
 
+  typedef typename cl_type<aux_eT>::type aux_ceT;
+
   cl_int status;
-  status  = coot_wrapper(clSetKernelArg)(*k_use, 0, sizeof(cl_mem),                    &mem.cl_mem_ptr        );
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 1, dev_mem_offset.size,               dev_mem_offset.addr    );
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 2, dev_n_elem.size,                   dev_n_elem.addr        );
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 3, sizeof(cl_mem),                    &aux_mem.cl_mem_ptr    );
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 4, dev_aux_mem_offset.size,           dev_aux_mem_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(*k_use, 5, sizeof(aux_eT) * local_group_size, NULL                   );
+  status  = coot_wrapper(clSetKernelArg)(*k_use, 0, sizeof(cl_mem),                     &mem.cl_mem_ptr        );
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 1, dev_mem_offset.size,                dev_mem_offset.addr    );
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 2, dev_n_elem.size,                    dev_n_elem.addr        );
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 3, sizeof(cl_mem),                     &aux_mem.cl_mem_ptr    );
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 4, dev_aux_mem_offset.size,            dev_aux_mem_offset.addr);
+  status |= coot_wrapper(clSetKernelArg)(*k_use, 5, sizeof(aux_ceT) * local_group_size, NULL                   );
 
   // If we have any uwords in extra_args, we need to allocate adapt_uwords for them, which will be filled in set_extra_args().
   constexpr const uword num_uwords = count_uwords<void, Args...>();

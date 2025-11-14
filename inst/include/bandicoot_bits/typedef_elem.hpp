@@ -22,36 +22,36 @@
 // when such types are used in template code
 
 
-#if defined(UINT8_MAX)
+#if (UCHAR_MAX >= 0xff)
+  typedef unsigned char      u8;
+  typedef          char      s8;
+#elif defined(UINT8_MAX)
   typedef          uint8_t   u8;
   typedef           int8_t   s8;
-#elif (UCHAR_MAX == 0xff)
-  typedef unsigned char      u8;
-  typedef   signed char      s8;
 #else
   typedef          cl_uchar  u8;
   typedef          cl_char   s8;
 #endif
 
 
-#if defined(UINT16_MAX)
-  typedef          uint16_t  u16;
-  typedef           int16_t  s16;
-#elif (USHRT_MAX == 0xffff)
+#if (USHRT_MAX >= 0xffff)
   typedef unsigned short     u16;
   typedef          short     s16;
+#elif defined(UINT16_MAX)
+  typedef          uint16_t  u16;
+  typedef           int16_t  s16;
 #else
   typedef          cl_ushort u16;
   typedef          cl_short  s16;
 #endif
 
 
-#if defined(UINT32_MAX)
-  typedef          uint32_t u32;
-  typedef           int32_t s32;
-#elif (UINT_MAX == 0xffffffff)
+#if (UINT_MAX >= 0xffffffff)
   typedef unsigned int      u32;
   typedef          int      s32;
+#elif defined(UINT32_MAX)
+  typedef          uint32_t u32;
+  typedef           int32_t s32;
 #else
   typedef          cl_uint  u32;
   typedef          cl_int   s32;
@@ -149,3 +149,26 @@ typedef void* void_ptr;
 #endif
 
 typedef COOT_FORTRAN_CHARLEN_TYPE blas_len;
+
+
+
+//
+// attempt to detect an FP16 type we can use, or if we find nothing, use
+// uint16_t as a placeholder
+//
+
+#if defined(COOT_FP16_TYPE)
+  typedef COOT_FP16_TYPE fp16;
+#elif defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
+  // If we are using C++23, then we have an FP16 type via <stdfloat>, if hardware
+  // support is available.
+  typedef std::float16_t fp16;
+#elif defined(COOT_USE_CUDA)
+  typedef __half fp16;
+#else
+  // We don't have a half-precision type we can use for arithmetic on the host.
+  // In this case, we will use our own "shim" type that actually holds a 32-bit
+  // float on the host, but we will downcast it to a fp16 when dealing with the
+  // GPU (and upcast when we bring back a value from the GPU).
+  typedef fp16_shim fp16;
+#endif

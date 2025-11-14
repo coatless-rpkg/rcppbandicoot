@@ -38,6 +38,6 @@ COOT_FN(PREFIX,equ_array_min_array_cube)(eT2* dest,
     const UWORD B_index = row + col * src_B_M_n_rows + slice * src_B_M_n_rows * src_B_M_n_cols;
     const UWORD dest_index = row + col * dest_M_n_rows + slice * dest_M_n_rows * dest_M_n_cols;
 
-    dest[dest_index] = min(src_A[A_index], ((eT2) src_B[B_index]));
+    dest[dest_index] = min(src_A[A_index], (TO_ET2(src_B[B_index])));
     }
   }

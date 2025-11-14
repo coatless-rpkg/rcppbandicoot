@@ -45,9 +45,12 @@ broadcast_op(const twoway_kernel_id::enum_id op,
 
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT2, eT1>(op);
 
-        eT2* dest_ptr    =    dest.cuda_mem_ptr +    dest_row_offset +    dest_col_offset * dest_M_n_rows;
-  const eT2* dest_in_ptr = dest_in.cuda_mem_ptr + dest_in_row_offset + dest_in_col_offset * dest_in_M_n_rows;
-  const eT1*  src_ptr    =     src.cuda_mem_ptr +     src_row_offset +     src_col_offset * src_M_n_rows;
+  typedef typename cuda_type<eT1>::type ceT1;
+  typedef typename cuda_type<eT2>::type ceT2;
+
+        ceT2* dest_ptr    =    dest.cuda_mem_ptr +    dest_row_offset +    dest_col_offset * dest_M_n_rows;
+  const ceT2* dest_in_ptr = dest_in.cuda_mem_ptr + dest_in_row_offset + dest_in_col_offset * dest_in_M_n_rows;
+  const ceT1*  src_ptr    =     src.cuda_mem_ptr +     src_row_offset +     src_col_offset * src_M_n_rows;
 
   const uword new_n_rows = src_n_rows * copies_per_row;
   const uword new_n_cols = src_n_cols * copies_per_col;
@@ -114,9 +117,12 @@ broadcast_subset_op(const twoway_kernel_id::enum_id op,
 
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT2, eT1>(op);
 
-        eT2* dest_ptr      =    dest.cuda_mem_ptr +    dest_row_offset +    dest_col_offset * dest_M_n_rows;
-  const eT2* dest_in_ptr   = dest_in.cuda_mem_ptr + dest_in_row_offset + dest_in_col_offset * dest_in_M_n_rows;
-  const eT1*  src_ptr      =     src.cuda_mem_ptr +     src_row_offset +     src_col_offset * src_M_n_rows;
+  typedef typename cuda_type<eT1>::type ceT1;
+  typedef typename cuda_type<eT2>::type ceT2;
+
+        ceT2* dest_ptr      =    dest.cuda_mem_ptr +    dest_row_offset +    dest_col_offset * dest_M_n_rows;
+  const ceT2* dest_in_ptr   = dest_in.cuda_mem_ptr + dest_in_row_offset + dest_in_col_offset * dest_in_M_n_rows;
+  const ceT1*  src_ptr      =     src.cuda_mem_ptr +     src_row_offset +     src_col_offset * src_M_n_rows;
   const uword* indices_ptr = indices.cuda_mem_ptr + indices_offset;
 
   const uword new_n_rows = src_n_rows * copies_per_row;

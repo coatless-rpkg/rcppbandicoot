@@ -94,7 +94,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
     for(UWORD i=0; i < diag; i += MAGMABLAS_LANSY_INF_BS )
       {
       // 32x4 threads cooperatively load 32x32 block
-      #pragma unroll 8
+      #ifdef CL_VERSION_2_0
+      __attribute__((opencl_unroll_hint(8)))
+      #endif
       for(UWORD j=0; j < MAGMABLAS_LANSY_INF_BS; j += 4)
         {
         la[tx][ty+j] = A[j*lda];
@@ -107,7 +109,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
       // for ty=1:  res = sum( la[tx, 8:15] )
       // for ty=2:  res = sum( la[tx,16:23] )
       // for ty=3:  res = sum( la[tx,24:31] )
-      #pragma unroll 8
+      #ifdef CL_VERSION_2_0
+      __attribute__((opencl_unroll_hint(8)))
+      #endif
       for(UWORD j=ty*8; j < ty*8 + 8; j++)
         {
         res += ET1_ABS( la[tx][j] );
@@ -117,7 +121,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
 
     // ----------
     // load diagonal block
-    #pragma unroll 8
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint(8)))
+    #endif
     for(UWORD j=0; j < MAGMABLAS_LANSY_INF_BS; j += 4)
       {
       la[tx][ty+j] = A[j*lda];
@@ -126,7 +132,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
 
     // copy lower triangle to upper triangle, and
     // make diagonal real (zero imaginary part)
-    #pragma unroll 8
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint(8)))
+    #endif
     for(UWORD i=ty*8; i < ty*8 + 8; i++)
       {
       if ( i < tx )
@@ -137,7 +145,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
     barrier( CLK_LOCAL_MEM_FENCE );
 
     // partial row sums
-    #pragma unroll 8
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint(8)))
+    #endif
     for(UWORD j=ty*8; j < ty*8 + 8; j++)
       {
       res += ET1_ABS( la[tx][j] );
@@ -150,7 +160,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
     for(UWORD i=diag + MAGMABLAS_LANSY_INF_BS; i < n - n_mod_bs; i += MAGMABLAS_LANSY_INF_BS )
       {
       // load block (transposed)
-      #pragma unroll 8
+      #ifdef CL_VERSION_2_0
+      __attribute__((opencl_unroll_hint(8)))
+      #endif
       for(UWORD j=0; j < MAGMABLAS_LANSY_INF_BS; j += 4)
         {
         la[ty+j][tx] = A[j*lda];
@@ -159,7 +171,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
       barrier( CLK_LOCAL_MEM_FENCE );
 
       // partial row sums
-      #pragma unroll 8
+      #ifdef CL_VERSION_2_0
+      __attribute__((opencl_unroll_hint(8)))
+      #endif
       for(UWORD j=ty*8; j < ty*8 + 8; j++)
         {
         res += ET1_ABS( la[tx][j] );
@@ -172,7 +186,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
     if ( n_mod_bs > 0 )
       {
       // load block (transposed), with zeros for rows outside matrix
-      #pragma unroll 8
+      #ifdef CL_VERSION_2_0
+      __attribute__((opencl_unroll_hint(8)))
+      #endif
       for(UWORD j=0; j < MAGMABLAS_LANSY_INF_BS; j += 4)
         {
         if ( tx < n_mod_bs )
@@ -187,7 +203,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
       barrier( CLK_LOCAL_MEM_FENCE );
 
       // partial row sums
-      #pragma unroll 8
+      #ifdef CL_VERSION_2_0
+      __attribute__((opencl_unroll_hint(8)))
+      #endif
       for(UWORD j=ty*8; j < ty*8 + 8; j++)
         {
         res += ET1_ABS( la[tx][j] );
@@ -230,7 +248,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
     for(UWORD i=0; i < diag; i += MAGMABLAS_LANSY_INF_BS )
       {
       // load block
-      #pragma unroll 8
+      #ifdef CL_VERSION_2_0
+      __attribute__((opencl_unroll_hint(8)))
+      #endif
       for(UWORD j=0; j < MAGMABLAS_LANSY_INF_BS; j += 4)
         {
         la[tx][ty+j] = A[j*lda];
@@ -239,7 +259,9 @@ COOT_FN(PREFIX,lansy_inf_lower)
       barrier( CLK_LOCAL_MEM_FENCE );
 
       // partial row sums
-      #pragma unroll 8
+      #ifdef CL_VERSION_2_0
+      __attribute__((opencl_unroll_hint(8)))
+      #endif
       for(UWORD j=0; j < 8; j++)
         {
         res += ET1_ABS( la[tx][j+ty*8] );

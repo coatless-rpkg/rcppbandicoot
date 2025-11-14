@@ -38,6 +38,6 @@ COOT_FN(PREFIX,equ_array_sqrt_post)(eT2* dest,
 
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
-    dest[dest_index] = (eT2) ((eT1) sqrt((fp_eT1) src[src_index]));
+    dest[dest_index] = TO_ET2(TO_ET1(sqrt(TO_FP_ET1(src[src_index]))));
     }
   }

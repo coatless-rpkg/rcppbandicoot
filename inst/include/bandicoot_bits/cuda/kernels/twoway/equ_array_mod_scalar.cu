@@ -36,7 +36,7 @@ COOT_FN(PREFIX,equ_array_mod_scalar)(eT2* dest,
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
     // For an integer type, the casts end up doing nothing.
-    uint_eT1 val = ((uint_eT1) src[src_index]) % ((uint_eT1) val_pre);
-    dest[dest_index] = (eT2) (((uint_eT2) val) % ((uint_eT2) val_post));
+    uint_eT1 val = TO_UINT_ET1(src[src_index]) % TO_UINT_ET1(val_pre);
+    dest[dest_index] = TO_ET2((TO_UINT_ET2(val)) % TO_UINT_ET2(val_post));
     }
   }

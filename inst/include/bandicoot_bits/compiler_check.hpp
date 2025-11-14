@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2008-2023 Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2008-2025 Conrad Sanderson (https://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,7 @@
 #undef COOT_HAVE_CXX14
 #undef COOT_HAVE_CXX17
 #undef COOT_HAVE_CXX20
+#undef COOT_HAVE_CXX23
 
 #if (__cplusplus >= 201103L)
   #define COOT_HAVE_CXX11
@@ -35,6 +36,10 @@
 
 #if (__cplusplus >= 202002L)
   #define COOT_HAVE_CXX20
+#endif
+
+#if (__cplusplus >= 202302L)
+  #define COOT_HAVE_CXX23
 #endif
 
 
@@ -57,6 +62,11 @@
   #if (_MSVC_LANG >= 202002L)
     #undef  COOT_HAVE_CXX20
     #define COOT_HAVE_CXX20
+  #endif
+  
+  #if (_MSVC_LANG >= 202302L)
+    #undef  COOT_HAVE_CXX23
+    #define COOT_HAVE_CXX23
   #endif
   
 #endif

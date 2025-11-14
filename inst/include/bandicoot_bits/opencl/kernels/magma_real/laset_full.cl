@@ -77,7 +77,9 @@ COOT_FN(PREFIX,laset_full)(const UWORD m,
     if (full)
       {
       // full block-column, off-diagonal block or offdiag == diag
-      #pragma unroll
+      #ifdef CL_VERSION_2_0
+      __attribute__((opencl_unroll_hint))
+      #endif
       for(int j=0; j < MAGMABLAS_BLK_Y; ++j)
         {
         A[j * lda] = offdiag;

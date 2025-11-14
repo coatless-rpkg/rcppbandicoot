@@ -31,8 +31,8 @@ class gemm
     {
     coot_extra_debug_sigprint();
 
-    const eT local_alpha = (use_alpha) ? alpha : float(1);
-    const eT local_beta  = (use_beta)  ? beta  : float(0);
+    const eT local_alpha = (use_alpha) ? alpha : eT(1);
+    const eT local_beta  = (use_beta)  ? beta  : eT(0);
 
     coot_rt_t::gemm<eT, do_trans_A, do_trans_B>(C.get_dev_mem(true),
                                                 C.n_rows, C.n_cols,
@@ -55,8 +55,8 @@ class gemm
     {
     coot_extra_debug_sigprint();
 
-    const eT local_alpha = (use_alpha) ? alpha : float(1);
-    const eT local_beta  = (use_beta)  ? beta  : float(0);
+    const eT local_alpha = (use_alpha) ? alpha : eT(1);
+    const eT local_beta  = (use_beta)  ? beta  : eT(0);
 
     coot_rt_t::gemm<eT, do_trans_A, do_trans_B>(C.get_dev_mem(true),
                                                 C.n_rows, C.n_cols,
@@ -79,8 +79,8 @@ class gemm
     {
     coot_extra_debug_sigprint();
 
-    const eT local_alpha = (use_alpha) ? alpha : float(1);
-    const eT local_beta  = (use_beta)  ? beta  : float(0);
+    const eT local_alpha = (use_alpha) ? alpha : eT(1);
+    const eT local_beta  = (use_beta)  ? beta  : eT(0);
 
     coot_rt_t::gemm<eT, do_trans_A, do_trans_B>(C.get_dev_mem(true),
                                                 C.n_rows, C.n_cols,
@@ -103,8 +103,8 @@ class gemm
     {
     coot_extra_debug_sigprint();
 
-    const eT local_alpha = (use_alpha) ? alpha : float(1);
-    const eT local_beta  = (use_beta)  ? beta  : float(0);
+    const eT local_alpha = (use_alpha) ? alpha : eT(1);
+    const eT local_beta  = (use_beta)  ? beta  : eT(0);
 
     coot_rt_t::gemm<eT, do_trans_A, do_trans_B>(C.get_dev_mem(true),
                                                 C.n_rows, C.n_cols,

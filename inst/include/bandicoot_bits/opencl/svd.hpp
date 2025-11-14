@@ -14,6 +14,24 @@
 
 
 
+template<typename eT>
+inline
+std::tuple<bool, std::string>
+svd(dev_mem_t<eT> U,
+    dev_mem_t<eT> S,
+    dev_mem_t<eT> V,
+    dev_mem_t<eT> A,
+    const uword n_rows,
+    const uword n_cols,
+    const bool compute_u_vt)
+  {
+  coot_stop_runtime_error("opencl::svd(): unsupported type");
+
+  return std::make_tuple(false, "unsupported type");
+  }
+
+
+
 /**
  * Compute the singular value decomposition using CUDA (cuSolverDn).
  *

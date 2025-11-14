@@ -27,7 +27,9 @@ COOT_FN(PREFIX,rel_any_neq_colwise)(__global UWORD* out,
     {
     __global const eT1* colptr = &(A[ col*A_n_rows + A_offset ]);
     UWORD result = 0;
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for(UWORD i = 0; i < A_n_rows; ++i)
       {
       const eT2 val1 = (eT2) colptr[i];

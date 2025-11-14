@@ -28,7 +28,7 @@ op_resize::apply(Mat<out_eT>& out, const Op<T1, op_resize>& in)
   const unwrap<T1> U(in.m);
   const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
 
-  if (U.is_alias(out) && std::is_same<out_eT, typename T1::elem_type>::value)
+  if (U.is_alias(out) && is_same_type<out_eT, typename T1::elem_type>::yes)
     {
     op_resize::apply_mat_inplace(out, new_n_rows, new_n_cols);
     }

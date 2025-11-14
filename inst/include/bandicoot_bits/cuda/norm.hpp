@@ -81,6 +81,67 @@ vec_norm_2(dev_mem_t<double> mem, const uword n_elem)
 template<typename eT>
 inline
 eT
+vec_norm_2(dev_mem_t<eT> mem, const uword n_elem, const typename coot_real_only<eT>::result* junk = 0)
+  {
+  coot_extra_debug_sigprint();
+  coot_ignore(junk);
+
+  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "cuda runtime not valid" );
+
+  // For floating-point types, we perform a power-k accumulation.
+  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_2);
+  CUfunction kernel_small = get_rt().cuda_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_2_small);
+
+  CUfunction accu_kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::accu);
+  CUfunction accu_kernel_small = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::accu_small);
+
+  const eT result = generic_reduce<eT, eT>(mem,
+                                           n_elem,
+                                           "vec_norm_2",
+                                           kernel,
+                                           kernel_small,
+                                           std::make_tuple(/* no extra args */),
+                                           accu_kernel,
+                                           accu_kernel_small,
+                                           std::make_tuple(/* no extra args */));
+
+  if (result == eT(0) || !coot_isfinite(result))
+    {
+    // We detected overflow or underflow---try again.
+    const eT max_elem = max_abs(mem, n_elem);
+    if (max_elem == eT(0))
+      {
+      // False alarm, the norm is actually zero.
+      return eT(0);
+      }
+
+    CUfunction robust_kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_2_robust);
+    CUfunction robust_kernel_small = get_rt().cuda_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_2_robust_small);
+
+    const eT robust_result = generic_reduce<eT, eT>(mem,
+                                                    n_elem,
+                                                    "vec_norm_2_robust",
+                                                    robust_kernel,
+                                                    robust_kernel_small,
+                                                    std::make_tuple(to_cuda_type(max_elem)),
+                                                    accu_kernel,
+                                                    accu_kernel_small,
+                                                    std::make_tuple(/* no extra args */));
+
+    return coot_sqrt(robust_result) * max_elem;
+    }
+  else
+    {
+    // The kernel returns just the accumulated result, so we still need to take the k'th root.
+    return coot_sqrt(result);
+    }
+  }
+
+
+
+template<typename eT>
+inline
+eT
 vec_norm_k(dev_mem_t<eT> mem, const uword n_elem, const uword k, const typename coot_real_only<eT>::result* junk = 0)
   {
   coot_extra_debug_sigprint();
@@ -106,7 +167,7 @@ vec_norm_k(dev_mem_t<eT> mem, const uword n_elem, const uword k, const typename 
                                            std::make_tuple(/* no extra args */));
 
   // The kernel returns just the accumulated result, so we still need to take the k'th root.
-  return std::pow(result, eT(1.0) / eT(k));
+  return coot_pow(result, eT(1 / eT(k)));
   }
 
 

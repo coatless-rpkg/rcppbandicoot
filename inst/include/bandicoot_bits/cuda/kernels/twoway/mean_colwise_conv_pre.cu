@@ -25,12 +25,12 @@ COOT_FN(PREFIX,mean_colwise_conv_pre)(eT2* dest,
   if(col < n_cols)
     {
     const eT1* colptr = &(src[ col * src_M_n_rows ]);
-    eT2 acc = (eT2) (0);
+    eT2 acc = TO_ET2(0);
     for (UWORD i = 0; i < n_rows; ++i)
       {
-      acc += (eT2) (colptr[i]);
+      acc += TO_ET2(colptr[i]);
       }
 
-    dest[col * dest_mem_incr] = (acc / (eT2) n_rows);
+    dest[col * dest_mem_incr] = (acc / TO_ET2(n_rows));
     }
   }

@@ -136,6 +136,9 @@ mul_diag
   runtime_t::adapt_uword cl_diag_arg_incr(diag_arg_incr);
   runtime_t::adapt_uword cl_mat_arg_M_n_rows(mat_arg_M_n_rows);
 
+  typedef typename cl_type<eT>::type ceT;
+  ceT cl_alpha = to_cl_type(alpha);
+
   cl_int status = 0;
 
   status |= coot_wrapper(clSetKernelArg)(kernel,  0, sizeof(cl_mem),           &(C_mem.cl_mem_ptr.ptr) );
@@ -145,7 +148,7 @@ mul_diag
   status |= coot_wrapper(clSetKernelArg)(kernel,  4, cl_diag_arg_incr.size,    cl_diag_arg_incr.addr   );
   status |= coot_wrapper(clSetKernelArg)(kernel,  5, sizeof(cl_mem),           &(mat_arg_ptr)          );
   status |= coot_wrapper(clSetKernelArg)(kernel,  6, cl_mat_arg_offset.size,   cl_mat_arg_offset.addr  );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  7, sizeof(eT),               &alpha                  );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  7, sizeof(ceT),              &cl_alpha               );
   status |= coot_wrapper(clSetKernelArg)(kernel,  8, cl_n_rows.size,           cl_n_rows.addr          );
   status |= coot_wrapper(clSetKernelArg)(kernel,  9, cl_n_cols.size,           cl_n_cols.addr          );
   status |= coot_wrapper(clSetKernelArg)(kernel, 10, cl_mat_arg_M_n_rows.size, cl_mat_arg_M_n_rows.addr);

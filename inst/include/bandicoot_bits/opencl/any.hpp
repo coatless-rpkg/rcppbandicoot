@@ -35,7 +35,7 @@ any_vec(const dev_mem_t<eT1> mem, const uword n_elem, const eT2 val, const twowa
                                         "any",
                                         k,
                                         k_small,
-                                        std::make_tuple(val),
+                                        std::make_tuple(to_cl_type(val)),
                                         second_k,
                                         second_k_small,
                                         std::make_tuple(/* no extra args for second pass */));
@@ -66,7 +66,7 @@ any_vec(const dev_mem_t<eT> mem, const uword n_elem, const eT val, const oneway_
                                        "any",
                                        k,
                                        k_small,
-                                       std::make_tuple(val),
+                                       std::make_tuple(to_cl_type(val)),
                                        second_k,
                                        second_k_small,
                                        std::make_tuple(/* no extra args for second pass */));
@@ -96,13 +96,16 @@ any(dev_mem_t<uword> out_mem, const dev_mem_t<eT1> in_mem, const uword n_rows, c
   runtime_t::adapt_uword A_n_rows(n_rows);
   runtime_t::adapt_uword A_n_cols(n_cols);
 
+  typedef typename cl_type<eT2>::type ceT2;
+  ceT2 cl_val = to_cl_type(val);
+
   status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),  &(out_mem.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(kernel, 1, out_offset.size, out_offset.addr          );
   status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),  &(in_mem.cl_mem_ptr.ptr) );
   status |= coot_wrapper(clSetKernelArg)(kernel, 3, A_offset.size,   A_offset.addr            );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(eT2),    &val                      );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 5, A_n_rows.size,  A_n_rows.addr             );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 6, A_n_cols.size,  A_n_cols.addr             );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(ceT2),    &cl_val                  );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, A_n_rows.size,   A_n_rows.addr            );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 6, A_n_cols.size,   A_n_cols.addr            );
   coot_check_cl_error(status, "coot::opencl::any(): failed to set kernel arguments");
 
   const size_t k1_work_dim       = 1;

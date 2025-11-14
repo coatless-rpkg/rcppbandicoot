@@ -18,7 +18,7 @@ __kernel
 void
 COOT_FN(PREFIX,radix_sort_multi_wg_bit_count)(__global eT1* A,
                                               const UWORD A_offset,
-                                              __global uint_eT1* counts,
+                                              __global UWORD* counts,
                                               const UWORD counts_offset,
                                               const UWORD n_elem,
                                               const UWORD sort_type,
@@ -35,7 +35,7 @@ COOT_FN(PREFIX,radix_sort_multi_wg_bit_count)(__global eT1* A,
 
   __global uint_eT1* uA = (__global uint_eT1*) A; // so that we can mask elements of A bitwise
 
-  uint_eT1 local_counts[4] = { 0, 0, 0, 0 };
+  UWORD local_counts[4] = { 0, 0, 0, 0 };
 
   // Count the number of elements with each bit value (00/01/10/11) that belong
   // to this thread.

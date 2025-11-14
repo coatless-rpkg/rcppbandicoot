@@ -50,7 +50,7 @@ COOT_FN(PREFIX,accu)(const eT1* in_mem,
 
   if (tid < 32) // unroll last warp's worth of work
     {
-    COOT_FN(PREFIX,accu_warp_reduce)(aux_mem, tid);
+    COOT_FN(PREFIX,accu_subgroup_reduce)(aux_mem, tid);
     }
 
   if (tid == 0)

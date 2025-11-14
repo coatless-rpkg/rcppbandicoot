@@ -18,6 +18,38 @@ COOT_FN(PREFIX,vec_norm_2_small)(const eT1* in_mem,
                                  const UWORD n_elem,
                                  eT1* out_mem)
   {
-  // This kernel is not used!  It is just a placeholder.
-  // Only the OpenCL version is used.
+  eT1* aux_mem = (eT1*) aux_shared_mem;
+
+  const UWORD tid = threadIdx.x;
+  UWORD i = blockIdx.x * (blockDim.x * 2) + threadIdx.x;
+  const UWORD grid_size = blockDim.x * 2 * gridDim.x;
+
+  aux_mem[tid] = 0;
+
+  while (i + blockDim.x < n_elem)
+    {
+    // copy to local shared memory
+    const eT1 v1 = in_mem[i] * in_mem[i];
+    const eT1 v2 = in_mem[i + blockDim.x] * in_mem[i + blockDim.x];
+    aux_mem[tid] += v1 + v2;
+    i += grid_size;
+    }
+  if (i < n_elem)
+    {
+    const eT1 v = in_mem[i] * in_mem[i];
+    aux_mem[tid] += v;
+    }
+
+  for (UWORD s = blockDim.x / 2; s > 0; s >>= 1)
+    {
+    if (tid < s)
+      {
+      aux_mem[tid] += aux_mem[tid + s];
+      }
+    }
+
+  if (tid == 0)
+    {
+    out_mem[blockIdx.x] = aux_mem[0];
+    }
   }

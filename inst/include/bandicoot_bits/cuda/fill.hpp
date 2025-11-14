@@ -36,10 +36,13 @@ fill(dev_mem_t<eT> dest,
   // Get kernel.
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::fill);
 
-  const eT* dest_ptr = dest.cuda_mem_ptr + row_offset + (col_offset * M_n_rows);
+  typedef typename cuda_type<eT>::type ceT;
+
+  const ceT* dest_ptr = dest.cuda_mem_ptr + row_offset + (col_offset * M_n_rows);
+  const ceT conv_val = to_cuda_type(val);
   const void* args[] = {
       &dest_ptr,
-      &val,
+      &conv_val,
       (uword*) &n_rows,
       (uword*) &n_cols,
       (uword*) &M_n_rows };

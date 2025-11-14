@@ -43,13 +43,16 @@ extract_cx(dev_mem_t<eT1> out_mem,
 
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT1>(oneway_real_kernel_id::extract_cx);
 
-  eT2* in_ptr  =  in_mem.cuda_mem_ptr +  in_row_offset +  in_col_offset *  in_M_n_rows;
-  eT1* out_ptr = out_mem.cuda_mem_ptr + out_row_offset + out_col_offset * out_M_n_rows;
+  typedef typename cuda_type<eT1>::type ceT1;
+  typedef typename cuda_type<eT2>::type ceT2;
+
+  ceT2* in_ptr  =  in_mem.cuda_mem_ptr +  in_row_offset +  in_col_offset *  in_M_n_rows;
+  ceT1* out_ptr = out_mem.cuda_mem_ptr + out_row_offset + out_col_offset * out_M_n_rows;
 
   const uword real_or_imag = (imag) ? 1 : 0;
 
   void* args[] = {
-      (eT1**) &in_ptr,
+      (ceT1**) &in_ptr,
       &out_ptr,
       (uword*) &real_or_imag,
       (uword*) &n_rows,

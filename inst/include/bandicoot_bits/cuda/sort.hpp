@@ -52,8 +52,9 @@ sort(dev_mem_t<eT> mem,
     kernel = get_rt().cuda_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_rowwise_ascending : oneway_kernel_id::radix_sort_rowwise_descending);
     }
 
+  typedef typename cuda_type<eT>::type ceT;
   const uword mem_offset = row_offset + col_offset * M_n_rows;
-  const eT* mem_ptr = mem.cuda_mem_ptr + mem_offset;
+  const ceT* mem_ptr = mem.cuda_mem_ptr + mem_offset;
 
   const void* args[] = {
       &mem_ptr,
@@ -116,7 +117,7 @@ sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
   CUresult result = coot_wrapper(cuLaunchKernel)(
       kernel,
       1, 1, 1, pow2_num_threads, 1, 1,
-      2 * pow2_num_threads * sizeof(eT), // shared memory should have size equal to the number of threads times 2
+      2 * pow2_num_threads * sizeof(uword), // shared memory should have size equal to the number of threads times 2
       NULL,
       (void**) args,
       0);

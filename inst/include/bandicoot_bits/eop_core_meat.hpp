@@ -70,14 +70,14 @@ eop_core<eop_type>::apply(Mat<eT>& out, const eOp<T1, eop_type>& x)
   if (is_same_type<eT, typename T1::elem_type>::no)
     {
     // This is case 1 or 3.  In both cases we set aux_in to x.aux, but if it is case 3 we must also set force_conv_unwrap.
-    aux_in = x.aux;
+    aux_in = in_eT(x.aux);
     conv_after_op = true;
 
     if (is_same_type<in_eT, typename T1::elem_type>::no)
       {
       // This is case 3.
       force_conv_unwrap = true;
-      aux_in = x.aux;
+      aux_in = in_eT(x.aux);
       }
     }
   else

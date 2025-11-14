@@ -149,7 +149,7 @@ COOT_FN(PREFIX,approx_equal_cube)(__global uint* out_mem,
 
   if (tid < SUBGROUP_SIZE)
     {
-    COOT_FN(u32_and_subgroup_reduce_,SUBGROUP_SIZE_NAME)(aux_mem, tid);
+    COOT_FN(COOT_FN(and_subgroup_reduce_,SUBGROUP_SIZE_NAME),_u32)(aux_mem, tid);
     }
 
   if (tid == 0)

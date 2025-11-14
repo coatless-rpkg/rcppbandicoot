@@ -57,9 +57,9 @@ COOT_FN(PREFIX,equ_array_trunc_exp_pre)(__global eT2* dest,
     else
       {
       const ARMA_FP_TYPE fp_val = (ARMA_FP_TYPE) val;
-      if (fp_val >= log(COOT_FN(coot_type_max_,ARMA_FP_TYPE)()))
+      if (fp_val >= log(ARMA_FP_MAX))
         {
-        dest[dest_index] = (eT2) COOT_FN(coot_type_max_,ARMA_FP_TYPE)();
+        dest[dest_index] = (eT2) ARMA_FP_MAX;
         }
       else
         {

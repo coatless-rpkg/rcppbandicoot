@@ -41,9 +41,9 @@ class Col : public Mat<eT>
   template<typename fill_type> inline Col(const uword in_rows, const uword in_cols, const fill::fill_class<fill_type>& f);
   template<typename fill_type> inline Col(const SizeMat& s,                         const fill::fill_class<fill_type>& f);
 
-  inline Col(dev_mem_t<eT> aux_dev_mem, const uword N);
-  inline Col(cl_mem        aux_dev_mem, const uword N);
-  inline Col(eT*           aux_dev_mem, const uword N);
+  inline Col(dev_mem_t<eT>                 aux_dev_mem, const uword N);
+  inline Col(cl_mem                        aux_dev_mem, const uword N);
+  inline Col(typename cuda_type<eT>::type* aux_dev_mem, const uword N);
 
   inline                  Col(const Col& X);
   inline const Col& operator=(const Col& X);

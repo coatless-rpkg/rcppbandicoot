@@ -46,9 +46,12 @@ fill(dev_mem_t<eT> dest,
 
   cl_int status = 0;
 
+  typedef typename cl_type<eT>::type ceT;
+  ceT cl_val = to_cl_type(val);
+
   status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),     &(dest.cl_mem_ptr.ptr));
   status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_out_offset.size, cl_out_offset.addr    );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(eT),         &val                  );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(ceT),        &cl_val               );
   status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_n_rows.size,     cl_n_rows.addr        );
   status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_n_cols.size,     cl_n_cols.addr        );
   status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_M_n_rows.size,   cl_M_n_rows.addr      );

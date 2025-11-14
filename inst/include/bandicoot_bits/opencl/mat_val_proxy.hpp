@@ -28,23 +28,25 @@ get_val(const dev_mem_t<eT> mem, const uword index)
 
   coot_aligned cl_int status = 0;
 
+  typedef typename cl_type<eT>::type ceT;
+
   coot_aligned void* mapped_ptr = coot_wrapper(clEnqueueMapBuffer)(
       get_rt().cl_rt.get_cq(),
       mem.cl_mem_ptr.ptr,
       CL_TRUE,
       CL_MAP_READ,
-      sizeof(eT) * (index + mem.cl_mem_ptr.offset),
-      sizeof(eT) * 1,
+      sizeof(ceT) * (index + mem.cl_mem_ptr.offset),
+      sizeof(ceT) * 1,
       0,
       NULL,
       NULL,
       &status);
 
-  eT val = eT(0);
+  ceT val = to_cl_type(eT(0));
 
   if ((status == CL_SUCCESS) && (mapped_ptr != NULL))
     {
-    val = *((eT*) (mapped_ptr));
+    val = *((ceT*) (mapped_ptr));
 
     status = coot_wrapper(clEnqueueUnmapMemObject)(
         get_rt().cl_rt.get_cq(),
@@ -57,7 +59,7 @@ get_val(const dev_mem_t<eT> mem, const uword index)
 
   coot_check_cl_error(status, "opencl::get_val(): couldn't access device memory");
 
-  return val;
+  return from_cl_type<eT, ceT>(val);
 
   // coot_aligned eT               val;
   // coot_aligned cl_buffer_region region;
@@ -92,12 +94,14 @@ set_val(dev_mem_t<eT> mem, const uword index, const eT in_val)
 
   coot_aligned cl_int status = 0;
 
+  typedef typename cl_type<eT>::type ceT;
+
   coot_aligned void* mapped_ptr = coot_wrapper(clEnqueueMapBuffer)(get_rt().cl_rt.get_cq(),
                                                                    mem.cl_mem_ptr.ptr,
                                                                    CL_TRUE,
                                                                    CL_MAP_WRITE,
-                                                                   sizeof(eT) * (index + mem.cl_mem_ptr.offset),
-                                                                   sizeof(eT) * 1,
+                                                                   sizeof(ceT) * (index + mem.cl_mem_ptr.offset),
+                                                                   sizeof(ceT) * 1,
                                                                    0,
                                                                    NULL,
                                                                    NULL,
@@ -105,7 +109,8 @@ set_val(dev_mem_t<eT> mem, const uword index, const eT in_val)
 
   if( (status == CL_SUCCESS) && (mapped_ptr != NULL) )
     {
-    *((eT*)(mapped_ptr)) = in_val;
+    ceT cl_val = to_cl_type(in_val);
+    *((ceT*)(mapped_ptr)) = cl_val;
 
     status = coot_wrapper(clEnqueueUnmapMemObject)(get_rt().cl_rt.get_cq(), mem.cl_mem_ptr.ptr, mapped_ptr, 0, NULL, NULL);
     }
@@ -126,12 +131,14 @@ val_add_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
 
   coot_aligned cl_int status = 0;
 
+  typedef typename cl_type<eT>::type ceT;
+
   coot_aligned void* mapped_ptr = coot_wrapper(clEnqueueMapBuffer)(get_rt().cl_rt.get_cq(),
                                                                    mem.cl_mem_ptr.ptr,
                                                                    CL_TRUE,
                                                                    (CL_MAP_READ | CL_MAP_WRITE),
-                                                                   sizeof(eT) * (index + mem.cl_mem_ptr.offset),
-                                                                   sizeof(eT) * 1,
+                                                                   sizeof(ceT) * (index + mem.cl_mem_ptr.offset),
+                                                                   sizeof(ceT) * 1,
                                                                    0,
                                                                    NULL,
                                                                    NULL,
@@ -139,7 +146,8 @@ val_add_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
 
   if( (status == CL_SUCCESS) && (mapped_ptr != NULL) )
     {
-    *((eT*)(mapped_ptr)) += val;
+    eT cl_val = from_cl_type<eT, ceT>(*((ceT*)(mapped_ptr))) + val;
+    *((ceT*)(mapped_ptr)) = to_cl_type(cl_val);
 
     status = coot_wrapper(clEnqueueUnmapMemObject)(get_rt().cl_rt.get_cq(), mem.cl_mem_ptr.ptr, mapped_ptr, 0, NULL, NULL);
     }
@@ -160,12 +168,14 @@ val_minus_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
 
   coot_aligned cl_int status = 0;
 
+  typedef typename cl_type<eT>::type ceT;
+
   coot_aligned void* mapped_ptr = coot_wrapper(clEnqueueMapBuffer)(get_rt().cl_rt.get_cq(),
                                                                    mem.cl_mem_ptr.ptr,
                                                                    CL_TRUE,
                                                                    (CL_MAP_READ | CL_MAP_WRITE),
-                                                                   sizeof(eT) * (index + mem.cl_mem_ptr.offset),
-                                                                   sizeof(eT) * 1,
+                                                                   sizeof(ceT) * (index + mem.cl_mem_ptr.offset),
+                                                                   sizeof(ceT) * 1,
                                                                    0,
                                                                    NULL,
                                                                    NULL,
@@ -173,12 +183,13 @@ val_minus_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
 
   if( (status == CL_SUCCESS) && (mapped_ptr != NULL) )
     {
-    *((eT*)(mapped_ptr)) -= val;
+    eT cl_val = from_cl_type<eT, ceT>(*((ceT*)(mapped_ptr))) - val;
+    *((ceT*)(mapped_ptr)) = to_cl_type(cl_val);
 
     status = coot_wrapper(clEnqueueUnmapMemObject)(get_rt().cl_rt.get_cq(), mem.cl_mem_ptr.ptr, mapped_ptr, 0, NULL, NULL);
     }
 
-  coot_check_cl_error(status, "opencl::val_add_inplace(): couldn't access device memory" );
+  coot_check_cl_error(status, "opencl::val_minus_inplace(): couldn't access device memory" );
   }
 
 
@@ -194,12 +205,14 @@ val_mul_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
 
   coot_aligned cl_int status = 0;
 
+  typedef typename cl_type<eT>::type ceT;
+
   coot_aligned void* mapped_ptr = coot_wrapper(clEnqueueMapBuffer)(get_rt().cl_rt.get_cq(),
                                                                    mem.cl_mem_ptr.ptr,
                                                                    CL_TRUE,
                                                                    (CL_MAP_READ | CL_MAP_WRITE),
-                                                                   sizeof(eT) * (index + mem.cl_mem_ptr.offset),
-                                                                   sizeof(eT) * 1,
+                                                                   sizeof(ceT) * (index + mem.cl_mem_ptr.offset),
+                                                                   sizeof(ceT) * 1,
                                                                    0,
                                                                    NULL,
                                                                    NULL,
@@ -207,12 +220,13 @@ val_mul_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
 
   if( (status == CL_SUCCESS) && (mapped_ptr != NULL) )
     {
-    *((eT*)(mapped_ptr)) *= val;
+    eT cl_val = from_cl_type<eT, ceT>(*((ceT*)(mapped_ptr))) * val;
+    *((ceT*)(mapped_ptr)) = to_cl_type(cl_val);
 
     status = coot_wrapper(clEnqueueUnmapMemObject)(get_rt().cl_rt.get_cq(), mem.cl_mem_ptr.ptr, mapped_ptr, 0, NULL, NULL);
     }
 
-  coot_check_cl_error(status, "opencl::val_add_inplace(): couldn't access device memory" );
+  coot_check_cl_error(status, "opencl::val_mul_inplace(): couldn't access device memory" );
   }
 
 
@@ -228,12 +242,14 @@ val_div_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
 
   coot_aligned cl_int status = 0;
 
+  typedef typename cl_type<eT>::type ceT;
+
   coot_aligned void* mapped_ptr = coot_wrapper(clEnqueueMapBuffer)(get_rt().cl_rt.get_cq(),
                                                                    mem.cl_mem_ptr.ptr,
                                                                    CL_TRUE,
                                                                    (CL_MAP_READ | CL_MAP_WRITE),
-                                                                   sizeof(eT) * (index + mem.cl_mem_ptr.offset),
-                                                                   sizeof(eT) * 1,
+                                                                   sizeof(ceT) * (index + mem.cl_mem_ptr.offset),
+                                                                   sizeof(ceT) * 1,
                                                                    0,
                                                                    NULL,
                                                                    NULL,
@@ -241,10 +257,11 @@ val_div_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
 
   if( (status == CL_SUCCESS) && (mapped_ptr != NULL) )
     {
-    *((eT*)(mapped_ptr)) /= val;
+    eT cl_val = from_cl_type<eT, ceT>(*((ceT*)(mapped_ptr))) / val;
+    *((ceT*)(mapped_ptr)) = to_cl_type(cl_val);
 
     status = coot_wrapper(clEnqueueUnmapMemObject)(get_rt().cl_rt.get_cq(), mem.cl_mem_ptr.ptr, mapped_ptr, 0, NULL, NULL);
     }
 
-  coot_check_cl_error(status, "opencl::val_add_inplace(): couldn't access device memory" );
+  coot_check_cl_error(status, "opencl::val_div_inplace(): couldn't access device memory" );
   }

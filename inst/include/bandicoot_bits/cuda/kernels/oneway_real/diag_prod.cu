@@ -13,7 +13,7 @@
 // ------------------------------------------------------------------------
 
 // Forward declaration of one-way kernel that we need.
-__device__ void COOT_FN(PREFIX,prod_warp_reduce)(volatile eT1* data, int tid);
+__device__ void COOT_FN(PREFIX,prod_subgroup_reduce)(volatile eT1* data, int tid);
 
 // this kernel is technically incorrect if the size is not a factor of 2!
 // Compute the product of the elements on the diagonal of a matrix.
@@ -60,8 +60,8 @@ COOT_FN(PREFIX,diag_prod)(const eT1* in_mem,
 
   if (tid < 32) // unroll last warp's worth of work
     {
-    // Since we are just accumulating, we can use the accu_warp_reduce utility function.
-    COOT_FN(PREFIX,prod_warp_reduce)(aux_mem, tid);
+    // Since we are just accumulating, we can use the accu_subgroup_reduce utility function.
+    COOT_FN(PREFIX,prod_subgroup_reduce)(aux_mem, tid);
     }
 
   if (tid == 0)

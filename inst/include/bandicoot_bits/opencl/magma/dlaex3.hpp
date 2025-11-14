@@ -312,81 +312,80 @@ magma_dlaex3
         rk = iiu - iil + 1;
         }
 
-        if (k == 2)
+      if (k == 2)
+        {
+        #pragma omp single
           {
-          #pragma omp single
-            {
-            for (j = 0; j < k; ++j)
-              {
-              w[0] = *(Q +     j * ldq);
-              w[1] = *(Q + 1 + j * ldq);
-
-              i = indx[0] - 1;
-              *(Q +     j * ldq) = w[i];
-              i = indx[1] - 1;
-              *(Q + 1 + j * ldq) = w[i];
-              }
-            }
-          }
-        else if (k != 1)
-          {
-          // Compute updated W.
-          blas::copy(ik, &w[ibegin], ione, &s[ibegin], ione);
-
-          // Initialize W(I) = Q(I,I)
-          tmp = ldq + 1;
-          blas::copy(ik, Q + ibegin + ibegin * ldq, tmp, &w[ibegin], ione);
-
           for (j = 0; j < k; ++j)
             {
-            magma_int_t i_tmp = std::min(j, iend);
-            for (i = ibegin; i < i_tmp; ++i)
-              {
-              w[i] = w[i] * ( *(Q + i + j * ldq) / ( dlamda[i] - dlamda[j] ) );
-              }
-            i_tmp = std::max(j+1, ibegin);
-            for (i = i_tmp; i < iend; ++i)
-              {
-              w[i] = w[i] * ( *(Q + i + j * ldq) / ( dlamda[i] - dlamda[j] ) );
-              }
+            w[0] = *(Q +     j * ldq);
+            w[1] = *(Q + 1 + j * ldq);
+
+            i = indx[0] - 1;
+            *(Q +     j * ldq) = w[i];
+            i = indx[1] - 1;
+            *(Q + 1 + j * ldq) = w[i];
             }
+          }
+        }
+      else if (k != 1)
+        {
+        // Compute updated W.
+        blas::copy(ik, &w[ibegin], ione, &s[ibegin], ione);
 
-          for (i = ibegin; i < iend; ++i)
+        // Initialize W(I) = Q(I,I)
+        tmp = ldq + 1;
+        blas::copy(ik, Q + ibegin + ibegin * ldq, tmp, &w[ibegin], ione);
+
+        for (j = 0; j < k; ++j)
+          {
+          magma_int_t i_tmp = std::min(j, iend);
+          for (i = ibegin; i < i_tmp; ++i)
             {
-            w[i] = copysign( sqrt( -w[i] ), s[i]);
+            w[i] = w[i] * ( *(Q + i + j * ldq) / ( dlamda[i] - dlamda[j] ) );
             }
-
-          #pragma omp barrier
-
-          // reduce the number of threads used to have enough S workspace
-          nthread = std::min(n1, omp_get_num_threads());
-
-          if (tid < nthread)
+          i_tmp = std::max(j+1, ibegin);
+          for (i = i_tmp; i < iend; ++i)
             {
-            ibegin = ( tid    * rk) / nthread + iil - 1;
-            iend   = ((tid+1) * rk) / nthread + iil - 1;
-            ik     = iend - ibegin;
+            w[i] = w[i] * ( *(Q + i + j * ldq) / ( dlamda[i] - dlamda[j] ) );
             }
-          else
-            {
-            ibegin = -1;
-            iend   = -1;
-            ik     = -1;
-            }
+          }
 
-          // Compute eigenvectors of the modified rank-1 modification.
-          for (j = ibegin; j < iend; ++j)
+        for (i = ibegin; i < iend; ++i)
+          {
+          w[i] = copysign( sqrt( -w[i] ), s[i]);
+          }
+
+        #pragma omp barrier
+
+        // reduce the number of threads used to have enough S workspace
+        nthread = std::min(n1, omp_get_num_threads());
+
+        if (tid < nthread)
+          {
+          ibegin = ( tid    * rk) / nthread + iil - 1;
+          iend   = ((tid+1) * rk) / nthread + iil - 1;
+          ik     = iend - ibegin;
+          }
+        else
+          {
+          ibegin = -1;
+          iend   = -1;
+          ik     = -1;
+          }
+
+        // Compute eigenvectors of the modified rank-1 modification.
+        for (j = ibegin; j < iend; ++j)
+          {
+          for (i = 0; i < k; ++i)
             {
-            for (i = 0; i < k; ++i)
-              {
-              s[tid*k + i] = w[i] / *(Q + i + j * ldq);
-              }
-            temp = magma_cblas_dnrm2( k, s + tid*k, 1 );
-            for (i = 0; i < k; ++i)
-              {
-              magma_int_t iii = indx[i] - 1;
-              *(Q + i + j * ldq) = s[tid*k + iii] / temp;
-              }
+            s[tid*k + i] = w[i] / *(Q + i + j * ldq);
+            }
+          temp = magma_cblas_dnrm2( k, s + tid*k, 1 );
+          for (i = 0; i < k; ++i)
+            {
+            magma_int_t iii = indx[i] - 1;
+            *(Q + i + j * ldq) = s[tid*k + iii] / temp;
             }
           }
         }

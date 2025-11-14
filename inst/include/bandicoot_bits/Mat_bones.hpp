@@ -68,9 +68,9 @@ class Mat : public Base< eT, Mat<eT> >
   inline            Mat(const std::initializer_list< std::initializer_list<eT> >& list);
   inline Mat& operator=(const std::initializer_list< std::initializer_list<eT> >& list);
 
-  inline Mat(dev_mem_t<eT> aux_dev_mem, const uword in_rows, const uword in_cols);
-  inline Mat(cl_mem        aux_dev_mem, const uword in_rows, const uword in_cols); // OpenCL alias constructor
-  inline Mat(eT*           aux_dev_mem, const uword in_rows, const uword in_cols); // CUDA alias constructor
+  inline Mat(dev_mem_t<eT>                 aux_dev_mem, const uword in_rows, const uword in_cols);
+  inline Mat(cl_mem                        aux_dev_mem, const uword in_rows, const uword in_cols); // OpenCL alias constructor
+  inline Mat(typename cuda_type<eT>::type* aux_dev_mem, const uword in_rows, const uword in_cols); // CUDA alias constructor
 
   inline dev_mem_t<eT> get_dev_mem(const bool sync = true) const;
 
@@ -175,6 +175,8 @@ class Mat : public Base< eT, Mat<eT> >
 
   coot_inline       diagview<eT> diag(const sword in_id = 0);
   coot_inline const diagview<eT> diag(const sword in_id = 0) const;
+
+  inline const Mat& replace(const eT old_val, const eT new_val);
 
   inline const Mat& clamp(const eT min_val, const eT max_val);
 

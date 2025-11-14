@@ -33,12 +33,18 @@ regspace(dev_mem_t<eT> mem, const uword mem_incr, const eT start, const eT delta
 
   dev_mem_t<eT>* in_mem = &mem;
 
+  typedef typename cuda_type<eT>::type ceT;
+
+  const ceT cuda_start = to_cuda_type(start);
+  const ceT cuda_delta = to_cuda_type(delta);
+  const ceT cuda_end = to_cuda_type(end);
+
   void* args[] = {
       &(in_mem->cuda_mem_ptr),
       (uword*) &mem_incr,
-      (eT*) &start,
-      (eT*) &end,
-      (eT*) &delta,
+      (ceT*) &cuda_start,
+      (ceT*) &cuda_end,
+      (ceT*) &cuda_delta,
       (uword*) &num };
 
   CUresult result = coot_wrapper(cuLaunchKernel)(

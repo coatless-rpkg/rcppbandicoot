@@ -30,10 +30,13 @@ class OpCube : public BaseCube< typename T1::elem_type, OpCube<T1, op_type> >
   inline          OpCube(const BaseCube<typename T1::elem_type, T1>& in_m, const elem_type in_aux, const uword in_aux_uword_a, const uword in_aux_uword_b, const uword in_aux_uword_c);
   inline          OpCube(const BaseCube<typename T1::elem_type, T1>& in_m, const uword in_aux_uword_a, const uword in_aux_uword_b);
   inline          OpCube(const BaseCube<typename T1::elem_type, T1>& in_m, const uword in_aux_uword_a, const uword in_aux_uword_b, const uword in_aux_uword_c);
+  // `junk` is ignored and exists to disambiguate specializations; pass any constant char
+  inline          OpCube(const BaseCube<typename T1::elem_type, T1>& in_m, const char junk, const elem_type in_aux, const elem_type in_aux_b);
   inline         ~OpCube();
 
   const T1&       m;            // the operand; must be derived from BaseCube
         elem_type aux;          // auxiliary data, using the element type as used by T1
+        elem_type aux_b;        // auxiliary data, using the element type as used by T1
         uword     aux_uword_a;  // auxiliary data, uword format
         uword     aux_uword_b;  // auxiliary data, uword format
         uword     aux_uword_c;  // auxiliary data, uword format

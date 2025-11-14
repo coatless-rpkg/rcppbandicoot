@@ -38,18 +38,18 @@ COOT_FN(PREFIX,equ_array_sign_pre)(eT2* dest,
 
   if (row < n_rows && col < n_cols && slice < n_slices)
     {
-    const eT2 val = (eT2) src[src_index];
-    if (val > (eT2) 0)
+    const eT2 val = TO_ET2(src[src_index]);
+    if (val > TO_ET2(0))
       {
-      dest[dest_index] = (eT2) 1;
+      dest[dest_index] = TO_ET2(1);
       }
-    else if (val == (eT2) 0)
+    else if (val == TO_ET2(0))
       {
-      dest[dest_index] = (eT2) 0;
+      dest[dest_index] = TO_ET2(0);
       }
     else
       {
-      dest[dest_index] = (eT2) -1;
+      dest[dest_index] = TO_ET2(-1);
       }
     }
   }

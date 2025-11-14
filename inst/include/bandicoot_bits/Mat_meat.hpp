@@ -559,7 +559,7 @@ Mat<eT>::Mat(cl_mem aux_dev_mem, const uword in_n_rows, const uword in_n_cols)
 
 template<typename eT>
 inline
-Mat<eT>::Mat(eT* aux_dev_mem, const uword in_n_rows, const uword in_n_cols)
+Mat<eT>::Mat(typename cuda_type<eT>::type* aux_dev_mem, const uword in_n_rows, const uword in_n_cols)
   : n_rows    (in_n_rows)
   , n_cols    (in_n_cols)
   , n_elem    (in_n_rows*in_n_cols)  // TODO: need to check whether the result fits
@@ -735,7 +735,7 @@ Mat<eT>::init(const uword new_n_rows, const uword new_n_cols)
   uword in_n_cols = new_n_cols;
 
   // ensure that n_elem can hold the result of (n_rows * n_cols)
-  coot_debug_check( ((double(new_n_rows)*double(new_n_cols)) > double(std::numeric_limits<uword>::max())), "Mat::init(): requested size is too large" );
+  coot_debug_check( ((double(new_n_rows)*double(new_n_cols)) > double(Datum<uword>::max)), "Mat::init(): requested size is too large" );
 
   const uword t_mem_state = mem_state;
   const uword t_vec_state = vec_state;
@@ -2257,6 +2257,24 @@ Mat<eT>::diag(const sword in_id) const
   const uword len = (std::min)(n_rows - row_offset, n_cols - col_offset);
 
   return diagview<eT>(*this, row_offset, col_offset, len);
+  }
+
+
+
+template<typename eT>
+inline
+const Mat<eT>&
+Mat<eT>::replace(const eT old_val, const eT new_val)
+  {
+  coot_extra_debug_sigprint();
+
+  coot_rt_t::replace(dev_mem, dev_mem,
+                     old_val, new_val,
+                     n_rows, n_cols, 1,
+                     0, 0, 0, n_rows, n_cols,
+                     0, 0, 0, n_rows, n_cols);
+
+  return *this;
   }
 
 

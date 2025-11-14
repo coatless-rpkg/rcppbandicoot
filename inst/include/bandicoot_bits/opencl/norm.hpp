@@ -93,16 +93,16 @@ vec_norm_2(dev_mem_t<eT> mem, const uword n_elem, const typename coot_real_only<
                                                     "vec_norm_2_robust",
                                                     robust_kernel,
                                                     robust_kernel_small,
-                                                    std::make_tuple(max_elem),
+                                                    std::make_tuple(to_cl_type(max_elem)),
                                                     accu_kernel,
                                                     accu_kernel_small,
                                                     std::make_tuple(/* no extra args */));
 
-    return std::sqrt(robust_result) * max_elem;
+    return coot_sqrt(robust_result) * max_elem;
     }
   else
     {
-    return std::sqrt(result);
+    return coot_sqrt(result);
     }
   }
 
@@ -132,7 +132,7 @@ vec_norm_k(dev_mem_t<eT> mem, const uword n_elem, const uword k, const typename 
                                            accu_kernel,
                                            accu_kernel_small,
                                            std::make_tuple(/* no extra args */));
-  return std::pow(result, eT(1) / eT(k));
+  return coot_pow(result, eT(1 / eT(k)));
   }
 
 

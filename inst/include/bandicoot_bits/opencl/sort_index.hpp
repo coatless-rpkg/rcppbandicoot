@@ -28,12 +28,11 @@ stable_sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A,
   // sort_index_vec_multiple_workgroups() function (below).
 
   // We'll sort the top two bits, and then do sub-sorts on each group.
-  typedef typename uint_type<eT>::result ueT;
-  dev_mem_t<ueT> hist;
+  dev_mem_t<uword> hist;
   dev_mem_t<eT> A_temp;
   dev_mem_t<uword> out_temp;
 
-  hist.cl_mem_ptr     = get_rt().cl_rt.acquire_memory<ueT>(4 * total_num_threads);
+  hist.cl_mem_ptr     = get_rt().cl_rt.acquire_memory<uword>(4 * total_num_threads);
   A_temp.cl_mem_ptr   = get_rt().cl_rt.acquire_memory<eT>(n_elem);
   out_temp.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(n_elem);
 
@@ -136,7 +135,7 @@ stable_sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A,
     // Reallocate the histogram vector to the correct size that we'll need.
     get_rt().cl_rt.synchronise();
     get_rt().cl_rt.release_memory(hist.cl_mem_ptr);
-    hist.cl_mem_ptr = get_rt().cl_rt.acquire_memory<ueT>(4 * (pow2_num_threads1 + pow2_num_threads2));
+    hist.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(4 * (pow2_num_threads1 + pow2_num_threads2));
     }
 
   const uword hist_offset = 4 * pow2_num_threads1;
@@ -186,7 +185,7 @@ stable_sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A,
       }
     if (second_group_count > 0)
       {
-      dev_mem_t<ueT> hist2{hist.cl_mem_ptr.ptr, hist.cl_mem_ptr.offset + hist_offset};
+      dev_mem_t<uword> hist2{hist.cl_mem_ptr.ptr, hist.cl_mem_ptr.offset + hist_offset};
       shifted_prefix_sum(hist2, 4 * pow2_num_threads2);
       }
 
@@ -263,12 +262,11 @@ sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A, const 
   coot_extra_debug_sigprint();
 
   // First create auxiliary memory.
-  typedef typename uint_type<eT>::result ueT;
-  dev_mem_t<ueT> hist;
+  dev_mem_t<uword> hist;
   dev_mem_t<eT> A_temp;
   dev_mem_t<uword> out_temp;
 
-  hist.cl_mem_ptr     = get_rt().cl_rt.acquire_memory<ueT>(4 * total_num_threads);
+  hist.cl_mem_ptr     = get_rt().cl_rt.acquire_memory<uword>(4 * total_num_threads);
   A_temp.cl_mem_ptr   = get_rt().cl_rt.acquire_memory<eT>(n_elem);
   out_temp.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(n_elem);
 
@@ -297,11 +295,11 @@ sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A, const 
     // we need to sort in a slightly different order to handle the sign bit.
     if (b == (8 * sizeof(eT) - 2))
       {
-      if (std::is_signed<eT>::value && !std::is_floating_point<eT>::value)
+      if (is_signed<eT>::value && !is_real<eT>::value)
         {
         step_sort_type = 2 + sort_type; // 2 for ascending, 3 for descending
         }
-      else if (std::is_floating_point<eT>::value)
+      else if (is_real<eT>::value)
         {
         step_sort_type = 4 + sort_type; // 4 for ascending, 5 for descending
         }
@@ -401,7 +399,7 @@ sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const 
   // If we will have multiple workgroups, we can't use the single-kernel version.
   if (total_num_threads != local_group_size)
     {
-    if (stable_sort == 0 || !std::is_floating_point<eT>::value)
+    if (stable_sort == 0 || !is_real<eT>::value)
       {
       sort_index_vec_multiple_workgroups(out, A, n_elem, sort_type, pow2_num_threads, local_group_size);
       }
@@ -421,7 +419,7 @@ sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const 
 
   cl_int status = 0;
 
-  const size_t aux_mem_size = (stable_sort == 0) ? (2 * sizeof(eT) * pow2_num_threads) : (4 * sizeof(eT) * pow2_num_threads);
+  const size_t aux_mem_size = (stable_sort == 0) ? (2 * sizeof(uword) * pow2_num_threads) : (4 * sizeof(uword) * pow2_num_threads);
 
   runtime_t::adapt_uword cl_n_elem(n_elem);
   runtime_t::adapt_uword cl_A_offset(A.cl_mem_ptr.offset);

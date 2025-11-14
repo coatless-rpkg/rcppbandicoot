@@ -33,8 +33,8 @@ COOT_FN(PREFIX,equ_array_min_array)(eT3* dest,
     const UWORD B_index = row + col * src_B_M_n_rows;
     const UWORD dest_index = row + col * dest_M_n_rows;
 
-    const threeway_promoted_eT a_val = (threeway_promoted_eT) src_A[A_index];
-    const threeway_promoted_eT b_val = (threeway_promoted_eT) src_B[B_index];
-    dest[dest_index] = (eT3) min(a_val, b_val);
+    const threeway_promoted_eT a_val = TO_THREEWAY_PROMOTED_ET(src_A[A_index]);
+    const threeway_promoted_eT b_val = TO_THREEWAY_PROMOTED_ET(src_B[B_index]);
+    dest[dest_index] = TO_ET3(min(a_val, b_val));
     }
   }

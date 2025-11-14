@@ -36,7 +36,7 @@ cpu_memory::acquire(const uword n_elem)
   {
   coot_debug_check
     (
-    ( size_t(n_elem) > (std::numeric_limits<size_t>::max() / sizeof(eT)) ),
+    ( size_t(n_elem) > (Datum<size_t>::max / sizeof(eT)) ),
     "cpu_memory::acquire(): requested size is too large"
     );
 

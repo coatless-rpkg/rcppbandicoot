@@ -19,6 +19,7 @@ struct runtime_dev_info
   public:
 
   coot_aligned bool   is_gpu;
+  coot_aligned bool   has_float16;
   coot_aligned bool   has_float64;
   coot_aligned bool   has_sizet64;
   coot_aligned bool   has_subgroups;
@@ -36,6 +37,7 @@ struct runtime_dev_info
   reset()
     {
     is_gpu         = false;
+    has_float16    = false;
     has_float64    = false;
     has_sizet64    = false;
     has_subgroups  = false;
@@ -75,6 +77,7 @@ class runtime_t
 
   inline bool is_valid()                   const;
   inline bool has_sizet64()                const;
+  inline bool has_float16()                const;
   inline bool has_float64()                const;
   inline bool has_subgroups()              const;
   inline bool must_synchronise_subgroups() const;
@@ -85,13 +88,16 @@ class runtime_t
   inline void release_memory(coot_cl_mem dev_mem);
 
   template<typename eT>
-  inline constexpr bool is_supported_type(const typename enable_if<is_supported_kernel_elem_type<eT>::value && !is_double<eT>::value>::result* junk = 0) const { return true; }
+  inline constexpr bool is_supported_type(const typename enable_if<is_supported_elem_type<eT>::value && !is_double<eT>::value && !is_fp16<eT>::value>::result* junk = 0) const { return true; }
 
   template<typename eT>
   inline bool is_supported_type(const typename enable_if<is_double<eT>::value>::result* junk = 0) { return has_float64(); }
 
   template<typename eT>
-  inline constexpr bool is_supported_type(const typename enable_if<!is_supported_kernel_elem_type<eT>::value>::result* junk = 0) const { return false; }
+  inline bool is_supported_type(const typename enable_if<is_fp16<eT>::value>::result* junk = 0) { return has_float16(); }
+
+  template<typename eT>
+  inline constexpr bool is_supported_type(const typename enable_if<!is_supported_elem_type<eT>::value>::result* junk = 0) const { return false; }
 
   inline void synchronise();
 
@@ -151,13 +157,17 @@ class runtime_t
 
   coot_aligned runtime_dev_info dev_info;
 
-  coot_aligned std::vector<cl_kernel>                                                                   zeroway_kernels;
-  coot_aligned rt_common::kernels_t<std::vector<cl_kernel>>                                             oneway_kernels;
-  coot_aligned rt_common::kernels_t<std::vector<cl_kernel>>                                             oneway_real_kernels;
-  coot_aligned rt_common::kernels_t<std::vector<cl_kernel>>                                             oneway_integral_kernels;
-  coot_aligned rt_common::kernels_t<rt_common::kernels_t<std::vector<cl_kernel>>>                       twoway_kernels;
-  coot_aligned rt_common::kernels_t<rt_common::kernels_t<rt_common::kernels_t<std::vector<cl_kernel>>>> threeway_kernels;
-  coot_aligned rt_common::kernels_t<std::vector<cl_kernel>>                                             magma_real_kernels;
+  coot_aligned std::string      build_options;
+  coot_aligned std::string      unique_host_device_id;
+  coot_aligned std::string      src_preamble;
+
+  coot_aligned std::unordered_map<zeroway_kernel_id::enum_id, cl_kernel>                                                                    zeroway_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_kernel_id::enum_id, cl_kernel>>                                               oneway_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_real_kernel_id::enum_id, cl_kernel>>                                          oneway_real_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_integral_kernel_id::enum_id, cl_kernel>>                                      oneway_integral_kernels;
+  coot_aligned rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<twoway_kernel_id::enum_id, cl_kernel>>>                         twoway_kernels;
+  coot_aligned rt_common::kernels_t<rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<threeway_kernel_id::enum_id, cl_kernel>>>> threeway_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<magma_real_kernel_id::enum_id, cl_kernel>>                                           magma_real_kernels;
 
   // Internally-held RNG state.
   coot_aligned coot_cl_mem   xorwow32_state;
@@ -178,29 +188,44 @@ class runtime_t
 
   inline bool setup_queue(cl_context& out_context, cl_command_queue& out_queue, cl_platform_id in_plat_id, cl_device_id in_dev_id) const;
 
-  inline std::string unique_host_device_id() const;
+  inline void generate_unique_host_device_id();
 
-  inline bool load_cached_kernels(const std::string& unique_host_device_id,
-                                  const size_t kernel_size);
+  inline std::string generate_kernel(const zeroway_kernel_id::enum_id num);
 
-  inline bool compile_kernels(const std::string& unique_host_id);
+  template<typename eT>
+  inline std::string generate_kernel(const oneway_kernel_id::enum_id num);
 
-  inline bool create_kernels(const std::vector<std::pair<std::string, cl_kernel*>>& name_map,
-                             runtime_t::program_wrapper& prog_holder,
-                             const std::string& build_options);
+  template<typename eT>
+  inline std::string generate_kernel(const oneway_real_kernel_id::enum_id num);
 
-  inline bool cache_kernels(const std::string& unique_host_device_id,
-                            runtime_t::program_wrapper& prog_holder) const;
+  template<typename eT>
+  inline std::string generate_kernel(const oneway_integral_kernel_id::enum_id num);
+
+  template<typename eT1, typename eT2>
+  inline std::string generate_kernel(const twoway_kernel_id::enum_id num);
+
+  template<typename eT1, typename eT2, typename eT3>
+  inline std::string generate_kernel(const threeway_kernel_id::enum_id num);
+
+  template<typename eT>
+  inline std::string generate_kernel(const magma_real_kernel_id::enum_id num);
+
+  inline bool load_cached_kernel(const std::string& kernel_name,
+                                 cl_kernel& kernel);
+
+  inline void compile_kernel(const std::string& kernel_name,
+                             const std::string& source,
+                             cl_kernel& kernel);
 
   template<typename eT1, typename... eTs, typename HeldType, typename EnumType>
   inline
-  const cl_kernel&
-  get_kernel(const rt_common::kernels_t<HeldType>& k, const EnumType num);
+  std::tuple<bool, cl_kernel&>
+  get_kernel(rt_common::kernels_t<HeldType>& k, const EnumType num);
 
-  template<typename eT, typename EnumType>
+  template<typename EnumType>
   inline
-  const cl_kernel&
-  get_kernel(const rt_common::kernels_t<std::vector<cl_kernel>>& k, const EnumType num);
+  std::tuple<bool, cl_kernel&>
+  get_kernel(std::unordered_map<EnumType, cl_kernel>& k, const EnumType num);
   };
 
 

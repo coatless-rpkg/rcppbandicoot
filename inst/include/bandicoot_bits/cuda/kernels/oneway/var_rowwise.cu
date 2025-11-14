@@ -27,7 +27,7 @@ COOT_FN(PREFIX,var_rowwise)(eT1* dest,
   const UWORD row = blockIdx.x * blockDim.x + threadIdx.x;
   if(row < n_rows)
     {
-    eT1 acc = (eT1)(0);
+    eT1 acc = TO_ET1(0);
     const eT1 mean_val = src_means[row];
     for (UWORD i = 0; i < n_cols; ++i)
       {
@@ -35,6 +35,6 @@ COOT_FN(PREFIX,var_rowwise)(eT1* dest,
       acc += (val * val);
       }
 
-    dest[row * dest_mem_incr] = (acc / (eT1) (n_cols - norm_correction));
+    dest[row * dest_mem_incr] = (acc / TO_ET1(n_cols - norm_correction));
     }
   }

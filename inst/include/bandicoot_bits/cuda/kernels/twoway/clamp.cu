@@ -31,6 +31,6 @@ COOT_FN(PREFIX,clamp)(eT2* dest,
     const UWORD dest_index = row + col * dest_M_n_rows;
 
     const eT1 clamped_val = max(min_val, min(max_val, src[src_index]));
-    dest[dest_index] = (eT2) clamped_val;
+    dest[dest_index] = TO_ET2(clamped_val);
     }
   }

@@ -12,6 +12,236 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
+
+
+void
+COOT_FN(PREFIX,index_max_subgroup_reduce_other)(__local volatile eT1* data, __local volatile UWORD* data_uword, UWORD tid)
+  {
+  for(UWORD i = SUBGROUP_SIZE; i > 0; i >>= 1)
+    {
+    if (tid < i)
+      {
+      if (data[tid + i] > data[tid])
+        {
+        data[tid] = data[tid + i];
+        data_uword[tid] = data_uword[tid + i];
+        }
+      }
+    SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+    }
+  }
+
+
+
+void
+COOT_FN(PREFIX,index_max_subgroup_reduce_8)(__local volatile eT1* data, __local volatile UWORD* data_uword, UWORD tid)
+  {
+  if (data[tid + 8] > data[tid])
+    {
+    data[tid] = data[tid + 8];
+    data_uword[tid] = data_uword[tid + 8];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 4] > data[tid])
+    {
+    data[tid] = data[tid + 4];
+    data_uword[tid] = data_uword[tid + 4];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 2] > data[tid])
+    {
+    data[tid] = data[tid + 2];
+    data_uword[tid] = data_uword[tid + 2];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 1] > data[tid])
+    {
+    data[tid] = data[tid + 1];
+    data_uword[tid] = data_uword[tid + 1];
+    }
+  }
+
+
+
+void
+COOT_FN(PREFIX,index_max_subgroup_reduce_16)(__local volatile eT1* data, __local volatile UWORD* data_uword, UWORD tid)
+  {
+  if (data[tid + 16] > data[tid])
+    {
+    data[tid] = data[tid + 16];
+    data_uword[tid] = data_uword[tid + 16];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 8] > data[tid])
+    {
+    data[tid] = data[tid + 8];
+    data_uword[tid] = data_uword[tid + 8];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 4] > data[tid])
+    {
+    data[tid] = data[tid + 4];
+    data_uword[tid] = data_uword[tid + 4];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 2] > data[tid])
+    {
+    data[tid] = data[tid + 2];
+    data_uword[tid] = data_uword[tid + 2];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 1] > data[tid])
+    {
+    data[tid] = data[tid + 1];
+    data_uword[tid] = data_uword[tid + 1];
+    }
+  }
+
+
+
+void
+COOT_FN(PREFIX,index_max_subgroup_reduce_32)(__local volatile eT1* data, __local volatile UWORD* data_uword, UWORD tid)
+  {
+  if (data[tid + 32] > data[tid])
+    {
+    data[tid] = data[tid + 32];
+    data_uword[tid] = data_uword[tid + 32];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 16] > data[tid])
+    {
+    data[tid] = data[tid + 16];
+    data_uword[tid] = data_uword[tid + 16];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 8] > data[tid])
+    {
+    data[tid] = data[tid + 8];
+    data_uword[tid] = data_uword[tid + 8];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 4] > data[tid])
+    {
+    data[tid] = data[tid + 4];
+    data_uword[tid] = data_uword[tid + 4];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 2] > data[tid])
+    {
+    data[tid] = data[tid + 2];
+    data_uword[tid] = data_uword[tid + 2];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 1] > data[tid])
+    {
+    data[tid] = data[tid + 1];
+    data_uword[tid] = data_uword[tid + 1];
+    }
+  }
+
+
+
+void
+COOT_FN(PREFIX,index_max_subgroup_reduce_64)(__local volatile eT1* data, __local volatile UWORD* data_uword, UWORD tid)
+  {
+  if (data[tid + 64] > data[tid])
+    {
+    data[tid] = data[tid + 64];
+    data_uword[tid] = data_uword[tid + 64];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 32] > data[tid])
+    {
+    data[tid] = data[tid + 32];
+    data_uword[tid] = data_uword[tid + 32];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 16] > data[tid])
+    {
+    data[tid] = data[tid + 16];
+    data_uword[tid] = data_uword[tid + 16];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 8] > data[tid])
+    {
+    data[tid] = data[tid + 8];
+    data_uword[tid] = data_uword[tid + 8];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 4] > data[tid])
+    {
+    data[tid] = data[tid + 4];
+    data_uword[tid] = data_uword[tid + 4];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 2] > data[tid])
+    {
+    data[tid] = data[tid + 2];
+    data_uword[tid] = data_uword[tid + 2];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 1] > data[tid])
+    {
+    data[tid] = data[tid + 1];
+    data_uword[tid] = data_uword[tid + 1];
+    }
+  }
+
+
+
+void COOT_FN(PREFIX,index_max_subgroup_reduce_128)(__local volatile eT1* data, __local volatile UWORD* data_uword, UWORD tid)
+  {
+  if (data[tid + 128] > data[tid])
+    {
+    data[tid] = data[tid + 128];
+    data_uword[tid] = data_uword[tid + 128];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 64] > data[tid])
+    {
+    data[tid] = data[tid + 64];
+    data_uword[tid] = data_uword[tid + 64];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 32] > data[tid])
+    {
+    data[tid] = data[tid + 32];
+    data_uword[tid] = data_uword[tid + 32];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 16] > data[tid])
+    {
+    data[tid] = data[tid + 16];
+    data_uword[tid] = data_uword[tid + 16];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 8] > data[tid])
+    {
+    data[tid] = data[tid + 8];
+    data_uword[tid] = data_uword[tid + 8];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 4] > data[tid])
+    {
+    data[tid] = data[tid + 4];
+    data_uword[tid] = data_uword[tid + 4];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 2] > data[tid])
+    {
+    data[tid] = data[tid + 2];
+    data_uword[tid] = data_uword[tid + 2];
+    }
+  SUBGROUP_BARRIER(CLK_LOCAL_MEM_FENCE);
+  if (data[tid + 1] > data[tid])
+    {
+    data[tid] = data[tid + 1];
+    data_uword[tid] = data_uword[tid + 1];
+    }
+  }
+
+
+
 __kernel
 void
 COOT_FN(PREFIX,index_max)(__global const eT1* in_mem,
@@ -34,7 +264,7 @@ COOT_FN(PREFIX,index_max)(__global const eT1* in_mem,
   // Make sure all auxiliary memory is initialized to something that won't
   // screw up the final reduce.
   aux_mem[tid] = COOT_FN(coot_type_max_,eT1)();
-  aux_uword_mem[tid] = COOT_FN(coot_type_max_,UWORD)();
+  aux_uword_mem[tid] = COOT_UWORD_MAX;
 
   if (i < n_elem)
     {

@@ -61,39 +61,14 @@ runtime_t::init(const bool manual_selection, const uword wanted_platform, const 
   status = setup_queue(ctxt, cq, plt_id, dev_id);
   if(status == false)  { coot_debug_warn("coot::cl_rt.init(): couldn't setup queue"); return false; }
 
-  // setup kernels; first, check to see if we have them cached
-
-  const std::string unique_host_id = unique_host_device_id();
-  size_t cached_kernel_size = cache::has_cached_kernels(unique_host_id);
-  bool load_success = false;
-  if (cached_kernel_size > 0)
-    {
-    load_success = load_cached_kernels(unique_host_id, cached_kernel_size);
-    if (!load_success)
-      {
-      coot_debug_warn("coot::cl_rt.init(): couldn't load cached kernels for unique host id '" + unique_host_id + "'");
-      }
-    }
-
-  if (cached_kernel_size == 0 || !load_success)
-    {
-    status = compile_kernels(unique_host_id);
-    if (status == false)
-      {
-      coot_debug_warn("coot::cl_rt.init(): couldn't setup OpenCL kernels");
-      return false;
-      }
-    }
-
-
-  // TODO: refactor to allow use the choice of clBLAS or clBLast backends
-
   // setup clBLAS
+  #if defined(COOT_USE_CLBLAS)
   coot_extra_debug_warn("coot::cl_rt.init(): begin clBLAS setup");
   cl_int clblas_status = coot_wrapper(clblasSetup)();
   coot_extra_debug_warn("coot::cl_rt.init(): finished clBLAS setup");
 
   if(clblas_status != CL_SUCCESS)  { coot_debug_warn("coot::cl_rt.init(): couldn't setup clBLAS"); return false; }
+  #endif
 
   if(status == false)
     {
@@ -103,13 +78,32 @@ runtime_t::init(const bool manual_selection, const uword wanted_platform, const 
     return false;
     }
 
+  // Get the name we will use to cache kernels.
+  generate_unique_host_device_id();
+
+  // Get the build options we will use to compile each kernel.
+  build_options = "";
+  if (dev_info.opencl_ver >= 300)
+    build_options += "-cl-std=CL3.0 ";
+  else if (dev_info.opencl_ver >= 200)
+    build_options += "-cl-std=CL2.0 ";
+  else if (dev_info.opencl_ver >= 120)
+    build_options += "-cl-std=CL1.2 ";
+  else if (dev_info.opencl_ver >= 110)
+    build_options += "-cl-std=CL1.1 ";
+  build_options += ((sizeof(uword) >= 8) && dev_info.has_sizet64) ? std::string("-D UWORD=ulong") : std::string("-D UWORD=uint");
+
   valid = true;
+
+  // Initialize the preamble we will use when compiling kernels.
+  const bool need_subgroup_extension = (dev_info.opencl_ver < 210) && has_subgroups();
+  src_preamble = kernel_src::init_src_preamble(has_float64(), has_float16(), has_sizet64(), has_subgroups(), get_subgroup_size(), must_synchronise_subgroups(), need_subgroup_extension);
 
   // Now set up the XORWOW RNGs for float and double.
   // For type eT, we must store 6 * sizeof(eT) * num_rng_threads for each RNG,
   // where num_rng_threads is the maximum kernel work group size for the randu kernel.
   // This means that we will effectively have one RNG per thread.
-  cl_kernel rng_kernel = get_kernel<float>(oneway_kernel_id::inplace_xorwow_randu);
+  cl_kernel rng_kernel = get_kernel<float>(oneway_kernel_id::inplace_xorwow32_randu);
   status = coot_wrapper(clGetKernelWorkGroupInfo)(rng_kernel, dev_id, CL_KERNEL_WORK_GROUP_SIZE, sizeof(size_t), &num_rng_threads, NULL);
   coot_check_cl_error(status, "coot::cl_rt.init()");
   size_t preferred_work_group_size_multiple;
@@ -128,6 +122,7 @@ runtime_t::init(const bool manual_selection, const uword wanted_platform, const 
 
   philox_state = acquire_memory<u32>(6 * num_rng_threads);
   init_philox_state(philox_state, num_rng_threads);
+  valid = true;
 
   return true;
   }
@@ -167,7 +162,9 @@ runtime_t::internal_cleanup()
 
   if(cq != NULL)  { coot_wrapper(clFinish)(cq); }
 
+  #if defined(COOT_USE_CLBLAS)
   coot_wrapper(clblasTeardown)();
+  #endif
 
   // TODO: clean up RNGs
 
@@ -268,6 +265,7 @@ runtime_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, 
       local_device_pri.at(local_device_count) = 0;
 
       if(tmp_info.is_gpu)           { local_device_pri.at(local_device_count) +=  2; }
+      if(tmp_info.has_float16)      { local_device_pri.at(local_device_count) +=  1; }
       if(tmp_info.has_float64)      { local_device_pri.at(local_device_count) +=  1; }
       if(tmp_info.opencl_ver < 120) { local_device_pri.at(local_device_count)  = -1; }
       }
@@ -365,6 +363,7 @@ runtime_t::interrogate_device(runtime_dev_info& out_info, cl_platform_id in_plt_
 
   cl_device_type      dev_type = 0;
   cl_device_fp_config dev_fp64 = 0;
+  cl_device_fp_config dev_fp16 = 0;
 
   cl_uint dev_n_units     = 0;
   cl_uint dev_sizet_width = 0;
@@ -387,7 +386,12 @@ runtime_t::interrogate_device(runtime_dev_info& out_info, cl_platform_id in_plt_
   coot_wrapper(clGetDeviceInfo)(in_dev_id, CL_DEVICE_NAME,                     sizeof(dev_name2),           &dev_name2,        NULL);
   coot_wrapper(clGetDeviceInfo)(in_dev_id, CL_DEVICE_VERSION,                  sizeof(dev_name3),           &dev_name3,        NULL);
   coot_wrapper(clGetDeviceInfo)(in_dev_id, CL_DEVICE_TYPE,                     sizeof(cl_device_type),      &dev_type,         NULL);
+  #if defined(CL_DEVICE_DOUBLE_FP_CONFIG)
   coot_wrapper(clGetDeviceInfo)(in_dev_id, CL_DEVICE_DOUBLE_FP_CONFIG,         sizeof(cl_device_fp_config), &dev_fp64,         NULL);
+  #endif
+  #if defined(CL_DEVICE_HALF_FP_CONFIG)
+  coot_wrapper(clGetDeviceInfo)(in_dev_id, CL_DEVICE_HALF_FP_CONFIG,           sizeof(cl_device_fp_config), &dev_fp16,         NULL);
+  #endif
   coot_wrapper(clGetDeviceInfo)(in_dev_id, CL_DEVICE_MAX_COMPUTE_UNITS,        sizeof(cl_uint),             &dev_n_units,      NULL);
   coot_wrapper(clGetDeviceInfo)(in_dev_id, CL_DEVICE_MEM_BASE_ADDR_ALIGN,      sizeof(cl_uint),             &dev_align,        NULL);
   coot_wrapper(clGetDeviceInfo)(in_dev_id, CL_DEVICE_MAX_WORK_GROUP_SIZE,      sizeof(size_t),              &dev_max_wg,       NULL);
@@ -567,6 +571,7 @@ runtime_t::interrogate_device(runtime_dev_info& out_info, cl_platform_id in_plt_
     get_cerr_stream() << "name3:                      " << dev_name3 << std::endl;
     get_cerr_stream() << "is_gpu:                     " << (dev_type == CL_DEVICE_TYPE_GPU)  << std::endl;
     get_cerr_stream() << "fp64:                       " << dev_fp64 << std::endl;
+    get_cerr_stream() << "fp16:                       " << dev_fp16 << std::endl;
     get_cerr_stream() << "sizet_width:                " << dev_sizet_width  << std::endl;
     get_cerr_stream() << "ptr_width:                  " << dev_ptr_width << std::endl;
     get_cerr_stream() << "n_units:                    " << dev_n_units << std::endl;
@@ -583,6 +588,7 @@ runtime_t::interrogate_device(runtime_dev_info& out_info, cl_platform_id in_plt_
     }
 
   out_info.is_gpu                     = (dev_type == CL_DEVICE_TYPE_GPU);
+  out_info.has_float16                = (dev_fp16 != 0);
   out_info.has_float64                = (dev_fp64 != 0);
   out_info.has_sizet64                = (dev_sizet_width >= 8);
   out_info.has_subgroups              = dev_has_subgroups;
@@ -606,8 +612,8 @@ runtime_t::interrogate_device(runtime_dev_info& out_info, cl_platform_id in_plt_
 
 
 inline
-std::string
-runtime_t::unique_host_device_id() const
+void
+runtime_t::generate_unique_host_device_id()
   {
   // Generate a string that corresponds to this specific device and OpenCL version.
 
@@ -619,8 +625,7 @@ runtime_t::unique_host_device_id() const
   cl_int status = coot_wrapper(clGetDeviceInfo)(dev_id, CL_DEVICE_NAME, 1024, buffer, NULL);
   if (status != CL_SUCCESS)
     {
-    get_cerr_stream() << "unable to get device name" << std::endl;
-    return "";
+    coot_stop_runtime_error("coot::cl_rt.init(): unable to get device name: " + coot_cl_error::as_string(status));
     }
 
   // Remove non-alphanumeric characters from the device name.
@@ -638,8 +643,7 @@ runtime_t::unique_host_device_id() const
   status = coot_wrapper(clGetDeviceInfo)(dev_id, CL_DEVICE_VENDOR_ID, sizeof(cl_uint), &vendor_id, NULL);
   if (status != CL_SUCCESS)
     {
-    get_cerr_stream() << "unable to get device vendor ID" << std::endl;
-    return "";
+    coot_stop_runtime_error("coot::cl_rt.init(): unable to get device vendor ID: " + coot_cl_error::as_string(status));
     }
   oss << vendor_id << "_";
 
@@ -647,8 +651,7 @@ runtime_t::unique_host_device_id() const
   status = coot_wrapper(clGetDeviceInfo)(dev_id, CL_DEVICE_VERSION, 1024, buffer, NULL);
   if (status != CL_SUCCESS)
     {
-    get_cerr_stream() << "unable to get OpenCL version of device" << std::endl;
-    return "";
+    coot_stop_runtime_error("coot::cl_rt.init(): unable to get OpenCL version of device: " + coot_cl_error::as_string(status));
     }
   buf_len = strnlen(buffer, 1024);
   for (size_t i = 0; i < buf_len; ++i)
@@ -659,7 +662,7 @@ runtime_t::unique_host_device_id() const
   buffer2[buf_len] = buffer[buf_len];
 
   oss << buffer2;
-  return oss.str();
+  unique_host_device_id = oss.str();
   }
 
 
@@ -701,16 +704,23 @@ runtime_t::setup_queue(cl_context& out_context, cl_command_queue& out_queue, cl_
 
 inline
 bool
-runtime_t::load_cached_kernels(const std::string& unique_host_device_id, const size_t kernel_size)
+runtime_t::load_cached_kernel(const std::string& kernel_name, cl_kernel& kernel)
   {
   coot_extra_debug_sigprint();
 
+  const size_t kernel_size = cache::has_cached_kernel(unique_host_device_id, kernel_name);
+  if (kernel_size == 0)
+    {
+    // We don't have the kernel.
+    return false;
+    }
+
   // Allocate a buffer large enough to store the program.
   unsigned char* kernel_buffer = new unsigned char[kernel_size];
-  bool status = cache::read_cached_kernels(unique_host_device_id, kernel_buffer);
+  bool status = cache::read_cached_kernel(unique_host_device_id, kernel_name, kernel_buffer);
   if (status == false)
     {
-    coot_warn("coot::cl_rt.init(): could not load kernels for unique host device id '" + unique_host_device_id + "'");
+    coot_debug_warn("coot::opencl::load_cached_kernel(): could not load kernel '" + kernel_name + "' for unique host device id '" + unique_host_device_id + "'");
     delete[] kernel_buffer;
     return false;
     }
@@ -733,48 +743,33 @@ runtime_t::load_cached_kernels(const std::string& unique_host_device_id, const s
 
   delete[] kernel_buffer;
 
+  // We actually have to build the program, even when the kernel is cached.  Ideally, depending on the driver, this doesn't do much.
+  binary_status = coot_wrapper(clBuildProgram)(prog_holder.prog, 0, NULL, build_options.c_str(), NULL, NULL);
+  coot_check_cl_error(binary_status, "coot::opencl::load_cached_kernel(): clBuildProgram() for kernel '" + kernel_name + "' failed");
+
   // If we got to here, we succeeded at creating the program.
-  // So, load the compiled kernels, after initializing the name map.
+  // So, load the compiled kernel, after initializing the name map.
+  kernel = coot_wrapper(clCreateKernel)(prog_holder.prog, kernel_name.c_str(), &errcode_ret);
+  if(kernel == NULL)
+    {
+    coot_debug_warn("coot::opencl::load_cached_kernel(): couldn't create kernel '" + kernel_name + "': " + coot_cl_error::as_string(errcode_ret));
+    return false;
+    }
 
-  std::vector<std::pair<std::string, cl_kernel*>> name_map;
-  rt_common::init_zero_elem_kernel_map(zeroway_kernels, name_map, zeroway_kernel_id::get_names());
-  rt_common::init_one_elem_real_kernel_map(oneway_real_kernels, name_map, oneway_real_kernel_id::get_names(), "", has_float64());
-  rt_common::init_one_elem_integral_kernel_map(oneway_integral_kernels, name_map, oneway_integral_kernel_id::get_names(), "");
-  rt_common::init_one_elem_kernel_map(oneway_kernels, name_map, oneway_kernel_id::get_names(), "", has_float64());
-  rt_common::init_two_elem_kernel_map(twoway_kernels, name_map, twoway_kernel_id::get_names(), "", has_float64());
-  rt_common::init_three_elem_kernel_map(threeway_kernels, name_map, threeway_kernel_id::get_names(), "", has_float64());
-  rt_common::init_one_elem_real_kernel_map(magma_real_kernels, name_map, magma_real_kernel_id::get_names(), "", has_float64());
-
-  return create_kernels(name_map, prog_holder, "");
+  return true;
   }
 
 
 
 inline
-bool
-runtime_t::compile_kernels(const std::string& unique_host_id)
+void
+runtime_t::compile_kernel(const std::string& kernel_name,
+                          const std::string& source,
+                          cl_kernel& kernel)
   {
   coot_extra_debug_sigprint();
 
   // Gather the sources we need to compile.
-  std::vector<std::pair<std::string, cl_kernel*>> name_map;
-  type_to_dev_string type_map;
-  const bool need_subgroup_extension = (dev_info.opencl_ver < 210) && has_subgroups();
-  std::string source =
-      kernel_src::get_src_preamble(has_float64(), has_subgroups(), get_subgroup_size(), must_synchronise_subgroups(), need_subgroup_extension) +
-      rt_common::get_zero_elem_kernel_src(zeroway_kernels, kernel_src::get_zeroway_source(), zeroway_kernel_id::get_names(), name_map, type_map) +
-      rt_common::get_one_elem_real_kernel_src(oneway_real_kernels, kernel_src::get_oneway_real_source(), oneway_real_kernel_id::get_names(), "", name_map, type_map, has_float64()) +
-      rt_common::get_one_elem_integral_kernel_src(oneway_integral_kernels, kernel_src::get_oneway_integral_source(), oneway_integral_kernel_id::get_names(), "", name_map, type_map) +
-      rt_common::get_one_elem_kernel_src(oneway_kernels, kernel_src::get_oneway_source(), oneway_kernel_id::get_names(), "", name_map, type_map, has_float64()) +
-      rt_common::get_two_elem_kernel_src(twoway_kernels, kernel_src::get_twoway_source(), twoway_kernel_id::get_names(), "", name_map, type_map, has_float64()) +
-      rt_common::get_three_elem_kernel_src(threeway_kernels, kernel_src::get_threeway_source(), threeway_kernel_id::get_names(), name_map, type_map, has_float64()) +
-      rt_common::get_one_elem_real_kernel_src(magma_real_kernels, kernel_src::get_magma_real_source(), magma_real_kernel_id::get_names(), "", name_map, type_map, has_float64()) +
-      kernel_src::get_src_epilogue();
-
-  cl_int status;
-
-  // TODO: get info using clquery ?
-
   runtime_t::program_wrapper prog_holder;  // program_wrapper will automatically call clReleaseProgram() when it goes out of scope
 
 
@@ -784,57 +779,19 @@ runtime_t::compile_kernels(const std::string& unique_host_id)
   //           If lengths is NULL, all strings in the strings argument are considered null-terminated.
   //           Any length value passed in that is greater than zero excludes the null terminator in its count.
 
-
-  status = 0;
+  cl_int status = 0;
 
   const char* source_c_str = source.c_str();
 
   prog_holder.prog = coot_wrapper(clCreateProgramWithSource)(ctxt, 1, &source_c_str, NULL, &status);
-
-  if((status != CL_SUCCESS) || (prog_holder.prog == NULL))
+  coot_check_cl_error(status, "coot::opencl::compile_kernel(): couldn't create program for kernel '" + kernel_name + "'");
+  if(prog_holder.prog == NULL)
     {
-    get_cerr_stream() << "status: " << coot_cl_error::as_string(status) << endl;
-
-    get_cerr_stream() << "coot::cl_rt.init(): couldn't create program" << std::endl;
-    return false;
+    coot_stop_runtime_error("coot::opencl::compile_kernel(): returned program from clCreateProgramWithSource() for kernel '" + kernel_name + "' was NULL");
     }
 
-  std::string build_options = "";
-  if (dev_info.opencl_ver >= 300)
-    build_options += "-cl-std=CL3.0 ";
-  else if (dev_info.opencl_ver >= 200)
-    build_options += "-cl-std=CL2.0 ";
-  else if (dev_info.opencl_ver >= 120)
-    build_options += "-cl-std=CL1.2 ";
-  else if (dev_info.opencl_ver >= 110)
-    build_options += "-cl-std=CL1.1 ";
-  build_options += ((sizeof(uword) >= 8) && dev_info.has_sizet64) ? std::string("-D UWORD=ulong") : std::string("-D UWORD=uint");
-
-  // Now load the compiled kernels.
-  bool create_kernel_status = create_kernels(name_map, prog_holder, build_options);
-  if (create_kernel_status)
-    {
-    // Attempt to cache these compiled kernels.
-    bool cache_status = cache_kernels(unique_host_id, prog_holder);
-    if (cache_status == false)
-      {
-      coot_debug_warn("coot::cl_rt.init(): couldn't cache compiled OpenCL kernels");
-      // This is not fatal, so we can proceed.
-      }
-    }
-
-  return create_kernel_status;
-  }
-
-
-
-inline
-bool
-runtime_t::create_kernels(const std::vector<std::pair<std::string, cl_kernel*>>& name_map, runtime_t::program_wrapper& prog_holder, const std::string& build_options)
-  {
-
-  // We actually have to build the program first.  Ideally, if we are loading cached kernels, this step doesn't really do much.
-  cl_int status = coot_wrapper(clBuildProgram)(prog_holder.prog, 0, NULL, build_options.c_str(), NULL, NULL);
+  // Now actually have to build the program first.
+  status = coot_wrapper(clBuildProgram)(prog_holder.prog, 0, NULL, build_options.c_str(), NULL, NULL);
 
   if(status != CL_SUCCESS)
     {
@@ -845,49 +802,24 @@ runtime_t::create_kernels(const std::vector<std::pair<std::string, cl_kernel*>>&
     char* buffer = new char[len];
 
     coot_wrapper(clGetProgramBuildInfo)(prog_holder.prog, dev_id, CL_PROGRAM_BUILD_LOG, len, buffer, NULL);
-    coot_warn("coot::cl_rt.init(): couldn't build program; output from clGetProgramBuildInfo():");
-    coot_warn(buffer);
-    delete[] buffer;
-
-    return false;
+    coot_stop_runtime_error("coot::cl_rt.compile_kernel(): couldn't compile kernel '" + kernel_name + "'; output from clGetProgramBuildInfo():", buffer);
     }
 
-  for (uword i = 0; i < name_map.size(); ++i)
-    {
-    (*name_map.at(i).second) = coot_wrapper(clCreateKernel)(prog_holder.prog, name_map.at(i).first.c_str(), &status);
+  kernel = coot_wrapper(clCreateKernel)(prog_holder.prog, kernel_name.c_str(), &status);
+  coot_check_cl_error(status, "coot::opencl::compile_kernel(): couldn't create kernel '" + kernel_name + "'; source:\n\n" + source + "\n\n");
 
-    if((status != CL_SUCCESS) || (name_map.at(i).second == NULL))
-      {
-      coot_warn(std::string("coot::cl_rt.init(): couldn't create kernel ") + name_map.at(i).first + std::string(": ") + coot_cl_error::as_string(status));
-      return false;
-      }
-    }
-
-  return true;
-  }
-
-
-
-inline
-bool
-runtime_t::cache_kernels(const std::string& unique_host_device_id,
-                         runtime_t::program_wrapper& prog_holder) const
-  {
-  coot_extra_debug_sigprint();
-
-  // Get the actual binaries to serialize.
-  cl_int status;
+  // Now that we have built the kernel, cache it.
   size_t binary_size;
   status = coot_wrapper(clGetProgramInfo)(prog_holder.prog, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &binary_size, NULL);
   if (status != CL_SUCCESS)
     {
-    coot_warn(std::string("coot::cl_rt.init(): clGetProgramInfo() call to get binary size failed with ") + coot_cl_error::as_string(status));
-    return false;
+    coot_debug_warn("coot::opencl::compile_kernel(): clGetProgramInfo() call to get binary size of kernel '" + kernel_name + "'failed: " + coot_cl_error::as_string(status));
+    return; // Don't keep trying to cache... but we did build the kernel.
     }
   else if (binary_size == 0)
     {
-    coot_warn("coot::cl_rt.init(): reported binary size is 0; not caching");
-    return false;
+    coot_debug_warn("coot::opencl::compile_kernel(): reported binary size for kernel '" + kernel_name + "' is 0; not caching");
+    return;
     }
 
   // Now allocate something to hold the program.
@@ -895,13 +827,17 @@ runtime_t::cache_kernels(const std::string& unique_host_device_id,
   status = coot_wrapper(clGetProgramInfo)(prog_holder.prog, CL_PROGRAM_BINARIES, sizeof(size_t), &buffer, NULL);
   if (status != CL_SUCCESS)
     {
-    coot_warn(std::string("coot::cl_rt.init(): clGetProgramInfo() call to get binaries failed with ") + coot_cl_error::as_string(status));
-    return false;
+    coot_debug_warn("coot::opencl::compile_kernel(): clGetProgramInfo() call to get binaries for kernel '" + kernel_name + "' failed with " + coot_cl_error::as_string(status));
+    return;
     }
 
-  bool success = cache::cache_kernels(unique_host_device_id, buffer, binary_size);
+  bool success = cache::cache_kernel(unique_host_device_id, kernel_name, buffer, binary_size);
+  if (success == false)
+    {
+    coot_debug_warn("coot::opencl::compile_kernel(): could not cache compiled OpenCL kernel " + kernel_name);
+    }
+
   delete[] buffer;
-  return success;
   }
 
 
@@ -971,6 +907,15 @@ runtime_t::has_sizet64() const
 
 inline
 bool
+runtime_t::has_float16() const
+  {
+  return dev_info.has_float16;
+  }
+
+
+
+inline
+bool
 runtime_t::has_float64() const
   {
   return dev_info.has_float64;
@@ -1009,12 +954,14 @@ runtime_t::acquire_memory(const uword n_elem)
 
   coot_debug_check
    (
-   ( size_t(n_elem) > (std::numeric_limits<size_t>::max() / sizeof(eT)) ),
+   ( size_t(n_elem) > (Datum<size_t>::max / sizeof(eT)) ),
    "coot::cl_rt.acquire_memory(): requested size is too large"
    );
 
+  typedef typename cl_type<eT>::type ceT;
+
   cl_int status = 0;
-  cl_mem result = coot_wrapper(clCreateBuffer)(ctxt, CL_MEM_READ_WRITE, sizeof(eT)*(std::max)(uword(1), n_elem), NULL, &status);
+  cl_mem result = coot_wrapper(clCreateBuffer)(ctxt, CL_MEM_READ_WRITE, sizeof(ceT)*(std::max)(uword(1), n_elem), NULL, &status);
 
   coot_check_bad_alloc( ((status != CL_SUCCESS) || (result == NULL)), "coot::cl_rt.acquire_memory(): not enough memory on device" );
 
@@ -1126,10 +1073,141 @@ runtime_t::delete_extra_cq(cl_command_queue& in_queue)
 
 
 inline
+std::string
+runtime_t::generate_kernel(const zeroway_kernel_id::enum_id num)
+  {
+  coot_extra_debug_sigprint();
+
+  std::string source =
+      src_preamble +
+      kernel_src::get_zeroway_source(num);
+
+  return source;
+  }
+
+
+
+template<typename eT>
+inline
+std::string
+runtime_t::generate_kernel(const oneway_kernel_id::enum_id num)
+  {
+  coot_extra_debug_sigprint();
+
+  std::string source =
+      src_preamble +
+      kernel_src::get_oneway_defines<eT>() +
+      kernel_src::get_oneway_source(num);
+
+  return source;
+  }
+
+
+
+template<typename eT>
+inline
+std::string
+runtime_t::generate_kernel(const oneway_real_kernel_id::enum_id num)
+  {
+  coot_extra_debug_sigprint();
+
+  std::string source =
+      src_preamble +
+      kernel_src::get_oneway_defines<eT>() +
+      kernel_src::get_oneway_real_source(num);
+
+  return source;
+  }
+
+
+
+template<typename eT>
+inline
+std::string
+runtime_t::generate_kernel(const oneway_integral_kernel_id::enum_id num)
+  {
+  coot_extra_debug_sigprint();
+
+  std::string source =
+      src_preamble +
+      kernel_src::get_oneway_defines<eT>() +
+      kernel_src::get_oneway_integral_source(num);
+
+  return source;
+  }
+
+
+
+template<typename eT1, typename eT2>
+inline
+std::string
+runtime_t::generate_kernel(const twoway_kernel_id::enum_id num)
+  {
+  coot_extra_debug_sigprint();
+
+  std::string source =
+      src_preamble +
+      kernel_src::get_twoway_defines<eT2, eT1>() +
+      kernel_src::get_twoway_source(num);
+
+  return source;
+  }
+
+
+
+template<typename eT1, typename eT2, typename eT3>
+inline
+std::string
+runtime_t::generate_kernel(const threeway_kernel_id::enum_id num)
+  {
+  coot_extra_debug_sigprint();
+
+  std::string source =
+      src_preamble +
+      kernel_src::get_threeway_defines<eT3, eT2, eT1>() +
+      kernel_src::get_threeway_source(num);
+
+  return source;
+  }
+
+
+
+template<typename eT>
+inline
+std::string
+runtime_t::generate_kernel(const magma_real_kernel_id::enum_id num)
+  {
+  coot_extra_debug_sigprint();
+
+  std::string source =
+      src_preamble +
+      kernel_src::get_magma_defines() +
+      kernel_src::get_oneway_defines<eT>() +
+      kernel_src::get_magma_real_source(num);
+
+  return source;
+  }
+
+
+
+inline
 const cl_kernel&
 runtime_t::get_kernel(const zeroway_kernel_id::enum_id num)
   {
-  return zeroway_kernels.at(num);
+  const std::tuple<bool, cl_kernel&> t = get_kernel(zeroway_kernels, num);
+  if (std::get<0>(t) == true)
+    {
+    const std::string name = rt_common::get_kernel_name(num);
+
+    if (!load_cached_kernel(name, std::get<1>(t)))
+      {
+      // We will have to compile the kernel on the spot.
+      const std::string source = generate_kernel(num);
+      compile_kernel(name, source, std::get<1>(t));
+      }
+    }
+
+  return std::get<1>(t);
   }
 
 
@@ -1139,7 +1217,20 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const oneway_kernel_id::enum_id num)
   {
-  return get_kernel<eT>(oneway_kernels, num);
+  const std::tuple<bool, cl_kernel&> t = get_kernel<eT>(oneway_kernels, num);
+  if (std::get<0>(t) == true)
+    {
+    const std::string name = rt_common::get_kernel_name<eT>(num);
+
+    if (!load_cached_kernel(name, std::get<1>(t)))
+      {
+      // We will have to compile the kernel on the spot.
+      const std::string source = generate_kernel<eT>(num);
+      compile_kernel(name, source, std::get<1>(t));
+      }
+    }
+
+  return std::get<1>(t);
   }
 
 
@@ -1149,7 +1240,20 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const oneway_real_kernel_id::enum_id num)
   {
-  return get_kernel<eT>(oneway_real_kernels, num);
+  const std::tuple<bool, cl_kernel&> t = get_kernel<eT>(oneway_real_kernels, num);
+  if (std::get<0>(t) == true)
+    {
+    const std::string name = rt_common::get_kernel_name<eT>(num);
+
+    if (!load_cached_kernel(name, std::get<1>(t)))
+      {
+      // We will have to compile the kernel on the spot.
+      const std::string source = generate_kernel<eT>(num);
+      compile_kernel(name, source, std::get<1>(t));
+      }
+    }
+
+  return std::get<1>(t);
   }
 
 
@@ -1159,7 +1263,20 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const oneway_integral_kernel_id::enum_id num)
   {
-  return get_kernel<eT>(oneway_integral_kernels, num);
+  const std::tuple<bool, cl_kernel&> t = get_kernel<eT>(oneway_integral_kernels, num);
+  if (std::get<0>(t) == true)
+    {
+    const std::string name = rt_common::get_kernel_name<eT>(num);
+
+    if (!load_cached_kernel(name, std::get<1>(t)))
+      {
+      // We will have to compile the kernel on the spot.
+      const std::string source = generate_kernel<eT>(num);
+      compile_kernel(name, source, std::get<1>(t));
+      }
+    }
+
+  return std::get<1>(t);
   }
 
 
@@ -1169,7 +1286,20 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const twoway_kernel_id::enum_id num)
   {
-  return get_kernel<eT1, eT2>(twoway_kernels, num);
+  const std::tuple<bool, cl_kernel&> t = get_kernel<eT1, eT2>(twoway_kernels, num);
+  if (std::get<0>(t) == true)
+    {
+    const std::string name = rt_common::get_kernel_name<eT1, eT2>(num);
+
+    if (!load_cached_kernel(name, std::get<1>(t)))
+      {
+      // We will have to compile the kernel on the spot.
+      const std::string source = generate_kernel<eT1, eT2>(num);
+      compile_kernel(name, source, std::get<1>(t));
+      }
+    }
+
+  return std::get<1>(t);
   }
 
 
@@ -1179,7 +1309,20 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const threeway_kernel_id::enum_id num)
   {
-  return get_kernel<eT1, eT2, eT3>(threeway_kernels, num);
+  const std::tuple<bool, cl_kernel&> t = get_kernel<eT1, eT2, eT3>(threeway_kernels, num);
+  if (std::get<0>(t) == true)
+    {
+    const std::string name = rt_common::get_kernel_name<eT1, eT2, eT3>(num);
+
+    if (!load_cached_kernel(name, std::get<1>(t)))
+      {
+      // We will have to compile the kernel on the spot.
+      const std::string source = generate_kernel<eT1, eT2, eT3>(num);
+      compile_kernel(name, source, std::get<1>(t));
+      }
+    }
+
+  return std::get<1>(t);
   }
 
 
@@ -1189,38 +1332,46 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const magma_real_kernel_id::enum_id num)
   {
-  return get_kernel<eT>(magma_real_kernels, num);
+  const std::tuple<bool, cl_kernel&> t = get_kernel<eT>(magma_real_kernels, num);
+  if (std::get<0>(t) == true)
+    {
+    const std::string name = type_prefix<eT>() + "_" + magma_real_kernel_id::get_names()[num];
+
+    if (!load_cached_kernel(name, std::get<1>(t)))
+      {
+      // We will have to compile the kernel on the spot.
+      const std::string source = generate_kernel<eT>(num);
+      compile_kernel(name, source, std::get<1>(t));
+      }
+    }
+
+  return std::get<1>(t);
   }
 
 
 
 template<typename eT1, typename... eTs, typename HeldType, typename EnumType>
 inline
-const cl_kernel&
-runtime_t::get_kernel(const rt_common::kernels_t<HeldType>& k, const EnumType num)
+std::tuple<bool, cl_kernel&>
+runtime_t::get_kernel(rt_common::kernels_t<HeldType>& k, const EnumType num)
   {
   coot_extra_debug_sigprint();
 
-  if(is_same_type<eT1, u32>::yes)
+  if(is_same_type<eT1, u8>::yes)         { return get_kernel<eTs...>(k.u8_kernels, num);  }
+  else if(is_same_type<eT1,  s8>::yes)   { return get_kernel<eTs...>(k.s8_kernels, num);  }
+  else if(is_same_type<eT1, u16>::yes)   { return get_kernel<eTs...>(k.u16_kernels, num); }
+  else if(is_same_type<eT1, s16>::yes)   { return get_kernel<eTs...>(k.s16_kernels, num); }
+  else if(is_same_type<eT1, u32>::yes)   { return get_kernel<eTs...>(k.u32_kernels, num); }
+  else if(is_same_type<eT1, s32>::yes)   { return get_kernel<eTs...>(k.s32_kernels, num); }
+  else if(is_same_type<eT1, u64>::yes)   { return get_kernel<eTs...>(k.u64_kernels, num); }
+  else if(is_same_type<eT1, s64>::yes)   { return get_kernel<eTs...>(k.s64_kernels, num); }
+  else if(is_same_type<eT1, fp16>::yes)
     {
-    return get_kernel<eTs...>(k.u32_kernels, num);
+    coot_debug_check( has_float16() == false, "coot::cl_rt.get_kernel(): device does not support float16 (fp16) kernels; use a different element type (such as float)" );
+
+    return get_kernel<eTs...>(k.h_kernels, num);
     }
-  else if(is_same_type<eT1, s32>::yes)
-    {
-    return get_kernel<eTs...>(k.s32_kernels, num);
-    }
-  else if(is_same_type<eT1, u64>::yes)
-    {
-    return get_kernel<eTs...>(k.u64_kernels, num);
-    }
-  else if(is_same_type<eT1, s64>::yes)
-    {
-    return get_kernel<eTs...>(k.s64_kernels, num);
-    }
-  else if(is_same_type<eT1, float>::yes)
-    {
-    return get_kernel<eTs...>(k.f_kernels, num);
-    }
+  else if(is_same_type<eT1, float>::yes) { return get_kernel<eTs...>(k.f_kernels, num);   }
   else if(is_same_type<eT1, double>::yes)
     {
     coot_debug_check( has_float64() == false, "coot::cl_rt.get_kernel(): device does not support float64 (double) kernels; use a different element type (such as float)" );
@@ -1268,76 +1419,22 @@ runtime_t::get_kernel(const rt_common::kernels_t<HeldType>& k, const EnumType nu
 
 
 
-template<typename eT, typename EnumType>
+template<typename EnumType>
 inline
-const cl_kernel&
-runtime_t::get_kernel(const rt_common::kernels_t<std::vector<cl_kernel>>& k, const EnumType num)
+std::tuple<bool, cl_kernel&>
+runtime_t::get_kernel(std::unordered_map<EnumType, cl_kernel>& k, const EnumType num)
   {
   coot_extra_debug_sigprint();
 
-  if(is_same_type<eT, u32>::yes)
+  if(k.count(num) == 0)
     {
-    return k.u32_kernels.at(num);
+    k[num] = cl_kernel();
+    return std::forward_as_tuple(true, k[num]);
     }
-  else if(is_same_type<eT, s32>::yes)
+  else
     {
-    return k.s32_kernels.at(num);
+    return std::forward_as_tuple(false, k[num]);
     }
-  else if(is_same_type<eT, u64>::yes)
-    {
-    return k.u64_kernels.at(num);
-    }
-  else if(is_same_type<eT, s64>::yes)
-    {
-    return k.s64_kernels.at(num);
-    }
-  else if(is_same_type<eT, float>::yes)
-    {
-    return k.f_kernels.at(num);
-    }
-  else if(is_same_type<eT, double>::yes)
-    {
-    coot_debug_check( has_float64() == false, "coot::cl_rt.get_kernel(): device does not support float64 (double) kernels, use a different element type (such as float)" );
-
-    return k.d_kernels.at(num);
-    }
-  else if(is_same_type<eT, uword>::yes)
-    {
-    // only encountered if uword != u32 or u64; but we need to figure out how large a uword is
-    // (this can happen if, e.g., u32 == unsigned int and u64 == unsigned long long but uword == unsigned long)
-    if (sizeof(uword) == sizeof(u32))
-      {
-      return k.u32_kernels.at(num);
-      }
-    else if (sizeof(uword) == sizeof(u64))
-      {
-      return k.u64_kernels.at(num);
-      }
-    else
-      {
-      // hopefully nobody ever, ever, ever sees this
-      throw std::invalid_argument("coot::cl_rt.get_kernel(): unknown size for uword");
-      }
-    }
-  else if(is_same_type<eT, sword>::yes)
-    {
-    // only encountered if sword != s32 or s64
-    if (sizeof(sword) == sizeof(s32))
-      {
-      return k.s32_kernels.at(num);
-      }
-    else if (sizeof(sword) == sizeof(s64))
-      {
-      return k.s64_kernels.at(num);
-      }
-    else
-      {
-      // hopefully nobody ever, ever, ever sees this
-      throw std::invalid_argument("coot::cl_rt.get_kernel(): unknown size for sword");
-      }
-    }
-
-  throw std::invalid_argument("coot::cl_rt.get_kernel(): unsupported element type");
   }
 
 
@@ -1391,6 +1488,11 @@ runtime_t::get_xorwow_state() const
 
 
 
+template<> inline coot_cl_mem runtime_t::get_xorwow_state<u8    >() const { return xorwow32_state; }
+template<> inline coot_cl_mem runtime_t::get_xorwow_state<s8    >() const { return xorwow32_state; }
+template<> inline coot_cl_mem runtime_t::get_xorwow_state<u16   >() const { return xorwow32_state; }
+template<> inline coot_cl_mem runtime_t::get_xorwow_state<s16   >() const { return xorwow32_state; }
+template<> inline coot_cl_mem runtime_t::get_xorwow_state<fp16  >() const { return xorwow32_state; }
 template<> inline coot_cl_mem runtime_t::get_xorwow_state<float >() const { return xorwow32_state; }
 template<> inline coot_cl_mem runtime_t::get_xorwow_state<u32   >() const { return xorwow32_state; }
 template<> inline coot_cl_mem runtime_t::get_xorwow_state<s32   >() const { return xorwow32_state; }

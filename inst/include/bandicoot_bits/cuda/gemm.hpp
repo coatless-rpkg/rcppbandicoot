@@ -60,7 +60,7 @@ struct gemm
 
     cublasStatus_t result;
 
-    if (is_same_type<eT, float>::value)
+    if (is_float<eT>::value)
       {
       result = coot_wrapper(cublasSgemm)(get_rt().cuda_rt.cublas_handle,
                                          trans_a,
@@ -77,7 +77,7 @@ struct gemm
                                          (float*) (C_mem.cuda_mem_ptr + C_row_offset + C_col_offset * C_M_n_rows),
                                          ldc);
       }
-    else if (is_same_type<eT, double>::value)
+    else if (is_double<eT>::value)
       {
       result = coot_wrapper(cublasDgemm)(get_rt().cuda_rt.cublas_handle,
                                          trans_a,
@@ -94,12 +94,31 @@ struct gemm
                                          (double*) (C_mem.cuda_mem_ptr + C_row_offset + C_col_offset * C_M_n_rows),
                                          ldc);
       }
-    else if (std::is_same<eT, std::complex<float>>::value)
+    else if (is_fp16<eT>::value)
+      {
+      coot_check_runtime_error( !get_rt().cuda_rt.is_supported_type<__half>(), "coot::cuda::gemm(): half-precision not supported by device" );
+
+      result = coot_wrapper(cublasHgemm)(get_rt().cuda_rt.cublas_handle,
+                                         trans_a,
+                                         trans_b,
+                                         M,
+                                         N,
+                                         K,
+                                         (const __half*) &alpha,
+                                         (const __half*) (A_mem.cuda_mem_ptr + A_row_offset + A_col_offset * A_M_n_rows),
+                                         lda,
+                                         (const __half*) (B_mem.cuda_mem_ptr + B_row_offset + B_col_offset * B_M_n_rows),
+                                         ldb,
+                                         (const __half*) &beta,
+                                         (__half*) (C_mem.cuda_mem_ptr + C_row_offset + C_col_offset * C_M_n_rows),
+                                         ldc);
+      }
+    else if (is_cx_float<eT>::value)
       {
       // RC-TODO: this
       throw std::runtime_error("complex not implemented yet");
       }
-    else if (std::is_same<eT, std::complex<double>>::value)
+    else if (is_cx_double<eT>::value)
       {
       // RC-TODO: this
       throw std::runtime_error("complex not implemented yet");

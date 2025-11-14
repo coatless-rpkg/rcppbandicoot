@@ -29,21 +29,21 @@ dot(dev_mem_t<eT1> mem1, dev_mem_t<eT2> mem2, const uword n_elem)
   coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::dot(): cuda runtime not valid" );
 
   // If we can, try to use cuBLAS.
-  if (std::is_same<eT1, eT2>::value && std::is_same<eT1, float>::value)
+  if (is_same_type<eT1, eT2>::yes && is_float<eT1>::value)
     {
     float result;
     cublasStatus_t status = coot_wrapper(cublasSdot)(get_rt().cuda_rt.cublas_handle, n_elem, (float*) mem1.cuda_mem_ptr, 1, (float*) mem2.cuda_mem_ptr, 1, &result);
 
     coot_check_cublas_error( status, "coot::cuda::dot(): call to cublasSdot() failed" );
-    return result;
+    return promoted_eT(result);
     }
-  else if (std::is_same<eT1, eT2>::value && std::is_same<eT1, double>::value)
+  else if (is_same_type<eT1, eT2>::value && is_double<eT1>::value)
     {
     double result;
     cublasStatus_t status = coot_wrapper(cublasDdot)(get_rt().cuda_rt.cublas_handle, n_elem, (double*) mem1.cuda_mem_ptr, 1, (double*) mem2.cuda_mem_ptr, 1, &result);
 
     coot_check_cublas_error( status, "coot::cuda::dot(): call to cublasDdot() failed" );
-    return result;
+    return promoted_eT(result);
     }
   else
     {

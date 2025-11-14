@@ -33,8 +33,8 @@ COOT_FN(PREFIX,equ_array_atan2)(eT3* dest,
     const UWORD B_index = row + col * src_B_M_n_rows;
     const UWORD dest_index = row + col * dest_M_n_rows;
 
-    const fp_eT3 a_val = (fp_eT3) src_A[A_index];
-    const fp_eT3 b_val = (fp_eT3) src_B[B_index];
-    dest[dest_index] = (eT3) atan2(a_val, b_val);
+    const fp_eT3 a_val = TO_FP_ET3(src_A[A_index]);
+    const fp_eT3 b_val = TO_FP_ET3(src_B[B_index]);
+    dest[dest_index] = TO_ET3(atan2(a_val, b_val));
     }
   }

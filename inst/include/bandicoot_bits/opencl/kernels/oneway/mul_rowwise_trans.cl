@@ -32,7 +32,9 @@ COOT_FN(PREFIX,mul_rowwise_trans)(__global eT1* out,
     {
     const eT1 val = alpha * A[A_offset + row * A_incr];
 
-    #pragma unroll
+    #ifdef CL_VERSION_2_0
+    __attribute__((opencl_unroll_hint))
+    #endif
     for(UWORD i = 0; i < n_cols; ++i)
       {
       const UWORD in_elem_offset = i + row * in_M_n_rows;

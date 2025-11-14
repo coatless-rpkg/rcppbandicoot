@@ -160,7 +160,7 @@ magma_dorglq
 
   queue = magma_queue_create();
 
-  magmablas_dlaset( MagmaFull, m, n, std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN(), dA, 0, ldda, queue );
+  magmablas_dlaset( MagmaFull, m, n, Datum<double>::nan, Datum<double>::nan, dA, 0, ldda, queue );
 
   // all columns are handled by blocked method.
   // ki is start of last (partial) block

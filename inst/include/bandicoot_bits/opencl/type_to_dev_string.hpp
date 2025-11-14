@@ -28,6 +28,46 @@ perform_type_mapping()
 template<>
 inline
 std::string
+perform_type_mapping<u8>()
+  {
+  return "uchar";
+  }
+
+
+
+template<>
+inline
+std::string
+perform_type_mapping<s8>()
+  {
+  return "char";
+  }
+
+
+
+template<>
+inline
+std::string
+perform_type_mapping<u16>()
+  {
+  return "ushort";
+  }
+
+
+
+template<>
+inline
+std::string
+perform_type_mapping<s16>()
+  {
+  return "short";
+  }
+
+
+
+template<>
+inline
+std::string
 perform_type_mapping<u32>()
   {
   return "uint";
@@ -61,6 +101,16 @@ std::string
 perform_type_mapping<s64>()
   {
   return "long";
+  }
+
+
+
+template<>
+inline
+std::string
+perform_type_mapping<fp16>()
+  {
+  return "half";
   }
 
 
@@ -102,7 +152,7 @@ struct type_to_dev_string
   static
   inline
   std::string
-  abs_func(const typename enable_if2<std::is_floating_point<T>::value, void>::result* = 0)
+  abs_func(const typename enable_if2<is_real<T>::value, void>::result* = 0)
     {
     return "fabs";
     }
@@ -114,7 +164,7 @@ struct type_to_dev_string
   static
   inline
   std::string
-  abs_func(const typename enable_if2<std::is_signed<T>::value && !std::is_floating_point<T>::value, void>::result* = 0)
+  abs_func(const typename enable_if2<is_signed<T>::value && !is_real<T>::value, void>::result* = 0)
     {
     return "abs";
     }
@@ -126,7 +176,7 @@ struct type_to_dev_string
   static
   inline
   std::string
-  abs_func(const typename enable_if2<!std::is_signed<T>::value, void>::result* = 0)
+  abs_func(const typename enable_if2<!is_signed<T>::value, void>::result* = 0)
     {
     return "";
     }
