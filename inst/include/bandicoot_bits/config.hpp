@@ -176,6 +176,14 @@
   #undef COOT_PRINT_EXCEPTIONS
 #endif
 
+#if defined(COOT_DONT_USE_CLBLAST)
+  #undef COOT_USE_CLBLAST
+#endif
+
+#if defined(COOT_DONT_USE_CLBLAS)
+  #undef COOT_USE_CLBLAS
+#endif
+
 #if !defined(COOT_DEFAULT_BACKEND)
   #if defined(COOT_USE_OPENCL)
     #define COOT_DEFAULT_BACKEND CL_BACKEND

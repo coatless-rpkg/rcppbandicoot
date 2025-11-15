@@ -1,2 +1,12 @@
-PKG_CXXFLAGS = $(SHLIB_OPENMP_CXXFLAGS)
-PKG_LIBS = $(SHLIB_OPENMP_CXXFLAGS) $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+## RcppBandicoot Makevars.in
+##
+## This file is processed by configure to generate Makevars
+## It includes GPU backend configuration (OpenCL, CUDA) and other settings
+
+PKG_CPPFLAGS = -I../inst/include
+
+## Compiler flags from configure
+PKG_CXXFLAGS =  -DCOOT_USE_OPENCL -F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks -DCOOT_USE_CLBLAST -I/opt/homebrew/opt/clblast/include -DCOOT_USE_CLBLAS -I/opt/homebrew/opt/clblas/include -DCOOT_DONT_USE_CUDA -DCOOT_DEFAULT_BACKEND=CL_BACKEND 
+
+## Linker flags from configure
+PKG_LIBS =  -L/opt/homebrew/opt/clblas/lib -lclBLAS -L/opt/homebrew/opt/clblast/lib -lclblast  -framework OpenCL -L/Library/Frameworks/R.framework/Resources/lib -lRlapack -L/Library/Frameworks/R.framework/Resources/lib -lRblas -L/opt/gfortran/lib/gcc/aarch64-apple-darwin20.0/14.2.0 -L/opt/gfortran/lib -lemutls_w -lheapt_w -lgfortran -lquadmath

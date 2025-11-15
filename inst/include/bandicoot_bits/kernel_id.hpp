@@ -150,8 +150,8 @@ struct oneway_kernel_id
     radix_sort_descending,
     radix_sort_index_ascending,
     radix_sort_index_descending,
-    stable_radix_sort_index_ascending,
-    stable_radix_sort_index_descending,
+    stable_radix_sort_idx_asc,
+    stable_radix_sort_idx_desc,
     shifted_prefix_sum_small,
     shifted_prefix_sum_subgroups,
     shifted_prefix_sum_add_offset,
@@ -252,8 +252,8 @@ struct oneway_kernel_id
     names.push_back("radix_sort_descending");
     names.push_back("radix_sort_index_ascending");
     names.push_back("radix_sort_index_descending");
-    names.push_back("stable_radix_sort_index_ascending");
-    names.push_back("stable_radix_sort_index_descending");
+    names.push_back("stable_radix_sort_idx_asc");
+    names.push_back("stable_radix_sort_idx_desc");
     names.push_back("shifted_prefix_sum_small");
     names.push_back("shifted_prefix_sum_subgroups");
     names.push_back("shifted_prefix_sum_add_offset");

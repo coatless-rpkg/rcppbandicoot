@@ -41,7 +41,7 @@ Mat<eT>::Mat()
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
   }
@@ -57,7 +57,7 @@ Mat<eT>::Mat(const uword in_n_rows, const uword in_n_cols)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -76,7 +76,7 @@ Mat<eT>::Mat(const SizeMat& s)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -96,7 +96,7 @@ Mat<eT>::Mat(const uword in_n_rows, const uword in_n_cols, const fill::fill_clas
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -116,7 +116,7 @@ Mat<eT>::Mat(const SizeMat& s, const fill::fill_class<fill_type>& f)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -135,7 +135,7 @@ Mat<eT>::Mat(const char* text)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -166,7 +166,7 @@ Mat<eT>::Mat(const std::string& text)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -208,7 +208,7 @@ Mat<eT>::init(const std::string& text_orig)
       {
       if (text_mod[i] == ',')
         {
-        text_mod[i] == ' ';
+        text_mod[i] = ' ';
         }
       }
     }
@@ -335,7 +335,7 @@ Mat<eT>::Mat(const std::vector<eT>& x)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -380,7 +380,7 @@ Mat<eT>::Mat(const std::initializer_list<eT>& list)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -411,7 +411,7 @@ Mat<eT>::Mat(const std::initializer_list< std::initializer_list<eT> >& list)
   , n_elem    (0)
   , vec_state (0)
   , mem_state (0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -630,7 +630,7 @@ Mat<eT>::Mat(const arma::Mat<eT>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -905,7 +905,7 @@ Mat<eT>::Mat(const Mat<eT>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1110,7 +1110,7 @@ Mat<eT>::Mat(const subview<eT>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1230,7 +1230,7 @@ Mat<eT>::Mat(const diagview<eT>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1342,7 +1342,7 @@ Mat<eT>::Mat(const eOp<T1, eop_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1477,7 +1477,7 @@ Mat<eT>::Mat(const eGlue<T1, T2, eglue_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1618,7 +1618,7 @@ Mat<eT>::Mat(const mtOp<eT, T1, mtop_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1742,7 +1742,7 @@ Mat<eT>::Mat(const Op<T1, op_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1864,7 +1864,7 @@ Mat<eT>::Mat(const Glue<T1, T2, glue_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -1992,7 +1992,7 @@ Mat<eT>::Mat(const mtGlue<eT, T1, T2, mtglue_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 
@@ -2102,7 +2102,7 @@ Mat<eT>::Mat(const CubeToMatOp<T1, op_type>& X)
   , n_elem   (0)
   , vec_state(0)
   , mem_state(0)
-  , dev_mem({ NULL, 0 })
+  , dev_mem({{ NULL, 0 }})
   {
   coot_extra_debug_sigprint_this(this);
 

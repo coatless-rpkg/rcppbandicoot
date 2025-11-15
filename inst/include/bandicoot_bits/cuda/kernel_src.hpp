@@ -63,7 +63,7 @@ read_file(const std::string& filename)
   std::string file_contents = "";
   if (!f.is_open())
     {
-    std::cout << "Failed to open " << full_filename << " (kernel source)!\n";
+    COOT_CERR_STREAM << "Failed to open " << full_filename << " (kernel source)!\n";
     throw std::runtime_error("Cannot open required kernel source.");
     }
 

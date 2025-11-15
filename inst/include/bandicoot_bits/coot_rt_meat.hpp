@@ -99,7 +99,7 @@ coot_rt_t::init(const std::string filename, const bool print_info)
 
   // TODO: handling of config files is currently rudimentary
 
-  if(print_info)  {std::cout << "coot::opencl::runtime_t::init(): reading " << filename << std::endl; }
+  if(print_info)  {COOT_COUT_STREAM << "coot::opencl::runtime_t::init(): reading " << filename << std::endl; }
 
   uword wanted_platform = 0;
   uword wanted_device   = 0;
@@ -109,7 +109,7 @@ coot_rt_t::init(const std::string filename, const bool print_info)
 
   if(f.is_open() == false)
     {
-    std::cout << "coot::opencl::runtime_t::init(): couldn't read " << filename << std::endl;
+    COOT_CERR_STREAM << "coot::opencl::runtime_t::init(): couldn't read " << filename << std::endl;
     return false;
     }
 
@@ -121,12 +121,12 @@ coot_rt_t::init(const std::string filename, const bool print_info)
     wanted_platform = 0;
     wanted_device   = 0;
 
-    std::cout << "coot::opencl::runtime_t::init(): couldn't read " << filename << std::endl;
+    COOT_CERR_STREAM << "coot::opencl::runtime_t::init(): couldn't read " << filename << std::endl;
     return false;
     }
   else
     {
-    if(print_info)  { std::cout << "coot::opencl::runtime::init(): wanted_platform = " << wanted_platform << "   wanted_device = " << wanted_device << std::endl; }
+    if(print_info)  { COOT_COUT_STREAM << "coot::opencl::runtime::init(): wanted_platform = " << wanted_platform << "   wanted_device = " << wanted_device << std::endl; }
     }
 
   // prevent recursive initialisation
@@ -213,7 +213,7 @@ coot_rt_t::acquire_memory(const uword n_elem)
 
 //  coot_check_runtime_error( (valid == false), "coot_rt::acquire_memory(): runtime not valid" );
 
-  if(n_elem == 0)  { return dev_mem_t<eT>({ NULL, 0 }); }
+  if(n_elem == 0)  { return dev_mem_t<eT>({{ NULL, 0 }}); }
 
   coot_debug_check
    (

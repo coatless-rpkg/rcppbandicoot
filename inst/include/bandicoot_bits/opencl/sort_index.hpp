@@ -185,7 +185,7 @@ stable_sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A,
       }
     if (second_group_count > 0)
       {
-      dev_mem_t<uword> hist2{hist.cl_mem_ptr.ptr, hist.cl_mem_ptr.offset + hist_offset};
+      dev_mem_t<uword> hist2{{hist.cl_mem_ptr.ptr, hist.cl_mem_ptr.offset + hist_offset}};
       shifted_prefix_sum(hist2, 4 * pow2_num_threads2);
       }
 
@@ -385,11 +385,11 @@ sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const 
     }
   else if (stable_sort == 1 && sort_type == 0)
     {
-    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_index_ascending);
+    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_idx_asc);
     }
   else
     {
-    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_index_descending);
+    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_idx_desc);
     }
 
   size_t total_num_threads, local_group_size;

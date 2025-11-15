@@ -1,4 +1,4 @@
-// Copyright (C) 2023 James Balamuta
+// Copyright (C) 2023-2025 James Balamuta
 //
 // This file is part of RcppBandicoot.
 //
@@ -18,7 +18,20 @@
 #ifndef RcppBandicoot__RcppBandicoot__h
 #define RcppBandicoot__RcppBandicoot__h
 
-// Load the Bandicoot library
-#include "bandicoot.hpp"
+// Prevent direct inclusion of Rcpp.h when using RcppBandicoot
+#if defined(Rcpp_hpp) && !defined(COMPILING_RCPPBANDICOOT)
+ #error "The file 'Rcpp.h' should not be included. Please correct to include only 'RcppBandicoot.h'."
+#endif
+
+// Step 1: Include forward declarations and load Bandicoot library
+// This must be done before including Rcpp.h
+#include <RcppBandicootForward.h>
+
+// Step 2: Now include Rcpp
+#include <Rcpp/Rcpp>
+
+// Step 3: Include the conversion functions (wrap and as)
+#include <RcppBandicootWrap.h>
+#include <RcppBandicootAs.h>
 
 #endif

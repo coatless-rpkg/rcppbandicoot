@@ -7,22 +7,23 @@ Authors@R:
              role = c("aut", "cre", "cph"), 
              comment = c(ORCID = "0000-0003-2826-8458"))
      )
-Description: 'Bandicoot' is a templated C++ GPU Linear Algebra library 
- (by the 'Armadillo' team) that provides a simple set of abstractions for writing 
+Description: 'Bandicoot' is a templated C++ GPU Linear Algebra library
+ (by the 'Armadillo' team) that provides a simple set of abstractions for writing
  high performant code for graphics processing units.
  The 'RcppBandicoot' package includes the header files from the 'Bandicoot' library.
  Therefore, users do not need to install 'Bandicoot' to use 'RcppBandicoot'.
  Note that the 'Bandicoot' library is licensed under Apache License version 2.0 and
- 'RcppBandicoot' (the 'Rcpp' bindings/bridge to 'Bandicoot') is licensed under 
- the GNU GPL version 2 or later. Note that 'Bandicoot' requires a compiler that 
- supports 'C++11' and 'OpenCL' or 'CUDA' 9.800 or later.
+ 'RcppBandicoot' (the 'Rcpp' bindings/bridge to 'Bandicoot') is licensed under
+ the GNU GPL version 2 or later. Note that 'Bandicoot' requires a compiler that
+ supports 'C++14' and 'OpenCL' (>= 1.2) or 'CUDA' (>= 9.8).
 License: GPL (>= 2)
-Depends: 
-    R (>= 4.3)
-LinkingTo: 
-    Rcpp (>= 1.0.11)
-Imports: 
-    Rcpp (>= 1.0.11)
+Depends:
+    R (>= 4.4)
+LinkingTo:
+    Rcpp (>= 1.1.0)
+Imports:
+    Rcpp (>= 1.1.0)
+SystemRequirements: C++14, OpenCL (>= 1.2) or CUDA (>= 9.8), GPU device with appropriate drivers. For OpenCL: CLBlast (recommended) or clBLAS for BLAS operations.
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.3

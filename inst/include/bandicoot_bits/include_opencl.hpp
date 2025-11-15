@@ -20,11 +20,9 @@
   #if defined(__APPLE__)
     #include <OpenCL/opencl.h>
     #include <OpenCL/cl_platform.h>
-    #include <OpenCL/cl_half.h>
   #else
     #include <CL/opencl.h>
     #include <CL/cl_platform.h>
-    #include <CL/cl_half.h>
   #endif
 
   #if defined(COOT_USE_CLBLAST)

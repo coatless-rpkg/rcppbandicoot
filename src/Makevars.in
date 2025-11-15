@@ -1,0 +1,12 @@
+## RcppBandicoot Makevars.in
+##
+## This file is processed by configure to generate Makevars
+## It includes GPU backend configuration (OpenCL, CUDA) and other settings
+
+PKG_CPPFLAGS = -I../inst/include
+
+## Compiler flags from configure
+PKG_CXXFLAGS = @BANDICOOT_CXXFLAGS@ @OPENMP_CXXFLAGS@
+
+## Linker flags from configure
+PKG_LIBS = @OPENMP_CXXFLAGS@ @BANDICOOT_LIBS@

@@ -2,3 +2,15 @@ Procedure for updating the Bandicoot library:
 
 - Download Bandicoot from upstream
 - Copy and replace the bandicoot.hpp and bandicoot_bits found in this directory
+
+RcppBandicoot Integration Headers:
+
+The following headers provide seamless integration between R and Bandicoot GPU matrices:
+
+- RcppBandicoot.h: Main header file to include in your C++ code
+- RcppBandicootForward.h: Forward declarations for Rcpp/Bandicoot integration
+- RcppBandicootWrap.h: Implements wrap() functions to convert Bandicoot types to R objects
+- RcppBandicootAs.h: Implements as() functions to convert R objects to Bandicoot types
+
+These headers enable automatic conversion between R matrices/vectors and Bandicoot GPU matrices,
+allowing you to write C++ functions that seamlessly accept R data and return GPU-computed results.

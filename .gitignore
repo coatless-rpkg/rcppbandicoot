@@ -1,3 +1,8 @@
 .DS_Store
 .Rproj.user
 .Rhistory
+
+# Autoconf build artifacts
+autom4te.cache/
+config.log
+config.status
