@@ -389,16 +389,16 @@ fi
 
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([GPU Backend Configuration Summary:])
-AC_MSG_NOTICE([  Platform:       ${RSysinfoName}])
-AC_MSG_NOTICE([  C++ Standard:   C++14])
-AC_MSG_NOTICE([  OpenCL:         ${HAVE_OPENCL}])
+AC_MSG_NOTICE([  Platform:      ${RSysinfoName}])
+AC_MSG_NOTICE([  C++ Standard:  C++14])
+AC_MSG_NOTICE([  OpenCL:        ${HAVE_OPENCL}])
 if test "x${HAVE_OPENCL}" = x1; then
-  AC_MSG_NOTICE([  CLBlast:        ${HAVE_CLBLAST}])
-  AC_MSG_NOTICE([  clBLAS:         ${HAVE_CLBLAS}])
+  AC_MSG_NOTICE([  CLBlast:       ${HAVE_CLBLAST}])
+  AC_MSG_NOTICE([  clBLAS:        ${HAVE_CLBLAS}])
+  AC_MSG_NOTICE([  OpenCL Target: ${OPENCL_TARGET_VERSION}])
 fi
-AC_MSG_NOTICE([  Target Version: ${OPENCL_TARGET_VERSION}])
-AC_MSG_NOTICE([  CUDA:           ${HAVE_CUDA}])
-AC_MSG_NOTICE([  Default:        ${DEFAULT_BACKEND}])
+AC_MSG_NOTICE([  CUDA:          ${HAVE_CUDA}])
+AC_MSG_NOTICE([  Default:       ${DEFAULT_BACKEND}])
 AC_MSG_NOTICE([])
 
 ## =============================================================================

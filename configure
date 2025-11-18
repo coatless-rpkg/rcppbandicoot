@@ -5262,24 +5262,24 @@ fi
 printf "%s\n" "$as_me: " >&6;}
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: GPU Backend Configuration Summary:" >&5
 printf "%s\n" "$as_me: GPU Backend Configuration Summary:" >&6;}
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Platform:       ${RSysinfoName}" >&5
-printf "%s\n" "$as_me:   Platform:       ${RSysinfoName}" >&6;}
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   C++ Standard:   C++14" >&5
-printf "%s\n" "$as_me:   C++ Standard:   C++14" >&6;}
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   OpenCL:         ${HAVE_OPENCL}" >&5
-printf "%s\n" "$as_me:   OpenCL:         ${HAVE_OPENCL}" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Platform:      ${RSysinfoName}" >&5
+printf "%s\n" "$as_me:   Platform:      ${RSysinfoName}" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   C++ Standard:  C++14" >&5
+printf "%s\n" "$as_me:   C++ Standard:  C++14" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   OpenCL:        ${HAVE_OPENCL}" >&5
+printf "%s\n" "$as_me:   OpenCL:        ${HAVE_OPENCL}" >&6;}
 if test "x${HAVE_OPENCL}" = x1; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   CLBlast:        ${HAVE_CLBLAST}" >&5
-printf "%s\n" "$as_me:   CLBlast:        ${HAVE_CLBLAST}" >&6;}
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   clBLAS:         ${HAVE_CLBLAS}" >&5
-printf "%s\n" "$as_me:   clBLAS:         ${HAVE_CLBLAS}" >&6;}
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   CLBlast:       ${HAVE_CLBLAST}" >&5
+printf "%s\n" "$as_me:   CLBlast:       ${HAVE_CLBLAST}" >&6;}
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   clBLAS:        ${HAVE_CLBLAS}" >&5
+printf "%s\n" "$as_me:   clBLAS:        ${HAVE_CLBLAS}" >&6;}
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   OpenCL Target: ${OPENCL_TARGET_VERSION}" >&5
+printf "%s\n" "$as_me:   OpenCL Target: ${OPENCL_TARGET_VERSION}" >&6;}
 fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Target Version: ${OPENCL_TARGET_VERSION}" >&5
-printf "%s\n" "$as_me:   Target Version: ${OPENCL_TARGET_VERSION}" >&6;}
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   CUDA:           ${HAVE_CUDA}" >&5
-printf "%s\n" "$as_me:   CUDA:           ${HAVE_CUDA}" >&6;}
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Default:        ${DEFAULT_BACKEND}" >&5
-printf "%s\n" "$as_me:   Default:        ${DEFAULT_BACKEND}" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   CUDA:          ${HAVE_CUDA}" >&5
+printf "%s\n" "$as_me:   CUDA:          ${HAVE_CUDA}" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Default:       ${DEFAULT_BACKEND}" >&5
+printf "%s\n" "$as_me:   Default:       ${DEFAULT_BACKEND}" >&6;}
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: " >&5
 printf "%s\n" "$as_me: " >&6;}
 
