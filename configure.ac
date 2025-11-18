@@ -325,7 +325,7 @@ if test "x${NVCC}" != xno; then
                     [AC_CHECK_LIB([nvrtc], [nvrtcCreateProgram],
                      [HAVE_CUDA=1
                       CUDA_CXXFLAGS="-DCOOT_USE_CUDA -DCOOT_CUDA_INCLUDE_PATH=${CUDA_HOME}/include/"
-                      CUDA_LIBS="-L${CUDA_HOME}/lib64 -L${CUDA_HOME}/lib -lcudart -lcublas -lcusolver -lcurand -lnvrtc"
+                      CUDA_LIBS="-L${CUDA_HOME}/lib64 -L${CUDA_HOME}/lib -lcuda -lcudart -lcublas -lcusolver -lcurand -lnvrtc"
                       BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CUDA_CXXFLAGS}"
                       BANDICOOT_LIBS="${BANDICOOT_LIBS} ${CUDA_LIBS}"
                       AC_MSG_RESULT([yes])],
