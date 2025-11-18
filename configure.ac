@@ -78,6 +78,23 @@ HAVE_CUDA=0
 HAVE_CLBLAST=0
 HAVE_CLBLAS=0
 DEFAULT_BACKEND="NONE"
+HAVE_OPENMP=0
+
+## Individual component flags
+OPENCL_CXXFLAGS=""
+OPENCL_LIBS=""
+CUDA_CXXFLAGS=""
+CUDA_LIBS=""
+CLBLAST_CXXFLAGS=""
+CLBLAST_LIBS=""
+CLBLAS_CXXFLAGS=""
+CLBLAS_LIBS=""
+
+## Location variables (for bandicoot_config())
+CLBLAST_PREFIX=""
+CLBLAS_PREFIX=""
+CUDA_HOME=""
+SDKPATH=""
 
 ## =============================================================================
 ## OpenCL Detection
@@ -119,11 +136,13 @@ if test x"${is_macos}" = x"yes"; then
     ]])],
     [opencl_header_found=yes
      HAVE_OPENCL=1
-     BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_USE_OPENCL"
+     OPENCL_CXXFLAGS="-DCOOT_USE_OPENCL"
      if test -n "${SDKPATH}" && test -d "${FRAMEWORK_SEARCH_PATH}"; then
-       BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -F${FRAMEWORK_SEARCH_PATH}"
+       OPENCL_CXXFLAGS="${OPENCL_CXXFLAGS} -F${FRAMEWORK_SEARCH_PATH}"
      fi
-     BANDICOOT_LIBS="${BANDICOOT_LIBS} -framework OpenCL"
+     OPENCL_LIBS="-framework OpenCL"
+     BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${OPENCL_CXXFLAGS}"
+     BANDICOOT_LIBS="${BANDICOOT_LIBS} ${OPENCL_LIBS}"
      AC_MSG_RESULT([yes (framework)])],
     [opencl_header_found=no
      HAVE_OPENCL=0
@@ -143,7 +162,7 @@ else
     AC_CHECK_HEADER([CL/opencl.h],
                     [opencl_header_found=yes
                      OPENCL_INCLUDE="<CL/opencl.h>"
-                     BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_USE_OPENCL"],
+                     OPENCL_CXXFLAGS="-DCOOT_USE_OPENCL"],
                     [opencl_header_found=no])
 
     ## If headers found, check for OpenCL library
@@ -154,11 +173,12 @@ else
       AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include ${OPENCL_INCLUDE}]],
                                       [[clGetPlatformIDs(0,0,0);]])],
                      [HAVE_OPENCL=1
-                      BANDICOOT_LIBS="${BANDICOOT_LIBS} -lOpenCL"
+                      OPENCL_LIBS="-lOpenCL"
+                      BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${OPENCL_CXXFLAGS}"
+                      BANDICOOT_LIBS="${BANDICOOT_LIBS} ${OPENCL_LIBS}"
                       AC_MSG_RESULT([yes (-lOpenCL)])],
                      [HAVE_OPENCL=0
-                      AC_MSG_RESULT([no])
-                      BANDICOOT_CXXFLAGS=$(echo ${BANDICOOT_CXXFLAGS} | sed 's/-DCOOT_USE_OPENCL//')])
+                      AC_MSG_RESULT([no])])
 
       LIBS="${saved_LIBS}"
     else
@@ -193,13 +213,15 @@ if test "x${HAVE_OPENCL}" = x1; then
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern "C" void CLBlastSgemm();]],
                                   [[CLBlastSgemm();]])],
                  [HAVE_CLBLAST=1
-                  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_USE_CLBLAST"
+                  CLBLAST_CXXFLAGS="-DCOOT_USE_CLBLAST"
                   if test -n "${CLBLAST_PREFIX}"; then
-                    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -I${CLBLAST_PREFIX}/include"
-                    BANDICOOT_LIBS="-L${CLBLAST_PREFIX}/lib -lclblast ${BANDICOOT_LIBS}"
+                    CLBLAST_CXXFLAGS="${CLBLAST_CXXFLAGS} -I${CLBLAST_PREFIX}/include"
+                    CLBLAST_LIBS="-L${CLBLAST_PREFIX}/lib -lclblast"
                   else
-                    BANDICOOT_LIBS="-lclblast ${BANDICOOT_LIBS}"
+                    CLBLAST_LIBS="-lclblast"
                   fi
+                  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CLBLAST_CXXFLAGS}"
+                  BANDICOOT_LIBS="${CLBLAST_LIBS} ${BANDICOOT_LIBS}"
                   AC_MSG_RESULT([yes])],
                  [HAVE_CLBLAST=0
                   ## Explicitly disable CLBlast since bandicoot's config.hpp enables it by default
@@ -240,13 +262,15 @@ if test "x${HAVE_OPENCL}" = x1; then
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern "C" void clblasSetup();]],
                                   [[clblasSetup();]])],
                  [HAVE_CLBLAS=1
-                  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_USE_CLBLAS"
+                  CLBLAS_CXXFLAGS="-DCOOT_USE_CLBLAS"
                   if test -n "${CLBLAS_PREFIX}"; then
-                    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -I${CLBLAS_PREFIX}/include"
-                    BANDICOOT_LIBS="-L${CLBLAS_PREFIX}/lib -lclBLAS ${BANDICOOT_LIBS}"
+                    CLBLAS_CXXFLAGS="${CLBLAS_CXXFLAGS} -I${CLBLAS_PREFIX}/include"
+                    CLBLAS_LIBS="-L${CLBLAS_PREFIX}/lib -lclBLAS"
                   else
-                    BANDICOOT_LIBS="-lclBLAS ${BANDICOOT_LIBS}"
+                    CLBLAS_LIBS="-lclBLAS"
                   fi
+                  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CLBLAS_CXXFLAGS}"
+                  BANDICOOT_LIBS="${CLBLAS_LIBS} ${BANDICOOT_LIBS}"
                   AC_MSG_RESULT([yes])],
                  [HAVE_CLBLAS=0
                   ## Explicitly disable clBLAS since bandicoot's config.hpp enables it by default
@@ -300,8 +324,10 @@ if test "x${NVCC}" != xno; then
                    [AC_CHECK_LIB([curand], [curandCreateGenerator],
                     [AC_CHECK_LIB([nvrtc], [nvrtcCreateProgram],
                      [HAVE_CUDA=1
-                      BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_USE_CUDA -DCOOT_CUDA_INCLUDE_PATH=${CUDA_HOME}/include/"
-                      BANDICOOT_LIBS="${BANDICOOT_LIBS} -L${CUDA_HOME}/lib64 -L${CUDA_HOME}/lib -lcudart -lcublas -lcusolver -lcurand -lnvrtc"
+                      CUDA_CXXFLAGS="-DCOOT_USE_CUDA -DCOOT_CUDA_INCLUDE_PATH=${CUDA_HOME}/include/"
+                      CUDA_LIBS="-L${CUDA_HOME}/lib64 -L${CUDA_HOME}/lib -lcudart -lcublas -lcusolver -lcurand -lnvrtc"
+                      BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CUDA_CXXFLAGS}"
+                      BANDICOOT_LIBS="${BANDICOOT_LIBS} ${CUDA_LIBS}"
                       AC_MSG_RESULT([yes])],
                      [HAVE_CUDA=0])],
                     [HAVE_CUDA=0])],
@@ -378,6 +404,7 @@ if test x"${is_apple_compiler}" = x"yes"; then
   AC_MSG_RESULT([unavailable (Apple compiler)])
   AC_MSG_WARN([OpenMP unavailable and turned off.])
   OPENMP_CXXFLAGS=""
+  HAVE_OPENMP=0
 else
   ## Check if R has -fopenmp in ldflags
   allldflags=$(${R_HOME}/bin/R CMD config --ldflags)
@@ -385,10 +412,12 @@ else
   if test x"${hasOpenMP}" = x""; then
     AC_MSG_RESULT([missing])
     OPENMP_CXXFLAGS=""
+    HAVE_OPENMP=0
   else
     AC_MSG_RESULT([found and suitable])
     OPENMP_CXXFLAGS='$(SHLIB_OPENMP_CXXFLAGS)'
     BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${OPENMP_CXXFLAGS}"
+    HAVE_OPENMP=1
   fi
 fi
 
@@ -400,7 +429,10 @@ LAPACK_LIBS=$(${R_HOME}/bin/R CMD config LAPACK_LIBS)
 BLAS_LIBS=$(${R_HOME}/bin/R CMD config BLAS_LIBS)
 FLIBS=$(${R_HOME}/bin/R CMD config FLIBS)
 
-BANDICOOT_LIBS="${BANDICOOT_LIBS} ${LAPACK_LIBS} ${BLAS_LIBS} ${FLIBS}"
+## Combined LAPACK/BLAS libs for modular plugins
+LAPACK_BLAS_LIBS="${LAPACK_LIBS} ${BLAS_LIBS} ${FLIBS}"
+
+BANDICOOT_LIBS="${BANDICOOT_LIBS} ${LAPACK_BLAS_LIBS}"
 
 ## =============================================================================
 ## Generate output
@@ -410,5 +442,30 @@ AC_SUBST([BANDICOOT_CXXFLAGS])
 AC_SUBST([BANDICOOT_LIBS])
 AC_SUBST([OPENMP_CXXFLAGS])
 
-AC_CONFIG_FILES([src/Makevars])
+## Individual component flags
+AC_SUBST([OPENCL_CXXFLAGS])
+AC_SUBST([OPENCL_LIBS])
+AC_SUBST([CUDA_CXXFLAGS])
+AC_SUBST([CUDA_LIBS])
+AC_SUBST([CLBLAST_CXXFLAGS])
+AC_SUBST([CLBLAST_LIBS])
+AC_SUBST([CLBLAS_CXXFLAGS])
+AC_SUBST([CLBLAS_LIBS])
+AC_SUBST([LAPACK_BLAS_LIBS])
+
+## Configuration status for bandicoot_config()
+AC_SUBST([HAVE_OPENCL])
+AC_SUBST([HAVE_CUDA])
+AC_SUBST([HAVE_CLBLAST])
+AC_SUBST([HAVE_CLBLAS])
+AC_SUBST([HAVE_OPENMP])
+AC_SUBST([DEFAULT_BACKEND])
+
+## Location information for bandicoot_config()
+AC_SUBST([CLBLAST_PREFIX])
+AC_SUBST([CLBLAS_PREFIX])
+AC_SUBST([CUDA_HOME])
+AC_SUBST([SDKPATH])
+
+AC_CONFIG_FILES([src/Makevars R/flags.R])
 AC_OUTPUT

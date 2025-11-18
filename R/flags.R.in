@@ -1,0 +1,210 @@
+##
+## RcppBandicoot flags.R
+##
+## Copyright (C) 2023-2025 James Balamuta
+##
+## Licensed under GPL-2 or later
+##
+## This file is generated from flags.R.in by the configure script
+##
+
+#' Get RcppBandicoot C++ compiler flags
+#'
+#' Returns the C++ compiler flags required for compiling code that uses RcppBandicoot.
+#' These flags include the path to RcppBandicoot headers and necessary preprocessor definitions
+#' for GPU backends (OpenCL/CUDA), BLAS libraries (CLBlast/clBLAS), and other compile-time options.
+#'
+#' The flags are determined at package installation time by the configure script, ensuring they
+#' match the configuration used to build the package.
+#'
+#' @return 
+#' A character string containing the compiler flags
+#' @export
+#' @examples
+#' RcppBandicootCxxFlags()
+RcppBandicootCxxFlags <- function() {
+  path <- system.file("include", package = "RcppBandicoot")
+  if (path == "") {
+    stop("RcppBandicoot package not found")
+  }
+
+  # Combine include path with configure-time flags
+  paste0("-I", shQuote(path), " @BANDICOOT_CXXFLAGS@")
+}
+
+#' Get RcppBandicoot linker flags
+#'
+#' Returns the linker flags required for linking code that uses RcppBandicoot.
+#' These flags include the necessary GPU libraries (OpenCL, CLBlast, clBLAS, CUDA),
+#' R's LAPACK/BLAS libraries, and Fortran libraries.
+#'
+#' The flags are determined at package installation time by the configure script,
+#' ensuring they match the configuration used to build the package.
+#'
+#' @return 
+#' A character string containing the linker flags
+#' @export
+#' @examples
+#' \dontrun{
+#' RcppBandicootLdFlags()
+#' }
+RcppBandicootLdFlags <- function() {
+  '@BANDICOOT_LIBS@'
+}
+
+## =============================================================================
+## Individual component flags
+## =============================================================================
+
+#' @keywords internal
+OpenCLCxxFlags <- function() '@OPENCL_CXXFLAGS@'
+
+#' @keywords internal
+OpenCLLdFlags <- function() '@OPENCL_LIBS@'
+
+#' @keywords internal
+CUDACxxFlags <- function() '@CUDA_CXXFLAGS@'
+
+#' @keywords internal
+CUDALdFlags <- function() '@CUDA_LIBS@'
+
+#' @keywords internal
+CLBlastCxxFlags <- function() '@CLBLAST_CXXFLAGS@'
+
+#' @keywords internal
+CLBlastLdFlags <- function() '@CLBLAST_LIBS@'
+
+#' @keywords internal
+CLBLASCxxFlags <- function() '@CLBLAS_CXXFLAGS@'
+
+#' @keywords internal
+CLBLASLdFlags <- function() '@CLBLAS_LIBS@'
+
+#' @keywords internal
+LAPACKBLASLdFlags <- function() '@LAPACK_BLAS_LIBS@'
+
+## =============================================================================
+## Configuration status
+## =============================================================================
+
+#' Show RcppBandicoot configuration
+#'
+#' Displays the GPU backends and BLAS libraries that were detected and enabled
+#' when the RcppBandicoot package was installed. This shows the configuration
+#' determined by the configure script.
+#'
+#' @param verbose Logical. If TRUE, also shows the compiler and linker flags.
+#'   Default is FALSE.
+#' @return 
+#' Invisibly returns a list with the configuration details
+#' @export
+#' @examples
+#' bandicoot_config()
+#'
+#' bandicoot_config(verbose = TRUE)
+bandicoot_config <- function(verbose = FALSE) {
+  have_opencl <- as.logical(as.integer("@HAVE_OPENCL@"))
+  have_cuda <- as.logical(as.integer("@HAVE_CUDA@"))
+  have_clblast <- as.logical(as.integer("@HAVE_CLBLAST@"))
+  have_clblas <- as.logical(as.integer("@HAVE_CLBLAS@"))
+  have_openmp <- as.logical(as.integer("@HAVE_OPENMP@"))
+  default_backend <- "@DEFAULT_BACKEND@"
+
+  # Location information
+  clblast_prefix <- "@CLBLAST_PREFIX@"
+  clblas_prefix <- "@CLBLAS_PREFIX@"
+  cuda_home <- "@CUDA_HOME@"
+  sdkpath <- "@SDKPATH@"
+
+  cat("RcppBandicoot Configuration\n")
+  cat("===========================\n\n")
+
+  cat("GPU Backends:\n")
+  cat(sprintf("  OpenCL:       %s\n", if (have_opencl) "YES" else "NO"))
+  if (have_opencl && nzchar(sdkpath)) {
+    cat(sprintf("    SDK Path:   %s\n", sdkpath))
+  }
+  cat(sprintf("  CUDA:         %s\n", if (have_cuda) "YES" else "NO"))
+  if (have_cuda && nzchar(cuda_home)) {
+    cat(sprintf("    CUDA Home:  %s\n", cuda_home))
+  }
+  cat("\n")
+
+  if (have_opencl) {
+    cat("OpenCL BLAS Libraries:\n")
+    cat(sprintf("  CLBlast:      %s\n", if (have_clblast) "YES" else "NO"))
+    if (have_clblast && nzchar(clblast_prefix)) {
+      cat(sprintf("    Location:   %s\n", clblast_prefix))
+    }
+    cat(sprintf("  clBLAS:       %s\n", if (have_clblas) "YES" else "NO"))
+    if (have_clblas && nzchar(clblas_prefix)) {
+      cat(sprintf("    Location:   %s\n", clblas_prefix))
+    }
+    cat("\n")
+  }
+
+  cat(sprintf("Default Backend:  %s\n", default_backend))
+  cat(sprintf("OpenMP Support:   %s\n", if (have_openmp) "YES" else "NO"))
+
+  if (verbose) {
+    cat("\n")
+    cat("Compiler Flags:\n")
+    cat("---------------\n")
+    cat(RcppBandicootCxxFlags())
+    cat("\n\n")
+
+    cat("Linker Flags:\n")
+    cat("-------------\n")
+    cat(RcppBandicootLdFlags())
+    cat("\n")
+  }
+
+  invisible(list(
+    opencl = have_opencl,
+    cuda = have_cuda,
+    clblast = have_clblast,
+    clblas = have_clblas,
+    openmp = have_openmp,
+    default_backend = default_backend,
+    clblast_prefix = if (nzchar(clblast_prefix)) clblast_prefix else NULL,
+    clblas_prefix = if (nzchar(clblas_prefix)) clblas_prefix else NULL,
+    cuda_home = if (nzchar(cuda_home)) cuda_home else NULL,
+    sdkpath = if (nzchar(sdkpath)) sdkpath else NULL,
+    cxxflags = if (verbose) RcppBandicootCxxFlags() else NULL,
+    libs = if (verbose) RcppBandicootLdFlags() else NULL
+  ))
+}
+
+## =============================================================================
+## Convenience functions
+## =============================================================================
+
+#' Print RcppBandicoot C++ compiler flags
+#'
+#' Prints the C++ compiler flags required for compiling code that uses RcppBandicoot.
+#' This is a convenience wrapper around \code{\link{RcppBandicootCxxFlags}}.
+#'
+#' @return 
+#' Invisibly returns the flags (after printing them)
+#' @export
+#' @examples
+#' CxxFlags()
+CxxFlags <- function() {
+  cat(RcppBandicootCxxFlags())
+  invisible(RcppBandicootCxxFlags())
+}
+
+#' Print RcppBandicoot linker flags
+#'
+#' Prints the linker flags required for linking code that uses RcppBandicoot.
+#' This is a convenience wrapper around \code{\link{RcppBandicootLdFlags}}.
+#'
+#' @return 
+#' Invisibly returns the flags (after printing them)
+#' @export
+#' @examples
+#' LdFlags()
+LdFlags <- function() {
+  cat(RcppBandicootLdFlags())
+  invisible(RcppBandicootLdFlags())
+}
