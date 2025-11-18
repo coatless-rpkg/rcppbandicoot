@@ -319,7 +319,7 @@ if test "x${NVCC}" != xno; then
     LDFLAGS="${LDFLAGS} -L${CUDA_HOME}/lib64 -L${CUDA_HOME}/lib"
 
     AC_CHECK_LIB([cudart], [cudaMalloc],
-                 [AC_CHECK_LIB([cublas], [cublasCreate],
+                 [AC_CHECK_LIB([cublas], [cublasCreate_v2],
                   [AC_CHECK_LIB([cusolver], [cusolverDnCreate],
                    [AC_CHECK_LIB([curand], [curandCreateGenerator],
                     [AC_CHECK_LIB([nvrtc], [nvrtcCreateProgram],

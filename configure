@@ -5019,9 +5019,9 @@ fi
 printf "%s\n" "$ac_cv_lib_cudart_cudaMalloc" >&6; }
 if test "x$ac_cv_lib_cudart_cudaMalloc" = xyes
 then :
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for cublasCreate in -lcublas" >&5
-printf %s "checking for cublasCreate in -lcublas... " >&6; }
-if test ${ac_cv_lib_cublas_cublasCreate+y}
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for cublasCreate_v2 in -lcublas" >&5
+printf %s "checking for cublasCreate_v2 in -lcublas... " >&6; }
+if test ${ac_cv_lib_cublas_cublasCreate_v2+y}
 then :
   printf %s "(cached) " >&6
 else case e in #(
@@ -5031,21 +5031,21 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 namespace conftest {
-  extern "C" int cublasCreate ();
+  extern "C" int cublasCreate_v2 ();
 }
 int
 main (void)
 {
-return conftest::cublasCreate ();
+return conftest::cublasCreate_v2 ();
   ;
   return 0;
 }
 _ACEOF
 if ac_fn_cxx_try_link "$LINENO"
 then :
-  ac_cv_lib_cublas_cublasCreate=yes
+  ac_cv_lib_cublas_cublasCreate_v2=yes
 else case e in #(
-  e) ac_cv_lib_cublas_cublasCreate=no ;;
+  e) ac_cv_lib_cublas_cublasCreate_v2=no ;;
 esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam \
@@ -5053,9 +5053,9 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
 LIBS=$ac_check_lib_save_LIBS ;;
 esac
 fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_cublas_cublasCreate" >&5
-printf "%s\n" "$ac_cv_lib_cublas_cublasCreate" >&6; }
-if test "x$ac_cv_lib_cublas_cublasCreate" = xyes
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_cublas_cublasCreate_v2" >&5
+printf "%s\n" "$ac_cv_lib_cublas_cublasCreate_v2" >&6; }
+if test "x$ac_cv_lib_cublas_cublasCreate_v2" = xyes
 then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for cusolverDnCreate in -lcusolver" >&5
 printf %s "checking for cusolverDnCreate in -lcusolver... " >&6; }
