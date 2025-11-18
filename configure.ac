@@ -96,6 +96,9 @@ CLBLAS_PREFIX=""
 CUDA_HOME=""
 SDKPATH=""
 
+## Use common current version on non-macOS systems
+OPENCL_TARGET_VERSION=300
+
 ## =============================================================================
 ## OpenCL Detection
 ## =============================================================================
@@ -157,6 +160,10 @@ if test x"${is_macos}" = x"yes"; then
       AC_MSG_WARN([You may need to install Xcode Command Line Tools: xcode-select --install])
       AC_MSG_WARN([Or use CUDA if you have an NVIDIA GPU])
     fi
+
+    ## Use minimum version to match OpenCL on macOS
+    OPENCL_TARGET_VERSION=120
+
 else
     ## Linux/Unix: Check for CL/opencl.h header
     AC_CHECK_HEADER([CL/opencl.h],
@@ -382,15 +389,16 @@ fi
 
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([GPU Backend Configuration Summary:])
-AC_MSG_NOTICE([  Platform:     ${RSysinfoName}])
-AC_MSG_NOTICE([  C++ Standard: C++14])
-AC_MSG_NOTICE([  OpenCL:       ${HAVE_OPENCL}])
+AC_MSG_NOTICE([  Platform:      ${RSysinfoName}])
+AC_MSG_NOTICE([  C++ Standard:  C++14])
+AC_MSG_NOTICE([  OpenCL:        ${HAVE_OPENCL}])
 if test "x${HAVE_OPENCL}" = x1; then
-  AC_MSG_NOTICE([  CLBlast:      ${HAVE_CLBLAST}])
-  AC_MSG_NOTICE([  clBLAS:       ${HAVE_CLBLAS}])
+  AC_MSG_NOTICE([  CLBlast:       ${HAVE_CLBLAST}])
+  AC_MSG_NOTICE([  clBLAS:        ${HAVE_CLBLAS}])
+  AC_MSG_NOTICE([  OpenCL Target: ${OPENCL_TARGET_VERSION}])
 fi
-AC_MSG_NOTICE([  CUDA:         ${HAVE_CUDA}])
-AC_MSG_NOTICE([  Default:      ${DEFAULT_BACKEND}])
+AC_MSG_NOTICE([  CUDA:          ${HAVE_CUDA}])
+AC_MSG_NOTICE([  Default:       ${DEFAULT_BACKEND}])
 AC_MSG_NOTICE([])
 
 ## =============================================================================
@@ -466,6 +474,9 @@ AC_SUBST([CLBLAST_PREFIX])
 AC_SUBST([CLBLAS_PREFIX])
 AC_SUBST([CUDA_HOME])
 AC_SUBST([SDKPATH])
+
+## OpenCL target version
+AC_SUBST([OPENCL_TARGET_VERSION])
 
 AC_CONFIG_FILES([src/Makevars R/flags.R])
 AC_OUTPUT

@@ -639,6 +639,7 @@ ac_includes_default="\
 ac_header_cxx_list=
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+OPENCL_TARGET_VERSION
 SDKPATH
 CUDA_HOME
 CLBLAS_PREFIX
@@ -4581,6 +4582,9 @@ CLBLAS_PREFIX=""
 CUDA_HOME=""
 SDKPATH=""
 
+## Use common current version on non-macOS systems
+OPENCL_TARGET_VERSION=300
+
 ## =============================================================================
 ## OpenCL Detection
 ## =============================================================================
@@ -4668,6 +4672,10 @@ printf "%s\n" "$as_me: WARNING: You may need to install Xcode Command Line Tools
       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Or use CUDA if you have an NVIDIA GPU" >&5
 printf "%s\n" "$as_me: WARNING: Or use CUDA if you have an NVIDIA GPU" >&2;}
     fi
+
+    ## Use minimum version to match OpenCL on macOS
+    OPENCL_TARGET_VERSION=120
+
 else
     ## Linux/Unix: Check for CL/opencl.h header
     ac_header= ac_cache=
@@ -5254,22 +5262,24 @@ fi
 printf "%s\n" "$as_me: " >&6;}
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: GPU Backend Configuration Summary:" >&5
 printf "%s\n" "$as_me: GPU Backend Configuration Summary:" >&6;}
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Platform:     ${RSysinfoName}" >&5
-printf "%s\n" "$as_me:   Platform:     ${RSysinfoName}" >&6;}
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   C++ Standard: C++14" >&5
-printf "%s\n" "$as_me:   C++ Standard: C++14" >&6;}
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   OpenCL:       ${HAVE_OPENCL}" >&5
-printf "%s\n" "$as_me:   OpenCL:       ${HAVE_OPENCL}" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Platform:      ${RSysinfoName}" >&5
+printf "%s\n" "$as_me:   Platform:      ${RSysinfoName}" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   C++ Standard:  C++14" >&5
+printf "%s\n" "$as_me:   C++ Standard:  C++14" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   OpenCL:        ${HAVE_OPENCL}" >&5
+printf "%s\n" "$as_me:   OpenCL:        ${HAVE_OPENCL}" >&6;}
 if test "x${HAVE_OPENCL}" = x1; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   CLBlast:      ${HAVE_CLBLAST}" >&5
-printf "%s\n" "$as_me:   CLBlast:      ${HAVE_CLBLAST}" >&6;}
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   clBLAS:       ${HAVE_CLBLAS}" >&5
-printf "%s\n" "$as_me:   clBLAS:       ${HAVE_CLBLAS}" >&6;}
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   CLBlast:       ${HAVE_CLBLAST}" >&5
+printf "%s\n" "$as_me:   CLBlast:       ${HAVE_CLBLAST}" >&6;}
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   clBLAS:        ${HAVE_CLBLAS}" >&5
+printf "%s\n" "$as_me:   clBLAS:        ${HAVE_CLBLAS}" >&6;}
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   OpenCL Target: ${OPENCL_TARGET_VERSION}" >&5
+printf "%s\n" "$as_me:   OpenCL Target: ${OPENCL_TARGET_VERSION}" >&6;}
 fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   CUDA:         ${HAVE_CUDA}" >&5
-printf "%s\n" "$as_me:   CUDA:         ${HAVE_CUDA}" >&6;}
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Default:      ${DEFAULT_BACKEND}" >&5
-printf "%s\n" "$as_me:   Default:      ${DEFAULT_BACKEND}" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   CUDA:          ${HAVE_CUDA}" >&5
+printf "%s\n" "$as_me:   CUDA:          ${HAVE_CUDA}" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Default:       ${DEFAULT_BACKEND}" >&5
+printf "%s\n" "$as_me:   Default:       ${DEFAULT_BACKEND}" >&6;}
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: " >&5
 printf "%s\n" "$as_me: " >&6;}
 
@@ -5350,6 +5360,9 @@ BANDICOOT_LIBS="${BANDICOOT_LIBS} ${LAPACK_BLAS_LIBS}"
 
 
 
+
+
+## OpenCL target version
 
 
 ac_config_files="$ac_config_files src/Makevars R/flags.R"

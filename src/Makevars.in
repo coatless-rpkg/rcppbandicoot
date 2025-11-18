@@ -3,7 +3,7 @@
 ## This file is processed by configure to generate Makevars
 ## It includes GPU backend configuration (OpenCL, CUDA) and other settings
 
-PKG_CPPFLAGS = -I../inst/include
+PKG_CPPFLAGS = -I../inst/include -DCL_TARGET_OPENCL_VERSION=@OPENCL_TARGET_VERSION@
 
 ## Compiler flags from configure
 PKG_CXXFLAGS = @BANDICOOT_CXXFLAGS@ @OPENMP_CXXFLAGS@
