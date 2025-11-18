@@ -5173,7 +5173,7 @@ if test "x$ac_cv_lib_nvrtc_nvrtcCreateProgram" = xyes
 then :
   HAVE_CUDA=1
                       CUDA_CXXFLAGS="-DCOOT_USE_CUDA -DCOOT_CUDA_INCLUDE_PATH=${CUDA_HOME}/include/"
-                      CUDA_LIBS="-L${CUDA_HOME}/lib64 -L${CUDA_HOME}/lib -lcudart -lcublas -lcusolver -lcurand -lnvrtc"
+                      CUDA_LIBS="-L${CUDA_HOME}/lib64 -L${CUDA_HOME}/lib -lcuda -lcudart -lcublas -lcusolver -lcurand -lnvrtc"
                       BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CUDA_CXXFLAGS}"
                       BANDICOOT_LIBS="${BANDICOOT_LIBS} ${CUDA_LIBS}"
                       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
