@@ -26,6 +26,13 @@ svd(dev_mem_t<eT> U,
     const bool compute_u_vt)
   {
   coot_stop_runtime_error("opencl::svd(): unsupported type");
+  coot_ignore(U);
+  coot_ignore(S);
+  coot_ignore(V);
+  coot_ignore(A);
+  coot_ignore(n_rows);
+  coot_ignore(n_cols);
+  coot_ignore(compute_u_vt);
 
   return std::make_tuple(false, "unsupported type");
   }

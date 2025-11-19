@@ -52,40 +52,20 @@ inline
 std::string
 read_file(const std::string& filename)
   {
-  std::string full_filename;
+  #if defined(COOT_KERNEL_SOURCE_DIR)
+  const char* source_dir = COOT_KERNEL_SOURCE_DIR;
+  const std::string full_filename = std::string(source_dir) + "opencl/" + full_filename;
+  #else
+  const std::string this_file = __FILE__;
 
-  // Check if COOT_CL_KERNEL_PATH environment variable is set
-  const char* kernel_path_env = std::getenv("COOT_CL_KERNEL_PATH");
-
-  if (kernel_path_env != nullptr)
-    {
-    std::string kernel_path_str(kernel_path_env);
-    if (!kernel_path_str.empty())
-      {
-      // Use the path from the environment variable
-      full_filename = kernel_path_str + "/" + filename;
-      }
-    else
-      {
-      // Fall back to the original behavior using __FILE__
-      const std::string this_file = __FILE__;
-      // We need to strip the '_src.hpp' from __FILE__.
-      full_filename = this_file.substr(0, this_file.size() - 8) + "s/" + filename;
-      }
-    }
-  else
-    {
-    // Fall back to the original behavior using __FILE__
-    const std::string this_file = __FILE__;
-    // We need to strip the '_src.hpp' from __FILE__.
-    full_filename = this_file.substr(0, this_file.size() - 8) + "s/" + filename;
-    }
-
+  // We need to strip the '_src.hpp' from __FILE__.
+  const std::string full_filename = this_file.substr(0, this_file.size() - 8) + "s/" + filename;
+  #endif
   std::ifstream f(full_filename);
   std::string file_contents = "";
   if (!f.is_open())
     {
-    COOT_CERR_STREAM << "Failed to open " << full_filename << " (kernel source)!\n";
+    COOT_COUT_STREAM << "Failed to open " << full_filename << " (kernel source)!\n";
     throw std::runtime_error("Cannot open required kernel source.");
     }
 

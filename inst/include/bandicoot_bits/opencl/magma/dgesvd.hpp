@@ -104,8 +104,8 @@ magma_dgesvd
   // Local variables
   magma_int_t i, ie, ir, iu, ib, ncu;
   double dummy[1], unused[1], eps;
-  magma_int_t nru, iscl;
-  magma_int_t ierr, itau, ncvt, nrvt;
+  magma_int_t nru = 0, iscl;
+  magma_int_t ierr, itau, ncvt = 0, nrvt;
   magma_int_t chunk, minmn, wrkbl, itaup, itauq, mnthr, iwork;
   magma_int_t ldwrkr, ldwrku, maxwrk, minwrk, gemm_nb;
   double anrm, bignum, smlnum;

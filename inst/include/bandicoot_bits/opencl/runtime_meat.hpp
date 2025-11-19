@@ -470,14 +470,14 @@ runtime_t::interrogate_device(runtime_dev_info& out_info, cl_platform_id in_plt_
       {
       status = coot_wrapper(clBuildProgram)(tmp_program, 0, NULL, NULL, NULL, NULL);
 
-      // cout << "status: " << coot_cl_error::as_string(status) << endl;
+      // COOT_COUT_STREAM << "status: " << coot_cl_error::as_string(status) << std::endl;
 
       // size_t len = 0;
       // char buffer[10240];
 
       // clGetProgramBuildInfo(tmp_program, in_dev_id, CL_PROGRAM_BUILD_LOG, sizeof(buffer), buffer, &len);
-      // std::cout << "output from clGetProgramBuildInfo():" << std::endl;
-      // std::cout << buffer << std::endl;
+      // COOT_COUT_STREAM << "output from clGetProgramBuildInfo():" << std::endl;
+      // COOT_COUT_STREAM << buffer << std::endl;
 
       if(status == CL_SUCCESS)
         {

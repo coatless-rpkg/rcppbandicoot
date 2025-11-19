@@ -72,6 +72,7 @@ class op_vectorise_cube_col
   : public traits_op_col
   {
   public:
+
   template<typename T1> inline static void apply(Mat<typename T1::elem_type>& out, const CubeToMatOp<T1, op_vectorise_cube_col>& in);
 
   template<typename T1> inline static uword compute_n_rows(const CubeToMatOp<T1, op_vectorise_cube_col>& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices);

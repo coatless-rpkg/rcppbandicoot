@@ -101,8 +101,6 @@ diagview<eT>::operator+=(const eT val)
   {
   coot_extra_debug_sigprint();
 
-  Mat<eT>& t_m = const_cast< Mat<eT>& >(m);
-
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
                         m.get_dev_mem(false), m.get_dev_mem(false),
                         (eT) val, (eT) 0,
@@ -119,8 +117,6 @@ void
 diagview<eT>::operator-=(const eT val)
   {
   coot_extra_debug_sigprint();
-
-  Mat<eT>& t_m = const_cast< Mat<eT>& >(m);
 
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_minus_scalar_post,
                         m.get_dev_mem(false), m.get_dev_mem(false),
@@ -139,8 +135,6 @@ diagview<eT>::operator*=(const eT val)
   {
   coot_extra_debug_sigprint();
 
-  Mat<eT>& t_m = const_cast< Mat<eT>& >(m);
-
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
                         m.get_dev_mem(false), m.get_dev_mem(false),
                         (eT) val, (eT) 1,
@@ -157,8 +151,6 @@ void
 diagview<eT>::operator/=(const eT val)
   {
   coot_extra_debug_sigprint();
-
-  Mat<eT>& t_m = const_cast< Mat<eT>& >(m);
 
   coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
                         m.get_dev_mem(false), m.get_dev_mem(false),
@@ -177,8 +169,6 @@ void
 diagview<eT>::operator= (const Mat<eT>& o)
   {
   coot_extra_debug_sigprint();
-
-  Mat<eT>& t_m = const_cast< Mat<eT>& >(m);
 
   coot_debug_check
     (
@@ -201,8 +191,6 @@ void
 diagview<eT>::operator= (const subview<eT>& o)
   {
   coot_extra_debug_sigprint();
-
-  Mat<eT>& t_m = const_cast< Mat<eT>& >(m);
 
   coot_debug_check
     (
@@ -228,7 +216,6 @@ diagview<eT>::operator= (const Base<eT,T1>& o)
   {
   coot_extra_debug_sigprint();
 
-  Mat<eT>& t_m = const_cast< Mat<eT>& >(m);
   const unwrap<T1> U( o.get_ref() );
 
   operator=(U.M);
@@ -310,8 +297,6 @@ diagview<eT>::extract(Mat<eT>& out, const diagview<eT>& in)
 
   // NOTE: we're assuming that the matrix has already been set to the correct size and there is no aliasing;
   // size setting and alias checking is done by either the Mat contructor or operator=()
-
-  const Mat<eT>& in_m = in.m;
 
   out.set_size(in.n_rows, in.n_cols); // should be a vector
 

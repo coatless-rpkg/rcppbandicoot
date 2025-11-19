@@ -148,8 +148,6 @@ join_cols(dev_mem_t<eT5> out,
   const uword C_n_elem = C_n_rows * C_n_cols;
   const uword D_n_elem = D_n_rows * D_n_cols;
 
-  const uword out_n_rows = A_n_rows + B_n_rows + C_n_rows + D_n_rows;
-
   // If the types are different, we need to perform a cast during the copy.
   if (A_n_elem > 0)
     {

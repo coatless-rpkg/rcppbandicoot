@@ -53,6 +53,9 @@ inline
 uword
 mtop_find::compute_n_rows(const mtOp<out_eT, T1, mtop_find>& op, const uword in_n_rows, const uword in_n_cols)
   {
+  coot_ignore(in_n_rows);
+  coot_ignore(in_n_cols);
+
   // We can't know the size of the result unless we actually compute it, unfortunately.
   apply(const_cast<Mat<uword>&>(op.computed_result), op);
   access::rw(op.is_computed) = true;
@@ -67,5 +70,9 @@ inline
 uword
 mtop_find::compute_n_cols(const mtOp<out_eT, T1, mtop_find>& op, const uword in_n_rows, const uword in_n_cols)
   {
+  coot_ignore(op);
+  coot_ignore(in_n_rows);
+  coot_ignore(in_n_cols);
+
   return 1;
   }

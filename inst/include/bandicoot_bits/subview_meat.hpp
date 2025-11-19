@@ -73,8 +73,73 @@ subview<eT>::subview(const Mat<eT>& in_m, const uword in_row1, const uword in_co
 
 template<typename eT>
 inline
+subview<eT>::subview(const subview<eT>& x)
+  : m(x.m)
+  , aux_row1(x.aux_row1)
+  , aux_col1(x.aux_col1)
+  , n_rows(x.n_rows)
+  , n_cols(x.n_cols)
+  , n_elem(x.n_elem)
+  {
+  coot_extra_debug_sigprint();
+  }
+
+
+
+template<typename eT>
+inline
+subview<eT>::subview(subview<eT>&& x)
+  : m(x.m)
+  , aux_row1(x.aux_row1)
+  , aux_col1(x.aux_col1)
+  , n_rows(x.n_rows)
+  , n_cols(x.n_cols)
+  , n_elem(x.n_elem)
+  {
+  coot_extra_debug_sigprint();
+
+  // for paranoia
+  access::rw(x.aux_row1) = 0;
+  access::rw(x.aux_col1) = 0;
+  access::rw(x.n_rows) = 0;
+  access::rw(x.n_cols) = 0;
+  access::rw(x.n_elem) = 0;
+  }
+
+
+
+template<typename eT>
+inline
 void
 subview<eT>::operator= (const subview<eT>& x)
+  {
+  coot_extra_debug_sigprint();
+
+  // TODO: this is currently a "better-than-nothing" solution; replace with code using a dedicated kernel
+
+  const Mat<eT> tmp(x);
+
+  (*this).operator=(tmp);
+
+
+  // if(check_overlap(x))
+  //   {
+  //   const Mat<eT> tmp(x);
+  //
+  //   (*this).operator=(tmp);
+  //   }
+  // else
+  //   {
+  //   // TODO: implement kernel to copy from submatrix to submatrix
+  //   }
+  }
+
+
+
+template<typename eT>
+inline
+void
+subview<eT>::operator= (subview<eT>&& x)
   {
   coot_extra_debug_sigprint();
 
