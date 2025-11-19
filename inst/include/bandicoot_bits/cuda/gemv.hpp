@@ -39,6 +39,20 @@ struct gemv
         const uword x_mem_incr)
     {
     coot_extra_debug_sigprint();
+    coot_ignore(y_mem);
+    coot_ignore(A_mem);
+    coot_ignore(A_n_rows);
+    coot_ignore(A_n_cols);
+    coot_ignore(x_mem);
+    coot_ignore(alpha);
+    coot_ignore(beta);
+    coot_ignore(y_offset);
+    coot_ignore(y_mem_incr);
+    coot_ignore(A_row_offset);
+    coot_ignore(A_col_offset);
+    coot_ignore(A_M_n_rows);
+    coot_ignore(x_offset);
+    coot_ignore(x_mem_incr);
 
     coot_stop_runtime_error("coot::cuda::gemv(): unsupported type");
     }

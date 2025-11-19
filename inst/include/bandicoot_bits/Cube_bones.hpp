@@ -47,6 +47,10 @@ class Cube : public BaseCube< eT, Cube<eT> >
 
   coot_aligned dev_mem_t<eT> dev_mem;
 
+  static constexpr bool is_col = false;
+  static constexpr bool is_row = false;
+  static constexpr bool is_xvec = false;
+
 
   protected:
 

@@ -47,11 +47,11 @@ sort(dev_mem_t<eT> mem,
   cl_kernel k;
   if (dim == 0)
     {
-    k = get_rt().cl_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_colwise_ascending : oneway_kernel_id::radix_sort_colwise_descending);
+    k = get_rt().cl_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_colwise_asc : oneway_kernel_id::radix_sort_colwise_desc);
     }
   else
     {
-    k = get_rt().cl_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_rowwise_ascending : oneway_kernel_id::radix_sort_rowwise_descending);
+    k = get_rt().cl_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_rowwise_asc : oneway_kernel_id::radix_sort_rowwise_desc);
     }
 
   cl_int status = 0;
@@ -207,7 +207,7 @@ sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
 
   runtime_t::cq_guard guard;
 
-  cl_kernel k = get_rt().cl_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_ascending : oneway_kernel_id::radix_sort_descending);
+  cl_kernel k = get_rt().cl_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_asc : oneway_kernel_id::radix_sort_desc);
 
   size_t total_num_threads, local_group_size;
   reduce_kernel_group_info(k, n_elem, "sort", total_num_threads, local_group_size);

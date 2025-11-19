@@ -55,15 +55,20 @@ inline
 std::string
 read_file(const std::string& filename)
   {
+  #if defined(COOT_KERNEL_SOURCE_DIR)
+  const char* source_dir = COOT_KERNEL_SOURCE_DIR;
+  const std::string full_filename = std::string(source_dir) + "cuda/" + filename;
+  #else
   const std::string this_file = __FILE__;
 
   // We need to strip the '_src.hpp' from __FILE__.
   const std::string full_filename = this_file.substr(0, this_file.size() - 8) + "s/" + filename;
+  #endif
   std::ifstream f(full_filename);
   std::string file_contents = "";
   if (!f.is_open())
     {
-    COOT_CERR_STREAM << "Failed to open " << full_filename << " (kernel source)!\n";
+    COOT_COUT_STREAM << "Failed to open " << full_filename << " (kernel source)!\n";
     throw std::runtime_error("Cannot open required kernel source.");
     }
 

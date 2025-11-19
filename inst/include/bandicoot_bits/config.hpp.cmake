@@ -155,6 +155,14 @@
   #undef COOT_USE_OPENCL
 #endif
 
+#if defined(COOT_DONT_USE_CLBLAST)
+  #undef COOT_USE_CLBLAST
+#endif
+
+#if defined(COOT_DONT_USE_CLBLAS)
+  #undef COOT_USE_CLBLAS
+#endif
+
 #if defined(COOT_DONT_USE_CUDA)
   #undef COOT_USE_CUDA
 #endif
@@ -199,6 +207,26 @@
     #define COOT_SYSTEM_KERNEL_CACHE_DIR "/var/cache/bandicoot/"
   #endif
 #endif
+
+// Uncomment and modify the lines below to specify a custom directory where Bandicoot kernel sources are stored.
+// Alternately, define COOT_KERNEL_SOURCE_DIR in your program.
+// Note that COOT_KERNEL_SOURCE_DIR must have a / as its final character (or \ on Windows).
+//
+// Kernels are expected to be in the following structure:
+//   COOT_KERNEL_SOURCE_DIR/
+//     cuda/
+//       defs/ (these directories contain the individual .cu files)
+//       oneway/
+//       .../
+//     opencl/
+//       defs/ (these directories contain the individual .cl files)
+//       oneway/
+//       .../
+//
+// #if defined(COOT_KERNEL_SOURCE_DIR)
+//   #undef COOT_KERNEL_SOURCE_DIR
+//   #define COOT_KERNEL_SOURCE_DIR /custom/kernel/location/
+// #endif
 
 // if Bandicoot was installed on this system via CMake and COOT_USE_WRAPPER is not defined,
 // COOT_AUX_LIBS lists the libraries required by Bandicoot on this system, and

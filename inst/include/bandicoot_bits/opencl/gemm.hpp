@@ -43,8 +43,25 @@ struct gemm
         const uword B_M_n_rows)
     {
     coot_extra_debug_sigprint();
+    coot_ignore(C_mem);
+    coot_ignore(C_n_rows);
+    coot_ignore(C_n_cols);
+    coot_ignore(A_mem);
+    coot_ignore(A_n_rows);
+    coot_ignore(A_n_cols);
+    coot_ignore(B_mem);
+    coot_ignore(alpha);
+    coot_ignore(beta);
+    coot_ignore(C_row_offset);
+    coot_ignore(C_col_offset);
+    coot_ignore(C_M_n_rows);
+    coot_ignore(A_row_offset);
+    coot_ignore(A_col_offset);
+    coot_ignore(A_M_n_rows);
+    coot_ignore(B_row_offset);
+    coot_ignore(B_col_offset);
+    coot_ignore(B_M_n_rows);
 
-    // NOTE: fp16 support will be available when using clBlast
     coot_stop_runtime_error("coot::opencl::gemm(): unsupported type");
     }
 

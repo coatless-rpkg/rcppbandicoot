@@ -45,19 +45,19 @@ sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const 
   CUfunction kernel;
   if (stable_sort == 0 && sort_type == 0)
     {
-    kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_index_ascending);
+    kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_index_asc);
     }
   else if (stable_sort == 0 && sort_type == 1)
     {
-    kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_index_descending);
+    kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_index_desc);
     }
   else if (stable_sort == 1 && sort_type == 0)
     {
-    kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_idx_asc);
+    kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_index_asc);
     }
   else
     {
-    kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_idx_desc);
+    kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_index_desc);
     }
 
   const size_t aux_mem_size = (stable_sort == 0) ? 2 * pow2_num_threads * sizeof(uword) : 4 * pow2_num_threads * sizeof(uword);

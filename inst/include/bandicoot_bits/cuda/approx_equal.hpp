@@ -192,8 +192,8 @@ approx_equal_cube(const dev_mem_t<eT> A,
       (uword*) &n_cols,
       (uword*) &n_elem,
       (uword*) &mode,
-      (ceT*) &abs_tol,
-      (ceT*) &rel_tol };
+      (ceT*) &conv_abs_tol,
+      (ceT*) &conv_rel_tol };
 
   CUresult curesult = coot_wrapper(cuLaunchKernel)(
         num_threads <= 32 ? k_small : k, // if we have fewer threads than a single warp, we can use a more optimized version of the kernel

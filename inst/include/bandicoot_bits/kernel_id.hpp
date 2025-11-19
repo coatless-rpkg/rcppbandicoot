@@ -142,16 +142,16 @@ struct oneway_kernel_id
     submat_var,
     submat_var_small,
     //
-    radix_sort_colwise_ascending,
-    radix_sort_rowwise_ascending,
-    radix_sort_ascending,
-    radix_sort_colwise_descending,
-    radix_sort_rowwise_descending,
-    radix_sort_descending,
-    radix_sort_index_ascending,
-    radix_sort_index_descending,
-    stable_radix_sort_idx_asc,
-    stable_radix_sort_idx_desc,
+    radix_sort_colwise_asc,
+    radix_sort_rowwise_asc,
+    radix_sort_asc,
+    radix_sort_colwise_desc,
+    radix_sort_rowwise_desc,
+    radix_sort_desc,
+    radix_sort_index_asc,
+    radix_sort_index_desc,
+    stable_radix_sort_index_asc,
+    stable_radix_sort_index_desc,
     shifted_prefix_sum_small,
     shifted_prefix_sum_subgroups,
     shifted_prefix_sum_add_offset,
@@ -244,16 +244,16 @@ struct oneway_kernel_id
     names.push_back("submat_var");
     names.push_back("submat_var_small");
 
-    names.push_back("radix_sort_colwise_ascending");
-    names.push_back("radix_sort_rowwise_ascending");
-    names.push_back("radix_sort_ascending");
-    names.push_back("radix_sort_colwise_descending");
-    names.push_back("radix_sort_rowwise_descending");
-    names.push_back("radix_sort_descending");
-    names.push_back("radix_sort_index_ascending");
-    names.push_back("radix_sort_index_descending");
-    names.push_back("stable_radix_sort_idx_asc");
-    names.push_back("stable_radix_sort_idx_desc");
+    names.push_back("radix_sort_colwise_asc");
+    names.push_back("radix_sort_rowwise_asc");
+    names.push_back("radix_sort_asc");
+    names.push_back("radix_sort_colwise_desc");
+    names.push_back("radix_sort_rowwise_desc");
+    names.push_back("radix_sort_desc");
+    names.push_back("radix_sort_index_asc");
+    names.push_back("radix_sort_index_desc");
+    names.push_back("stable_radix_sort_index_asc");
+    names.push_back("stable_radix_sort_index_desc");
     names.push_back("shifted_prefix_sum_small");
     names.push_back("shifted_prefix_sum_subgroups");
     names.push_back("shifted_prefix_sum_add_offset");
