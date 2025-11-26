@@ -6,7 +6,7 @@
 PKG_CPPFLAGS = -I../inst/include
 
 ## Compiler flags from configure
-PKG_CXXFLAGS =  -DCOOT_USE_OPENCL -F/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks -DCOOT_USE_CLBLAST -I/opt/homebrew/opt/clblast/include -DCOOT_USE_CLBLAS -I/opt/homebrew/opt/clblas/include -DCOOT_DONT_USE_CUDA -DCOOT_DEFAULT_BACKEND=CL_BACKEND 
+PKG_CXXFLAGS =  -DCOOT_USE_OPENCL -DCOOT_USE_CLBLAST -DCOOT_USE_CLBLAS -DCOOT_USE_CUDA -DCOOT_CUDA_INCLUDE_PATH=/usr/include/ -DCOOT_DEFAULT_BACKEND=CUDA_BACKEND $(SHLIB_OPENMP_CXXFLAGS) $(SHLIB_OPENMP_CXXFLAGS)
 
 ## Linker flags from configure
 PKG_LIBS =  -L/opt/homebrew/opt/clblas/lib -lclBLAS -L/opt/homebrew/opt/clblast/lib -lclblast  -framework OpenCL -L/Library/Frameworks/R.framework/Resources/lib -lRlapack -L/Library/Frameworks/R.framework/Resources/lib -lRblas -L/opt/gfortran/lib/gcc/aarch64-apple-darwin20.0/14.2.0 -L/opt/gfortran/lib -lemutls_w -lheapt_w -lgfortran -lquadmath
