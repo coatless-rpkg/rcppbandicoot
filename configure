@@ -5230,12 +5230,12 @@ fi
 ## Determine Default Backend
 ## =============================================================================
 
-if test "x${HAVE_OPENCL}" = x1; then
-  DEFAULT_BACKEND="CL_BACKEND"
-  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DEFAULT_BACKEND=CL_BACKEND"
-elif test "x${HAVE_CUDA}" = x1; then
+if test "x${HAVE_CUDA}" = x1; then
   DEFAULT_BACKEND="CUDA_BACKEND"
   BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DEFAULT_BACKEND=CUDA_BACKEND"
+elif test "x${HAVE_OPENCL}" = x1; then
+  DEFAULT_BACKEND="CL_BACKEND"
+  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DEFAULT_BACKEND=CL_BACKEND"
 else
   as_fn_error $? "
 ================================================================================
