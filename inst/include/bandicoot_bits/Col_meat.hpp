@@ -177,7 +177,7 @@ Col<eT>::Col(const Col<eT>& X)
 
 template<typename eT>
 inline
-const Col<eT>&
+Col<eT>&
 Col<eT>::operator=(const Col<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -209,7 +209,7 @@ Col<eT>::Col(Col<eT>&& X)
 
 template<typename eT>
 inline
-const Col<eT>&
+Col<eT>&
 Col<eT>::operator=(Col<eT>&& X)
   {
   coot_extra_debug_sigprint();
@@ -423,7 +423,7 @@ Col<eT>::Col(const arma::Col<eT>& X)
 
 template<typename eT>
 inline
-const Col<eT>&
+Col<eT>&
 Col<eT>::operator=(const arma::Col<eT>& X)
   {
   coot_extra_debug_sigprint();

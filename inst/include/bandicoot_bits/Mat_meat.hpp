@@ -641,7 +641,7 @@ Mat<eT>::Mat(const arma::Mat<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const arma::Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -807,7 +807,7 @@ Mat<eT>::init(const uword new_n_rows, const uword new_n_cols)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const eT val)
   {
   coot_extra_debug_sigprint();
@@ -823,7 +823,7 @@ Mat<eT>::operator=(const eT val)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator+=(const eT val)
   {
   coot_extra_debug_sigprint();
@@ -842,7 +842,7 @@ Mat<eT>::operator+=(const eT val)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator-=(const eT val)
   {
   coot_extra_debug_sigprint();
@@ -861,7 +861,7 @@ Mat<eT>::operator-=(const eT val)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator*=(const eT val)
   {
   coot_extra_debug_sigprint();
@@ -880,7 +880,7 @@ Mat<eT>::operator*=(const eT val)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator/=(const eT val)
   {
   coot_extra_debug_sigprint();
@@ -916,7 +916,7 @@ Mat<eT>::Mat(const Mat<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -938,7 +938,7 @@ Mat<eT>::operator=(const Mat<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator+=(const Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -959,7 +959,7 @@ Mat<eT>::operator+=(const Mat<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator-=(const Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -980,7 +980,7 @@ Mat<eT>::operator-=(const Mat<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator*=(const Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -996,7 +996,7 @@ Mat<eT>::operator*=(const Mat<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator%=(const Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1017,7 +1017,7 @@ Mat<eT>::operator%=(const Mat<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator/=(const Mat<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1054,7 +1054,7 @@ Mat<eT>::Mat(Mat&& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(Mat<eT>&& X)
   {
   coot_extra_debug_sigprint();
@@ -1121,7 +1121,7 @@ Mat<eT>::Mat(const subview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const subview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1147,7 +1147,7 @@ Mat<eT>::operator=(const subview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator+=(const subview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1162,7 +1162,7 @@ Mat<eT>::operator+=(const subview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator-=(const subview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1178,7 +1178,7 @@ Mat<eT>::operator-=(const subview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator*=(const subview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1192,7 +1192,7 @@ Mat<eT>::operator*=(const subview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator%=(const subview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1208,7 +1208,7 @@ Mat<eT>::operator%=(const subview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator/=(const subview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1241,7 +1241,7 @@ Mat<eT>::Mat(const diagview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const diagview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1265,7 +1265,7 @@ Mat<eT>::operator=(const diagview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator+=(const diagview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1279,7 +1279,7 @@ Mat<eT>::operator+=(const diagview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator-=(const diagview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1293,7 +1293,7 @@ Mat<eT>::operator-=(const diagview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator*=(const diagview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1307,7 +1307,7 @@ Mat<eT>::operator*=(const diagview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator%=(const diagview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1321,7 +1321,7 @@ Mat<eT>::operator%=(const diagview<eT>& X)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator/=(const diagview<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -1329,6 +1329,118 @@ Mat<eT>::operator/=(const diagview<eT>& X)
   // Extract the diagview, and then divide.
   Mat<eT> diag(X);
   return operator/=(diag);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Mat<eT>::Mat(const subview_elem1<eT, T1>& X)
+  : n_rows   (0)
+  , n_cols   (0)
+  , n_elem   (0)
+  , vec_state(0)
+  , mem_state(0)
+  , dev_mem({ NULL, 0 })
+  {
+  coot_extra_debug_sigprint_this(this);
+
+  subview_elem1<eT, T1>::extract(*this, X);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Mat<eT>&
+Mat<eT>::operator=(const subview_elem1<eT, T1>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  subview_elem1<eT, T1>::extract(*this, X);
+  return *this;
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Mat<eT>&
+Mat<eT>::operator+=(const subview_elem1<eT, T1>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  // Temporary implementation: extract into a temporary matrix, and then do the operation.
+  Mat<eT> tmp;
+  subview_elem1<eT, T1>::extract(tmp, X);
+  return operator+=(tmp);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Mat<eT>&
+Mat<eT>::operator-=(const subview_elem1<eT, T1>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  // Temporary implementation: extract into a temporary matrix, and then do the operation.
+  Mat<eT> tmp;
+  subview_elem1<eT, T1>::extract(tmp, X);
+  return operator-=(tmp);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Mat<eT>&
+Mat<eT>::operator*=(const subview_elem1<eT, T1>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  // Temporary implementation: extract into a temporary matrix, and then do the operation.
+  Mat<eT> tmp;
+  subview_elem1<eT, T1>::extract(tmp, X);
+  return operator*=(tmp);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Mat<eT>&
+Mat<eT>::operator%=(const subview_elem1<eT, T1>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  // Temporary implementation: extract into a temporary matrix, and then do the operation.
+  Mat<eT> tmp;
+  subview_elem1<eT, T1>::extract(tmp, X);
+  return operator%=(tmp);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+inline
+Mat<eT>&
+Mat<eT>::operator/=(const subview_elem1<eT, T1>& X)
+  {
+  coot_extra_debug_sigprint();
+
+  // Temporary implementation: extract into a temporary matrix, and then do the operation.
+  Mat<eT> tmp;
+  subview_elem1<eT, T1>::extract(tmp, X);
+  return operator/=(tmp);
   }
 
 
@@ -1354,7 +1466,7 @@ Mat<eT>::Mat(const eOp<T1, eop_type>& X)
 template<typename eT>
 template<typename T1, typename eop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const eOp<T1, eop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1376,7 +1488,7 @@ Mat<eT>::operator=(const eOp<T1, eop_type>& X)
 template<typename eT>
 template<typename T1, typename eop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator+=(const eOp<T1, eop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1395,7 +1507,7 @@ Mat<eT>::operator+=(const eOp<T1, eop_type>& X)
 template<typename eT>
 template<typename T1, typename eop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator-=(const eOp<T1, eop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1414,7 +1526,7 @@ Mat<eT>::operator-=(const eOp<T1, eop_type>& X)
 template<typename eT>
 template<typename T1, typename eop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator*=(const eOp<T1, eop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1433,7 +1545,7 @@ Mat<eT>::operator*=(const eOp<T1, eop_type>& X)
 template<typename eT>
 template<typename T1, typename eop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator%=(const eOp<T1, eop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1452,7 +1564,7 @@ Mat<eT>::operator%=(const eOp<T1, eop_type>& X)
 template<typename eT>
 template<typename T1, typename eop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator/=(const eOp<T1, eop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1489,7 +1601,7 @@ Mat<eT>::Mat(const eGlue<T1, T2, eglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename eglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const eGlue<T1, T2, eglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1512,7 +1624,7 @@ Mat<eT>::operator=(const eGlue<T1, T2, eglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename eglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator+=(const eGlue<T1, T2, eglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1532,7 +1644,7 @@ Mat<eT>::operator+=(const eGlue<T1, T2, eglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename eglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator-=(const eGlue<T1, T2, eglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1552,7 +1664,7 @@ Mat<eT>::operator-=(const eGlue<T1, T2, eglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename eglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator*=(const eGlue<T1, T2, eglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1572,7 +1684,7 @@ Mat<eT>::operator*=(const eGlue<T1, T2, eglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename eglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator%=(const eGlue<T1, T2, eglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1592,7 +1704,7 @@ Mat<eT>::operator%=(const eGlue<T1, T2, eglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename eglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator/=(const eGlue<T1, T2, eglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1630,7 +1742,7 @@ Mat<eT>::Mat(const mtOp<eT, T1, mtop_type>& X)
 template<typename eT>
 template<typename T1, typename mtop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const mtOp<eT, T1, mtop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1645,7 +1757,7 @@ Mat<eT>::operator=(const mtOp<eT, T1, mtop_type>& X)
 template<typename eT>
 template<typename T1, typename mtop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator+=(const mtOp<eT, T1, mtop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1663,7 +1775,7 @@ Mat<eT>::operator+=(const mtOp<eT, T1, mtop_type>& X)
 template<typename eT>
 template<typename T1, typename mtop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator-=(const mtOp<eT, T1, mtop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1681,7 +1793,7 @@ Mat<eT>::operator-=(const mtOp<eT, T1, mtop_type>& X)
 template<typename eT>
 template<typename T1, typename mtop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator*=(const mtOp<eT, T1, mtop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1699,7 +1811,7 @@ Mat<eT>::operator*=(const mtOp<eT, T1, mtop_type>& X)
 template<typename eT>
 template<typename T1, typename mtop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator%=(const mtOp<eT, T1, mtop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1717,7 +1829,7 @@ Mat<eT>::operator%=(const mtOp<eT, T1, mtop_type>& X)
 template<typename eT>
 template<typename T1, typename mtop_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator/=(const mtOp<eT, T1, mtop_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1754,7 +1866,7 @@ Mat<eT>::Mat(const Op<T1, op_type>& X)
 template<typename eT>
 template<typename T1, typename op_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const Op<T1, op_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1771,7 +1883,7 @@ Mat<eT>::operator=(const Op<T1, op_type>& X)
 template<typename eT>
 template<typename T1, typename op_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator+=(const Op<T1, op_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1788,7 +1900,7 @@ Mat<eT>::operator+=(const Op<T1, op_type>& X)
 template<typename eT>
 template<typename T1, typename op_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator-=(const Op<T1, op_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1805,7 +1917,7 @@ Mat<eT>::operator-=(const Op<T1, op_type>& X)
 template<typename eT>
 template<typename T1, typename op_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator*=(const Op<T1, op_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1824,7 +1936,7 @@ Mat<eT>::operator*=(const Op<T1, op_type>& X)
 template<typename eT>
 template<typename T1, typename op_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator%=(const Op<T1, op_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1841,7 +1953,7 @@ Mat<eT>::operator%=(const Op<T1, op_type>& X)
 template<typename eT>
 template<typename T1, typename op_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator/=(const Op<T1, op_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1876,7 +1988,7 @@ Mat<eT>::Mat(const Glue<T1, T2, glue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename glue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const Glue<T1, T2, glue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1894,7 +2006,7 @@ Mat<eT>::operator=(const Glue<T1, T2, glue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename glue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator+=(const Glue<T1, T2, glue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1912,7 +2024,7 @@ Mat<eT>::operator+=(const Glue<T1, T2, glue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename glue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator-=(const Glue<T1, T2, glue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1930,7 +2042,7 @@ Mat<eT>::operator-=(const Glue<T1, T2, glue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename glue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator*=(const Glue<T1, T2, glue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1950,7 +2062,7 @@ Mat<eT>::operator*=(const Glue<T1, T2, glue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename glue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator%=(const Glue<T1, T2, glue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -1968,7 +2080,7 @@ Mat<eT>::operator%=(const Glue<T1, T2, glue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename glue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator/=(const Glue<T1, T2, glue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -2004,7 +2116,7 @@ Mat<eT>::Mat(const mtGlue<eT, T1, T2, mtglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename mtglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator=(const mtGlue<eT, T1, T2, mtglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -2019,7 +2131,7 @@ Mat<eT>::operator=(const mtGlue<eT, T1, T2, mtglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename mtglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator+=(const mtGlue<eT, T1, T2, mtglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -2034,7 +2146,7 @@ Mat<eT>::operator+=(const mtGlue<eT, T1, T2, mtglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename mtglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator-=(const mtGlue<eT, T1, T2, mtglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -2049,7 +2161,7 @@ Mat<eT>::operator-=(const mtGlue<eT, T1, T2, mtglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename mtglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator*=(const mtGlue<eT, T1, T2, mtglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -2066,7 +2178,7 @@ Mat<eT>::operator*=(const mtGlue<eT, T1, T2, mtglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename mtglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator%=(const mtGlue<eT, T1, T2, mtglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -2081,7 +2193,7 @@ Mat<eT>::operator%=(const mtGlue<eT, T1, T2, mtglue_type>& X)
 template<typename eT>
 template<typename T1, typename T2, typename mtglue_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::operator/=(const mtGlue<eT, T1, T2, mtglue_type>& X)
   {
   coot_extra_debug_sigprint();
@@ -2263,7 +2375,7 @@ Mat<eT>::diag(const sword in_id) const
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::replace(const eT old_val, const eT new_val)
   {
   coot_extra_debug_sigprint();
@@ -2281,7 +2393,7 @@ Mat<eT>::replace(const eT old_val, const eT new_val)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::clamp(const eT min_val, const eT max_val)
   {
   coot_extra_debug_sigprint();
@@ -2301,7 +2413,7 @@ Mat<eT>::clamp(const eT min_val, const eT max_val)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::fill(const eT val)
   {
   coot_extra_debug_sigprint();
@@ -2316,7 +2428,7 @@ Mat<eT>::fill(const eT val)
 template<typename eT>
 template<typename fill_type>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::fill(const fill::fill_class<fill_type>&)
   {
   coot_extra_debug_sigprint();
@@ -2334,7 +2446,7 @@ Mat<eT>::fill(const fill::fill_class<fill_type>&)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::zeros()
   {
   coot_extra_debug_sigprint();
@@ -2348,7 +2460,7 @@ Mat<eT>::zeros()
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::zeros(const uword new_n_elem)
   {
   coot_extra_debug_sigprint();
@@ -2363,7 +2475,7 @@ Mat<eT>::zeros(const uword new_n_elem)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::zeros(const uword new_n_rows, const uword new_n_cols)
   {
   coot_extra_debug_sigprint();
@@ -2378,7 +2490,7 @@ Mat<eT>::zeros(const uword new_n_rows, const uword new_n_cols)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::zeros(const SizeMat& s)
   {
   coot_extra_debug_sigprint();
@@ -2393,7 +2505,7 @@ Mat<eT>::zeros(const SizeMat& s)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::ones()
   {
   coot_extra_debug_sigprint();
@@ -2407,7 +2519,7 @@ Mat<eT>::ones()
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::ones(const uword new_n_elem)
   {
   coot_extra_debug_sigprint();
@@ -2422,7 +2534,7 @@ Mat<eT>::ones(const uword new_n_elem)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::ones(const uword new_n_rows, const uword new_n_cols)
   {
   coot_extra_debug_sigprint();
@@ -2437,7 +2549,7 @@ Mat<eT>::ones(const uword new_n_rows, const uword new_n_cols)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::ones(const SizeMat& s)
   {
   coot_extra_debug_sigprint();
@@ -2452,7 +2564,7 @@ Mat<eT>::ones(const SizeMat& s)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::randu()
   {
   coot_extra_debug_sigprint();
@@ -2466,7 +2578,7 @@ Mat<eT>::randu()
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::randu(const uword new_n_elem)
   {
   coot_extra_debug_sigprint();
@@ -2480,7 +2592,7 @@ Mat<eT>::randu(const uword new_n_elem)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::randu(const uword new_n_rows, const uword new_n_cols)
   {
   coot_extra_debug_sigprint();
@@ -2494,7 +2606,7 @@ Mat<eT>::randu(const uword new_n_rows, const uword new_n_cols)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::randu(const SizeMat& s)
   {
   coot_extra_debug_sigprint();
@@ -2508,7 +2620,7 @@ Mat<eT>::randu(const SizeMat& s)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::randn()
   {
   coot_extra_debug_sigprint();
@@ -2522,7 +2634,7 @@ Mat<eT>::randn()
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::randn(const uword new_n_elem)
   {
   coot_extra_debug_sigprint();
@@ -2536,7 +2648,7 @@ Mat<eT>::randn(const uword new_n_elem)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::randn(const uword new_n_rows, const uword new_n_cols)
   {
   coot_extra_debug_sigprint();
@@ -2550,7 +2662,7 @@ Mat<eT>::randn(const uword new_n_rows, const uword new_n_cols)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::randn(const SizeMat& s)
   {
   coot_extra_debug_sigprint();
@@ -2564,7 +2676,7 @@ Mat<eT>::randn(const SizeMat& s)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::eye()
   {
   coot_extra_debug_sigprint();
@@ -2583,7 +2695,7 @@ Mat<eT>::eye()
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::eye(const uword new_n_rows, const uword new_n_cols)
   {
   coot_extra_debug_sigprint();
@@ -2598,7 +2710,7 @@ Mat<eT>::eye(const uword new_n_rows, const uword new_n_cols)
 
 template<typename eT>
 inline
-const Mat<eT>&
+Mat<eT>&
 Mat<eT>::eye(const SizeMat& s)
   {
   coot_extra_debug_sigprint();
@@ -3535,6 +3647,58 @@ Mat<eT>::cols(const span& col_span) const
     );
 
   return subview<eT>(*this, 0, in_col1, n_rows, submat_n_cols);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+coot_inline
+subview_elem1<eT, T1>
+Mat<eT>::elem(const Base<uword, T1>& a)
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_elem1<eT, T1>(*this, a);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+coot_inline
+const subview_elem1<eT, T1>
+Mat<eT>::elem(const Base<uword, T1>& a) const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_elem1<eT, T1>(*this, a);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+coot_inline
+subview_elem1<eT, T1>
+Mat<eT>::operator()(const Base<uword, T1>& a)
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_elem1<eT, T1>(*this, a);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+coot_inline
+const subview_elem1<eT, T1>
+Mat<eT>::operator()(const Base<uword, T1>& a) const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_elem1<eT, T1>(*this, a);
   }
 
 

@@ -45,11 +45,11 @@ class Col : public Mat<eT>
   inline Col(cl_mem                        aux_dev_mem, const uword N);
   inline Col(typename cuda_type<eT>::type* aux_dev_mem, const uword N);
 
-  inline                  Col(const Col& X);
-  inline const Col& operator=(const Col& X);
+  inline            Col(const Col& X);
+  inline Col& operator=(const Col& X);
 
-  inline                  Col(Col&& X);
-  inline const Col& operator=(Col&& X);
+  inline            Col(Col&& X);
+  inline Col& operator=(Col&& X);
 
   inline            Col(const char*        text);
   inline Col& operator=(const char*        text);
@@ -66,8 +66,8 @@ class Col : public Mat<eT>
   template<typename T1> inline            Col(const Base<eT, T1>& X);
   template<typename T1> inline Col& operator=(const Base<eT, T1>& X);
 
-  inline                  Col(const arma::Col<eT>& X);
-  inline const Col& operator=(const arma::Col<eT>& X);
+  inline            Col(const arma::Col<eT>& X);
+  inline Col& operator=(const arma::Col<eT>& X);
 
   inline explicit operator arma::Col<eT> () const;
 

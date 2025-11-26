@@ -63,3 +63,46 @@ fill(dev_mem_t<eT> dest,
 
   coot_check_cl_error(status, "coot::opencl::fill(): couldn't execute kernel");
   }
+
+
+
+template<typename eT>
+inline
+void
+fill_subview_elem1(dev_mem_t<eT> dest,
+                   const dev_mem_t<uword> dest_locs,
+                   const eT val,
+                   const uword n_elem)
+  {
+  coot_extra_debug_sigprint();
+
+  if (n_elem == 0)
+    return;
+
+  cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::fill_sve1);
+
+  runtime_t::cq_guard guard;
+
+  runtime_t::adapt_uword cl_dest_offset(dest.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_dest_locs_offset(dest_locs.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_n_elem(n_elem);
+
+  cl_int status = 0;
+
+  typedef typename cl_type<eT>::type ceT;
+  ceT cl_val = to_cl_type(val);
+
+  status  = coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),           &(dest.cl_mem_ptr.ptr)     );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_dest_offset.size,      cl_dest_offset.addr        );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),           &(dest_locs.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_dest_locs_offset.size, cl_dest_locs_offset.addr   );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 4, sizeof(ceT),              &cl_val                    );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_n_elem.size,           cl_n_elem.addr             );
+  coot_check_cl_error(status, "coot::opencl::fill_subview_elem1(): couldn't set kernel arguments");
+
+  size_t work_size = size_t(n_elem);
+
+  status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, 1, NULL, &work_size, NULL, 0, NULL, NULL);
+
+  coot_check_cl_error(status, "coot::opencl::fill_subview_elem1(): couldn't execute kernel");
+  }

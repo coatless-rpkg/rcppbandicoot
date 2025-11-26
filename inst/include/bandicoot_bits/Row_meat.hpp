@@ -177,7 +177,7 @@ Row<eT>::Row(const Row<eT>& X)
 
 template<typename eT>
 inline
-const Row<eT>&
+Row<eT>&
 Row<eT>::operator=(const Row<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -209,7 +209,7 @@ Row<eT>::Row(Row<eT>&& X)
 
 template<typename eT>
 inline
-const Row<eT>&
+Row<eT>&
 Row<eT>::operator=(Row<eT>&& X)
   {
   coot_extra_debug_sigprint();
@@ -423,7 +423,7 @@ Row<eT>::Row(const arma::Row<eT>& X)
 
 template<typename eT>
 inline
-const Row<eT>&
+Row<eT>&
 Row<eT>::operator=(const arma::Row<eT>& X)
   {
   coot_extra_debug_sigprint();

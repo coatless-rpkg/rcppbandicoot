@@ -45,11 +45,11 @@ class Row : public Mat<eT>
   inline Row(cl_mem                        aux_dev_mem, const uword N);
   inline Row(typename cuda_type<eT>::type* aux_dev_mem, const uword N);
 
-  inline                  Row(const Row& X);
-  inline const Row& operator=(const Row& X);
+  inline            Row(const Row& X);
+  inline Row& operator=(const Row& X);
 
-  inline                  Row(Row&& X);
-  inline const Row& operator=(Row&& X);
+  inline            Row(Row&& X);
+  inline Row& operator=(Row&& X);
 
   inline            Row(const char*        text);
   inline Row& operator=(const char*        text);
@@ -66,8 +66,8 @@ class Row : public Mat<eT>
   template<typename T1> inline            Row(const Base<eT, T1>& X);
   template<typename T1> inline Row& operator=(const Base<eT, T1>& X);
 
-  inline                  Row(const arma::Row<eT>& X);
-  inline const Row& operator=(const arma::Row<eT>& X);
+  inline            Row(const arma::Row<eT>& X);
+  inline Row& operator=(const arma::Row<eT>& X);
 
   inline explicit operator arma::Row<eT> () const;
 

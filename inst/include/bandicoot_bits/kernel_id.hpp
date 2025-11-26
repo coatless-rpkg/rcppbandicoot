@@ -88,6 +88,7 @@ struct oneway_kernel_id
   enum enum_id
     {
     fill = 0,
+    fill_sve1,
     //
     mul_colwise,
     mul_rowwise,
@@ -190,6 +191,7 @@ struct oneway_kernel_id
     std::vector<std::string> names;
 
     names.push_back("fill");
+    names.push_back("fill_sve1");
 
     names.push_back("mul_colwise");
     names.push_back("mul_rowwise");
@@ -626,6 +628,27 @@ struct twoway_kernel_id
     replace,
     clamp,
     //
+    extract_sve1,
+    equ_array_plus_scalar_sve1,
+    equ_array_minus_scalar_pre_pre_sve1,
+    equ_array_minus_scalar_pre_post_sve1,
+    equ_array_minus_scalar_post_sve1,
+    equ_array_mul_scalar_sve1,
+    equ_array_div_scalar_pre_sve1,
+    equ_array_div_scalar_post_sve1,
+    //
+    inplace_sve1_eq_array,
+    inplace_sve1_plus_array,
+    inplace_sve1_minus_array,
+    inplace_sve1_mul_array,
+    inplace_sve1_div_array,
+    //
+    inplace_sve1_eq_sve1,
+    inplace_sve1_plus_sve1,
+    inplace_sve1_minus_sve1,
+    inplace_sve1_mul_sve1,
+    inplace_sve1_div_sve1,
+    //
     equ_array_plus_array_cube,
     equ_array_minus_array_cube,
     equ_array_mul_array_cube,
@@ -795,6 +818,27 @@ struct twoway_kernel_id
     names.push_back("equ_array_lgamma_post");
     names.push_back("replace");
     names.push_back("clamp");
+
+    names.push_back("extract_sve1");
+    names.push_back("equ_array_plus_scalar_sve1");
+    names.push_back("equ_array_minus_scalar_pre_pre_sve1");
+    names.push_back("equ_array_minus_scalar_pre_post_sve1");
+    names.push_back("equ_array_minus_scalar_post_sve1");
+    names.push_back("equ_array_mul_scalar_sve1");
+    names.push_back("equ_array_div_scalar_pre_sve1");
+    names.push_back("equ_array_div_scalar_post_sve1");
+
+    names.push_back("inplace_sve1_eq_array");
+    names.push_back("inplace_sve1_plus_array");
+    names.push_back("inplace_sve1_minus_array");
+    names.push_back("inplace_sve1_mul_array");
+    names.push_back("inplace_sve1_div_array");
+
+    names.push_back("inplace_sve1_eq_sve1");
+    names.push_back("inplace_sve1_plus_sve1");
+    names.push_back("inplace_sve1_minus_sve1");
+    names.push_back("inplace_sve1_mul_sve1");
+    names.push_back("inplace_sve1_div_sve1");
 
     names.push_back("equ_array_plus_array_cube");
     names.push_back("equ_array_minus_array_cube");

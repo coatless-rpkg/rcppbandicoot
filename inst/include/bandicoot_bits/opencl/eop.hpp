@@ -95,6 +95,61 @@ eop_scalar(const twoway_kernel_id::enum_id num,
 
 
 
+template<typename eT1, typename eT2>
+inline
+void
+eop_scalar_subview_elem1(const twoway_kernel_id::enum_id num,
+                         dev_mem_t<eT2> dest,
+                         const dev_mem_t<uword> dest_locs,
+                         const dev_mem_t<eT1> src,
+                         const dev_mem_t<uword> src_locs,
+                         const eT1 aux_val_pre,
+                         const eT2 aux_val_post,
+                         // logical size of source and destination
+                         const uword n_elem)
+  {
+  coot_extra_debug_sigprint();
+
+  // Get kernel.
+  cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(num);
+
+  runtime_t::cq_guard guard;
+  runtime_t::adapt_uword cl_n_elem(n_elem);
+  runtime_t::adapt_uword cl_src_offset(src.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_src_locs_offset(src_locs.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_dest_offset(dest.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_dest_locs_offset(dest_locs.cl_mem_ptr.offset);
+
+  typedef typename cl_type<eT1>::type ceT1;
+  typedef typename cl_type<eT2>::type ceT2;
+  ceT1 cl_aux_val_pre = to_cl_type(aux_val_pre);
+  ceT2 cl_aux_val_post = to_cl_type(aux_val_post);
+
+  cl_int status = 0;
+
+  status |= coot_wrapper(clSetKernelArg)(kernel,  0, sizeof(cl_mem),           &dest.cl_mem_ptr.ptr     );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  1, cl_dest_offset.size,      cl_dest_offset.addr      );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  2, sizeof(cl_mem),           &dest_locs.cl_mem_ptr.ptr);
+  status |= coot_wrapper(clSetKernelArg)(kernel,  3, cl_dest_locs_offset.size, cl_dest_locs_offset.addr );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  4, sizeof(cl_mem),           &src.cl_mem_ptr.ptr      );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  5, cl_src_offset.size,       cl_src_offset.addr       );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  6, sizeof(cl_mem),           &src_locs.cl_mem_ptr.ptr );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  7, cl_src_locs_offset.size,  cl_src_locs_offset.addr  );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  8, sizeof(ceT1),             &cl_aux_val_pre          );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  9, sizeof(ceT2),             &cl_aux_val_post         );
+  status |= coot_wrapper(clSetKernelArg)(kernel, 10, cl_n_elem.size,           cl_n_elem.addr           );
+
+  coot_check_runtime_error( (status != CL_SUCCESS), "coot::opencl::eop_scalar_subview_elem1(): couldn't set kernel arguments");
+
+  size_t work_size = size_t(n_elem);
+
+  status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, 1, NULL, &work_size, NULL, 0, NULL, NULL);
+
+  coot_check_runtime_error( (status != CL_SUCCESS), "coot::opencl::eop_scalar_subview_elem1(): couldn't execute kernel");
+  }
+
+
+
 /**
  * Run an OpenCL elementwise kernel that performs an operation on two matrices.
  */
@@ -164,6 +219,106 @@ eop_mat(const threeway_kernel_id::enum_id num,
   status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
 
   coot_check_cl_error(status, "coot::opencl::eop_mat(): couldn't execute kernel" );
+  }
+
+
+
+/**
+ * Run an OpenCL elementwise kernel on two subview_elem1s.
+ */
+template<typename eT1, typename eT2>
+inline
+void
+eop_subview_elem1(const twoway_kernel_id::enum_id num,
+                  dev_mem_t<eT2> dest,
+                  const dev_mem_t<uword> dest_locs,
+                  const dev_mem_t<eT1> src,
+                  const dev_mem_t<uword> src_locs,
+                  const uword n_elem)
+  {
+  coot_extra_debug_sigprint();
+
+  if (n_elem == 0)
+    {
+    return;
+    }
+
+  // Get kernel.
+  cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(num);
+
+  runtime_t::cq_guard guard;
+
+  runtime_t::adapt_uword cl_dest_offset(dest.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_dest_locs_offset(dest_locs.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_src_offset(src.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_src_locs_offset(src_locs.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_n_elem(n_elem);
+
+  cl_int status = 0;
+
+  status |= coot_wrapper(clSetKernelArg)(kernel,  0,              sizeof(cl_mem), &( dest.cl_mem_ptr.ptr)     );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  1,         cl_dest_offset.size, cl_dest_offset.addr         );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  2,              sizeof(cl_mem), &( dest_locs.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel,  3,    cl_dest_locs_offset.size, cl_dest_locs_offset.addr    );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  4,              sizeof(cl_mem), &( src.cl_mem_ptr.ptr)      );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  5,          cl_src_offset.size, cl_src_offset.addr          );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  6,              sizeof(cl_mem), &( src_locs.cl_mem_ptr.ptr) );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  7,     cl_src_locs_offset.size, cl_src_locs_offset.addr     );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  8,              cl_n_elem.size, cl_n_elem.addr              );
+
+  const size_t work_size = size_t(n_elem);
+
+  status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, 1, NULL, &work_size, NULL, 0, NULL, NULL);
+
+  coot_check_cl_error(status, "coot::opencl::eop_subview_elem1(): couldn't execute kernel" );
+  }
+
+
+
+/**
+ * Run an OpenCL elementwise kernel on a matrix into a subview_elem1.
+ */
+template<typename eT1, typename eT2>
+inline
+void
+eop_subview_elem1_array(const twoway_kernel_id::enum_id num,
+                        dev_mem_t<eT2> dest,
+                        const dev_mem_t<uword> dest_locs,
+                        const dev_mem_t<eT1> src,
+                        const uword n_elem)
+  {
+  coot_extra_debug_sigprint();
+
+  if (n_elem == 0)
+    {
+    return;
+    }
+
+  // Get kernel.
+  cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(num);
+
+  runtime_t::cq_guard guard;
+
+  runtime_t::adapt_uword cl_dest_offset(dest.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_dest_locs_offset(dest_locs.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_src_offset(src.cl_mem_ptr.offset);
+  runtime_t::adapt_uword cl_n_elem(n_elem);
+
+  cl_int status = 0;
+
+  status |= coot_wrapper(clSetKernelArg)(kernel,  0,              sizeof(cl_mem), &( dest.cl_mem_ptr.ptr)     );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  1,         cl_dest_offset.size, cl_dest_offset.addr         );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  2,              sizeof(cl_mem), &( dest_locs.cl_mem_ptr.ptr));
+  status |= coot_wrapper(clSetKernelArg)(kernel,  3,    cl_dest_locs_offset.size, cl_dest_locs_offset.addr    );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  4,              sizeof(cl_mem), &( src.cl_mem_ptr.ptr)      );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  5,          cl_src_offset.size, cl_src_offset.addr          );
+  status |= coot_wrapper(clSetKernelArg)(kernel,  6,              cl_n_elem.size, cl_n_elem.addr              );
+
+  const size_t work_size = size_t(n_elem);
+
+  status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, 1, NULL, &work_size, NULL, 0, NULL, NULL);
+
+  coot_check_cl_error(status, "coot::opencl::eop_subview_elem1_array(): couldn't execute kernel" );
   }
 
 

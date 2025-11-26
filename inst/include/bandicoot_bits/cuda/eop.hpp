@@ -87,6 +87,53 @@ eop_scalar(const twoway_kernel_id::enum_id num,
 
 
 
+template<typename eT1, typename eT2>
+inline
+void
+eop_scalar_subview_elem1(const twoway_kernel_id::enum_id num,
+                         dev_mem_t<eT2> dest,
+                         const dev_mem_t<uword> dest_locs,
+                         const dev_mem_t<eT1> src,
+                         const dev_mem_t<uword> src_locs,
+                         const eT1 aux_val_pre,
+                         const eT2 aux_val_post,
+                         const uword n_elem)
+  {
+  coot_extra_debug_sigprint();
+
+  // Get kernel.
+  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT2, eT1>(num);
+
+  typedef typename cuda_type<eT1>::type ceT1;
+  typedef typename cuda_type<eT2>::type ceT2;
+
+  const ceT1 cuda_aux_val_pre = to_cuda_type(aux_val_pre);
+  const ceT2 cuda_aux_val_post = to_cuda_type(aux_val_post);
+
+  const void* args[] = {
+      &dest.cuda_mem_ptr,
+      &dest_locs.cuda_mem_ptr,
+      &src.cuda_mem_ptr,
+      &src_locs.cuda_mem_ptr,
+      &cuda_aux_val_pre,
+      &cuda_aux_val_post,
+      (uword*) &n_elem };
+
+  const kernel_dims dims = one_dimensional_grid_dims(n_elem);
+
+  CUresult result = coot_wrapper(cuLaunchKernel)(
+      kernel,
+      dims.d[0], dims.d[1], dims.d[2],
+      dims.d[3], dims.d[4], dims.d[5],
+      0, NULL, // shared mem and stream
+      (void**) args, // arguments
+      0);
+
+  coot_check_cuda_error(result, "coot::cuda::eop_scalar_subview_elem1(): cuLaunchKernel() failed");
+  }
+
+
+
 /**
  * Run a CUDA elementwise kernel that performs an operation on two matrices.
  */
@@ -150,6 +197,82 @@ eop_mat(const threeway_kernel_id::enum_id num,
       0);
 
   coot_check_cuda_error( result, "coot::cuda::eop_mat(): cuLaunchKernel() failed" );
+  }
+
+
+
+/**
+ * Run a CUDA elementwise kernel that performs an operation on two subview_elem1s.
+ */
+template<typename eT1, typename eT2>
+inline
+void
+eop_subview_elem1(const twoway_kernel_id::enum_id num,
+                  dev_mem_t<eT2> dest,
+                  const dev_mem_t<uword> dest_locs,
+                  const dev_mem_t<eT1> src,
+                  const dev_mem_t<uword> src_locs,
+                  const uword n_elem)
+  {
+  coot_extra_debug_sigprint();
+
+  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT2, eT1>(num);
+
+  const void* args[] = {
+      &(dest.cuda_mem_ptr),
+      &(dest_locs.cuda_mem_ptr),
+      &(src.cuda_mem_ptr),
+      &(src_locs.cuda_mem_ptr),
+      (uword*) &n_elem };
+
+  const kernel_dims dims = one_dimensional_grid_dims(n_elem);
+
+  CUresult result = coot_wrapper(cuLaunchKernel)(
+      kernel,
+      dims.d[0], dims.d[1], dims.d[2],
+      dims.d[3], dims.d[4], dims.d[5],
+      0, NULL, // shared mem and stream
+      (void**) args, // arguments
+      0);
+
+  coot_check_cuda_error( result, "coot::cuda::eop_subview_elem1(): cuLaunchKernel() failed" );
+  }
+
+
+
+/**
+ * Run a CUDA elementwise kernel on a matrix into a subview_elem1.
+ */
+template<typename eT1, typename eT2>
+inline
+void
+eop_subview_elem1_array(const twoway_kernel_id::enum_id num,
+                        dev_mem_t<eT2> dest,
+                        const dev_mem_t<uword> dest_locs,
+                        const dev_mem_t<eT1> src,
+                        const uword n_elem)
+  {
+  coot_extra_debug_sigprint();
+
+  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT2, eT1>(num);
+
+  const void* args[] = {
+      &(dest.cuda_mem_ptr),
+      &(dest_locs.cuda_mem_ptr),
+      &(src.cuda_mem_ptr),
+      (uword*) &n_elem };
+
+  const kernel_dims dims = one_dimensional_grid_dims(n_elem);
+
+  CUresult result = coot_wrapper(cuLaunchKernel)(
+      kernel,
+      dims.d[0], dims.d[1], dims.d[2],
+      dims.d[3], dims.d[4], dims.d[5],
+      0, NULL, // shared mem and stream
+      (void**) args, // arguments
+      0);
+
+  coot_check_cuda_error( result, "coot::cuda::eop_subview_elem1_array(): cuLaunchKernel() failed" );
   }
 
 

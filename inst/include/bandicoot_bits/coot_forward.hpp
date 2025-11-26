@@ -34,6 +34,9 @@ template<typename eT> class subview_col;
 template<typename eT> class subview_row;
 template<typename eT> class subview_cube;
 
+template<typename eT, typename T1>              class subview_elem1;
+template<typename eT, typename T1, typename T2> class subview_elem2;
+
 template<typename parent, unsigned int mode>              class subview_each1;
 template<typename parent, unsigned int mode, typename TB> class subview_each2;
 

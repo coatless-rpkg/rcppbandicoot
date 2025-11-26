@@ -17,9 +17,9 @@
 
 
 #define COOT_VERSION_MAJOR 3
-#define COOT_VERSION_MINOR 0
-#define COOT_VERSION_PATCH 1
-#define COOT_VERSION_NAME  "Extreme Cable Organization"
+#define COOT_VERSION_MINOR 1
+#define COOT_VERSION_PATCH 0
+#define COOT_VERSION_NAME  "This Coffee Is Poorly Roasted"
 // kept for reverse compatibility because older versions called it "NOTE"...
 #define COOT_VERSION_NOTE COOT_VERSION_NAME
 

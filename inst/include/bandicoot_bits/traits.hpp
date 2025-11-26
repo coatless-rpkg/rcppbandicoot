@@ -221,6 +221,19 @@ struct is_subview_col< const subview_col<eT> >
 
 
 template<typename T>
+struct is_subview_elem1
+  { static constexpr bool value = false; };
+
+template<typename eT, typename T1>
+struct is_subview_elem1< subview_elem1<eT, T1> >
+  { static constexpr bool value = true; };
+
+template<typename eT, typename T1>
+struct is_subview_elem1< const subview_elem1<eT, T1> >
+  { static constexpr bool value = true; };
+
+
+template<typename T>
 struct is_diagview
   { static constexpr bool value = false; };
 
@@ -480,6 +493,7 @@ struct is_coot_type
   || is_subview<T1>::value
   || is_subview_col<T1>::value
   || is_subview_row<T1>::value
+  || is_subview_elem1<T1>::value
   || is_diagview<T1>::value
   || is_CubeToMatOp<T1>::value
   ;

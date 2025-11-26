@@ -1693,55 +1693,55 @@ Cube<eT>::tail_slices(const uword N) const
 
 
 
-/* template<typename eT> */
-/* template<typename T1> */
-/* arma_inline */
-/* subview_elem1<eT,T1> */
-/* Cube<eT>::elem(const Base<uword,T1>& a) */
-/*   { */
-/*   arma_extra_debug_sigprint(); */
+template<typename eT>
+template<typename T1>
+coot_inline
+subview_elem1<eT,T1>
+Cube<eT>::elem(const Base<uword,T1>& a)
+  {
+  coot_extra_debug_sigprint();
 
-/*   return subview_elem1<eT,T1>(*this, a); */
-/*   } */
-
-
-
-/* template<typename eT> */
-/* template<typename T1> */
-/* arma_inline */
-/* const subview_elem1<eT,T1> */
-/* Cube<eT>::elem(const Base<uword,T1>& a) const */
-/*   { */
-/*   arma_extra_debug_sigprint(); */
-
-/*   return subview_elem1<eT,T1>(*this, a); */
-/*   } */
+  return subview_elem1<eT,T1>(*this, a);
+  }
 
 
 
-/* template<typename eT> */
-/* template<typename T1> */
-/* arma_inline */
-/* subview_elem1<eT,T1> */
-/* Cube<eT>::operator()(const Base<uword,T1>& a) */
-/*   { */
-/*   arma_extra_debug_sigprint(); */
+template<typename eT>
+template<typename T1>
+coot_inline
+const subview_elem1<eT,T1>
+Cube<eT>::elem(const Base<uword,T1>& a) const
+  {
+  coot_extra_debug_sigprint();
 
-/*   return subview_elem1<eT,T1>(*this, a); */
-/*   } */
+  return subview_elem1<eT,T1>(*this, a);
+  }
 
 
 
-/* template<typename eT> */
-/* template<typename T1> */
-/* arma_inline */
-/* const subview_elem1<eT,T1> */
-/* Cube<eT>::operator()(const Base<uword,T1>& a) const */
-/*   { */
-/*   arma_extra_debug_sigprint(); */
+template<typename eT>
+template<typename T1>
+coot_inline
+subview_elem1<eT,T1>
+Cube<eT>::operator()(const Base<uword,T1>& a)
+  {
+  coot_extra_debug_sigprint();
 
-/*   return subview_elem1<eT,T1>(*this, a); */
-/*   } */
+  return subview_elem1<eT,T1>(*this, a);
+  }
+
+
+
+template<typename eT>
+template<typename T1>
+coot_inline
+const subview_elem1<eT,T1>
+Cube<eT>::operator()(const Base<uword,T1>& a) const
+  {
+  coot_extra_debug_sigprint();
+
+  return subview_elem1<eT,T1>(*this, a);
+  }
 
 
 
@@ -3616,7 +3616,7 @@ Cube<eT>::Cube(const arma::Cube<eT>& X)
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::operator=(const arma::Cube<eT>& X)
   {
   coot_extra_debug_sigprint();
@@ -3762,7 +3762,7 @@ Cube<eT>::copy_size(const BaseCube<eT2, expr>& m)
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::replace(const eT old_val, const eT new_val)
   {
   coot_extra_debug_sigprint();
@@ -3794,7 +3794,7 @@ Cube<eT>::replace(const eT old_val, const eT new_val)
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::clamp(const eT min_val, const eT max_val)
   {
   coot_extra_debug_sigprint();
@@ -3814,7 +3814,7 @@ Cube<eT>::clamp(const eT min_val, const eT max_val)
 //! fill the cube with the specified value
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::fill(const eT val)
   {
   coot_extra_debug_sigprint();
@@ -3828,7 +3828,7 @@ Cube<eT>::fill(const eT val)
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::zeros()
   {
   coot_extra_debug_sigprint();
@@ -3842,7 +3842,7 @@ Cube<eT>::zeros()
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::zeros(const uword new_n_rows, const uword new_n_cols, const uword new_n_slices)
   {
   coot_extra_debug_sigprint();
@@ -3857,7 +3857,7 @@ Cube<eT>::zeros(const uword new_n_rows, const uword new_n_cols, const uword new_
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::zeros(const SizeCube& s)
   {
   coot_extra_debug_sigprint();
@@ -3872,7 +3872,7 @@ Cube<eT>::zeros(const SizeCube& s)
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::ones()
   {
   coot_extra_debug_sigprint();
@@ -3886,7 +3886,7 @@ Cube<eT>::ones()
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::ones(const uword new_n_rows, const uword new_n_cols, const uword new_n_slices)
   {
   coot_extra_debug_sigprint();
@@ -3901,7 +3901,7 @@ Cube<eT>::ones(const uword new_n_rows, const uword new_n_cols, const uword new_n
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::ones(const SizeCube& s)
   {
   coot_extra_debug_sigprint();
@@ -3916,7 +3916,7 @@ Cube<eT>::ones(const SizeCube& s)
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::randu()
   {
   coot_extra_debug_sigprint();
@@ -3930,7 +3930,7 @@ Cube<eT>::randu()
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::randu(const uword new_n_rows, const uword new_n_cols, const uword new_n_slices)
   {
   coot_extra_debug_sigprint();
@@ -3944,7 +3944,7 @@ Cube<eT>::randu(const uword new_n_rows, const uword new_n_cols, const uword new_
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::randu(const SizeCube& s)
   {
   coot_extra_debug_sigprint();
@@ -3958,7 +3958,7 @@ Cube<eT>::randu(const SizeCube& s)
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::randn()
   {
   coot_extra_debug_sigprint();
@@ -3972,7 +3972,7 @@ Cube<eT>::randn()
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::randn(const uword new_n_rows, const uword new_n_cols, const uword new_n_slices)
   {
   coot_extra_debug_sigprint();
@@ -3986,7 +3986,7 @@ Cube<eT>::randn(const uword new_n_rows, const uword new_n_cols, const uword new_
 
 template<typename eT>
 inline
-const Cube<eT>&
+Cube<eT>&
 Cube<eT>::randn(const SizeCube& s)
   {
   coot_extra_debug_sigprint();
