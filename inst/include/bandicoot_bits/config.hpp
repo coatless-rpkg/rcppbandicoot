@@ -223,7 +223,7 @@
 
 // Uncomment and modify the lines below to specify a custom directory where Bandicoot kernel sources are stored.
 // Alternately, define COOT_KERNEL_SOURCE_DIR in your program.
-// Note that COOT_KERNEL_SOURCE_DIR must have a / as its final character (or \ on Windows).
+// Note that COOT_KERNEL_SOURCE_DIR must have a / as its final character (or \ on Windows), and should be enclosed in quotes.
 //
 // Kernels are expected to be in the following structure:
 //   COOT_KERNEL_SOURCE_DIR/
@@ -236,9 +236,9 @@
 //       oneway/
 //       .../
 //
-// #if defined(COOT_KERNEL_SOURCE_DIR)
+// #if !defined(COOT_KERNEL_SOURCE_DIR)
 //   #undef COOT_KERNEL_SOURCE_DIR
-//   #define COOT_KERNEL_SOURCE_DIR /custom/kernel/location/
+//   #define COOT_KERNEL_SOURCE_DIR "/custom/kernel/location/"
 // #endif
 
 // if Bandicoot was installed on this system via CMake and COOT_USE_WRAPPER is not defined,

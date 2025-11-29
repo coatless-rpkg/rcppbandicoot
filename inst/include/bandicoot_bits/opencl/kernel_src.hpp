@@ -58,8 +58,8 @@ read_file(const std::string& filename)
   #else
   const std::string this_file = __FILE__;
 
-  // We need to strip the '_src.hpp' from __FILE__.
-  const std::string full_filename = this_file.substr(0, this_file.size() - 8) + "s/" + filename;
+  // We need to strip the 'opencl/kernel_src.hpp' from __FILE__.
+  const std::string full_filename = this_file.substr(0, this_file.size() - 21) + "kernels/opencl/" + filename;
   #endif
   std::ifstream f(full_filename);
   std::string file_contents = "";

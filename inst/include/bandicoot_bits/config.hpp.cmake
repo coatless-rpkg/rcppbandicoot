@@ -229,7 +229,7 @@
 //       oneway/
 //       .../
 //
-// #if defined(COOT_KERNEL_SOURCE_DIR)
+// #if !defined(COOT_KERNEL_SOURCE_DIR)
 //   #undef COOT_KERNEL_SOURCE_DIR
 //   #define COOT_KERNEL_SOURCE_DIR /custom/kernel/location/
 // #endif

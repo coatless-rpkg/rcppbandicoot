@@ -61,8 +61,8 @@ read_file(const std::string& filename)
   #else
   const std::string this_file = __FILE__;
 
-  // We need to strip the '_src.hpp' from __FILE__.
-  const std::string full_filename = this_file.substr(0, this_file.size() - 8) + "s/" + filename;
+  // We need to strip 'cuda/kernel_src.hpp' from __FILE__ and replace it with 'kernels/cuda/'.
+  const std::string full_filename = this_file.substr(0, this_file.size() - 19) + "kernels/cuda/" + filename;
   #endif
   std::ifstream f(full_filename);
   std::string file_contents = "";
