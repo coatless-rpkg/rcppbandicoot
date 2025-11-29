@@ -11,6 +11,17 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// gpu_initialize
+void gpu_initialize(std::string type, bool print_info);
+RcppExport SEXP _RcppBandicoot_gpu_initialize(SEXP typeSEXP, SEXP print_infoSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< bool >::type print_info(print_infoSEXP);
+    gpu_initialize(type, print_info);
+    return R_NilValue;
+END_RCPP
+}
 // bandicoot_version
 void bandicoot_version();
 RcppExport SEXP _RcppBandicoot_bandicoot_version() {
@@ -113,6 +124,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_RcppBandicoot_gpu_initialize", (DL_FUNC) &_RcppBandicoot_gpu_initialize, 2},
     {"_RcppBandicoot_bandicoot_version", (DL_FUNC) &_RcppBandicoot_bandicoot_version, 0},
     {"_RcppBandicoot_gpu_matrix_multiply", (DL_FUNC) &_RcppBandicoot_gpu_matrix_multiply, 2},
     {"_RcppBandicoot_gpu_transpose", (DL_FUNC) &_RcppBandicoot_gpu_transpose, 1},
