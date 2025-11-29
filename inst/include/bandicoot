@@ -21,8 +21,6 @@
 
 #include <cassert>  // TODO: remove this after all of the code has been adapted
 
-#define CL_TARGET_OPENCL_VERSION 300
-
 #undef  CL_USE_DEPRECATED_OPENCL_1_2_APIS
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 

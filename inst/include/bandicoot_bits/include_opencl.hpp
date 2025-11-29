@@ -14,9 +14,10 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
-#define CL_TARGET_OPENCL_VERSION 300
+
 
 #if defined(COOT_USE_OPENCL)
+  #define CL_TARGET_OPENCL_VERSION COOT_TARGET_OPENCL_VERSION
   #if defined(__APPLE__)
     #include <OpenCL/opencl.h>
     #include <OpenCL/cl_platform.h>

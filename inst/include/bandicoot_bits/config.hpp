@@ -16,8 +16,6 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
-#define CL_TARGET_OPENCL_VERSION 300
-
 #if !defined(COOT_WARN_LEVEL)
   #define COOT_WARN_LEVEL 2
 #endif
@@ -37,6 +35,14 @@
 //// Uncomment the above line if you have OpenCL available on your system.
 //// Bandicoot requires OpenCL to be available.
 //// For nontrivial operations it is also required to have either clBLAS or CLBlast available also.
+#endif
+
+#if !defined(COOT_TARGET_OPENCL_VERSION)
+#define COOT_TARGET_OPENCL_VERSION 120
+//// This defines the version of the OpenCL API that will be targeted by default.
+//// Make sure that it matches the version of the OpenCL driver (you can find this with `clinfo`; look for "Platform Numeric Version".
+////
+//// NOTE: the version above is a fallback safety value!  Set it to the correct version for your system.
 #endif
 
 #if !defined(COOT_USE_CLBLAST)

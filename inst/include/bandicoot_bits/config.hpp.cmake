@@ -32,6 +32,12 @@
 //// For nontrivial operations it is also required to have either clBLAS or CLBlast available also.
 #endif
 
+#if !defined(COOT_TARGET_OPENCL_VERSION)
+#cmakedefine COOT_TARGET_OPENCL_VERSION @COOT_TARGET_OPENCL_VERSION@
+//// This defines the version of the OpenCL API that will be targeted by default.
+//// Make sure that it matches the version of the OpenCL driver (you can find this with `clinfo`; look for "Platform Numeric Version".
+#endif
+
 #if !defined(COOT_USE_CLBLAST)
 #cmakedefine COOT_USE_CLBLAST
 //// Uncomment the above line if you have CLBlast available on your system.
