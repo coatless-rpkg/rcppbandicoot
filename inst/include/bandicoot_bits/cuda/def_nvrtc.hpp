@@ -62,4 +62,14 @@ extern "C"
 
 
 
+  extern nvrtcResult coot_wrapper(nvrtcGetPTXSize)(nvrtcProgram prog,
+                                                   size_t* ptxSizeRet);
+
+
+
+  extern nvrtcResult coot_wrapper(nvrtcGetPTX)(nvrtcProgram prog,
+                                               char* ptx);
+
+
+
   }

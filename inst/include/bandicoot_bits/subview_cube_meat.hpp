@@ -246,7 +246,7 @@ subview_cube<eT>::operator+=(const BaseCube<eT, T1>& x)
 
   no_conv_unwrap_cube<T1> U(x.get_ref());
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
                       m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                       n_rows, n_cols, n_slices,
                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -266,7 +266,7 @@ subview_cube<eT>::operator-=(const BaseCube<eT, T1>& x)
 
   no_conv_unwrap_cube<T1> U(x.get_ref());
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
                       m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                       n_rows, n_cols, n_slices,
                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -286,7 +286,7 @@ subview_cube<eT>::operator%=(const BaseCube<eT, T1>& x)
 
   no_conv_unwrap_cube<T1> U(x.get_ref());
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
                       m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                       n_rows, n_cols, n_slices,
                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -306,7 +306,7 @@ subview_cube<eT>::operator/=(const BaseCube<eT, T1>& x)
 
   no_conv_unwrap_cube<T1> U(x.get_ref());
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
                       m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                       n_rows, n_cols, n_slices,
                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -338,7 +338,7 @@ subview_cube<eT>::operator+=(const subview_cube<eT>& x)
   {
   coot_extra_debug_sigprint();
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
                       m.dev_mem, m.dev_mem, x.m.dev_mem,
                       n_rows, n_cols, n_slices,
                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -355,7 +355,7 @@ subview_cube<eT>::operator-=(const subview_cube<eT>& x)
   {
   coot_extra_debug_sigprint();
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
                       m.dev_mem, m.dev_mem, x.m.dev_mem,
                       n_rows, n_cols, n_slices,
                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -372,7 +372,7 @@ subview_cube<eT>::operator%=(const subview_cube<eT>& x)
   {
   coot_extra_debug_sigprint();
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
                       m.dev_mem, m.dev_mem, x.m.dev_mem,
                       n_rows, n_cols, n_slices,
                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -389,7 +389,7 @@ subview_cube<eT>::operator/=(const subview_cube<eT>& x)
   {
   coot_extra_debug_sigprint();
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
                       m.dev_mem, m.dev_mem, x.m.dev_mem,
                       n_rows, n_cols, n_slices,
                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -500,7 +500,7 @@ subview_cube<eT>::operator+=(const Base<eT, T1>& x)
   if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) )
     {
     // interpret the matrix as a cube with one slice
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -511,7 +511,7 @@ subview_cube<eT>::operator+=(const Base<eT, T1>& x)
   if( (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) )
     {
     // interpret the matrix as a rows x 1 x slices tube
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -522,7 +522,7 @@ subview_cube<eT>::operator+=(const Base<eT, T1>& x)
   if( (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
     {
     // intepret the matrix as a 1 x cols x slices tube
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -569,7 +569,7 @@ subview_cube<eT>::operator-=(const Base<eT, T1>& x)
   if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) )
     {
     // interpret the matrix as a cube with one slice
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -580,7 +580,7 @@ subview_cube<eT>::operator-=(const Base<eT, T1>& x)
   if( (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) )
     {
     // interpret the matrix as a rows x 1 x slices tube
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -591,7 +591,7 @@ subview_cube<eT>::operator-=(const Base<eT, T1>& x)
   if( (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
     {
     // intepret the matrix as a 1 x cols x slices tube
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -638,7 +638,7 @@ subview_cube<eT>::operator%=(const Base<eT, T1>& x)
   if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) )
     {
     // interpret the matrix as a cube with one slice
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -649,7 +649,7 @@ subview_cube<eT>::operator%=(const Base<eT, T1>& x)
   if( (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) )
     {
     // interpret the matrix as a rows x 1 x slices tube
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -660,7 +660,7 @@ subview_cube<eT>::operator%=(const Base<eT, T1>& x)
   if( (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
     {
     // intepret the matrix as a 1 x cols x slices tube
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -707,7 +707,7 @@ subview_cube<eT>::operator/=(const Base<eT, T1>& x)
   if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) )
     {
     // interpret the matrix as a cube with one slice
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -718,7 +718,7 @@ subview_cube<eT>::operator/=(const Base<eT, T1>& x)
   if( (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) )
     {
     // interpret the matrix as a rows x 1 x slices tube
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -729,7 +729,7 @@ subview_cube<eT>::operator/=(const Base<eT, T1>& x)
   if( (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
     {
     // intepret the matrix as a 1 x cols x slices tube
-    coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
                         m.dev_mem, m.dev_mem, U.get_dev_mem(false),
                         t_n_rows, t_n_cols, t_n_slices,
                         aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
@@ -772,7 +772,7 @@ subview_cube<eT>::plus_inplace(Cube<eT>& out, const subview_cube<eT>& in)
   coot_debug_assert_same_size(out, in, "addition");
 
   // add the subview to `out`
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
                       out.get_dev_mem(false), out.get_dev_mem(false), in.m.get_dev_mem(false),
                       out.n_rows, out.n_cols, out.n_slices,
                       0, 0, 0, out.n_rows, out.n_cols,
@@ -792,7 +792,7 @@ subview_cube<eT>::minus_inplace(Cube<eT>& out, const subview_cube<eT>& in)
   coot_debug_assert_same_size(out, in, "subtraction");
 
   // subtract the subview from `out`
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
                       out.get_dev_mem(false), out.get_dev_mem(false), in.m.get_dev_mem(false),
                       out.n_rows, out.n_cols, out.n_slices,
                       0, 0, 0, out.n_rows, out.n_cols,
@@ -812,7 +812,7 @@ subview_cube<eT>::schur_inplace(Cube<eT>& out, const subview_cube<eT>& in)
   coot_debug_assert_same_size(out, in, "element-wise multiplication");
 
   // add the subview to `out`
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
                       out.get_dev_mem(false), out.get_dev_mem(false), in.m.get_dev_mem(false),
                       out.n_rows, out.n_cols, out.n_slices,
                       0, 0, 0, out.n_rows, out.n_cols,
@@ -832,7 +832,7 @@ subview_cube<eT>::div_inplace(Cube<eT>& out, const subview_cube<eT>& in)
   coot_debug_assert_same_size(out, in, "division");
 
   // add the subview to `out`
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
                       out.get_dev_mem(false), out.get_dev_mem(false), in.m.get_dev_mem(false),
                       out.n_rows, out.n_cols, out.n_slices,
                       0, 0, 0, out.n_rows, out.n_cols,
@@ -936,7 +936,7 @@ subview_cube<eT>::plus_inplace(Mat<eT>& out, const subview_cube<eT>& in)
       // out is a matrix
       if (in_n_cols == 1)
         {
-        coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
                             out.get_dev_mem(false), in.get_dev_mem(false),
                             in_n_rows, in_n_cols, in_n_slices,
                             0, 0, 0, out.n_rows, 1,
@@ -944,7 +944,7 @@ subview_cube<eT>::plus_inplace(Mat<eT>& out, const subview_cube<eT>& in)
         }
       else if (in_n_rows == 1)
         {
-        coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
                             out.get_dev_mem(false), in.get_dev_mem(false),
                             in_n_rows, in_n_cols, in_n_slices,
                             0, 0, 0, 1, out.n_rows,
@@ -954,7 +954,7 @@ subview_cube<eT>::plus_inplace(Mat<eT>& out, const subview_cube<eT>& in)
     else
       {
       // out is a vector
-      coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+      coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
                           out.get_dev_mem(false), in.get_dev_mem(false),
                           1, 1, in_n_slices,
                           0, 0, 0, 1, 1,
@@ -996,7 +996,7 @@ subview_cube<eT>::minus_inplace(Mat<eT>& out, const subview_cube<eT>& in)
       // out is a matrix
       if (in_n_cols == 1)
         {
-        coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
                             out.get_dev_mem(false), in.get_dev_mem(false),
                             in_n_rows, in_n_cols, in_n_slices,
                             0, 0, 0, out.n_rows, 1,
@@ -1004,7 +1004,7 @@ subview_cube<eT>::minus_inplace(Mat<eT>& out, const subview_cube<eT>& in)
         }
       else if (in_n_rows == 1)
         {
-        coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
                             out.get_dev_mem(false), in.get_dev_mem(false),
                             in_n_rows, in_n_cols, in_n_slices,
                             0, 0, 0, 1, out.n_rows,
@@ -1014,7 +1014,7 @@ subview_cube<eT>::minus_inplace(Mat<eT>& out, const subview_cube<eT>& in)
     else
       {
       // out is a vector
-      coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+      coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
                           out.get_dev_mem(false), in.get_dev_mem(false),
                           1, 1, in_n_slices,
                           0, 0, 0, 1, 1,
@@ -1056,7 +1056,7 @@ subview_cube<eT>::schur_inplace(Mat<eT>& out, const subview_cube<eT>& in)
       // out is a matrix
       if (in_n_cols == 1)
         {
-        coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
                             out.get_dev_mem(false), in.get_dev_mem(false),
                             in_n_rows, in_n_cols, in_n_slices,
                             0, 0, 0, out.n_rows, 1,
@@ -1064,7 +1064,7 @@ subview_cube<eT>::schur_inplace(Mat<eT>& out, const subview_cube<eT>& in)
         }
       else if (in_n_rows == 1)
         {
-        coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
                             out.get_dev_mem(false), in.get_dev_mem(false),
                             in_n_rows, in_n_cols, in_n_slices,
                             0, 0, 0, 1, out.n_rows,
@@ -1074,7 +1074,7 @@ subview_cube<eT>::schur_inplace(Mat<eT>& out, const subview_cube<eT>& in)
     else
       {
       // out is a vector
-      coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+      coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
                           out.get_dev_mem(false), in.get_dev_mem(false),
                           1, 1, in_n_slices,
                           0, 0, 0, 1, 1,
@@ -1116,7 +1116,7 @@ subview_cube<eT>::div_inplace(Mat<eT>& out, const subview_cube<eT>& in)
       // out is a matrix
       if (in_n_cols == 1)
         {
-        coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
                             out.get_dev_mem(false), in.get_dev_mem(false),
                             in_n_rows, in_n_cols, in_n_slices,
                             0, 0, 0, out.n_rows, 1,
@@ -1124,7 +1124,7 @@ subview_cube<eT>::div_inplace(Mat<eT>& out, const subview_cube<eT>& in)
         }
       else if (in_n_rows == 1)
         {
-        coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
                             out.get_dev_mem(false), in.get_dev_mem(false),
                             in_n_rows, in_n_cols, in_n_slices,
                             0, 0, 0, 1, out.n_rows,
@@ -1134,7 +1134,7 @@ subview_cube<eT>::div_inplace(Mat<eT>& out, const subview_cube<eT>& in)
     else
       {
       // out is a vector
-      coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+      coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
                           out.get_dev_mem(false), in.get_dev_mem(false),
                           1, 1, in_n_slices,
                           0, 0, 0, 1, 1,

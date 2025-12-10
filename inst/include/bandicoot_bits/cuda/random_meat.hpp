@@ -172,6 +172,7 @@ void
 fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const typename enable_if<is_same_type<typename promote_type<typename uint_type<eT>::result, u32>::result, u32>::yes>::result* junk = nullptr)
   {
   coot_extra_debug_sigprint();
+  coot_ignore(junk);
 
   if (n == 0) { return; }
 
@@ -233,6 +234,7 @@ void
 fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const typename enable_if<is_same_type<typename uint_type<eT>::result, u64>::yes>::result* junk = nullptr)
   {
   coot_extra_debug_sigprint();
+  coot_ignore(junk);
 
   if (n == 0) { return; }
 

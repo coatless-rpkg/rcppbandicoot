@@ -45,11 +45,11 @@ sort(dev_mem_t<eT> mem,
   CUfunction kernel;
   if (dim == 0)
     {
-    kernel = get_rt().cuda_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_colwise_ascending : oneway_kernel_id::radix_sort_colwise_descending);
+    kernel = get_rt().cuda_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_colwise_asc : oneway_kernel_id::radix_sort_colwise_desc);
     }
   else
     {
-    kernel = get_rt().cuda_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_rowwise_ascending : oneway_kernel_id::radix_sort_rowwise_descending);
+    kernel = get_rt().cuda_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_rowwise_asc : oneway_kernel_id::radix_sort_rowwise_desc);
     }
 
   typedef typename cuda_type<eT>::type ceT;
@@ -107,7 +107,7 @@ sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
   dev_mem_t<eT> tmp_mem;
   tmp_mem.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<eT>(n_elem);
 
-  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_ascending : oneway_kernel_id::radix_sort_descending);
+  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_asc : oneway_kernel_id::radix_sort_desc);
 
   const void* args[] = {
       &(A.cuda_mem_ptr),

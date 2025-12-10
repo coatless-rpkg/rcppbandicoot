@@ -16,9 +16,6 @@
 // ------------------------------------------------------------------------
 
 
-using std::cout;
-using std::cerr;
-using std::endl;
 using std::ios;
 using std::size_t;
 
@@ -36,6 +33,9 @@ template<typename eT> class subview;
 template<typename eT> class subview_col;
 template<typename eT> class subview_row;
 template<typename eT> class subview_cube;
+
+template<typename eT, typename T1>              class subview_elem1;
+template<typename eT, typename T1, typename T2> class subview_elem2;
 
 template<typename parent, unsigned int mode>              class subview_each1;
 template<typename parent, unsigned int mode, typename TB> class subview_each2;
@@ -72,8 +72,9 @@ template<                 typename T1, typename   op_type> class   OpCube;
 template<                 typename T1, typename  eop_type> class  eOpCube;
 template<typename out_eT, typename T1, typename mtop_type> class mtOpCube;
 
-template<                 typename T1, typename T2, typename  glue_type> class   GlueCube;
-template<                 typename T1, typename T2, typename eglue_type> class  eGlueCube;
+template<                 typename T1, typename T2, typename   glue_type> class   GlueCube;
+template<                 typename T1, typename T2, typename  eglue_type> class  eGlueCube;
+template<typename out_eT, typename T1, typename T2, typename mtglue_type> class mtGlueCube;
 
 template<                 typename T1, typename op_type> class CubeToMatOp;
 
@@ -166,11 +167,11 @@ class glue_solve;
 class glue_min;
 class glue_max;
 
-class glue_mixed_plus;
-class glue_mixed_minus;
-class glue_mixed_schur;
-class glue_mixed_div;
-class glue_mixed_times;
+class mtglue_mixed_plus;
+class mtglue_mixed_minus;
+class mtglue_mixed_schur;
+class mtglue_mixed_div;
+class mtglue_mixed_times;
 
 class mtglue_rel_lt;
 class mtglue_rel_gt;

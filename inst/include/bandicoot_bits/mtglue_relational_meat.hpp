@@ -50,12 +50,14 @@ mtglue_rel_lt::apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_lt>
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_lt::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_lt>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_lt::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_lt>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_cols);
+  coot_ignore(A_n_cols);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_rows;
+  return A_n_rows;
   }
 
 
@@ -63,12 +65,14 @@ mtglue_rel_lt::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_lt>& glue, 
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_lt::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_lt>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_lt::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_lt>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_rows);
+  coot_ignore(A_n_rows);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_cols;
+  return A_n_cols;
   }
 
 
@@ -107,12 +111,14 @@ mtglue_rel_gt::apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_gt>
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_gt::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_gt>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_gt::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_gt>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_cols);
+  coot_ignore(A_n_cols);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_rows;
+  return A_n_rows;
   }
 
 
@@ -120,12 +126,14 @@ mtglue_rel_gt::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_gt>& glue, 
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_gt::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_gt>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_gt::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_gt>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_rows);
+  coot_ignore(A_n_rows);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_cols;
+  return A_n_cols;
   }
 
 
@@ -164,12 +172,14 @@ mtglue_rel_lteq::apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_l
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_lteq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_lteq>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_lteq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_lteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_cols);
+  coot_ignore(A_n_cols);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_rows;
+  return A_n_rows;
   }
 
 
@@ -177,12 +187,14 @@ mtglue_rel_lteq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_lteq>& gl
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_lteq::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_lteq>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_lteq::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_lteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_rows);
+  coot_ignore(A_n_rows);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_cols;
+  return A_n_cols;
   }
 
 
@@ -221,12 +233,14 @@ mtglue_rel_gteq::apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_g
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_gteq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_gteq>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_gteq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_gteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_cols);
+  coot_ignore(A_n_cols);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_rows;
+  return A_n_rows;
   }
 
 
@@ -234,12 +248,14 @@ mtglue_rel_gteq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_gteq>& gl
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_gteq::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_gteq>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_gteq::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_gteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_rows);
+  coot_ignore(A_n_rows);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_cols;
+  return A_n_cols;
   }
 
 
@@ -278,12 +294,14 @@ mtglue_rel_eq::apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_eq>
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_eq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_eq>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_eq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_eq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_cols);
+  coot_ignore(A_n_cols);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_rows;
+  return A_n_rows;
   }
 
 
@@ -291,12 +309,14 @@ mtglue_rel_eq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_eq>& glue, 
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_eq::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_eq>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_eq::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_eq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_rows);
+  coot_ignore(A_n_rows);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_cols;
+  return A_n_cols;
   }
 
 
@@ -335,12 +355,14 @@ mtglue_rel_noteq::apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_noteq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_noteq>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_noteq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_noteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_cols);
+  coot_ignore(A_n_cols);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_rows;
+  return A_n_rows;
   }
 
 
@@ -348,12 +370,14 @@ mtglue_rel_noteq::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_noteq>& 
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_noteq::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_noteq>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_noteq::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_noteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_rows);
+  coot_ignore(A_n_rows);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_cols;
+  return A_n_cols;
   }
 
 
@@ -392,12 +416,14 @@ mtglue_rel_and::apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_an
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_and::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_and>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_and::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_and>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_cols);
+  coot_ignore(A_n_cols);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_rows;
+  return A_n_rows;
   }
 
 
@@ -405,12 +431,14 @@ mtglue_rel_and::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_and>& glue
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_and::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_and>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_and::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_and>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_rows);
+  coot_ignore(A_n_rows);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_cols;
+  return A_n_cols;
   }
 
 
@@ -449,12 +477,14 @@ mtglue_rel_or::apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_or>
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_or::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_or>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_or::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_or>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_cols);
+  coot_ignore(A_n_cols);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_rows;
+  return A_n_rows;
   }
 
 
@@ -462,10 +492,12 @@ mtglue_rel_or::compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_or>& glue, 
 template<typename T1, typename T2>
 inline
 uword
-mtglue_rel_or::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_or>& glue, const uword in_n_rows, const uword in_n_cols)
+mtglue_rel_or::compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_or>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
-  coot_ignore(in_n_rows);
+  coot_ignore(A_n_rows);
+  coot_ignore(B_n_rows);
+  coot_ignore(B_n_cols);
 
-  return in_n_cols;
+  return A_n_cols;
   }

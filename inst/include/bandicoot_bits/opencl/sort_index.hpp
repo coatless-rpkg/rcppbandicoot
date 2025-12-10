@@ -377,19 +377,19 @@ sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const 
   cl_kernel k;
   if (stable_sort == 0 && sort_type == 0)
     {
-    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_index_ascending);
+    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_index_asc);
     }
   else if (stable_sort == 0 && sort_type == 1)
     {
-    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_index_descending);
+    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_index_desc);
     }
   else if (stable_sort == 1 && sort_type == 0)
     {
-    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_idx_asc);
+    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_index_asc);
     }
   else
     {
-    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_idx_desc);
+    k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::stable_radix_sort_index_desc);
     }
 
   size_t total_num_threads, local_group_size;

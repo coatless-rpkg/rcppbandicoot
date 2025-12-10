@@ -221,6 +221,32 @@ struct is_subview_col< const subview_col<eT> >
 
 
 template<typename T>
+struct is_subview_elem1
+  { static constexpr bool value = false; };
+
+template<typename eT, typename T1>
+struct is_subview_elem1< subview_elem1<eT, T1> >
+  { static constexpr bool value = true; };
+
+template<typename eT, typename T1>
+struct is_subview_elem1< const subview_elem1<eT, T1> >
+  { static constexpr bool value = true; };
+
+
+template<typename T>
+struct is_subview_elem2
+  { static constexpr bool value = false; };
+
+template<typename eT, typename T1, typename T2>
+struct is_subview_elem2< subview_elem2<eT, T1, T2> >
+  { static constexpr bool value = true; };
+
+template<typename eT, typename T1, typename T2>
+struct is_subview_elem2< const subview_elem2<eT, T1, T2> >
+  { static constexpr bool value = true; };
+
+
+template<typename T>
 struct is_diagview
   { static constexpr bool value = false; };
 
@@ -458,6 +484,18 @@ struct is_eGlueCube< const eGlueCube<T1,T2,eglue_type> >
   { static constexpr bool value = true; };
 
 
+template<typename T>
+struct is_mtGlueCube
+  { static constexpr bool value = false; };
+
+template<typename out_eT, typename T1, typename T2, typename mtglue_type>
+struct is_mtGlueCube< mtGlueCube<out_eT,T1,T2,mtglue_type> >
+  { static constexpr bool value = true; };
+
+template<typename out_eT, typename T1, typename T2, typename mtglue_type>
+struct is_mtGlueCube< const mtGlueCube<out_eT,T1,T2,mtglue_type> >
+  { static constexpr bool value = true; };
+
 
 //
 //
@@ -480,6 +518,8 @@ struct is_coot_type
   || is_subview<T1>::value
   || is_subview_col<T1>::value
   || is_subview_row<T1>::value
+  || is_subview_elem1<T1>::value
+  || is_subview_elem2<T1>::value
   || is_diagview<T1>::value
   || is_CubeToMatOp<T1>::value
   ;
@@ -498,7 +538,7 @@ struct is_coot_cube_type
   || is_mtOpCube<T1>::value
   || is_GlueCube<T1>::value
   || is_eGlueCube<T1>::value
-  //|| is_mtGlueCube<T1>::value
+  || is_mtGlueCube<T1>::value
   || is_subview_cube<T1>::value
   //|| is_subview_cube_slices<T1>::value
   ;

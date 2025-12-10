@@ -232,7 +232,7 @@ mtop_conv_to::apply_inplace_plus(Cube<out_eT>& out, const mtOpCube<out_eT, T1, m
 
   const unwrap_cube<T1> U(X.q);
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_plus_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
                       out.get_dev_mem(false), out.get_dev_mem(false), U.get_dev_mem(false),
                       out.n_rows, out.n_cols, out.n_slices,
                       0, 0, 0, out.n_rows, out.n_cols,
@@ -251,7 +251,7 @@ mtop_conv_to::apply_inplace_minus(Cube<out_eT>& out, const mtOpCube<out_eT, T1, 
 
   const unwrap_cube<T1> U(X.q);
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_minus_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
                       out.get_dev_mem(false), out.get_dev_mem(false), U.get_dev_mem(false),
                       out.n_rows, out.n_cols, out.n_slices,
                       0, 0, 0, out.n_rows, out.n_cols,
@@ -270,7 +270,7 @@ mtop_conv_to::apply_inplace_schur(Cube<out_eT>& out, const mtOpCube<out_eT, T1, 
 
   const unwrap_cube<T1> U(X.q);
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_mul_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
                       out.get_dev_mem(false), out.get_dev_mem(false), U.get_dev_mem(false),
                       out.n_rows, out.n_cols, out.n_slices,
                       0, 0, 0, out.n_rows, out.n_cols,
@@ -289,7 +289,7 @@ mtop_conv_to::apply_inplace_div(Cube<out_eT>& out, const mtOpCube<out_eT, T1, mt
 
   const unwrap_cube<T1> U(X.q);
 
-  coot_rt_t::eop_cube(twoway_kernel_id::equ_array_div_array_cube,
+  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
                       out.get_dev_mem(false), out.get_dev_mem(false), U.get_dev_mem(false),
                       out.n_rows, out.n_cols, out.n_slices,
                       0, 0, 0, out.n_rows, out.n_cols,
@@ -304,6 +304,9 @@ inline
 uword
 mtop_conv_to::compute_n_rows(const mtOp<out_eT, T1, mtop_conv_to>& X, const uword in_n_rows, const uword in_n_cols)
   {
+  coot_ignore(X);
+  coot_ignore(in_n_cols);
+
   // mtop_conv_to does not change the size of the input.
   return in_n_rows;
   }
@@ -315,6 +318,9 @@ inline
 uword
 mtop_conv_to::compute_n_cols(const mtOp<out_eT, T1, mtop_conv_to>& X, const uword in_n_rows, const uword in_n_cols)
   {
+  coot_ignore(X);
+  coot_ignore(in_n_rows);
+
   // mtop_conv_to does not change the size of the input.
   return in_n_cols;
   }
@@ -326,6 +332,10 @@ inline
 uword
 mtop_conv_to::compute_n_rows(const mtOpCube<out_eT, T1, mtop_conv_to>& X, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices)
   {
+  coot_ignore(X);
+  coot_ignore(in_n_cols);
+  coot_ignore(in_n_slices);
+
   // mtop_conv_to does not change the size of the input.
   return in_n_rows;
   }
@@ -337,6 +347,10 @@ inline
 uword
 mtop_conv_to::compute_n_cols(const mtOpCube<out_eT, T1, mtop_conv_to>& X, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices)
   {
+  coot_ignore(X);
+  coot_ignore(in_n_rows);
+  coot_ignore(in_n_slices);
+
   // mtop_conv_to does not change the size of the input.
   return in_n_cols;
   }
@@ -348,6 +362,10 @@ inline
 uword
 mtop_conv_to::compute_n_slices(const mtOpCube<out_eT, T1, mtop_conv_to>& X, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices)
   {
+  coot_ignore(X);
+  coot_ignore(in_n_rows);
+  coot_ignore(in_n_cols);
+
   // mtop_conv_to does not change the size of the input.
   return in_n_slices;
   }

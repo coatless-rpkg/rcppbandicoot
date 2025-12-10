@@ -99,8 +99,8 @@ inline
 typename
 enable_if2
   <
-  (is_coot_type<T1>::value && is_coot_type<T2>::value && (is_same_type<typename T1::elem_type, typename T2::elem_type>::no)),
-  const Glue< T1, T2, glue_mixed_times >
+  (is_coot_type<T1>::value && is_coot_type<T2>::value && (is_same_type<typename T1::elem_type, typename T2::elem_type>::no) && (is_promotable<typename T1::elem_type, typename T2::elem_type>::value)),
+  const mtGlue< typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_times >
   >::result
 operator*
   (
@@ -110,12 +110,7 @@ operator*
   {
   coot_extra_debug_sigprint();
 
-  typedef typename T1::elem_type eT1;
-  typedef typename T2::elem_type eT2;
-
-  promote_type<eT1,eT2>::check();
-
-  return Glue<T1, T2, glue_mixed_times>( X, Y );
+  return mtGlue<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_times>( X, Y );
   }
 
 

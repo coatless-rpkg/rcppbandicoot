@@ -24,8 +24,8 @@ class mtglue_rel_lt
   template<typename T1, typename T2>
   inline static void apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_lt>& X);
 
-  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_lt>& glue, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_lt>& glue, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_lt>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_lt>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
   };
 
 
@@ -38,8 +38,8 @@ class mtglue_rel_gt
   template<typename T1, typename T2>
   inline static void apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_gt>& X);
 
-  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_gt>& glue, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_gt>& glue, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_gt>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_gt>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
   };
 
 
@@ -52,8 +52,8 @@ class mtglue_rel_lteq
   template<typename T1, typename T2>
   inline static void apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_lteq>& X);
 
-  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_lteq>& glue, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_lteq>& glue, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_lteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_lteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
   };
 
 
@@ -66,8 +66,8 @@ class mtglue_rel_gteq
   template<typename T1, typename T2>
   inline static void apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_gteq>& X);
 
-  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_gteq>& glue, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_gteq>& glue, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_gteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_gteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
   };
 
 
@@ -80,8 +80,8 @@ class mtglue_rel_eq
   template<typename T1, typename T2>
   inline static void apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_eq>& X);
 
-  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_eq>& glue, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_eq>& glue, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_eq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_eq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
   };
 
 
@@ -94,8 +94,8 @@ class mtglue_rel_noteq
   template<typename T1, typename T2>
   inline static void apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_noteq>& X);
 
-  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_noteq>& glue, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_noteq>& glue, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_noteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_noteq>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
   };
 
 
@@ -108,8 +108,8 @@ class mtglue_rel_and
   template<typename T1, typename T2>
   inline static void apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_and>& X);
 
-  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_and>& glue, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_and>& glue, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_and>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_and>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
   };
 
 
@@ -122,6 +122,6 @@ class mtglue_rel_or
   template<typename T1, typename T2>
   inline static void apply(Mat<uword>& out, const mtGlue<uword, T1, T2, mtglue_rel_or>& X);
 
-  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_or>& glue, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_or>& glue, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<uword, T1, T2, mtglue_rel_or>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+  template<typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<uword, T1, T2, mtglue_rel_or>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
   };

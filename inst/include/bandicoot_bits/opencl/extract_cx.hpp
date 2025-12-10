@@ -39,8 +39,8 @@ extract_cx(dev_mem_t<eT1> out_mem,
 
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT1>(oneway_real_kernel_id::extract_cx);
 
-  const uword out_offset = out_row_offset + out_col_offset * out_M_n_rows;
-  const uword  in_offset =  in_row_offset +  in_col_offset *  in_M_n_rows;
+  const uword out_offset = out_mem.cl_mem_ptr.offset + out_row_offset + out_col_offset * out_M_n_rows;
+  const uword  in_offset =  in_mem.cl_mem_ptr.offset +  in_row_offset +  in_col_offset *  in_M_n_rows;
 
   const uword real_or_imag = (imag) ? 1 : 0;
 
@@ -55,9 +55,9 @@ extract_cx(dev_mem_t<eT1> out_mem,
 
   cl_int status = 0;
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),       &in_mem.cl_mem_ptr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),       &in_mem.cl_mem_ptr.ptr);
   status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_in_offset.size,    cl_in_offset.addr);
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),       &out_mem.cl_mem_ptr);
+  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),       &out_mem.cl_mem_ptr.ptr);
   status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_out_offset.size,   cl_out_offset.addr);
   status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_real_or_imag.size, cl_real_or_imag.addr);
   status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_n_rows.size,       cl_n_rows.addr);
