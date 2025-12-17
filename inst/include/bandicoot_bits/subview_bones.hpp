@@ -52,7 +52,11 @@ class subview : public Base<eT, subview<eT> >
 
   inline ~subview();
 
+  inline subview(const subview<eT>& x);
+  inline subview(subview<eT>&& x);
+
   inline void operator= (const subview<eT>& x);
+  inline void operator= (subview<eT>&& x);
 
   inline void operator=  (const eT val);
   inline void operator+= (const eT val);

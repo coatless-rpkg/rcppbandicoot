@@ -110,7 +110,7 @@ set_val(dev_mem_t<eT> mem, const uword index, const eT in_val)
   if( (status == CL_SUCCESS) && (mapped_ptr != NULL) )
     {
     ceT cl_val = to_cl_type(in_val);
-    *((ceT*)(mapped_ptr)) = cl_val;
+    *((ceT*)(mapped_ptr)) = to_cl_type(cl_val);
 
     status = coot_wrapper(clEnqueueUnmapMemObject)(get_rt().cl_rt.get_cq(), mem.cl_mem_ptr.ptr, mapped_ptr, 0, NULL, NULL);
     }

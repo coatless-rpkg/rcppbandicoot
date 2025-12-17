@@ -168,23 +168,23 @@ eglue_core<eglue_type>::apply(Cube<eT3>& out, const eGlueCube<T1, T2, eglue_type
 
   // TODO: there is no size checking here!
 
-  twoway_kernel_id::enum_id kernel;
+  threeway_kernel_id::enum_id kernel;
 
   if(is_same_type<eglue_type, eglue_plus >::yes)
     {
-    kernel = twoway_kernel_id::equ_array_plus_array_cube;
+    kernel = threeway_kernel_id::equ_array_plus_array_cube;
     }
   else if(is_same_type<eglue_type, eglue_minus>::yes)
     {
-    kernel = twoway_kernel_id::equ_array_minus_array_cube;
+    kernel = threeway_kernel_id::equ_array_minus_array_cube;
     }
   else if(is_same_type<eglue_type, eglue_div  >::yes)
     {
-    kernel = twoway_kernel_id::equ_array_div_array_cube;
+    kernel = threeway_kernel_id::equ_array_div_array_cube;
     }
   else if(is_same_type<eglue_type, eglue_schur>::yes)
     {
-    kernel = twoway_kernel_id::equ_array_mul_array_cube;
+    kernel = threeway_kernel_id::equ_array_mul_array_cube;
     }
   else
     {

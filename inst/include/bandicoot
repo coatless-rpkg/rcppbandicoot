@@ -202,6 +202,7 @@ namespace coot
   #include "bandicoot_bits/coot_rt_bones.hpp"
   #include "bandicoot_bits/coot_init.hpp"
   #include "bandicoot_bits/coot_synchronise.hpp"
+  #include "bandicoot_bits/coot_backend.hpp"
 
   #include "bandicoot_bits/dev_mem_t_operators.hpp"
   #include "bandicoot_bits/memory_overlaps.hpp"
@@ -225,6 +226,8 @@ namespace coot
   #include "bandicoot_bits/subview_bones.hpp"
   #include "bandicoot_bits/diagview_bones.hpp"
   #include "bandicoot_bits/subview_each_bones.hpp"
+  #include "bandicoot_bits/subview_elem1_bones.hpp"
+  #include "bandicoot_bits/subview_elem2_bones.hpp"
   #include "bandicoot_bits/Cube_bones.hpp"
   #include "bandicoot_bits/subview_cube_bones.hpp"
 
@@ -303,6 +306,7 @@ namespace coot
   #include "bandicoot_bits/glue_min_bones.hpp"
   #include "bandicoot_bits/glue_max_bones.hpp"
 
+  #include "bandicoot_bits/mtglue_mixed_bones.hpp"
   #include "bandicoot_bits/mtglue_relational_bones.hpp"
 
   #include "bandicoot_bits/wall_clock_bones.hpp"
@@ -460,6 +464,8 @@ namespace coot
       #include "bandicoot_bits/opencl/index_min.hpp"
       #include "bandicoot_bits/opencl/index_max.hpp"
       #include "bandicoot_bits/opencl/extract_cx.hpp"
+      #include "bandicoot_bits/opencl/extract_subview_elem1.hpp"
+      #include "bandicoot_bits/opencl/extract_subview_elem2.hpp"
       }
   #endif
 
@@ -523,6 +529,8 @@ namespace coot
     #include "bandicoot_bits/cuda/index_min.hpp"
     #include "bandicoot_bits/cuda/index_max.hpp"
     #include "bandicoot_bits/cuda/extract_cx.hpp"
+    #include "bandicoot_bits/cuda/extract_subview_elem1.hpp"
+    #include "bandicoot_bits/cuda/extract_subview_elem2.hpp"
     }
   #endif
 
@@ -656,6 +664,8 @@ namespace coot
   #include "bandicoot_bits/subview_meat.hpp"
   #include "bandicoot_bits/diagview_meat.hpp"
   #include "bandicoot_bits/subview_each_meat.hpp"
+  #include "bandicoot_bits/subview_elem1_meat.hpp"
+  #include "bandicoot_bits/subview_elem2_meat.hpp"
   #include "bandicoot_bits/Cube_meat.hpp"
   #include "bandicoot_bits/subview_cube_meat.hpp"
 
@@ -734,6 +744,7 @@ namespace coot
   #include "bandicoot_bits/glue_min_meat.hpp"
   #include "bandicoot_bits/glue_max_meat.hpp"
 
+  #include "bandicoot_bits/mtglue_mixed_meat.hpp"
   #include "bandicoot_bits/mtglue_relational_meat.hpp"
 
   #include "bandicoot_bits/wall_clock_meat.hpp"

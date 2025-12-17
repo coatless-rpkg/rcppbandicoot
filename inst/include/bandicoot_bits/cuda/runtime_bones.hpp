@@ -109,6 +109,7 @@ struct runtime_t
   coot_aligned bool                     valid;
 
   coot_aligned bool                     has_fp16;
+  coot_aligned bool                     nvrtc_cubin; // if false we must use PTX
 
   coot_aligned std::vector<std::string> nvrtc_opts;
   std::string                           unique_host_device_id;

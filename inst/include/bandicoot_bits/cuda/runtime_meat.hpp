@@ -60,8 +60,6 @@ runtime_t::init(const bool /* manual_selection */, const uword wanted_platform, 
   cudaError_t result2 = coot_wrapper(cudaGetDeviceProperties)(&dev_prop, wanted_device);
   coot_check_cuda_error(result2, "coot::cuda_rt.init(): couldn't get device properties");
 
-  generate_unique_host_device_id();
-
   // Initialize RNG struct.
   curandStatus_t result3;
   result3 = coot_wrapper(curandCreateGenerator)(&xorwow_rand, CURAND_RNG_PSEUDO_XORWOW);
@@ -113,8 +111,20 @@ runtime_t::init(const bool /* manual_selection */, const uword wanted_platform, 
 
   delete[] archs;
 
+  // If the card architecture is not the same major version number as the NVRTC supported architecture,
+  // then CUBINs will not work: CUBINs are only forward-compatible within a major version.
+  // If that's the case, we have to use PTX to store our kernels instead.
+  nvrtc_cubin = (((use_arch / 10) == (card_arch / 10)));
+
   std::stringstream gpu_arch_opt;
-  gpu_arch_opt << "--gpu-architecture=sm_" << use_arch;
+  if (nvrtc_cubin)
+    {
+    gpu_arch_opt << "--gpu-architecture=sm_" << use_arch; // generate CUBIN
+    }
+  else
+    {
+    gpu_arch_opt << "--gpu-architecture=compute_" << use_arch; // generate PTX
+    }
   gpu_arch_str = gpu_arch_opt.str();
   nvrtc_opts.push_back(gpu_arch_str);
 
@@ -126,6 +136,8 @@ runtime_t::init(const bool /* manual_selection */, const uword wanted_platform, 
     {
     nvrtc_opts.push_back(std::string("-I") + dir);
     }
+
+  generate_unique_host_device_id();
 
   src_preamble = kernel_src::init_src_preamble(has_fp16);
 
@@ -154,6 +166,10 @@ runtime_t::generate_unique_host_device_id()
     oss << std::setw(2) << std::setfill('0') << std::hex << ((unsigned int) dev_prop.uuid.bytes[i] & 0xFF);
     }
   oss << "_" << std::dec << runtime_version;
+  if (!nvrtc_cubin)
+    {
+    oss << "_ptx";
+    }
   unique_host_device_id = oss.str();
   }
 
@@ -360,17 +376,34 @@ runtime_t::compile_kernel(const std::string& kernel_name,
     coot_stop_runtime_error("coot::cuda::compile_kernel(): compilation of " + kernel_name + " kernel failed", std::string(log));
     }
 
-  // Obtain CUBIN from the program.
-  size_t cubin_size;
-  result = coot_wrapper(nvrtcGetCUBINSize)(prog, &cubin_size);
-  coot_check_nvrtc_error(result, "coot::cuda::compile_kernel(): nvrtcGetCUBINSize() failed while compiling " + kernel_name);
+  // Obtain CUBIN or PTX from the program.
+  size_t code_size = 0;
+  char* code = nullptr;
+  if (nvrtc_cubin)
+    {
+    result = coot_wrapper(nvrtcGetCUBINSize)(prog, &code_size);
+    coot_check_nvrtc_error(result, "coot::cuda::compile_kernel(): nvrtcGetCUBINSize() failed while compiling " + kernel_name);
+    }
+  else
+    {
+    result = coot_wrapper(nvrtcGetPTXSize)(prog, &code_size);
+    coot_check_nvrtc_error(result, "coot::cuda::compile_kernel(): nvrtcGetPTXSize() failed while compiling " + kernel_name);
+    }
 
-  char *cubin = new char[cubin_size];
-  result = coot_wrapper(nvrtcGetCUBIN)(prog, cubin);
-  coot_check_nvrtc_error(result, "coot::cuda::compile_kernel(): nvrtcGetCUBIN() failed while compiling " + kernel_name);
+  code = new char[code_size];
+  if (nvrtc_cubin)
+    {
+    result = coot_wrapper(nvrtcGetCUBIN)(prog, code);
+    coot_check_nvrtc_error(result, "coot::cuda::compile_kernel(): nvrtcGetCUBIN() failed while compiling " + kernel_name);
+    }
+  else
+    {
+    result = coot_wrapper(nvrtcGetPTX)(prog, code);
+    coot_check_nvrtc_error(result, "coot::cuda::compile_kernel(): nvrtcGetPTX() failed while compiling " + kernel_name);
+    }
 
   CUmodule module;
-  CUresult result2 = coot_wrapper(cuModuleLoadDataEx)(&module, cubin, 0, 0, 0);
+  CUresult result2 = coot_wrapper(cuModuleLoadDataEx)(&module, code, 0, 0, 0);
   coot_check_cuda_error(result2, "coot::cuda::compile_kernel(): cuModuleLoadDataEx() failed while compiling " + kernel_name);
 
   // Now that everything is compiled, unpack the results into individual kernels
@@ -379,14 +412,14 @@ runtime_t::compile_kernel(const std::string& kernel_name,
   coot_check_cuda_error(result2, "coot::cuda::compile_kernel(): cuModuleGetFunction() failed while compiling " + kernel_name);
 
   // Save the kernel to the cache.
-  const bool cache_result = cache::cache_kernel(unique_host_device_id, kernel_name, (unsigned char*) cubin, cubin_size);
+  const bool cache_result = cache::cache_kernel(unique_host_device_id, kernel_name, (unsigned char*) code, code_size);
   if (cache_result == false)
     {
     coot_debug_warn("coot::cuda::compile_kernel(): could not cache compiled CUDA kernel " + kernel_name);
     // This is not fatal, so we can proceed.
     }
 
-  delete[] cubin;
+  delete[] code;
   }
 
 

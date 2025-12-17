@@ -145,6 +145,7 @@ class SizeProxyCube< eGlueCube<T1, T2, eglue_type> >
 
 
 
+// mtOpCube
 template<typename out_eT, typename T1, typename mtop_type>
 class SizeProxyCube< mtOpCube<out_eT, T1, mtop_type> >
   {
@@ -172,4 +173,34 @@ class SizeProxyCube< mtOpCube<out_eT, T1, mtop_type> >
   coot_inline uword get_n_slices() const { return mtop_type::compute_n_slices(Q, S.get_n_rows(), S.get_n_cols(), S.get_n_slices()); }
   coot_inline uword get_n_elem() const { return get_n_rows() * get_n_cols() * get_n_slices(); }
   coot_inline uword get_n_elem_slice() const { return get_n_rows() * get_n_cols(); }
+  };
+
+
+
+// mtGlueCube
+template<typename out_eT, typename T1, typename T2, typename mtglue_type>
+class SizeProxyCube< mtGlueCube<out_eT, T1, T2, mtglue_type> >
+  {
+  public:
+
+  typedef typename T1::elem_type                   elem_type;
+  typedef typename get_pod_type<elem_type>::result pod_type;
+  typedef mtGlueCube<out_eT, T1, T2, mtglue_type>  stored_type;
+
+  // take the size of the first only
+  coot_aligned const SizeProxyCube<T1> S;
+  coot_aligned const mtGlueCube<out_eT, T1, T2, mtglue_type>& Q;
+
+  inline explicit SizeProxyCube(const mtGlueCube<out_eT, T1, T2, mtglue_type>& A)
+    : S(A.A)
+    , Q(A)
+    {
+    coot_extra_debug_sigprint();
+    }
+
+  coot_inline uword get_n_rows() const       { return S.get_n_rows(); }
+  coot_inline uword get_n_cols() const       { return S.get_n_cols(); }
+  coot_inline uword get_n_slices() const     { return S.get_n_slices(); }
+  coot_inline uword get_n_elem() const       { return S.get_n_elem(); }
+  coot_inline uword get_n_elem_slice() const { return S.get_n_elem_slice(); }
   };

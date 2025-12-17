@@ -1,0 +1,31 @@
+// Copyright 2025 Ryan Curtin (http://www.ratml.org/)
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// ------------------------------------------------------------------------
+
+
+
+// this kernel is technically incorrect if the size is not a factor of 2!
+__global__
+void
+COOT_FN(PREFIX,extract_sve1)(eT2* out_mem,
+                             const eT1* in_mem,
+                             const UWORD* in_locs,
+                             const UWORD n_elem)
+  {
+  const UWORD i = blockIdx.x * blockDim.x + threadIdx.x;
+
+  if (i < n_elem)
+    {
+    out_mem[i] = TO_ET2(in_mem[in_locs[i]]);
+    }
+  }

@@ -71,7 +71,7 @@ template<typename eT>
 struct alias_details< Cube<eT> >
   {
   static coot_inline dev_mem_t<eT>                     get_dev_mem(const Cube<eT>& M) { return M.get_dev_mem(false); }
-  static coot_inline uword                             get_offset(const Cube<eT>& M)  { return 0; }
+  static coot_inline uword                             get_offset(const Cube<eT>&)    { return 0; }
   static coot_inline uword                             get_n_elem(const Cube<eT>& M)  { return M.n_elem; }
   };
 

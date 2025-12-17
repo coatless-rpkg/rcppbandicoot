@@ -88,6 +88,8 @@ struct oneway_kernel_id
   enum enum_id
     {
     fill = 0,
+    fill_sve1,
+    fill_sve2,
     //
     mul_colwise,
     mul_rowwise,
@@ -142,16 +144,16 @@ struct oneway_kernel_id
     submat_var,
     submat_var_small,
     //
-    radix_sort_colwise_ascending,
-    radix_sort_rowwise_ascending,
-    radix_sort_ascending,
-    radix_sort_colwise_descending,
-    radix_sort_rowwise_descending,
-    radix_sort_descending,
-    radix_sort_index_ascending,
-    radix_sort_index_descending,
-    stable_radix_sort_idx_asc,
-    stable_radix_sort_idx_desc,
+    radix_sort_colwise_asc,
+    radix_sort_rowwise_asc,
+    radix_sort_asc,
+    radix_sort_colwise_desc,
+    radix_sort_rowwise_desc,
+    radix_sort_desc,
+    radix_sort_index_asc,
+    radix_sort_index_desc,
+    stable_radix_sort_index_asc,
+    stable_radix_sort_index_desc,
     shifted_prefix_sum_small,
     shifted_prefix_sum_subgroups,
     shifted_prefix_sum_add_offset,
@@ -190,6 +192,8 @@ struct oneway_kernel_id
     std::vector<std::string> names;
 
     names.push_back("fill");
+    names.push_back("fill_sve1");
+    names.push_back("fill_sve2");
 
     names.push_back("mul_colwise");
     names.push_back("mul_rowwise");
@@ -244,16 +248,16 @@ struct oneway_kernel_id
     names.push_back("submat_var");
     names.push_back("submat_var_small");
 
-    names.push_back("radix_sort_colwise_ascending");
-    names.push_back("radix_sort_rowwise_ascending");
-    names.push_back("radix_sort_ascending");
-    names.push_back("radix_sort_colwise_descending");
-    names.push_back("radix_sort_rowwise_descending");
-    names.push_back("radix_sort_descending");
-    names.push_back("radix_sort_index_ascending");
-    names.push_back("radix_sort_index_descending");
-    names.push_back("stable_radix_sort_idx_asc");
-    names.push_back("stable_radix_sort_idx_desc");
+    names.push_back("radix_sort_colwise_asc");
+    names.push_back("radix_sort_rowwise_asc");
+    names.push_back("radix_sort_asc");
+    names.push_back("radix_sort_colwise_desc");
+    names.push_back("radix_sort_rowwise_desc");
+    names.push_back("radix_sort_desc");
+    names.push_back("radix_sort_index_asc");
+    names.push_back("radix_sort_index_desc");
+    names.push_back("stable_radix_sort_index_asc");
+    names.push_back("stable_radix_sort_index_desc");
     names.push_back("shifted_prefix_sum_small");
     names.push_back("shifted_prefix_sum_subgroups");
     names.push_back("shifted_prefix_sum_add_offset");
@@ -626,10 +630,48 @@ struct twoway_kernel_id
     replace,
     clamp,
     //
-    equ_array_plus_array_cube,
-    equ_array_minus_array_cube,
-    equ_array_mul_array_cube,
-    equ_array_div_array_cube,
+    extract_sve1,
+    equ_array_plus_scalar_sve1,
+    equ_array_minus_scalar_pre_pre_sve1,
+    equ_array_minus_scalar_pre_post_sve1,
+    equ_array_minus_scalar_post_sve1,
+    equ_array_mul_scalar_sve1,
+    equ_array_div_scalar_pre_sve1,
+    equ_array_div_scalar_post_sve1,
+    //
+    inplace_sve1_eq_array,
+    inplace_sve1_plus_array,
+    inplace_sve1_minus_array,
+    inplace_sve1_mul_array,
+    inplace_sve1_div_array,
+    //
+    inplace_sve1_eq_sve1,
+    inplace_sve1_plus_sve1,
+    inplace_sve1_minus_sve1,
+    inplace_sve1_mul_sve1,
+    inplace_sve1_div_sve1,
+    //
+    extract_sve2,
+    equ_array_plus_scalar_sve2,
+    equ_array_minus_scalar_pre_pre_sve2,
+    equ_array_minus_scalar_pre_post_sve2,
+    equ_array_minus_scalar_post_sve2,
+    equ_array_mul_scalar_sve2,
+    equ_array_div_scalar_pre_sve2,
+    equ_array_div_scalar_post_sve2,
+    //
+    inplace_sve2_eq_array,
+    inplace_sve2_plus_array,
+    inplace_sve2_minus_array,
+    inplace_sve2_mul_array,
+    inplace_sve2_div_array,
+    //
+    inplace_sve2_eq_sve2,
+    inplace_sve2_plus_sve2,
+    inplace_sve2_minus_sve2,
+    inplace_sve2_mul_sve2,
+    inplace_sve2_div_sve2,
+    //
     equ_array_min_array_cube,
     equ_array_max_array_cube,
     //
@@ -796,10 +838,48 @@ struct twoway_kernel_id
     names.push_back("replace");
     names.push_back("clamp");
 
-    names.push_back("equ_array_plus_array_cube");
-    names.push_back("equ_array_minus_array_cube");
-    names.push_back("equ_array_mul_array_cube");
-    names.push_back("equ_array_div_array_cube");
+    names.push_back("extract_sve1");
+    names.push_back("equ_array_plus_scalar_sve1");
+    names.push_back("equ_array_minus_scalar_pre_pre_sve1");
+    names.push_back("equ_array_minus_scalar_pre_post_sve1");
+    names.push_back("equ_array_minus_scalar_post_sve1");
+    names.push_back("equ_array_mul_scalar_sve1");
+    names.push_back("equ_array_div_scalar_pre_sve1");
+    names.push_back("equ_array_div_scalar_post_sve1");
+
+    names.push_back("inplace_sve1_eq_array");
+    names.push_back("inplace_sve1_plus_array");
+    names.push_back("inplace_sve1_minus_array");
+    names.push_back("inplace_sve1_mul_array");
+    names.push_back("inplace_sve1_div_array");
+
+    names.push_back("inplace_sve1_eq_sve1");
+    names.push_back("inplace_sve1_plus_sve1");
+    names.push_back("inplace_sve1_minus_sve1");
+    names.push_back("inplace_sve1_mul_sve1");
+    names.push_back("inplace_sve1_div_sve1");
+
+    names.push_back("extract_sve2");
+    names.push_back("equ_array_plus_scalar_sve2");
+    names.push_back("equ_array_minus_scalar_pre_pre_sve2");
+    names.push_back("equ_array_minus_scalar_pre_post_sve2");
+    names.push_back("equ_array_minus_scalar_post_sve2");
+    names.push_back("equ_array_mul_scalar_sve2");
+    names.push_back("equ_array_div_scalar_pre_sve2");
+    names.push_back("equ_array_div_scalar_post_sve2");
+
+    names.push_back("inplace_sve2_eq_array");
+    names.push_back("inplace_sve2_plus_array");
+    names.push_back("inplace_sve2_minus_array");
+    names.push_back("inplace_sve2_mul_array");
+    names.push_back("inplace_sve2_div_array");
+
+    names.push_back("inplace_sve2_eq_sve2");
+    names.push_back("inplace_sve2_plus_sve2");
+    names.push_back("inplace_sve2_minus_sve2");
+    names.push_back("inplace_sve2_mul_sve2");
+    names.push_back("inplace_sve2_div_sve2");
+
     names.push_back("equ_array_min_array_cube");
     names.push_back("equ_array_max_array_cube");
 
@@ -937,6 +1017,11 @@ struct threeway_kernel_id
     equ_array_atan2,
     equ_array_hypot,
     //
+    equ_array_plus_array_cube,
+    equ_array_minus_array_cube,
+    equ_array_mul_array_cube,
+    equ_array_div_array_cube,
+    //
     invalid_kernel
     };
 
@@ -959,6 +1044,11 @@ struct threeway_kernel_id
 
     names.push_back("equ_array_atan2");
     names.push_back("equ_array_hypot");
+
+    names.push_back("equ_array_plus_array_cube");
+    names.push_back("equ_array_minus_array_cube");
+    names.push_back("equ_array_mul_array_cube");
+    names.push_back("equ_array_div_array_cube");
 
     return names;
     }
