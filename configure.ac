@@ -388,7 +388,7 @@ After installation, ensure GPU drivers are properly installed and configured.
 fi
 
 ## Installation directory
-## Note that we end on 'ks', mot 'kernels', to shorten the path.
+## Note that we end on 'ks', not 'kernels', to shorten the path.
 ## Note also that we ensure a final trailing '/'
 BANDICOOT_KERNELS_DIR=$(${R_HOME}/bin/Rscript -e 'cat(paste(head(.libPaths(),1), "RcppBandicoot", "include", "bandicoot_bits", "ks", "", sep="/"))')
 
