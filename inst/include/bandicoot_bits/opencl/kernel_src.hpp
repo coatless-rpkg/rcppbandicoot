@@ -54,7 +54,7 @@ read_file(const std::string& filename)
   {
   #if defined(COOT_KERNEL_SOURCE_DIR)
   const char* source_dir = COOT_KERNEL_SOURCE_DIR;
-  const std::string full_filename = std::string(source_dir) + "opencl/" + full_filename;
+  const std::string full_filename = std::string(source_dir) + "opencl/" + filename;
   #else
   const std::string this_file = __FILE__;
 
