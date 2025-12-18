@@ -1,8 +1,6 @@
 # RcppBandicoot
 
-<!-- badges: start -->
-[![R-CMD-check](https://github.com/coatless/rcppbandicoot-priv/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/coatless/rcppbandicoot-priv/actions/workflows/R-CMD-check.yaml)
-<!-- badges: end -->
+[![R-CMD-check](https://github.com/coatless-rpkg/rcppbandicoot/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/coatless-rpkg/rcppbandicoot/actions/workflows/R-CMD-check.yaml)
 
 ## Overview
 
@@ -67,7 +65,7 @@ about once a month.
 
 ### Authors
 
-James Joseph Balamuta
+James Joseph Balamuta and Dirk Eddelbuettel
 
 ### License
 
