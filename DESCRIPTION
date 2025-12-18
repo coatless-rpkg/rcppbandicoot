@@ -14,7 +14,7 @@ Description: 'Bandicoot' is a templated C++ GPU Linear Algebra library
  Note that the 'Bandicoot' library is licensed under Apache License version 2.0 and
  'RcppBandicoot' (the 'Rcpp' bindings/bridge to 'Bandicoot') is licensed under
  the GNU GPL version 2 or later. Note that 'Bandicoot' requires a compiler that
- supports 'C++14' and 'OpenCL' (>= 1.2) or 'CUDA' (>= 9.8).
+ supports 'OpenCL' (>= 1.2) or 'CUDA' (>= 9.8).
 License: GPL (>= 2)
 Depends: R (>= 4.4)
 LinkingTo: Rcpp (>= 1.1.0)
