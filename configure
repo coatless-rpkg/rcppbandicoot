@@ -639,6 +639,7 @@ ac_includes_default="\
 ac_header_cxx_list=
 ac_subst_vars='LTLIBOBJS
 LIBOBJS
+BANDICOOT_KERNELS_DIR
 OPENCL_TARGET_VERSION
 SDKPATH
 CUDA_HOME
@@ -5258,14 +5259,21 @@ After installation, ensure GPU drivers are properly installed and configured.
 " "$LINENO" 5
 fi
 
+## Installation directory
+## Note that we end on 'ks', mot 'kernels', to shorten the path.
+## Note also that we ensure a final trailing '/'
+BANDICOOT_KERNELS_DIR=$(${R_HOME}/bin/Rscript -e 'cat(paste(head(.libPaths(),1), "RcppBandicoot", "include", "bandicoot_bits", "ks", "", sep="/"))')
+
+
+
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: " >&5
 printf "%s\n" "$as_me: " >&6;}
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: GPU Backend Configuration Summary:" >&5
 printf "%s\n" "$as_me: GPU Backend Configuration Summary:" >&6;}
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Platform:      ${RSysinfoName}" >&5
 printf "%s\n" "$as_me:   Platform:      ${RSysinfoName}" >&6;}
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   C++ Standard:  C++14" >&5
-printf "%s\n" "$as_me:   C++ Standard:  C++14" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   C++ Standard:  C++14 or later" >&5
+printf "%s\n" "$as_me:   C++ Standard:  C++14 or later" >&6;}
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   OpenCL:        ${HAVE_OPENCL}" >&5
 printf "%s\n" "$as_me:   OpenCL:        ${HAVE_OPENCL}" >&6;}
 if test "x${HAVE_OPENCL}" = x1; then
@@ -5280,6 +5288,8 @@ fi
 printf "%s\n" "$as_me:   CUDA:          ${HAVE_CUDA}" >&6;}
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Default:       ${DEFAULT_BACKEND}" >&5
 printf "%s\n" "$as_me:   Default:       ${DEFAULT_BACKEND}" >&6;}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}:   Kernels:       ${BANDICOOT_KERNELS_DIR}" >&5
+printf "%s\n" "$as_me:   Kernels:       ${BANDICOOT_KERNELS_DIR}" >&6;}
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: " >&5
 printf "%s\n" "$as_me: " >&6;}
 
@@ -5363,6 +5373,9 @@ BANDICOOT_LIBS="${BANDICOOT_LIBS} ${LAPACK_BLAS_LIBS}"
 
 
 ## OpenCL target version
+
+
+## Bandicoot kernels
 
 
 ac_config_files="$ac_config_files src/Makevars R/flags.R"

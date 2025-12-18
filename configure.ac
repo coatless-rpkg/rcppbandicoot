@@ -387,10 +387,17 @@ After installation, ensure GPU drivers are properly installed and configured.
 ])
 fi
 
+## Installation directory
+## Note that we end on 'ks', mot 'kernels', to shorten the path.
+## Note also that we ensure a final trailing '/'
+BANDICOOT_KERNELS_DIR=$(${R_HOME}/bin/Rscript -e 'cat(paste(head(.libPaths(),1), "RcppBandicoot", "include", "bandicoot_bits", "ks", "", sep="/"))')
+
+
+
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([GPU Backend Configuration Summary:])
 AC_MSG_NOTICE([  Platform:      ${RSysinfoName}])
-AC_MSG_NOTICE([  C++ Standard:  C++14])
+AC_MSG_NOTICE([  C++ Standard:  C++14 or later])
 AC_MSG_NOTICE([  OpenCL:        ${HAVE_OPENCL}])
 if test "x${HAVE_OPENCL}" = x1; then
   AC_MSG_NOTICE([  CLBlast:       ${HAVE_CLBLAST}])
@@ -399,6 +406,7 @@ if test "x${HAVE_OPENCL}" = x1; then
 fi
 AC_MSG_NOTICE([  CUDA:          ${HAVE_CUDA}])
 AC_MSG_NOTICE([  Default:       ${DEFAULT_BACKEND}])
+AC_MSG_NOTICE([  Kernels:       ${BANDICOOT_KERNELS_DIR}])
 AC_MSG_NOTICE([])
 
 ## =============================================================================
@@ -477,6 +485,9 @@ AC_SUBST([SDKPATH])
 
 ## OpenCL target version
 AC_SUBST([OPENCL_TARGET_VERSION])
+
+## Bandicoot kernels
+AC_SUBST([BANDICOOT_KERNELS_DIR])
 
 AC_CONFIG_FILES([src/Makevars R/flags.R])
 AC_OUTPUT
