@@ -3,7 +3,7 @@
 ## This file is processed by configure to generate Makevars
 ## It includes GPU backend configuration (OpenCL, CUDA) and other settings
 
-PKG_CPPFLAGS = -I../inst/include -DCOOT_TARGET_OPENCL_VERSION=300 -DCOOT_KERNEL_SOURCE_DIR='"/usr/local/lib/R/site-library/RcppBandicoot/include/bandicoot_bits/"'
+PKG_CPPFLAGS = -I../inst/include -DCOOT_TARGET_OPENCL_VERSION=300 -DCOOT_KERNEL_SOURCE_DIR='"/usr/local/lib/R/site-library/RcppBandicoot/include/bandicoot_bits/kernels/"'
 
 ## Compiler flags from configure
 PKG_CXXFLAGS = @BANDICOOT_CXXFLAGS@
