@@ -8,11 +8,6 @@
 NULL
 
 .onLoad <- function(libname, pkgname) {
-  # Set the kernel path for Bandicoot OpenCL kernels
-  kernel_path <- system.file("include/bandicoot_bits/opencl/kernels",
-                            package = "RcppBandicoot")
-
-  if (nzchar(kernel_path)) {
-    Sys.setenv(COOT_CL_KERNEL_PATH = kernel_path)
-  }
+    ## this function is now empty as the kernel path is a _compile-time_
+    ## and not run-time issue
 }
