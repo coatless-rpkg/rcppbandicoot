@@ -96,11 +96,24 @@ echo "  Kernels: ${BANDICOOT_KERNELS_DIR}"
 echo ""
 
 ## Generate Makevars.win from template
-sed -e "s|@BANDICOOT_CXXFLAGS@|${BANDICOOT_CXXFLAGS}|g" \
-    -e "s|@BANDICOOT_LIBS@|${BANDICOOT_LIBS}|g" \
-    -e "s|@OPENMP_CXXFLAGS@|${OPENMP_CXXFLAGS}|g" \
-    -e "s|@OPENCL_TARGET_VERSION@|${OPENCL_TARGET_VERSION}|g" \
-    -e "s|@BANDICOOT_KERNELS_DIR@|${BANDICOOT_KERNELS_DIR}|g" \
-    src/Makevars.win.in > src/Makevars.win
+if [ -f "src/Makevars.win.in" ]; then
+    sed -e "s|@BANDICOOT_CXXFLAGS@|${BANDICOOT_CXXFLAGS}|g" \
+        -e "s|@BANDICOOT_LIBS@|${BANDICOOT_LIBS}|g" \
+        -e "s|@OPENMP_CXXFLAGS@|${OPENMP_CXXFLAGS}|g" \
+        -e "s|@OPENCL_TARGET_VERSION@|${OPENCL_TARGET_VERSION}|g" \
+        -e "s|@BANDICOOT_KERNELS_DIR@|${BANDICOOT_KERNELS_DIR}|g" \
+        src/Makevars.win.in > src/Makevars.win
+    echo "Generated src/Makevars.win"
+else
+    echo "ERROR: src/Makevars.win.in not found!"
+    exit 1
+fi
 
-echo "Generated src/Makevars.win"
+## Verify the generated file
+if [ -f "src/Makevars.win" ]; then
+    echo "Contents of src/Makevars.win:"
+    cat src/Makevars.win
+else
+    echo "ERROR: Failed to generate src/Makevars.win!"
+    exit 1
+fi
