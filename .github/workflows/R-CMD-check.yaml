@@ -45,6 +45,10 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y opencl-headers ocl-icd-opencl-dev libclblast-dev
 
+      - name: Install Intel OpenCL CPU Runtime (Windows)
+        if: runner.os == 'Windows'
+        run: choco install opencl-intel-cpu-runtime -y
+
       - name: Install OpenCL and CLBlast (Windows)
         if: runner.os == 'Windows'
         shell: bash
@@ -69,13 +73,38 @@ jobs:
           echo "CLBLAST_CPPFLAGS=-I$CLBLAST_PATH/include" >> $GITHUB_ENV
           echo "CLBLAST_LIBS=-L$CLBLAST_PATH/lib -lclblast" >> $GITHUB_ENV
 
-          # Add CLBlast DLL to PATH for runtime
-          CLBLAST_PATH_WIN=$(cygpath -w "$USERPROFILE/CLBlast-1.6.3-windows-x64/lib")
-          echo "$CLBLAST_PATH_WIN" >> $GITHUB_PATH
+          # Add DLLs to PATH for runtime loading
+          # vcpkg OpenCL ICD loader
+          VCPKG_BIN=$(cygpath -w "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin")
+          echo "$VCPKG_BIN" >> $GITHUB_PATH
+          # CLBlast DLL
+          CLBLAST_BIN=$(cygpath -w "$USERPROFILE/CLBlast-1.6.3-windows-x64/lib")
+          echo "$CLBLAST_BIN" >> $GITHUB_PATH
 
-      - name: Install Intel OpenCL CPU Runtime (Windows)
+          # Debug: show DLL locations
+          echo "=== DLL locations ==="
+          ls -la "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/" || true
+          ls -la "$USERPROFILE/CLBlast-1.6.3-windows-x64/lib/" || true
+
+      - name: Verify OpenCL installation (Windows)
         if: runner.os == 'Windows'
-        run: choco install opencl-intel-cpu-runtime -y
+        shell: pwsh
+        run: |
+          Write-Host "=== Checking OpenCL ICD registry ==="
+          Get-ChildItem "HKLM:\SOFTWARE\Khronos\OpenCL\Vendors" -ErrorAction SilentlyContinue | ForEach-Object {
+            $name = $_.PSChildName
+            Write-Host "  ICD: $name"
+          }
+          Write-Host ""
+          Write-Host "=== Checking for OpenCL.dll in PATH ==="
+          $opencl = Get-Command OpenCL.dll -ErrorAction SilentlyContinue
+          if ($opencl) { Write-Host "  Found: $($opencl.Source)" }
+          else { Write-Host "  OpenCL.dll not found in PATH" }
+          Write-Host ""
+          Write-Host "=== Checking for clblast.dll in PATH ==="
+          $clblast = Get-Command clblast.dll -ErrorAction SilentlyContinue
+          if ($clblast) { Write-Host "  Found: $($clblast.Source)" }
+          else { Write-Host "  clblast.dll not found in PATH" }
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
