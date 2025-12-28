@@ -43,8 +43,11 @@ fi
 
 ## Check for OpenCL library
 if [ -n "${OPENCL_LIBS}" ]; then
-    echo "  OpenCL library: found (via OPENCL_LIBS)"
+    echo "  OpenCL library: found (via OPENCL_LIBS): ${OPENCL_LIBS}"
     BANDICOOT_LIBS="${BANDICOOT_LIBS} ${OPENCL_LIBS}"
+else
+    echo "  OpenCL library: not found (OPENCL_LIBS not set)"
+    echo "  WARNING: Linking will fail without OpenCL library!"
 fi
 
 ## Check for CLBlast via environment variable
@@ -60,6 +63,7 @@ fi
 
 ## Check for CLBlast library
 if [ -n "${CLBLAST_LIBS}" ]; then
+    echo "  CLBlast library: ${CLBLAST_LIBS}"
     BANDICOOT_LIBS="${CLBLAST_LIBS} ${BANDICOOT_LIBS}"
 fi
 
