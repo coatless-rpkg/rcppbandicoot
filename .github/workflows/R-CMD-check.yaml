@@ -60,13 +60,8 @@ jobs:
           VCPKG_ROOT=$(cygpath -m "$VCPKG_INSTALLATION_ROOT")
           CLBLAST_PATH=$(cygpath -m "$USERPROFILE/CLBlast-1.6.3-windows-x64")
 
-          echo "OpenCL installed via vcpkg at: $VCPKG_ROOT"
-          echo "CLBlast at: $CLBLAST_PATH"
-
-          # List installed files
-          ls -la "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/include/" || true
-          ls -la "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib/" || true
-          ls -la "$USERPROFILE/CLBlast-1.6.3-windows-x64/" || true
+          echo "vcpkg root: $VCPKG_ROOT"
+          echo "CLBlast path: $CLBLAST_PATH"
 
           # Set environment variables for R package build
           echo "OPENCL_CPPFLAGS=-I$VCPKG_ROOT/installed/x64-windows/include" >> $GITHUB_ENV
@@ -74,9 +69,13 @@ jobs:
           echo "CLBLAST_CPPFLAGS=-I$CLBLAST_PATH/include" >> $GITHUB_ENV
           echo "CLBLAST_LIBS=-L$CLBLAST_PATH/lib -lclblast" >> $GITHUB_ENV
 
-          # Add DLLs to PATH for runtime
-          echo "$VCPKG_ROOT/installed/x64-windows/bin" >> $GITHUB_PATH
-          echo "$CLBLAST_PATH/lib" >> $GITHUB_PATH
+          # Add CLBlast DLL to PATH for runtime
+          CLBLAST_PATH_WIN=$(cygpath -w "$USERPROFILE/CLBlast-1.6.3-windows-x64/lib")
+          echo "$CLBLAST_PATH_WIN" >> $GITHUB_PATH
+
+      - name: Install Intel OpenCL CPU Runtime (Windows)
+        if: runner.os == 'Windows'
+        run: choco install opencl-intel-cpu-runtime -y
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
