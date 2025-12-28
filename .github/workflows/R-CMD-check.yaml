@@ -56,6 +56,11 @@ jobs:
           Invoke-WebRequest -Uri "https://github.com/CNugteren/CLBlast/releases/download/1.6.3/CLBlast-1.6.3-windows-x64.7z" -OutFile clblast.7z
           7z x clblast.7z -o"$env:USERPROFILE"
 
+          # Verify downloads
+          Write-Host "OpenCL headers directory:"
+          Get-ChildItem "$env:USERPROFILE/OpenCL-Headers-main" -ErrorAction SilentlyContinue | Select-Object -First 10
+          Write-Host "CLBlast directory:"
+          Get-ChildItem "$env:USERPROFILE/CLBlast-1.6.3-windows-x64" -ErrorAction SilentlyContinue
           # Set environment variables for R package build (use forward slashes for gcc)
           $openclPath = "$env:USERPROFILE/OpenCL-Headers-main" -replace '\\', '/'
           $clblastPath = "$env:USERPROFILE/CLBlast-1.6.3-windows-x64" -replace '\\', '/'
