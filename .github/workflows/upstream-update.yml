@@ -84,13 +84,20 @@ jobs:
           # Check if include directory exists
           if [ -d "$BANDICOOT_DIR/include" ]; then
             echo "Found include directory at $BANDICOOT_DIR/include"
-            
+
             # Create destination directory if it doesn't exist
             mkdir -p inst/include
-            
+
             # Copy the include directory contents
             cp -r $BANDICOOT_DIR/include/* inst/include/
-            
+
+            # Rename kernels/ to ks/ to avoid >100 char path warnings
+            # See PR #17: Installing kernels in 'ks/' avoids nag on > 100 chars
+            if [ -d "inst/include/bandicoot_bits/kernels" ]; then
+              mv inst/include/bandicoot_bits/kernels inst/include/bandicoot_bits/ks
+              echo "Renamed bandicoot_bits/kernels to bandicoot_bits/ks"
+            fi
+
             # List copied files for verification
             echo "Copied files to inst/include:"
             ls -la inst/include/
