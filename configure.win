@@ -1,0 +1,106 @@
+#!/bin/sh
+##
+## RcppBandicoot configure.win
+##
+## Windows-specific configuration script
+## Detects OpenCL and CLBlast from environment variables
+##
+## Copyright (C) 2023-2025 James Balamuta
+## Licensed under GPL-2 or later
+##
+
+echo "Configuring RcppBandicoot for Windows..."
+
+## Get R_HOME
+: ${R_HOME=$(R RHOME)}
+if test -z "${R_HOME}"; then
+    echo "ERROR: Could not determine R_HOME"
+    exit 1
+fi
+
+## Default values
+BANDICOOT_CXXFLAGS=""
+BANDICOOT_LIBS=""
+OPENMP_CXXFLAGS='$(SHLIB_OPENMP_CXXFLAGS)'
+OPENCL_TARGET_VERSION=300
+
+## Kernel source directory (matches configure.ac logic)
+BANDICOOT_KERNELS_DIR=$("${R_HOME}/bin/Rscript" -e 'cat(paste(head(.libPaths(),1), "RcppBandicoot", "include", "bandicoot_bits", "ks", "", sep="/"))')
+
+## Always disable CUDA on Windows (requires manual setup)
+BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CUDA"
+
+## Check for OpenCL headers via environment variable
+if [ -n "${OPENCL_CPPFLAGS}" ]; then
+    echo "  OpenCL headers: found (via OPENCL_CPPFLAGS)"
+    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_USE_OPENCL ${OPENCL_CPPFLAGS}"
+    HAVE_OPENCL=1
+else
+    echo "  OpenCL headers: not found"
+    echo "  Set OPENCL_CPPFLAGS to specify OpenCL header location"
+    HAVE_OPENCL=0
+fi
+
+## Check for OpenCL library
+if [ -n "${OPENCL_LIBS}" ]; then
+    echo "  OpenCL library: found (via OPENCL_LIBS)"
+    BANDICOOT_LIBS="${BANDICOOT_LIBS} ${OPENCL_LIBS}"
+fi
+
+## Check for CLBlast via environment variable
+if [ -n "${CLBLAST_CPPFLAGS}" ]; then
+    echo "  CLBlast: found (via CLBLAST_CPPFLAGS)"
+    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_USE_CLBLAST ${CLBLAST_CPPFLAGS}"
+    HAVE_CLBLAST=1
+else
+    echo "  CLBlast: not found, disabling"
+    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAST"
+    HAVE_CLBLAST=0
+fi
+
+## Check for CLBlast library
+if [ -n "${CLBLAST_LIBS}" ]; then
+    BANDICOOT_LIBS="${CLBLAST_LIBS} ${BANDICOOT_LIBS}"
+fi
+
+## Always disable clBLAS (CLBlast is preferred)
+BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAS"
+
+## Add common flags
+BANDICOOT_CXXFLAGS="${OPENMP_CXXFLAGS} -Wno-missing-braces ${BANDICOOT_CXXFLAGS}"
+
+## Add R's LAPACK/BLAS
+BANDICOOT_LIBS="${BANDICOOT_LIBS} \$(LAPACK_LIBS) \$(BLAS_LIBS) \$(FLIBS)"
+
+## Check if we have at least OpenCL
+if [ "${HAVE_OPENCL}" = "0" ]; then
+    echo ""
+    echo "WARNING: No GPU backend detected!"
+    echo ""
+    echo "RcppBandicoot requires OpenCL headers to compile on Windows."
+    echo "Set the following environment variables before building:"
+    echo ""
+    echo "  OPENCL_CPPFLAGS  - Path to OpenCL headers (e.g., -IC:/OpenCL/include)"
+    echo "  OPENCL_LIBS      - OpenCL library flags (e.g., -LC:/OpenCL/lib -lOpenCL)"
+    echo "  CLBLAST_CPPFLAGS - Path to CLBlast headers (optional)"
+    echo "  CLBLAST_LIBS     - CLBlast library flags (optional)"
+    echo ""
+fi
+
+echo ""
+echo "Configuration Summary:"
+echo "  OpenCL:  ${HAVE_OPENCL}"
+echo "  CLBlast: ${HAVE_CLBLAST}"
+echo "  CUDA:    disabled (Windows)"
+echo "  Kernels: ${BANDICOOT_KERNELS_DIR}"
+echo ""
+
+## Generate Makevars.win from template
+sed -e "s|@BANDICOOT_CXXFLAGS@|${BANDICOOT_CXXFLAGS}|g" \
+    -e "s|@BANDICOOT_LIBS@|${BANDICOOT_LIBS}|g" \
+    -e "s|@OPENMP_CXXFLAGS@|${OPENMP_CXXFLAGS}|g" \
+    -e "s|@OPENCL_TARGET_VERSION@|${OPENCL_TARGET_VERSION}|g" \
+    -e "s|@BANDICOOT_KERNELS_DIR@|${BANDICOOT_KERNELS_DIR}|g" \
+    src/Makevars.win.in > src/Makevars.win
+
+echo "Generated src/Makevars.win"

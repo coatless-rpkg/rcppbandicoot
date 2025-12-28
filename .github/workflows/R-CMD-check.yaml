@@ -20,6 +20,7 @@ jobs:
         config:
           - {os: macos-latest,   r: 'release'}
           - {os: ubuntu-latest,   r: 'release'}
+          - {os: windows-latest, r: 'release'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -43,6 +44,29 @@ jobs:
       - name: Install clblast via apt (Ubuntu)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y opencl-headers ocl-icd-opencl-dev libclblast-dev
+
+      - name: Install OpenCL headers and CLBlast (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # Download OpenCL headers from Khronos
+          Invoke-WebRequest -Uri "https://github.com/KhronosGroup/OpenCL-Headers/archive/refs/heads/main.zip" -OutFile opencl-headers.zip
+          Expand-Archive -Path opencl-headers.zip -DestinationPath $env:USERPROFILE
+
+          # Download CLBlast pre-built binaries
+          Invoke-WebRequest -Uri "https://github.com/CNugteren/CLBlast/releases/download/1.6.3/CLBlast-1.6.3-windows-x64.7z" -OutFile clblast.7z
+          7z x clblast.7z -o"$env:USERPROFILE"
+
+          # Set environment variables for R package build (use forward slashes for gcc)
+          $openclPath = "$env:USERPROFILE/OpenCL-Headers-main" -replace '\\', '/'
+          $clblastPath = "$env:USERPROFILE/CLBlast-1.6.3-windows-x64" -replace '\\', '/'
+
+          echo "OPENCL_CPPFLAGS=-I$openclPath" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "CLBLAST_CPPFLAGS=-I$clblastPath/include" | Out-File -FilePath $env:GITHUB_ENV -Append
+          echo "CLBLAST_LIBS=-L$clblastPath/lib -lclblast" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          # Add CLBlast DLL to PATH for runtime
+          echo "$clblastPath/lib" | Out-File -FilePath $env:GITHUB_PATH -Append
+        shell: pwsh
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
