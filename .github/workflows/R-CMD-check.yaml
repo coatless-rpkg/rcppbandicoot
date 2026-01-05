@@ -18,13 +18,14 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
+          #- {os: macos-latest,   r: 'release'}
+          #- {os: ubuntu-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      INTEL_OPENCL_URL: "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/b6dccdb7-b503-41ea-bd4b-a78e9c2d8dd6/w_opencl_runtime_p_2025.1.0.972.exe"
 
     steps:
       - uses: actions/checkout@v4
@@ -64,14 +65,37 @@ jobs:
           echo "OPENCL_INC=$vcpkgPath\include" >> $env:GITHUB_ENV
           echo "OPENCL_LIB64=$vcpkgPath\lib" >> $env:GITHUB_ENV
           
-      - name: Install Intel CPU Runtime (Windows)
-        if: runner.os == 'Windows' && steps.cache-opencl-win.outputs.cache-hit != 'true'
+      - name: Install Intel CPU Runtime for OpenCL (Windows)
+        if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $url = "https://github.com/coatless-actions/opencl-cpu-intel/releases/download/0.0.1/w_opencl_runtime_p_2025.3.1.762.exe"
-          $outFile = "$env:TEMP\ocl.exe"
-          (New-Object System.Net.WebClient).DownloadFile($url, $outFile)
-          Start-Process -FilePath $outFile -ArgumentList '-s','-a','--silent','--eula','accept' -Wait -NoNewWindow
+          # Download
+          curl -o opencl-installer.exe "${{ env.INTEL_OPENCL_URL }}"
+          
+          # Extract MSI from the self-extracting exe
+          $proc = Start-Process "./opencl-installer.exe" "-s -x -f extracted" -NoNewWindow -PassThru
+          $proc.WaitForExit()
+          
+          # Install via msiexec
+          $msi = Get-ChildItem ./extracted/*.msi | Select-Object -First 1
+          $proc = Start-Process "msiexec" "/i `"$msi`" /qn /l*! install.log" -NoNewWindow -PassThru
+          $proc.WaitForExit()
+          
+          if ($proc.ExitCode -ne 0) {
+            Get-Content install.log
+            exit $proc.ExitCode
+          }
+          
+          Remove-Item -Recurse -Force extracted, opencl-installer.exe
+      
+      - name: Register Intel OpenCL ICD (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dllPath = "C:\Program Files (x86)\Common Files\Intel\Shared Libraries\bin\OpenCL.dll"
+          REG ADD "HKLM\SOFTWARE\Khronos\OpenCL\Vendors" /v $dllPath /t REG_DWORD /d 0 /f
+          REG ADD "HKLM\SOFTWARE\Wow6432Node\Khronos\OpenCL\Vendors" /v $dllPath /t REG_DWORD /d 0 /f
+          Add-Content $env:GITHUB_PATH "C:\Program Files (x86)\Common Files\Intel\Shared Libraries\bin\"
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
