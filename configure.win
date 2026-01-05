@@ -69,6 +69,7 @@ fi
 
 ## Always disable clBLAS (CLBlast is preferred)
 BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAS"
+HAVE_CLBLAS=0
 
 ## Add common flags
 BANDICOOT_CXXFLAGS="${OPENMP_CXXFLAGS} -Wno-missing-braces ${BANDICOOT_CXXFLAGS}"
@@ -119,5 +120,65 @@ if [ -f "src/Makevars.win" ]; then
     cat src/Makevars.win
 else
     echo "ERROR: Failed to generate src/Makevars.win!"
+    exit 1
+fi
+
+## Generate R/flags.R from template
+## Set variables for flags.R.in substitution
+HAVE_CUDA=0
+HAVE_OPENMP=0
+DEFAULT_BACKEND="CL_BACKEND"
+OPENCL_CXXFLAGS_FOR_R=""
+OPENCL_LIBS_FOR_R=""
+CUDA_CXXFLAGS=""
+CUDA_LIBS=""
+CLBLAST_CXXFLAGS_FOR_R=""
+CLBLAST_LIBS_FOR_R=""
+CLBLAS_CXXFLAGS=""
+CLBLAS_LIBS=""
+LAPACK_BLAS_LIBS="\$(LAPACK_LIBS) \$(BLAS_LIBS) \$(FLIBS)"
+CLBLAST_PREFIX=""
+CLBLAS_PREFIX=""
+CUDA_HOME=""
+SDKPATH=""
+
+## Set OpenCL flags for R if detected
+if [ "${HAVE_OPENCL}" = "1" ]; then
+    OPENCL_CXXFLAGS_FOR_R="-DCOOT_USE_OPENCL ${OPENCL_CPPFLAGS}"
+    OPENCL_LIBS_FOR_R="${OPENCL_LIBS}"
+fi
+
+## Set CLBlast flags for R if detected
+if [ "${HAVE_CLBLAST}" = "1" ]; then
+    CLBLAST_CXXFLAGS_FOR_R="-DCOOT_USE_CLBLAST ${CLBLAST_CPPFLAGS}"
+    CLBLAST_LIBS_FOR_R="${CLBLAST_LIBS}"
+fi
+
+if [ -f "R/flags.R.in" ]; then
+    sed -e "s|@BANDICOOT_CXXFLAGS@|${BANDICOOT_CXXFLAGS}|g" \
+        -e "s|@BANDICOOT_LIBS@|${BANDICOOT_LIBS}|g" \
+        -e "s|@OPENCL_CXXFLAGS@|${OPENCL_CXXFLAGS_FOR_R}|g" \
+        -e "s|@OPENCL_LIBS@|${OPENCL_LIBS_FOR_R}|g" \
+        -e "s|@CUDA_CXXFLAGS@|${CUDA_CXXFLAGS}|g" \
+        -e "s|@CUDA_LIBS@|${CUDA_LIBS}|g" \
+        -e "s|@CLBLAST_CXXFLAGS@|${CLBLAST_CXXFLAGS_FOR_R}|g" \
+        -e "s|@CLBLAST_LIBS@|${CLBLAST_LIBS_FOR_R}|g" \
+        -e "s|@CLBLAS_CXXFLAGS@|${CLBLAS_CXXFLAGS}|g" \
+        -e "s|@CLBLAS_LIBS@|${CLBLAS_LIBS}|g" \
+        -e "s|@LAPACK_BLAS_LIBS@|${LAPACK_BLAS_LIBS}|g" \
+        -e "s|@HAVE_OPENCL@|${HAVE_OPENCL}|g" \
+        -e "s|@HAVE_CUDA@|${HAVE_CUDA}|g" \
+        -e "s|@HAVE_CLBLAST@|${HAVE_CLBLAST}|g" \
+        -e "s|@HAVE_CLBLAS@|${HAVE_CLBLAS}|g" \
+        -e "s|@HAVE_OPENMP@|${HAVE_OPENMP}|g" \
+        -e "s|@DEFAULT_BACKEND@|${DEFAULT_BACKEND}|g" \
+        -e "s|@CLBLAST_PREFIX@|${CLBLAST_PREFIX}|g" \
+        -e "s|@CLBLAS_PREFIX@|${CLBLAS_PREFIX}|g" \
+        -e "s|@CUDA_HOME@|${CUDA_HOME}|g" \
+        -e "s|@SDKPATH@|${SDKPATH}|g" \
+        R/flags.R.in > R/flags.R
+    echo "Generated R/flags.R"
+else
+    echo "ERROR: R/flags.R.in not found!"
     exit 1
 fi
