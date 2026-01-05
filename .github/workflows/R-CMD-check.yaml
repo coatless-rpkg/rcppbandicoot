@@ -39,72 +39,54 @@ jobs:
 
       - name: Install clblast via Homebrew (macOS)
         if: runner.os == 'macOS'
-        run: brew install clblast clblas
+        run: brew install clblast clblas clinfo
 
       - name: Install clblast via apt (Ubuntu)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y opencl-headers ocl-icd-opencl-dev libclblast-dev
+        run: | 
+          sudo apt-get update
+          sudo apt-get install -y \
+          opencl-headers \
+          ocl-icd-opencl-dev \ 
+          libclblast-dev \
+          clinfo
 
-      - name: Install Intel OpenCL CPU Runtime (Windows)
+      - name: Cache Intel OpenCL Runtime
         if: runner.os == 'Windows'
-        run: choco install opencl-intel-cpu-runtime -y
-
-      - name: Install OpenCL and CLBlast (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          # Install OpenCL ICD Loader via vcpkg
-          vcpkg install opencl:x64-windows
-
-          # Download CLBlast pre-built binaries
-          curl -L -o clblast.7z "https://github.com/CNugteren/CLBlast/releases/download/1.6.3/CLBlast-1.6.3-windows-x64.7z"
-          7z x clblast.7z -o"$USERPROFILE"
-
-          # Get vcpkg paths (use forward slashes for gcc)
-          VCPKG_ROOT=$(cygpath -m "$VCPKG_INSTALLATION_ROOT")
-          CLBLAST_PATH=$(cygpath -m "$USERPROFILE/CLBlast-1.6.3-windows-x64")
-
-          echo "vcpkg root: $VCPKG_ROOT"
-          echo "CLBlast path: $CLBLAST_PATH"
-
-          # Set environment variables for R package build
-          echo "OPENCL_CPPFLAGS=-I$VCPKG_ROOT/installed/x64-windows/include" >> $GITHUB_ENV
-          echo "OPENCL_LIBS=-L$VCPKG_ROOT/installed/x64-windows/lib -lOpenCL" >> $GITHUB_ENV
-          echo "CLBLAST_CPPFLAGS=-I$CLBLAST_PATH/include" >> $GITHUB_ENV
-          echo "CLBLAST_LIBS=-L$CLBLAST_PATH/lib -lclblast" >> $GITHUB_ENV
-
-          # Add DLLs to PATH for runtime loading
-          # vcpkg OpenCL ICD loader
-          VCPKG_BIN=$(cygpath -w "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin")
-          echo "$VCPKG_BIN" >> $GITHUB_PATH
-          # CLBlast DLL
-          CLBLAST_BIN=$(cygpath -w "$USERPROFILE/CLBlast-1.6.3-windows-x64/lib")
-          echo "$CLBLAST_BIN" >> $GITHUB_PATH
-
-          # Debug: show DLL locations
-          echo "=== DLL locations ==="
-          ls -la "$VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/" || true
-          ls -la "$USERPROFILE/CLBlast-1.6.3-windows-x64/lib/" || true
-
-      - name: Verify OpenCL installation (Windows)
+        id: cache-opencl-win
+        uses: actions/cache@v5
+        with:
+          # Default install location is x86 ... 
+          path: C:\Program Files (x86)\Common Files\Intel\Shared Libraries
+          key: intel-opencl-runtime-2025.3.1
+          
+      - name: Install OpenCL SDK (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          Write-Host "=== Checking OpenCL ICD registry ==="
-          Get-ChildItem "HKLM:\SOFTWARE\Khronos\OpenCL\Vendors" -ErrorAction SilentlyContinue | ForEach-Object {
-            $name = $_.PSChildName
-            Write-Host "  ICD: $name"
-          }
-          Write-Host ""
-          Write-Host "=== Checking for OpenCL.dll in PATH ==="
-          $opencl = Get-Command OpenCL.dll -ErrorAction SilentlyContinue
-          if ($opencl) { Write-Host "  Found: $($opencl.Source)" }
-          else { Write-Host "  OpenCL.dll not found in PATH" }
-          Write-Host ""
-          Write-Host "=== Checking for clblast.dll in PATH ==="
-          $clblast = Get-Command clblast.dll -ErrorAction SilentlyContinue
-          if ($clblast) { Write-Host "  Found: $($clblast.Source)" }
-          else { Write-Host "  clblast.dll not found in PATH" }
+          vcpkg install opencl:x64-windows
+          $vcpkgPath = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
+          echo "OCL=$vcpkgPath" >> $env:GITHUB_ENV
+          echo "OPENCL_INC=$vcpkgPath\include" >> $env:GITHUB_ENV
+          echo "OPENCL_LIB64=$vcpkgPath\lib" >> $env:GITHUB_ENV
+          
+      - name: Install Intel CPU Runtime (Windows)
+        if: runner.os == 'Windows' && steps.cache-opencl-win.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $url = "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/ad824c04-01c8-4ae5-b5e8-164a04f67609/w_opencl_runtime_p_2025.3.1.762.exe"
+          Invoke-WebRequest -Uri $url -OutFile "$env:TEMP\ocl.exe"
+          Start-Process -FilePath "$env:TEMP\ocl.exe" -ArgumentList '-s','-a','--silent','--eula','accept' -Wait -NoNewWindow
+          
+      - name: Verify OpenCL installation
+        shell: bash
+        run: |
+          if command -v clinfo &> /dev/null; then
+            clinfo -l
+          else
+            echo "clinfo not available, skipping verification"
+          fi
+          
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
