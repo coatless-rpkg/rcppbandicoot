@@ -70,6 +70,9 @@ jobs:
           # Register CLBlast location
           echo "CLBLAST_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
           echo "CLBLAST_LIBS=-L$vcpkgPath/lib -lclblast" >> $env:GITHUB_ENV
+
+          # Add vcpkg bin to PATH so DLLs can be found at runtime
+          echo "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows\bin" >> $env:GITHUB_PATH
           
       - name: Install Intel CPU Runtime for OpenCL (Windows)
         if: runner.os == 'Windows'
