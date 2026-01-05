@@ -62,8 +62,8 @@ jobs:
           vcpkg install opencl:x64-windows
           $vcpkgPath = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
           echo "OCL=$vcpkgPath" >> $env:GITHUB_ENV
-          echo "OPENCL_INC=$vcpkgPath\include" >> $env:GITHUB_ENV
-          echo "OPENCL_LIB64=$vcpkgPath\lib" >> $env:GITHUB_ENV
+          echo "OPENCL_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
+          echo "OPENCL_LIBS=-L$vcpkgPath/lib -lOpenCL" >> $env:GITHUB_ENV
           
       - name: Install Intel CPU Runtime for OpenCL (Windows)
         if: runner.os == 'Windows'
@@ -96,6 +96,14 @@ jobs:
           REG ADD "HKLM\SOFTWARE\Khronos\OpenCL\Vendors" /v $dllPath /t REG_DWORD /d 0 /f
           REG ADD "HKLM\SOFTWARE\Wow6432Node\Khronos\OpenCL\Vendors" /v $dllPath /t REG_DWORD /d 0 /f
           Add-Content $env:GITHUB_PATH "C:\Program Files (x86)\Common Files\Intel\Shared Libraries\bin\"
+
+      - name: Debug OpenCL paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          echo "OPENCL_CPPFLAGS: $env:OPENCL_CPPFLAGS"
+          echo "OPENCL_LIBS: $env:OPENCL_LIBS"
+          ls "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows\include\CL"
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
