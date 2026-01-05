@@ -43,12 +43,7 @@ jobs:
 
       - name: Install clblast via apt (Ubuntu)
         if: runner.os == 'Linux'
-        run: | 
-          sudo apt-get update
-          sudo apt-get install -y \
-          opencl-headers \
-          ocl-icd-opencl-dev \ 
-          libclblast-dev
+        run: sudo apt-get update && sudo apt-get install -y opencl-headers ocl-icd-opencl-dev libclblast-dev
 
       - name: Cache Intel OpenCL Runtime
         if: runner.os == 'Windows'
@@ -73,7 +68,7 @@ jobs:
         if: runner.os == 'Windows' && steps.cache-opencl-win.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          $url = "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/ad824c04-01c8-4ae5-b5e8-164a04f67609/w_opencl_runtime_p_2025.3.1.762.exe"
+          $url = "https://github.com/coatless-actions/opencl-cpu-intel/releases/download/0.0.1/w_opencl_runtime_p_2025.3.1.762.exe"
           $outFile = "$env:TEMP\ocl.exe"
           (New-Object System.Net.WebClient).DownloadFile($url, $outFile)
           Start-Process -FilePath $outFile -ArgumentList '-s','-a','--silent','--eula','accept' -Wait -NoNewWindow
