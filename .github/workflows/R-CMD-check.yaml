@@ -60,8 +60,9 @@ jobs:
         shell: pwsh
         run: |
           vcpkg install opencl:x64-windows
-          $vcpkgPath = "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows"
-          echo "OCL=$vcpkgPath" >> $env:GITHUB_ENV
+          # Convert to forward slashes to avoid escaping issues in configure.win
+          $vcpkgPath = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" -replace '\\','/'
+          
           echo "OPENCL_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
           echo "OPENCL_LIBS=-L$vcpkgPath/lib -lOpenCL" >> $env:GITHUB_ENV
           
