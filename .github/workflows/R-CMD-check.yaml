@@ -62,9 +62,14 @@ jobs:
           vcpkg install opencl:x64-windows
           # Convert to forward slashes to avoid escaping issues in configure.win
           $vcpkgPath = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" -replace '\\','/'
-          
+
+          # Register OpenCL location
           echo "OPENCL_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
           echo "OPENCL_LIBS=-L$vcpkgPath/lib -lOpenCL" >> $env:GITHUB_ENV
+
+          # Register CLBlast location
+          echo "CLBLAST_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
+          echo "CLBLAST_LIBS=-L$vcpkgPath/lib -lclblast" >> $env:GITHUB_ENV
           
       - name: Install Intel CPU Runtime for OpenCL (Windows)
         if: runner.os == 'Windows'
