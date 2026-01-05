@@ -48,8 +48,7 @@ jobs:
           sudo apt-get install -y \
           opencl-headers \
           ocl-icd-opencl-dev \ 
-          libclblast-dev \
-          clinfo
+          libclblast-dev
 
       - name: Cache Intel OpenCL Runtime
         if: runner.os == 'Windows'
@@ -75,18 +74,9 @@ jobs:
         shell: pwsh
         run: |
           $url = "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/ad824c04-01c8-4ae5-b5e8-164a04f67609/w_opencl_runtime_p_2025.3.1.762.exe"
-          Invoke-WebRequest -Uri $url -OutFile "$env:TEMP\ocl.exe"
-          Start-Process -FilePath "$env:TEMP\ocl.exe" -ArgumentList '-s','-a','--silent','--eula','accept' -Wait -NoNewWindow
-          
-      - name: Verify OpenCL installation
-        shell: bash
-        run: |
-          if command -v clinfo &> /dev/null; then
-            clinfo -l
-          else
-            echo "clinfo not available, skipping verification"
-          fi
-          
+          $outFile = "$env:TEMP\ocl.exe"
+          (New-Object System.Net.WebClient).DownloadFile($url, $outFile)
+          Start-Process -FilePath $outFile -ArgumentList '-s','-a','--silent','--eula','accept' -Wait -NoNewWindow
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
