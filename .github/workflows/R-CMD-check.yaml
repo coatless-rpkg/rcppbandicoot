@@ -59,7 +59,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          vcpkg install opencl:x64-windows
+          vcpkg install opencl:x64-windows clblast:x64-windows
           # Convert to forward slashes to avoid escaping issues in configure.win
           $vcpkgPath = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" -replace '\\','/'
 
