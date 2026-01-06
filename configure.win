@@ -64,7 +64,7 @@ fi
 ## Check for CLBlast library
 if [ -n "${CLBLAST_LIBS}" ]; then
     echo "  CLBlast library: ${CLBLAST_LIBS}"
-    BANDICOOT_LIBS="${CLBLAST_LIBS} ${BANDICOOT_LIBS}"
+    BANDICOOT_LIBS="${BANDICOOT_LIBS} ${CLBLAST_LIBS}"
 fi
 
 ## Always disable clBLAS (CLBlast is preferred)
