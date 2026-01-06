@@ -3,7 +3,7 @@
 ## This file is processed by configure.win to generate Makevars.win
 ## It includes GPU backend configuration (OpenCL, CLBlast) for Windows
 
-PKG_CPPFLAGS = -I../inst/include -DCOOT_TARGET_OPENCL_VERSION=@OPENCL_TARGET_VERSION@ -DCOOT_KERNEL_SOURCE_DIR='"@BANDICOOT_KERNELS_DIR@"'
+PKG_CPPFLAGS = -I../inst/include -DCOOT_TARGET_OPENCL_VERSION=@OPENCL_TARGET_VERSION@ -DCOOT_KERNEL_SOURCE_DIR=\"@BANDICOOT_KERNELS_DIR@\"
 
 ## Compiler flags from configure.win
 PKG_CXXFLAGS = @BANDICOOT_CXXFLAGS@
