@@ -126,7 +126,7 @@ fi
 ## Generate R/flags.R from template
 ## Set variables for flags.R.in substitution
 HAVE_CUDA=0
-HAVE_OPENMP=0
+HAVE_OPENMP=1
 DEFAULT_BACKEND="CL_BACKEND"
 OPENCL_CXXFLAGS_FOR_R=""
 OPENCL_LIBS_FOR_R=""
