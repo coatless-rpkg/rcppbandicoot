@@ -35,13 +35,23 @@ template<typename eT> class subview_row;
 template<typename eT> class subview_cube;
 
 template<typename eT, typename T1>              class subview_elem1;
-template<typename eT, typename T1, typename T2> class subview_elem2;
+template<typename eT, typename T1, typename T2> class subview_elem2_both;
+template<typename eT, typename T1>              class subview_elem2_all_cols;
+template<typename eT, typename T2>              class subview_elem2_all_rows;
+template<typename eT, typename sve2_type>       class subview_elem2;
 
 template<typename parent, unsigned int mode>              class subview_each1;
 template<typename parent, unsigned int mode, typename TB> class subview_each2;
 
 template<typename eT> class diagview;
 
+template<typename T1> class Proxy;
+
+template<typename T1, size_t src_dims, bool proxy_uses_ref> class ProxyColCast;
+template<typename T1, size_t src_dims, bool proxy_uses_ref> class ProxyMatCast;
+template<typename T1, size_t src_dims, bool proxy_uses_ref> class ProxyCubeCast;
+
+template<typename T1> struct proxy_col_type;
 
 class SizeMat;
 // class SizeCube;
@@ -98,7 +108,6 @@ class op_vectorise_col;
 class op_vectorise_row;
 class op_vectorise_all;
 class op_vectorise_cube_col;
-class op_clamp;
 class op_diagmat;
 class op_diagmat2;
 class op_diagvec;
@@ -122,6 +131,7 @@ class op_col_as_mat;
 
 class mtop_conv_to;
 class mtop_all;
+template<typename mtop_type> class mtop_rel_core;
 class mtop_rel_lt_pre;
 class mtop_rel_lt_post;
 class mtop_rel_gt_pre;
@@ -146,13 +156,18 @@ class eop_scalar_plus;
 class eop_neg;
 class eop_scalar_minus_pre;
 class eop_scalar_minus_post;
+class eop_scalar_times;
 class eop_scalar_div_pre;
 class eop_scalar_div_post;
+class eop_replace;
+class eop_clamp;
 
 class eglue_plus;
 class eglue_minus;
 class eglue_schur;
 class eglue_div;
+class eglue_min;
+class eglue_max;
 
 class glue_times;
 class glue_times_diag;
@@ -164,15 +179,15 @@ class glue_cross;
 class glue_conv;
 class glue_conv2;
 class glue_solve;
-class glue_min;
-class glue_max;
 
+template<typename mtglue_type> class mtglue_mixed_core;
 class mtglue_mixed_plus;
 class mtglue_mixed_minus;
 class mtglue_mixed_schur;
 class mtglue_mixed_div;
 class mtglue_mixed_times;
 
+template<typename mtglue_type> class mtglue_rel_core;
 class mtglue_rel_lt;
 class mtglue_rel_gt;
 class mtglue_rel_lteq;

@@ -42,6 +42,7 @@ class coot_ostream
   public:
 
   template<typename eT> inline static std::streamsize modify_stream(std::ostream& o, const eT*              data, const uword n_elem);
+//template<typename  T> inline static std::streamsize modify_stream(std::ostream& o, const std::complex<T>* data, const uword n_elem);  // TODO: enable when adding support for complex numbers
 
   template<typename eT> inline static typename enable_if2<!is_fp16<eT>::value, void>::result print_elem_zero(std::ostream& o, const bool modify);
   template<typename eT> inline static typename enable_if2< is_fp16<eT>::value, void>::result print_elem_zero(std::ostream& o, const bool modify);

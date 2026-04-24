@@ -21,11 +21,11 @@ inline
 void
 mtop_index_min::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_index_min>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword dim = in.aux_uword_a;
 
-  coot_debug_check( (dim > 1), "index_min(): parameter 'dim' must be 0 or 1" );
+  coot_conform_check( (dim > 1), "index_min(): parameter 'dim' must be 0 or 1" );
 
   const unwrap<T1> U(in.q);
 
@@ -40,7 +40,7 @@ inline
 void
 mtop_index_min::apply_noalias(Mat<uword>& out, const Mat<eT>& A, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (dim == 0)
     {
@@ -70,7 +70,7 @@ inline
 void
 mtop_index_min::apply_noalias(Mat<uword>& out, const subview<eT>& sv, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (dim == 0)
     {
@@ -122,11 +122,11 @@ inline
 void
 mtop_index_min::apply(Cube<uword>& out, const mtOpCube<uword, T1, mtop_index_min>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword dim = in.aux_uword_a;
 
-  coot_debug_check( (dim > 2), "index_min(): parameter 'dim' must be 0, 1, or 2" );
+  coot_conform_check( (dim > 2), "index_min(): parameter 'dim' must be 0, 1, or 2" );
 
   const unwrap_cube<T1> U(in.q);
   const extract_subcube<typename unwrap_cube<T1>::stored_type> E(U.M);
@@ -142,7 +142,7 @@ inline
 void
 mtop_index_min::apply_noalias(Cube<uword>& out, const Cube<eT>& A, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   out.set_size((dim == 0 && A.n_rows > 0) ? 1 : A.n_rows,
                (dim == 1 && A.n_cols > 0) ? 1 : A.n_cols,
@@ -229,7 +229,7 @@ inline
 uword
 mtop_index_min::apply_direct(const Base<typename T1::elem_type, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<T1> U(in.get_ref());
   const Mat<typename T1::elem_type>& A = U.M;
@@ -244,7 +244,7 @@ inline
 uword
 mtop_index_min::apply_direct(const BaseCube<typename T1::elem_type, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap_cube<T1> U(in.get_ref());
   const Cube<typename T1::elem_type>& A = U.M;

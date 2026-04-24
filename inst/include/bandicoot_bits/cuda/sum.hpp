@@ -30,7 +30,7 @@ sum(dev_mem_t<eT2> dest,
     const uword src_col_offset,
     const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   CUfunction kernel;
   if (dim == 0)

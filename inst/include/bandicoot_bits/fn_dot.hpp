@@ -26,7 +26,7 @@ dot
   const Base<eT2, T2>& B
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<T1>    U(A.get_ref());
   const unwrap<T2>    V(B.get_ref());

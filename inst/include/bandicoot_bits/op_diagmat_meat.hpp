@@ -16,74 +16,32 @@
 
 
 
-template<typename T1>
-inline
-void
-op_diagmat::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_diagmat>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  unwrap<T1> U(in.m);
-  op_diagmat::apply_direct(out, U.M);
-  }
-
-
-
 template<typename out_eT, typename T1>
 inline
 void
-op_diagmat::apply(Mat<out_eT>& out, const Op<T1, op_diagmat>& in, const typename enable_if<is_same_type<out_eT, typename T1::elem_type>::no>::result* junk)
+op_diagmat::apply(Mat<out_eT>& out, const Op<T1, op_diagmat>& in)
   {
-  coot_extra_debug_sigprint();
-  coot_ignore(junk);
+  coot_debug_sigprint();
 
-  // If the types are not the same, we have to force a conversion.
-  mtOp<out_eT, T1, mtop_conv_to> mtop(in.m);
-  unwrap<mtOp<out_eT, T1, mtop_conv_to>> U(mtop);
-  op_diagmat::apply_direct(out, U.M);
-  }
-
-
-
-template<typename eT>
-inline
-void
-op_diagmat::apply_direct(Mat<eT>& out, const Mat<eT>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  if (in.n_rows == 1 || in.n_cols == 1)
+  const Proxy<T1> P(in.m);
+  const alias_wrapper<Mat<out_eT>, Proxy<T1>> A(out, P);
+  if (P.get_n_rows() == 1 || P.get_n_cols() == 1)
     {
-    out.zeros(in.n_elem, in.n_elem);
-    out.diag() = in;
+    A.use.zeros(P.get_n_elem(), P.get_n_elem());
+    diagview<out_eT> d = A.use.diag();
+    coot_rt_t::copy(make_proxy(d), P);
     }
   else
     {
-    out.zeros(in.n_rows, in.n_cols);
-    out.diag() = in.diag();
-    }
-  }
+    // We can only have a diagview of an existing matrix, so unwrap the proxy into a temporary matrix.
+    Mat<out_eT> tmp(P.get_n_rows(), P.get_n_cols());
+    coot_rt_t::copy(make_proxy(tmp), P);
+    A.use.zeros(tmp.n_rows, tmp.n_cols);
 
+    diagview<out_eT> d_in = tmp.diag();
+    diagview<out_eT> d = A.use.diag();
 
-
-template<typename eT>
-inline
-void
-op_diagmat::apply_direct(Mat<eT>& out, const subview<eT>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  // Subviews must be extracted.
-  Mat<eT> tmp(in);
-  if (tmp.n_rows == 1 || tmp.n_cols == 1)
-    {
-    out.zeros(tmp.n_elem, tmp.n_elem);
-    out.diag() = tmp;
-    }
-  else
-    {
-    out.zeros(tmp.n_rows, tmp.n_cols);
-    out.diag() = tmp.diag();
+    coot_rt_t::copy(make_proxy(d), make_proxy(d_in));
     }
   }
 
@@ -119,18 +77,36 @@ op_diagmat::compute_n_cols(const Op<T1, op_diagmat>& op, const uword in_n_rows, 
 
 
 
-template<typename T1>
+template<typename out_eT, typename T1>
 inline
 void
-op_diagmat2::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_diagmat2>& in)
+op_diagmat2::apply(Mat<out_eT>& out, const Op<T1, op_diagmat2>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const sword k = (in.aux_uword_b % 2 == 0) ? in.aux_uword_a : (-sword(in.aux_uword_a));
   const bool swap = (in.aux_uword_b >= 2);
 
-  unwrap<T1> U(in.m);
-  op_diagmat2::apply_direct(out, U.M, k, swap);
+  const Proxy<T1> P(in.m);
+  const alias_wrapper<Mat<out_eT>, Proxy<T1>> A(out, P);
+  if (P.get_n_rows() == 1 || P.get_n_cols() == 1)
+    {
+    A.use.zeros(P.get_n_elem() + std::abs(k), P.get_n_elem() + std::abs(k));
+    diagview<out_eT> d = A.use.diag(k);
+    coot_rt_t::copy(make_proxy(d), P);
+    }
+  else
+    {
+    // We can only have a diagview of an existing matrix, so unwrap the proxy into a temporary matrix.
+    Mat<out_eT> tmp(P.get_n_rows(), P.get_n_cols());
+    coot_rt_t::copy(make_proxy(tmp), P);
+    A.use.zeros(tmp.n_rows, tmp.n_cols);
+
+    diagview<out_eT> d_in = swap ? tmp.diag(-k) : tmp.diag(k);
+    diagview<out_eT> d = A.use.diag(k);
+
+    coot_rt_t::copy(make_proxy(d), make_proxy(d_in));
+    }
   }
 
 
@@ -138,112 +114,33 @@ op_diagmat2::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_diagmat2>& 
 template<typename out_eT, typename T1>
 inline
 void
-op_diagmat2::apply(Mat<out_eT>& out, const Op<T1, op_diagmat2>& in, const typename enable_if<is_same_type<out_eT, typename T1::elem_type>::no>::result* junk)
+op_diagmat2::apply(Mat<out_eT>& out, const Op<Op<T1, op_htrans2>, op_diagmat2>& in)
   {
-  coot_extra_debug_sigprint();
-  coot_ignore(junk);
+  coot_debug_sigprint();
 
   const sword k = (in.aux_uword_b % 2 == 0) ? in.aux_uword_a : (-sword(in.aux_uword_a));
   const bool swap = (in.aux_uword_b >= 2);
 
-  // If the types are not the same, we have to force a conversion.
-  mtOp<out_eT, T1, mtop_conv_to> mtop(in.m);
-  unwrap<mtOp<out_eT, T1, mtop_conv_to>> U(mtop);
-  op_diagmat2::apply_direct(out, U.M, k, swap);
-  }
-
-
-
-template<typename T1>
-inline
-void
-op_diagmat2::apply(Mat<typename T1::elem_type>& out, const Op<Op<T1, op_htrans2>, op_diagmat2>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  const sword k = (in.aux_uword_b == 0) ? in.aux_uword_a : (-sword(in.aux_uword_a));
-
-  unwrap<T1> U(in.m.m);
-  op_diagmat2::apply_direct(out, U.M, k, true /* implicit transpose */);
-  // Now multiply by the scalar.
-  out *= in.m.aux;
-  }
-
-
-
-template<typename out_eT, typename T1>
-inline
-void
-op_diagmat2::apply(Mat<out_eT>& out, const Op<Op<T1, op_htrans2>, op_diagmat2>& in, const typename enable_if<is_same_type<out_eT, typename T1::elem_type>::no>::result* junk)
-  {
-  coot_extra_debug_sigprint();
-  coot_ignore(junk);
-
-  const sword k = (in.aux_uword_b == 0) ? in.aux_uword_a : (-sword(in.aux_uword_a));
-
-  // If the types are not the same, we have to force a conversion.
-  mtOp<out_eT, T1, mtop_conv_to> mtop(in.m.m);
-  unwrap<mtOp<out_eT, T1, mtop_conv_to>> U(mtop);
-  op_diagmat2::apply_direct(out, U.M, k, true /* implicit transpose */);
-  // Now multiply by the scalar.
-  out *= in.m.aux;
-  }
-
-
-
-template<typename eT>
-inline
-void
-op_diagmat2::apply_direct(Mat<eT>& out, const Mat<eT>& in, const sword k, const bool swap)
-  {
-  coot_extra_debug_sigprint();
-
-  if (in.n_rows == 1 || in.n_cols == 1)
+  const eOp<T1, eop_scalar_times> E(in.m.m, in.m.aux_a);
+  const Proxy<eOp<T1, eop_scalar_times>> P(in.m.m);
+  const alias_wrapper<Mat<out_eT>, Proxy<eOp<T1, eop_scalar_times>>> A(out, P);
+  if (P.get_n_rows() == 1 || P.get_n_cols() == 1)
     {
-    out.zeros(in.n_elem + std::abs(k), in.n_elem + std::abs(k));
-    out.diag(k) = in;
+    A.use.zeros(P.get_n_elem() + std::abs(k), P.get_n_elem() + std::abs(k));
+    diagview<out_eT> d = A.use.diag(k);
+    coot_rt_t::copy(make_proxy(d), P);
     }
   else
     {
-    out.zeros(in.n_rows, in.n_cols);
-    if (swap)
-      {
-      out.diag(k) = in.diag(-k);
-      }
-    else
-      {
-      out.diag(k) = in.diag(k);
-      }
-    }
-  }
+    // We can only have a diagview of an existing matrix, so unwrap the proxy into a temporary matrix.
+    Mat<out_eT> tmp(P.get_n_rows(), P.get_n_cols());
+    coot_rt_t::copy(make_proxy(tmp), P);
+    A.use.zeros(tmp.n_rows, tmp.n_cols);
 
+    diagview<out_eT> d_in = swap ? tmp.diag(-k) : tmp.diag(k);
+    diagview<out_eT> d = A.use.diag(k);
 
-
-template<typename eT>
-inline
-void
-op_diagmat2::apply_direct(Mat<eT>& out, const subview<eT>& in, const sword k, const bool swap)
-  {
-  coot_extra_debug_sigprint();
-
-  // Subviews must be extracted.
-  Mat<eT> tmp(in);
-  if (tmp.n_rows == 1 || tmp.n_cols == 1)
-    {
-    out.zeros(tmp.n_elem + std::abs(k), tmp.n_elem + std::abs(k));
-    out.diag(k) = tmp;
-    }
-  else
-    {
-    out.zeros(tmp.n_rows, tmp.n_cols);
-    if (swap)
-      {
-      out.diag(k) = in.diag(-k);
-      }
-    else
-      {
-      out.diag(k) = in.diag(k);
-      }
+    coot_rt_t::copy(make_proxy(d), make_proxy(d_in));
     }
   }
 

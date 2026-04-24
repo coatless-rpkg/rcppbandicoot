@@ -36,9 +36,9 @@ var(dev_mem_t<eT> dest,
     const uword src_means_offset,
     const uword src_means_mem_incr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::var(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::var(): OpenCL runtime not valid" );
 
   runtime_t::cq_guard guard;
 
@@ -90,7 +90,7 @@ inline
 eT
 var_vec(const dev_mem_t<eT> mem, const eT mean, const uword n_elem, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   cl_kernel k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::var);
   cl_kernel k_small = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::var_small);
@@ -118,7 +118,7 @@ inline
 eT
 var_vec_subview(const dev_mem_t<eT> mem, const eT mean, const uword M_n_rows, const uword M_n_cols, const uword aux_row1, const uword aux_col1, const uword n_rows, const uword n_cols, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(M_n_cols);
 
   cl_kernel k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::submat_var);

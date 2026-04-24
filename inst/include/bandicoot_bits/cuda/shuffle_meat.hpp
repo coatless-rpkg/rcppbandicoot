@@ -22,7 +22,7 @@ shuffle(dev_mem_t<eT> out, const uword out_row_offset, const uword out_col_offse
         const dev_mem_t<eT> in, const uword in_row_offset, const uword in_col_offset, const uword in_M_n_rows,
         const uword n_rows, const uword n_cols, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // dim 0: shuffle the rows of the matrix
   // dim 1: shuffle the columns of the matrix (or shuffle the elements of a vector)
@@ -34,7 +34,9 @@ shuffle(dev_mem_t<eT> out, const uword out_row_offset, const uword out_col_offse
   else if (n_sort_elem == 1)
     {
     // Shortcut: there is nothing to sort, since there is only one element.
-    copy_mat(out, in, n_rows, n_cols, out_row_offset, out_col_offset, out_M_n_rows, in_row_offset, in_col_offset, in_M_n_rows);
+    const Proxy<subview<eT>> P_out(out, out_row_offset, out_col_offset, n_rows, n_cols, out_M_n_rows);
+    const Proxy<subview<eT>> P_in(in, in_row_offset, in_col_offset, n_rows, n_cols, in_M_n_rows);
+    copy(P_out, P_in);
     return;
     }
 
@@ -44,8 +46,10 @@ shuffle(dev_mem_t<eT> out, const uword out_row_offset, const uword out_col_offse
   const uword num_bits = std::log2(n_sort_elem_pow2);
 
   // The variable philox algorithm also needs some random keys.
-  dev_mem_t<uword> philox_keys;
-  philox_keys.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<uword>(24);
+  dev_mem_t<uword>            philox_keys({{ NULL, 0 }});
+  runtime_t::mem_array<uword> philox_keys_array(24);
+
+  philox_keys.cuda_mem_ptr = philox_keys_array.memptr();
   curandStatus_t result = coot_wrapper(curandGenerate)(get_rt().cuda_rt.xorwow_rand, (u32*) philox_keys.cuda_mem_ptr, 48);
   coot_check_curand_error(result, "coot::cuda::shuffle(): curandGenerate() failed");
 
@@ -67,8 +71,6 @@ shuffle(dev_mem_t<eT> out, const uword out_row_offset, const uword out_col_offse
     {
     shuffle_large(out, out_offset, out_incr, out_elem_stride, in, in_offset, in_incr, in_elem_stride, n_sort_elem, elems_per_elem, n_sort_elem_pow2, num_bits, dims, philox_keys);
     }
-
-  get_rt().cuda_rt.release_memory(philox_keys.cuda_mem_ptr);
   }
 
 
@@ -81,7 +83,7 @@ shuffle_small(      dev_mem_t<eT> out, const uword out_offset, const uword out_i
               const uword n_elem, const uword elems_per_elem,
               const uword n_elem_pow2, const uword num_bits, const kernel_dims& dims, const dev_mem_t<uword> philox_keys)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename cuda_type<eT>::type ceT;
 
@@ -124,15 +126,17 @@ shuffle_large(      dev_mem_t<eT> out, const uword out_offset, const uword out_i
               const uword n_elem, const uword elems_per_elem,
               const uword n_elem_pow2, const uword num_bits, const kernel_dims& dims, const dev_mem_t<uword> philox_keys)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename cuda_type<eT>::type ceT;
 
         ceT* out_ptr = out.cuda_mem_ptr + out_offset;
   const ceT* in_ptr  =  in.cuda_mem_ptr + in_offset;
 
-  dev_mem_t<uword> out_block_mem;
-  out_block_mem.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<uword>(dims.d[0]);
+  dev_mem_t<uword>            out_block_mem({{ NULL, 0 }});
+  runtime_t::mem_array<uword> out_block_mem_array(dims.d[0]);
+
+  out_block_mem.cuda_mem_ptr = out_block_mem_array.memptr();
 
   const void* args1[] = {
     &(out_block_mem.cuda_mem_ptr),
@@ -182,6 +186,4 @@ shuffle_large(      dev_mem_t<eT> out, const uword out_offset, const uword out_i
       0);
 
   coot_check_cuda_error(result, "coot::cuda::shuffle() cuLaunchKernel() failed for shuffle");
-
-  get_rt().cuda_rt.release_memory(out_block_mem.cuda_mem_ptr);
   }

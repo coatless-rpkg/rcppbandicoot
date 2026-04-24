@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
 // Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
-// Copyright 2008-2017 Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2008-2026 Conrad Sanderson (https://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ inline
 void
 Base<elem_type,derived>::print(const std::string extra_text) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<derived> tmp( (*this).get_ref() );
 
@@ -57,7 +57,7 @@ inline
 void
 Base<elem_type,derived>::print(std::ostream& user_stream, const std::string extra_text) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<derived> tmp( (*this).get_ref() );
 
@@ -80,7 +80,7 @@ inline
 void
 Base<elem_type,derived>::raw_print(const std::string extra_text) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<derived> tmp( (*this).get_ref() );
 
@@ -103,7 +103,7 @@ inline
 void
 Base<elem_type,derived>::raw_print(std::ostream& user_stream, const std::string extra_text) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<derived> tmp( (*this).get_ref() );
 
@@ -122,14 +122,69 @@ Base<elem_type,derived>::raw_print(std::ostream& user_stream, const std::string 
 
 
 //
-// extra functions defined in Base_inv_yes
+// extra functions defined in Base_extra_yes
 
-template<typename derived>
+template<typename elem_type, typename derived>
 inline
 const Op<derived, op_inv>
-Base_inv_yes<derived>::i() const
+Base_extra_yes<elem_type,derived>::i() const
   {
   return Op<derived, op_inv>(static_cast<const derived&>(*this));
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
+Base_extra_yes<elem_type,derived>::is_sympd() const
+  {
+  coot_debug_sigprint();
+  
+  typedef typename get_pod_type<elem_type>::result T;
+  
+  Mat<elem_type> X = static_cast<const derived&>(*this);
+  
+  // default value for tol
+  const T tol = T(100) * std::numeric_limits<T>::epsilon() * norm(X, "fro");
+  
+  if(coot_isnan(tol))  { return false; }
+  
+  if(X.is_hermitian(tol) == false)  { return false; }
+  
+  if(X.is_empty())  { return false; }
+  
+  X.diag() -= elem_type(tol);
+  
+  std::tuple<bool, std::string> result = coot_rt_t::chol(X.get_dev_mem(true), X.n_rows);
+  
+  return std::get<0>(result);
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
+Base_extra_yes<elem_type,derived>::is_sympd(typename get_pod_type<elem_type>::result tol) const
+  {
+  coot_debug_sigprint();
+  
+  typedef typename get_pod_type<elem_type>::result T;
+  
+  coot_conform_check( ((tol >= T(0)) == false), "is_sympd(): parameter 'tol' must be >= 0" );
+  
+  Mat<elem_type> X = static_cast<const derived&>(*this);
+  
+  if(X.is_hermitian(tol) == false)  { return false; }
+  
+  if(X.is_empty())  { return false; }
+  
+  X.diag() -= elem_type(tol);
+  
+  std::tuple<bool, std::string> result = coot_rt_t::chol(X.get_dev_mem(true), X.n_rows);
+  
+  return std::get<0>(result);
   }
 
 
@@ -142,7 +197,7 @@ inline
 const derived&
 Base_eval_Mat<elem_type, derived>::eval() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return static_cast<const derived&>(*this);
   }
@@ -157,7 +212,7 @@ inline
 Mat<elem_type>
 Base_eval_expr<elem_type, derived>::eval() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Mat<elem_type>( static_cast<const derived&>(*this) );
   }
@@ -342,12 +397,112 @@ Base<elem_type,derived>::index_max() const
 template<typename elem_type, typename derived>
 inline
 bool
+Base<elem_type,derived>::is_symmetric() const
+  {
+  coot_debug_sigprint();
+  
+  // better-than-nothing implementation
+  
+  const unwrap<derived> U( (*this).get_ref() );
+  
+  if(U.M.n_rows != U.M.n_cols)  { return false; }
+  
+  return coot::all( coot::vectorise(U.M) == coot::vectorise(U.M.st()) );
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
+Base<elem_type,derived>::is_symmetric(const typename get_pod_type<elem_type>::result tol) const
+  {
+  coot_debug_sigprint();
+  
+  typedef typename get_pod_type<elem_type>::result T;
+  
+  if(tol == T(0))  { return (*this).is_symmetric(); }
+  
+  coot_conform_check( ((tol >= T(0)) == false), "is_symmetric(): parameter 'tol' must be > 0" );
+  
+  const unwrap<derived> U( (*this).get_ref() );
+  
+  if(U.M.n_rows != U.M.n_cols)  { return false; }
+  
+  const T norm_UM = as_scalar( coot::max(sum(abs(U.M), 1), 0) );
+  
+  if(norm_UM == T(0))  { return true; }
+  
+  if(coot_isnan(norm_UM))  { return false; }
+  
+  const T norm_UM_UMst = as_scalar( coot::max(sum(abs(U.M - U.M.st()), 1), 0) );
+  
+  if(coot_isnan(norm_UM_UMst))  { return false; }
+  
+  return ( (norm_UM_UMst / norm_UM) <= tol );
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
+Base<elem_type,derived>::is_hermitian() const
+  {
+  coot_debug_sigprint();
+  
+  // better-than-nothing implementation
+  
+  const unwrap<derived> U( (*this).get_ref() );
+  
+  if(U.M.n_rows != U.M.n_cols)  { return false; }
+  
+  return coot::all( coot::vectorise(U.M) == coot::vectorise(U.M.t()) );
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
+Base<elem_type,derived>::is_hermitian(const typename get_pod_type<elem_type>::result tol) const
+  {
+  coot_debug_sigprint();
+  
+  typedef typename get_pod_type<elem_type>::result T;
+  
+  if(tol == T(0))  { return (*this).is_hermitian(); }
+  
+  coot_conform_check( ((tol >= T(0)) == false), "is_hermitian(): parameter 'tol' must be > 0" );
+  
+  const unwrap<derived> U( (*this).get_ref() );
+  
+  if(U.M.n_rows != U.M.n_cols)  { return false; }
+  
+  const T norm_UM = as_scalar( coot::max(sum(abs(U.M), 1), 0) );
+  
+  if(norm_UM == T(0))  { return true; }
+  
+  if(coot_isnan(norm_UM))  { return false; }
+  
+  const T norm_UM_UMt = as_scalar( coot::max(sum(abs(U.M - U.M.t()), 1), 0) );
+  
+  if(coot_isnan(norm_UM_UMt))  { return false; }
+  
+  return ( (norm_UM_UMt / norm_UM) <= tol );
+  }
+
+
+
+template<typename elem_type, typename derived>
+inline
+bool
 Base<elem_type, derived>::is_finite() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // The finite kernels only work on contiguous memory.
-  if (is_non_integral<elem_type>::value)
+  if (is_real_or_cx<elem_type>::value)
     {
     Mat<elem_type> tmp((*this).get_ref());
     return tmp.is_finite();
@@ -365,10 +520,10 @@ inline
 bool
 Base<elem_type, derived>::has_inf() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // The has_inf kernels only work on contiguous memory.
-  if (is_non_integral<elem_type>::value)
+  if (is_real_or_cx<elem_type>::value)
     {
     Mat<elem_type> tmp((*this).get_ref());
     return tmp.has_inf();
@@ -386,10 +541,10 @@ inline
 bool
 Base<elem_type, derived>::has_nan() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // The has_nan kernels only work on contiguous memory.
-  if (is_non_integral<elem_type>::value)
+  if (is_real_or_cx<elem_type>::value)
     {
     Mat<elem_type> tmp((*this).get_ref());
     return tmp.has_nan();

@@ -30,7 +30,7 @@ sort(dev_mem_t<eT> mem,
      const uword col_offset,
      const uword M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If the matrix is empty, don't do anything.
   if (n_rows == 0 || n_cols == 0)
@@ -39,8 +39,10 @@ sort(dev_mem_t<eT> mem,
     }
 
   // First, allocate a temporary matrix we will use during computation.
-  dev_mem_t<eT> tmp_mem;
-  tmp_mem.cl_mem_ptr = get_rt().cl_rt.acquire_memory<eT>(n_rows * n_cols);
+  dev_mem_t<eT>            tmp_mem;
+  runtime_t::mem_array<eT> tmp_mem_array(n_rows * n_cols);
+
+  tmp_mem.cl_mem_ptr = tmp_mem_array.memptr();
 
   runtime_t::cq_guard guard;
 
@@ -81,7 +83,6 @@ sort(dev_mem_t<eT> mem,
   coot_check_cl_error(status, "coot::opencl::sort(): failed to run kernel");
 
   get_rt().cl_rt.synchronise();
-  get_rt().cl_rt.release_memory(tmp_mem.cl_mem_ptr);
   }
 
 
@@ -91,7 +92,7 @@ inline
 void
 sort_vec_multiple_workgroups(dev_mem_t<eT> A, const uword n_elem, const uword sort_type, const size_t total_num_threads, const size_t local_group_size)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Since we cannot synchronize across workgroups in OpenCL, we have to do the
   // management of the radix sort process at the CPU level.  The basic strategy
@@ -112,18 +113,20 @@ sort_vec_multiple_workgroups(dev_mem_t<eT> A, const uword n_elem, const uword so
   cl_int status = 0;
 
   // We already have a cq_guard, so we don't need another.
-  cl_kernel k_count = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_multi_wg_bit_count);
+  cl_kernel k_count   = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_multi_wg_bit_count);
   cl_kernel k_shuffle = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::radix_sort_multi_wg_shuffle);
 
   runtime_t::adapt_uword cl_n_elem(n_elem);
 
-  dev_mem_t<uword> hist;
-  dev_mem_t<eT> A_temp;
+  dev_mem_t<uword>            hist;
+  dev_mem_t<eT>               A_temp;
+  runtime_t::mem_array<uword> hist_array(4 * total_num_threads);
+  runtime_t::mem_array<eT>    A_temp_array(n_elem);
 
-  hist.cl_mem_ptr      = get_rt().cl_rt.acquire_memory<uword>(4 * total_num_threads);
-  A_temp.cl_mem_ptr    = get_rt().cl_rt.acquire_memory<eT>(n_elem);
+  hist.cl_mem_ptr      = hist_array.memptr();
+  A_temp.cl_mem_ptr    = A_temp_array.memptr();
 
-  dev_mem_t<eT>* A_in = &A;
+  dev_mem_t<eT>* A_in  = &A;
   dev_mem_t<eT>* A_out = &A_temp;
 
   for (size_t b = 0; b < 8 * sizeof(eT); b += 2)
@@ -186,8 +189,6 @@ sort_vec_multiple_workgroups(dev_mem_t<eT> A, const uword n_elem, const uword so
     }
 
   get_rt().cl_rt.synchronise();
-  get_rt().cl_rt.release_memory(hist.cl_mem_ptr);
-  get_rt().cl_rt.release_memory(A_temp.cl_mem_ptr);
   }
 
 
@@ -197,7 +198,7 @@ inline
 void
 sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If the vector is empty, don't do anything.
   if (n_elem == 0)
@@ -222,8 +223,10 @@ sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
     }
 
   // First, allocate a temporary matrix we will use during computation.
-  dev_mem_t<eT> tmp_mem;
-  tmp_mem.cl_mem_ptr = get_rt().cl_rt.acquire_memory<eT>(n_elem);
+  dev_mem_t<eT>            tmp_mem;
+  runtime_t::mem_array<eT> tmp_mem_array(n_elem);
+
+  tmp_mem.cl_mem_ptr = tmp_mem_array.memptr();
 
   cl_int status = 0;
 
@@ -241,5 +244,4 @@ sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
   coot_check_cl_error(status, "coot::opencl::sort(): failed to run kernel");
 
   get_rt().cl_rt.synchronise();
-  get_rt().cl_rt.release_memory(tmp_mem.cl_mem_ptr);
   }

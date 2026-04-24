@@ -49,7 +49,7 @@ struct unwrap
   unwrap(const T1& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   Mat<eT> M;
@@ -74,7 +74,7 @@ struct unwrap< Mat<eT> >
   unwrap(const Mat<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   const Mat<eT>& M;
@@ -99,7 +99,7 @@ struct unwrap< Row<eT> >
   unwrap(const Row<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   const Row<eT>& M;
@@ -124,7 +124,7 @@ struct unwrap< Col<eT> >
   unwrap(const Col<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   const Col<eT>& M;
@@ -149,7 +149,7 @@ struct unwrap< subview<eT> >
   unwrap(const subview<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   const subview<eT>& M;
@@ -174,7 +174,7 @@ struct unwrap< subview_col<eT> >
   unwrap(const subview_col<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   const subview_col<eT>& M;
@@ -199,7 +199,7 @@ struct unwrap< subview_row<eT> >
   unwrap(const subview_row<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   const subview_row<eT>& M;
@@ -225,7 +225,7 @@ struct unwrap< mtOp<out_eT, T1, mtop_conv_to> >
   unwrap(const mtOp<out_eT, T1, mtop_conv_to>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   Mat<out_eT> M;
@@ -250,7 +250,7 @@ struct unwrap< mtGlue<out_eT, T1, T2, mtglue_type> >
   unwrap(const mtGlue<out_eT, T1, T2, mtglue_type>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   Mat<out_eT> M;
@@ -282,7 +282,7 @@ struct partial_unwrap
   partial_unwrap(const T1& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -307,7 +307,7 @@ struct partial_unwrap< Mat<eT> >
   partial_unwrap(const Mat<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -332,7 +332,7 @@ struct partial_unwrap< Col<eT> >
   partial_unwrap(const Col<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -357,7 +357,7 @@ struct partial_unwrap< Row<eT> >
   partial_unwrap(const Row<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -382,7 +382,7 @@ struct partial_unwrap< subview<eT> >
   partial_unwrap(const subview<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -407,7 +407,7 @@ struct partial_unwrap< subview_col<eT> >
   partial_unwrap(const subview_col<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -432,7 +432,7 @@ struct partial_unwrap< subview_row<eT> >
   partial_unwrap(const subview_row<eT>& A)
     : M(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -458,7 +458,7 @@ struct partial_unwrap< Op<T1, op_htrans> >
   partial_unwrap(const Op<T1, op_htrans>& A)
     : M(A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -483,7 +483,7 @@ struct partial_unwrap< Op< Mat<eT>, op_htrans> >
   partial_unwrap(const Op< Mat<eT>, op_htrans>& A)
     : M(A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -508,7 +508,7 @@ struct partial_unwrap< Op< Col<eT>, op_htrans> >
   partial_unwrap(const Op< Col<eT>, op_htrans>& A)
     : M(A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -533,7 +533,7 @@ struct partial_unwrap< Op< Row<eT>, op_htrans> >
   partial_unwrap(const Op< Row<eT>, op_htrans>& A)
     : M(A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -558,7 +558,7 @@ struct partial_unwrap< Op< subview<eT>, op_htrans> >
   partial_unwrap(const Op< subview<eT>, op_htrans>& A)
     : M(A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -583,7 +583,7 @@ struct partial_unwrap< Op< subview_col<eT>, op_htrans> >
   partial_unwrap(const Op< subview_col<eT>, op_htrans>& A)
     : M(A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -608,7 +608,7 @@ struct partial_unwrap< Op< subview_row<eT>, op_htrans> >
   partial_unwrap(const Op< subview_row<eT>, op_htrans>& A)
     : M(A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(1); }
@@ -632,10 +632,10 @@ struct partial_unwrap< Op<T1, op_htrans2> >
 
   inline
   partial_unwrap(const Op<T1, op_htrans2>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -659,10 +659,10 @@ struct partial_unwrap< Op< Mat<eT>, op_htrans2> >
 
   inline
   partial_unwrap(const Op<Mat<eT>, op_htrans2>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -686,10 +686,10 @@ struct partial_unwrap< Op< Col<eT>, op_htrans2> >
 
   inline
   partial_unwrap(const Op<Col<eT>, op_htrans2>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -713,10 +713,10 @@ struct partial_unwrap< Op< Row<eT>, op_htrans2> >
 
   inline
   partial_unwrap(const Op<Row<eT>, op_htrans2>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -740,10 +740,10 @@ struct partial_unwrap< Op< subview<eT>, op_htrans2> >
 
   inline
   partial_unwrap(const Op<subview<eT>, op_htrans2>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -767,10 +767,10 @@ struct partial_unwrap< Op< subview_col<eT>, op_htrans2> >
 
   inline
   partial_unwrap(const Op<subview_col<eT>, op_htrans2>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -794,10 +794,10 @@ struct partial_unwrap< Op< subview_row<eT>, op_htrans2> >
 
   inline
   partial_unwrap(const Op<subview_row<eT>, op_htrans2>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -821,10 +821,10 @@ struct partial_unwrap< eOp<Mat<eT>, eop_scalar_times> >
 
   inline
   partial_unwrap(const eOp<Mat<eT>, eop_scalar_times>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -848,10 +848,10 @@ struct partial_unwrap< eOp<Col<eT>, eop_scalar_times> >
 
   inline
   partial_unwrap(const eOp<Col<eT>, eop_scalar_times>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -875,10 +875,10 @@ struct partial_unwrap< eOp<Row<eT>, eop_scalar_times> >
 
   inline
   partial_unwrap(const eOp<Row<eT>, eop_scalar_times>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -902,10 +902,10 @@ struct partial_unwrap< eOp<subview<eT>, eop_scalar_times> >
 
   inline
   partial_unwrap(const eOp<subview<eT>, eop_scalar_times>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -929,10 +929,10 @@ struct partial_unwrap< eOp<subview_col<eT>, eop_scalar_times> >
 
   inline
   partial_unwrap(const eOp<subview_col<eT>, eop_scalar_times>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -956,10 +956,10 @@ struct partial_unwrap< eOp<subview_row<eT>, eop_scalar_times> >
 
   inline
   partial_unwrap(const eOp<subview_row<eT>, eop_scalar_times>& A)
-    : val(A.aux)
+    : val(A.aux_a)
     , M  (A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return val; }
@@ -985,7 +985,7 @@ struct partial_unwrap< eOp<Mat<eT>, eop_neg> >
   partial_unwrap(const eOp<Mat<eT>, eop_neg>& A)
     : M(A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(-1); }
@@ -1010,7 +1010,7 @@ struct partial_unwrap< eOp<Col<eT>, eop_neg> >
   partial_unwrap(const eOp<Col<eT>, eop_neg>& A)
     : M(A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(-1); }
@@ -1035,7 +1035,7 @@ struct partial_unwrap< eOp<Row<eT>, eop_neg> >
   partial_unwrap(const eOp<Row<eT>, eop_neg>& A)
     : M(A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(-1); }
@@ -1060,7 +1060,7 @@ struct partial_unwrap< eOp<subview<eT>, eop_neg> >
   partial_unwrap(const eOp<subview<eT>, eop_neg>& A)
     : M(A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(-1); }
@@ -1085,7 +1085,7 @@ struct partial_unwrap< eOp<subview_col<eT>, eop_neg> >
   partial_unwrap(const eOp<subview_col<eT>, eop_neg>& A)
     : M(A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(-1); }
@@ -1110,7 +1110,7 @@ struct partial_unwrap< eOp<subview_row<eT>, eop_neg> >
   partial_unwrap(const eOp<subview_row<eT>, eop_neg>& A)
     : M(A.m.Q)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   constexpr eT get_val() const { return eT(-1); }
@@ -1139,7 +1139,7 @@ struct partial_unwrap< mtOp<eT, T1, mtop_type> >
     // but we don't currently have a great way to capture the not-yet-unwrapped type held in any T1.
     , M(mtOp<eT, typename partial_unwrap<T1>::stored_type, mtop_type>(Q.M))
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline eT get_val() const { return Q.get_val(); }

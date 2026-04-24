@@ -27,7 +27,7 @@ svd
   const typename coot_real_only<typename T1::elem_type>::result* junk = nullptr
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   typedef typename T1::elem_type eT;
@@ -90,7 +90,7 @@ svd
   const typename coot_real_only<typename T1::elem_type>::result* junk = nullptr
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   typedef typename T1::pod_type   T;
@@ -166,12 +166,12 @@ svd
   const typename coot_real_only<typename T1::elem_type>::result* junk = nullptr
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   typedef typename T1::elem_type eT;
 
-  coot_debug_check
+  coot_conform_check
     (
     ( ((void*)(&U) == (void*)(&S)) || (&U == &V) || ((void*)(&S) == (void*)(&V)) ),
     "svd(): two or more output objects are the same object"
@@ -179,11 +179,11 @@ svd
 
   const char sig = (method != nullptr) ? method[0] : char(0);
 
-  coot_debug_check( ((sig != 's') && (sig != 'd')), "svd(): unknown method specified" );
+  coot_conform_check( ((sig != 's') && (sig != 'd')), "svd(): unknown method specified" );
 
   if (sig == 'd')
     {
-    coot_debug_warn_level(2, "svd(): \"dc\" method not supported by bandicoot; falling back to \"std\"");
+    coot_warn(2, "svd(): \"dc\" method not supported by bandicoot; falling back to \"std\"");
     }
 
   SizeProxy<T1> P(X.get_ref());

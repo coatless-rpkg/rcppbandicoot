@@ -21,7 +21,7 @@ inline
 void
 op_cov::apply(Mat<out_eT>& out, const Op<T1, op_cov>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
 
@@ -49,10 +49,7 @@ op_cov::apply(Mat<out_eT>& out, const Op<T1, op_cov>& in)
                   0, 1,
                   U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
   Mat<eT> tmp(AA_n_rows, AA_n_cols);
-  coot_rt_t::copy_mat(tmp.get_dev_mem(false), U.get_dev_mem(false),
-                      AA_n_rows, AA_n_cols,
-                      0, 0, tmp.n_rows,
-                      U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+  coot_rt_t::copy(make_proxy(tmp), make_proxy(U.M));
 
   for (uword i = 0; i < tmp.n_rows; ++i)
     {

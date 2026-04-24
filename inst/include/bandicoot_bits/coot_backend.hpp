@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// 
+//
 // Copyright 2025 Ryan Curtin (http://www.ratml.org/)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,12 +20,13 @@ inline
 std::string
 coot_backend()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   switch (get_rt().backend)
     {
-    case CL_BACKEND:   return std::string("opencl");
-    case CUDA_BACKEND: return std::string("cuda");
+    case CL_BACKEND:     return std::string("opencl");
+    case CUDA_BACKEND:   return std::string("cuda");
+    case VULKAN_BACKEND: return std::string("vulkan");
     default: coot_stop_runtime_error("coot_rt::backend_to_string(): unknown backend");
     }
 

@@ -27,7 +27,7 @@ typename enable_if2<
 >::result
 reshape(const T1& x, const uword in_n_rows, const uword in_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_reshape>(x, in_n_rows, in_n_cols);
   }
@@ -43,7 +43,7 @@ typename enable_if2<
 >::result
 reshape(const T1& x, const SizeMat& s)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_reshape>(x, s.n_rows, s.n_cols);
   }

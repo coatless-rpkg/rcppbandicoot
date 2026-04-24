@@ -21,7 +21,7 @@ inline
 void
 op_stddev::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_stddev>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
 
@@ -43,11 +43,8 @@ op_stddev::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_stddev>& in)
     }
 
   // Now take the square root.
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_sqrt_pre, out.get_dev_mem(false), out.get_dev_mem(false),
-                        eT(0), eT(0),
-                        out.n_rows, out.n_cols, 1,
-                        0, 0, 0, out.n_rows, out.n_cols,
-                        0, 0, 0, out.n_rows, out.n_cols);
+  const eOp<Mat<eT>, eop_sqrt> ES(out);
+  coot_rt_t::copy(make_proxy(out), make_proxy(ES));
   }
 
 
@@ -57,7 +54,7 @@ inline
 void
 op_stddev::apply(Mat<out_eT>& out, const Op<T1, op_stddev>& in, const typename enable_if<is_same_type<out_eT, typename T1::elem_type>::no>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   typedef typename T1::elem_type eT;
@@ -79,11 +76,8 @@ op_stddev::apply(Mat<out_eT>& out, const Op<T1, op_stddev>& in, const typename e
     }
 
   // Now take the square root.
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_sqrt_post, out.get_dev_mem(false), tmp.get_dev_mem(false),
-                        eT(0), out_eT(0),
-                        out.n_rows, out.n_cols, 1,
-                        0, 0, 0, out.n_rows, out.n_cols,
-                        0, 0, 0, tmp.n_rows, tmp.n_cols);
+  const eOp<Mat<eT>, eop_sqrt> E(tmp);
+  coot_rt_t::copy(make_proxy(out), make_proxy(E));
   }
 
 

@@ -24,7 +24,7 @@ inline
 void
 glue_times_redirect<N>::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const partial_unwrap<T1> tmp1(X.A);
   const partial_unwrap<T2> tmp2(X.B);
@@ -58,7 +58,7 @@ inline
 void
 glue_times_redirect<2>::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const partial_unwrap<T1> tmp1(X.A);
   const partial_unwrap<T2> tmp2(X.B);
@@ -92,7 +92,7 @@ inline
 void
 glue_times_redirect<3>::apply(Mat<out_eT>& out, const Glue<Glue<T1, T2, glue_times>, T3, glue_times>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // we have exactly 3 objects
   // hence we can safely expand X as X.A.A, X.A.B and X.B
@@ -134,7 +134,7 @@ inline
 void
 glue_times_redirect<4>::apply(Mat<out_eT>& out, const Glue<Glue<Glue<T1, T2, glue_times>, T3, glue_times>, T4, glue_times>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // there is exactly 4 objects
   // hence we can safely expand X as X.A.A.A, X.A.A.B, X.A.B and X.B
@@ -181,11 +181,11 @@ inline
 void
 glue_times::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const sword N_mat = 1 + depth_lhs< glue_times, Glue<T1, T2, glue_times> >::num;
 
-  coot_extra_debug_print(coot_str::format("N_mat = %d") % N_mat);
+  coot_debug_print(coot_str::format("N_mat: %d") % N_mat);
 
   glue_times_redirect<N_mat>::apply(out, X);
   }
@@ -224,9 +224,9 @@ glue_times::apply
   const out_eT       alpha
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_assert_trans_mul_size<do_trans_A, do_trans_B>(A.n_rows, A.n_cols, B.n_rows, B.n_cols, "matrix multiplication");
+  coot_conform_assert_trans_mul_size<do_trans_A, do_trans_B>(A.n_rows, A.n_cols, B.n_rows, B.n_cols, "matrix multiplication");
 
   const uword final_n_rows = (do_trans_A == false) ? A.n_rows : A.n_cols;
   const uword final_n_cols = (do_trans_B == false) ? B.n_cols : B.n_rows;
@@ -321,7 +321,7 @@ glue_times::apply
   const out_eT       alpha
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT1;
   typedef typename T2::elem_type eT2;
@@ -375,7 +375,7 @@ glue_times::apply
   const out_eT       alpha
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Mat<out_eT> tmp;
 
@@ -442,7 +442,7 @@ inline
 void
 glue_times_diag::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times_diag>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   strip_diagmat<T1> s1(X.A);
   strip_diagmat<T2> s2(X.B);
@@ -466,7 +466,7 @@ glue_times_diag::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times_diag>& X)
   const uword C_n_rows = (A_trans) ? A_n_cols : A_n_rows;
   const uword C_n_cols = (B_trans) ? B_n_rows : B_n_cols;
 
-  coot_debug_assert_trans_mul_size<A_trans, B_trans>(A_n_rows, A_n_cols, B_n_rows, B_n_cols, "matrix multiplication");
+  coot_conform_assert_trans_mul_size<A_trans, B_trans>(A_n_rows, A_n_cols, B_n_rows, B_n_cols, "matrix multiplication");
 
   const out_eT alpha = (p1.get_val() == out_eT(1) && p2.get_val() == out_eT(1)) ? out_eT(1) : out_eT(p1.get_val() * p2.get_val());
 
@@ -479,37 +479,21 @@ glue_times_diag::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times_diag>& X)
     // In this case, we can do an elementwise multiplication of the diagonal
     // vectors, and create a new diagonal matrix.
 
-    // We use unwrap on the partial_unwrap result so we can have generic access to
-    // row and column offsets, in case either element is a subview.
     typedef typename partial_unwrap<ST1>::stored_type PST1;
     typedef typename partial_unwrap<ST2>::stored_type PST2;
-    unwrap<PST1> up1(p1.M);
-    unwrap<PST2> up2(p2.M);
-
-    Col<out_eT> tmp(A_n_elem);
-    coot_rt_t::eop_mat(threeway_kernel_id::equ_array_mul_array,
-                       tmp.get_dev_mem(false),
-                       up1.get_dev_mem(false),
-                       up2.get_dev_mem(false),
-                       tmp.n_rows, tmp.n_cols,
-                       0, 0, tmp.n_rows,
-                       up1.get_row_offset(), up1.get_col_offset(), up1.get_M_n_rows(),
-                       up2.get_row_offset(), up2.get_col_offset(), up2.get_M_n_rows());
-    if (alpha != out_eT(1))
-      {
-      coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
-                            tmp.get_dev_mem(false), tmp.get_dev_mem(false),
-                            alpha, (out_eT) 1,
-                            tmp.n_rows, tmp.n_cols, 1,
-                            0, 0, 0, tmp.n_rows, tmp.n_cols,
-                            0, 0, 0, tmp.n_rows, tmp.n_cols);
-      }
 
     // Set the diagonal of `out` to the vector in `tmp`.
-    coot_rt_t::copy_mat(out.get_dev_mem(false), tmp.get_dev_mem(false),
-                        1, A_n_elem,
-                        0, 0, C_n_rows + 1,
-                        0, 0, 1);
+    const diagview<out_eT> out_d(out, 0, 0, (std::min)(out.n_rows, out.n_cols));
+    const eGlue<PST1, PST2, eglue_schur> E(p1.M, p2.M);
+    if (alpha != out_eT(1))
+      {
+      const eOp<eGlue<PST1, PST2, eglue_schur>, eop_scalar_times> E2(E, alpha);
+      coot_rt_t::copy(make_proxy(out_d), make_proxy(E2));
+      }
+    else
+      {
+      coot_rt_t::copy(make_proxy(out_d), make_proxy(E));
+      }
     }
   else if (!A_diag && !B_diag)
     {

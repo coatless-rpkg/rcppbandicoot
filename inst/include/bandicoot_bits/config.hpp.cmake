@@ -1,4 +1,8 @@
-// Copyright 2017 Conrad Sanderson (http://conradsanderson.id.au)
+// SPDX-License-Identifier: Apache-2.0
+//
+// Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
+// Copyright 2017-2023 Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2008-2016 National ICT Australia (NICTA)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +33,7 @@
 #if !defined(COOT_USE_OPENCL)
 #cmakedefine COOT_USE_OPENCL
 //// Uncomment the above line if you have OpenCL available on your system.
+//// When using the OpenCL backend, Bandicoot requires OpenCL to be available.
 //// For nontrivial operations it is also required to have either clBLAS or CLBlast available also.
 #endif
 
@@ -36,6 +41,8 @@
 #cmakedefine COOT_TARGET_OPENCL_VERSION @COOT_TARGET_OPENCL_VERSION@
 //// This defines the version of the OpenCL API that will be targeted by default.
 //// Make sure that it matches the version of the OpenCL driver (you can find this with `clinfo`; look for "Platform Numeric Version".
+////
+//// NOTE: the version above is a fallback safety value!  Set it to the correct version for your system.
 #endif
 
 #if !defined(COOT_USE_CLBLAST)
@@ -52,10 +59,21 @@
 #if !defined(COOT_USE_CUDA)
 #cmakedefine COOT_USE_CUDA
 //// Uncomment the above line if you have CUDA available on your system.
-//// Bandicoot requires CUDA, CUDART, cuBLAS, cuRAND, cuSolver, and NVRTC.
+//// When using the CUDA backend, Bandicoot requires CUDA, CUDART, cuBLAS, cuRAND, cuSolver, and NVRTC to be available.
 #cmakedefine COOT_CUDA_INCLUDE_PATH @COOT_CUDA_INCLUDE_PATH@
 //// Set the above line to the include path used to include parts of the CUDA toolkit.
 //// These will be used by NVRTC to compile kernels on-the-fly.
+#endif
+
+#if !defined(COOT_USE_VULKAN)
+#cmakedefine COOT_USE_VULKAN
+//// Uncomment the above line if you have Vulkan available on your system.
+#endif
+
+#if !defined(COOT_USE_SHADERC)
+#cmakedefine COOT_USE_SHADERC
+//// Uncomment the above line if you have shaderc available on your system.
+//// shaderc is required for runtime compilation of Vulkan (GLSL -> SPIR-V) compute shaders.
 #endif
 
 #if !defined(COOT_DEFAULT_BACKEND)
@@ -118,19 +136,32 @@
 //// Note that COOT_USE_OPENMP is automatically enabled when a compiler supporting OpenMP 3.1 is detected.
 #endif
 
-// #define COOT_NO_DEBUG
-//// Uncomment the above line to disable all run-time checks. NOT RECOMMENDED.
-//// It is strongly recommended that run-time checks are enabled during development,
-//// as this greatly aids in finding mistakes in your code.
+#if !defined(COOT_USE_STD_MUTEX)
+  #define COOT_USE_STD_MUTEX
+//// Comment out the above line to disable use of std::mutex
+#endif
 
-// #define COOT_EXTRA_DEBUG
-//// Uncomment the above line if you want to see the function traces of how Bandicoot evaluates expressions.
+#if !defined(COOT_OPTIMISE_POWEXPR)
+  #define COOT_OPTIMISE_POWEXPR
+  //// Comment out the above line to disable optimised handling of pow()
+#endif
+
+#if !defined(COOT_CHECK_CONFORMANCE)
+  #define COOT_CHECK_CONFORMANCE
+  //// Comment out the above line to disable conformance checks for bounds and size.
+  //// This is NOT RECOMMENDED.
+  //// It is strongly recommended that conformance checks are enabled during development,
+//// as this greatly aids in finding mistakes in your code.
+#endif
+
+// #define COOT_DEBUG
+//// Uncomment the above line to see the function traces of how Bandicoot evaluates expressions.
 //// This is mainly useful for debugging of the library.
 
 #if defined(COOT_EXTRA_DEBUG)
-  #undef  COOT_NO_DEBUG
-  #undef  COOT_WARN_LEVEL
-  #define COOT_WARN_LEVEL 3
+  // for compatibility with earlier versions of Bandicoot (<= 3.1.0)
+  #undef  COOT_DEBUG
+  #define COOT_DEBUG
 #endif
 
 #if !defined(COOT_COUT_STREAM)
@@ -181,6 +212,37 @@
   #undef COOT_USE_OPENMP
 #endif
 
+#if defined(COOT_DONT_USE_STD_MUTEX)
+  #undef COOT_USE_STD_MUTEX
+#endif
+
+#if defined(COOT_DONT_OPTIMISE_POWEXPR)
+  #undef COOT_OPTIMISE_POWEXPR
+#endif
+
+#if defined(COOT_NO_DEBUG)
+  #undef COOT_DEBUG
+  #undef COOT_EXTRA_DEBUG
+#endif
+
+#if defined(COOT_DEBUG)
+  #undef  COOT_DONT_CHECK_CONFORMANCE
+
+  #undef  COOT_CHECK_CONFORMANCE
+  #define COOT_CHECK_CONFORMANCE
+
+  #undef  COOT_WARN_LEVEL
+  #define COOT_WARN_LEVEL 3
+#endif
+
+#if defined(COOT_DONT_CHECK_CONFORMANCE)
+  #if defined(COOT_DONT_CHECK_CONFORMANCE) && (COOT_WARN_LEVEL >= 2)
+    #pragma message ("WARNING: conformance checks disabled")
+  #endif
+
+  #undef COOT_CHECK_CONFORMANCE
+#endif
+
 #if defined(COOT_DONT_PRINT_EXCEPTIONS)
   #undef COOT_PRINT_EXCEPTIONS
 #endif
@@ -190,8 +252,10 @@
     #define COOT_DEFAULT_BACKEND CL_BACKEND
   #elif defined(COOT_USE_CUDA)
     #define COOT_DEFAULT_BACKEND CUDA_BACKEND
+  #elif defined(COOT_USE_VULKAN)
+    #define COOT_DEFAULT_BACKEND VULKAN_BACKEND
   #else
-    #error "One of COOT_USE_OPENCL or COOT_USE_CUDA must be defined!"
+    #error "One of COOT_USE_OPENCL, COOT_USE_CUDA, or COOT_USE_VULKAN must be defined!"
   #endif
 #else
   // TODO: ensure that the backend is valid
@@ -216,7 +280,7 @@
 
 // Uncomment and modify the lines below to specify a custom directory where Bandicoot kernel sources are stored.
 // Alternately, define COOT_KERNEL_SOURCE_DIR in your program.
-// Note that COOT_KERNEL_SOURCE_DIR must have a / as its final character (or \ on Windows).
+// Note that COOT_KERNEL_SOURCE_DIR must have a / as its final character (or \ on Windows), and should be enclosed in quotes.
 //
 // Kernels are expected to be in the following structure:
 //   COOT_KERNEL_SOURCE_DIR/
@@ -231,7 +295,7 @@
 //
 // #if !defined(COOT_KERNEL_SOURCE_DIR)
 //   #undef COOT_KERNEL_SOURCE_DIR
-//   #define COOT_KERNEL_SOURCE_DIR /custom/kernel/location/
+//   #define COOT_KERNEL_SOURCE_DIR "/custom/kernel/location/"
 // #endif
 
 // if Bandicoot was installed on this system via CMake and COOT_USE_WRAPPER is not defined,

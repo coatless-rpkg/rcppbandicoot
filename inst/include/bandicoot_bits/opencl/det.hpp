@@ -22,7 +22,7 @@ inline
 std::tuple<bool, std::string>
 det(dev_mem_t<eT> in, const uword n_rows, eT& out_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (get_rt().cl_rt.is_valid() == false)
     {
@@ -35,7 +35,8 @@ det(dev_mem_t<eT> in, const uword n_rows, eT& out_val)
   magma_int_t info   = 0;
   magma_int_t status = 0; // NOTE: all paths through dgetrf and sgetrf just return status == info...
 
-  int* ipiv = cpu_memory::acquire<int>(n_rows);
+  cpu_memory::mem_array<int> ipiv_array(n_rows);
+  int* ipiv = ipiv_array.memptr();
 
   if(is_float<eT>::value)
     {
@@ -52,7 +53,6 @@ det(dev_mem_t<eT> in, const uword n_rows, eT& out_val)
 
   if (status != MAGMA_SUCCESS)
     {
-    cpu_memory::release(ipiv);
     if (info < 0)
       {
       std::ostringstream oss;

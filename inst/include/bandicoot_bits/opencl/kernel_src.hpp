@@ -22,6 +22,7 @@
 struct kernel_src
   {
   static inline       std::string   init_src_preamble(const bool has_float64, const bool has_float16, const bool has_sizet64, const bool has_subgroups, const size_t subgroup_size, const bool must_synchronise_subgroups, const bool need_subgroup_extension);
+  static inline       std::string   init_src_prelims();
 
   static inline       std::string   get_zeroway_source(const zeroway_kernel_id::enum_id num);
 
@@ -36,10 +37,6 @@ struct kernel_src
   template<typename eT1, typename eT2>
   static inline       std::string   get_twoway_defines();
   static inline       std::string   get_twoway_source(const twoway_kernel_id::enum_id num);
-
-  template<typename eT1, typename eT2, typename eT3>
-  static inline       std::string   get_threeway_defines();
-  static inline       std::string   get_threeway_source(const threeway_kernel_id::enum_id num);
 
   static inline       std::string   init_magma_defines();
   static inline const std::string&  get_magma_defines();
@@ -143,13 +140,13 @@ kernel_src::init_src_preamble(const bool has_float64, const bool has_float16, co
   "#define COOT_S8_MAX "  + std::string(s8_max)  + " \n"
   "#define COOT_S16_MAX " + std::string(s16_max) + " \n"
   "#define COOT_S32_MAX " + std::string(s32_max) + " \n"
-  "#define COOT_S64_MAX " + std::string(s64_max) + " \n" +
+  "#define COOT_S64_MAX " + std::string(s64_max) + " \n"
+  "\n"
+  "#define COOT_PI " COOT_STRINGIFY(M_PI) "\n" +
 
   ((has_sizet64) ?
-      std::string("#define UWORD ulong \n"
-                  "#define COOT_UWORD_MAX COOT_U64_MAX \n") :
-      std::string("#define UWORD uint \n"
-                  "#define COOT_UWORD_MAX COOT_U32_MAX \n")) +
+      std::string("#define COOT_UWORD_MAX COOT_U64_MAX \n") :
+      std::string("#define COOT_UWORD_MAX COOT_U32_MAX \n")) +
 
   // Utility function for subgroup barriers; this is needed in case subgroups
   // are not available.
@@ -160,9 +157,16 @@ kernel_src::init_src_preamble(const bool has_float64, const bool has_float16, co
   "#define SUBGROUP_SIZE_NAME " + ((has_subgroups && subgroup_size < 128) ? std::string(subgroup_size_str) : "other") +
   "\n";
 
-  source += read_file("defs/opencl_prelims.cl");
-
   return source;
+  }
+
+
+
+inline
+std::string
+kernel_src::init_src_prelims()
+  {
+  return read_file("defs/opencl_prelims.cl");
   }
 
 
@@ -200,17 +204,17 @@ kernel_src::get_oneway_defines()
   typedef typename uint_type<eT>::result           uint_eT;
 
   std::string source = \
-      "#define PREFIX " + type_prefix<eT>() + "_ \n" +
+      "#define PREFIX " + rt_type_prefix<eT>() + "_ \n" +
       "#define eT1 " + type_to_dev_string::map<eT>() + " \n" +
       "#define fp_eT1 " + type_to_dev_string::map<fp_eT>() + " \n" +
       "#define uint_eT1 " + type_to_dev_string::map<uint_eT>() + " \n" +
       "#define ET1_ABS " + type_to_dev_string::abs_func<eT>() + " \n";
 
-  source += read_file("defs/" + type_prefix<eT>() + "_defs.cl");
+  source += read_file("defs/" + rt_type_prefix<eT>() + "_defs.cl");
   if (is_same_type<eT, fp_eT>::no)
-    source += read_file("defs/" + type_prefix<fp_eT>() + "_defs.cl");
+    source += read_file("defs/" + rt_type_prefix<fp_eT>() + "_defs.cl");
   if (is_same_type<eT, uint_eT>::no)
-    source += read_file("defs/" + type_prefix<uint_eT>() + "_defs.cl");
+    source += read_file("defs/" + rt_type_prefix<uint_eT>() + "_defs.cl");
 
   return source;
   }
@@ -301,7 +305,7 @@ kernel_src::get_twoway_defines()
   typedef typename promote_type<eT1, eT2>::result   twoway_promoted_eT;
 
   std::string source =
-      "#define PREFIX " + type_prefix<eT1>() + "_" + type_prefix<eT2>() + "_\n" +
+      "#define PREFIX " + rt_type_prefix<eT1>() + "_" + rt_type_prefix<eT2>() + "_\n" +
       "#define eT1 " + type_to_dev_string::map<eT1>() + "\n" +
       "#define fp_eT1 " + type_to_dev_string::map<fp_eT1>() + "\n" +
       "#define uint_eT1 " + type_to_dev_string::map<uint_eT1>() + "\n" +
@@ -311,28 +315,28 @@ kernel_src::get_twoway_defines()
       "#define uint_eT2 " + type_to_dev_string::map<uint_eT2>() + "\n" +
       "#define twoway_promoted_eT " + type_to_dev_string::map<twoway_promoted_eT>() + "\n";
 
-  source += read_file("defs/" + type_prefix<eT1>() + "_defs.cl");
+  source += read_file("defs/" + rt_type_prefix<eT1>() + "_defs.cl");
 
   if (is_same_type<eT1, fp_eT1>::no)
-    source += read_file("defs/" + type_prefix<fp_eT1>() + "_defs.cl");
+    source += read_file("defs/" + rt_type_prefix<fp_eT1>() + "_defs.cl");
 
   if (is_same_type<eT1, uint_eT1>::no)
-    source += read_file("defs/" + type_prefix<uint_eT1>() + "_defs.cl");
+    source += read_file("defs/" + rt_type_prefix<uint_eT1>() + "_defs.cl");
 
   if (is_same_type<eT2, eT1>::no &&
       is_same_type<eT2, fp_eT1>::no &&
       is_same_type<eT2, uint_eT1>::no)
-    source += read_file("defs/" + type_prefix<eT2>() + "_defs.cl");
+    source += read_file("defs/" + rt_type_prefix<eT2>() + "_defs.cl");
 
   if (is_same_type<eT2, fp_eT2>::no &&
       is_same_type<eT1, fp_eT2>::no &&
       is_same_type<fp_eT1, fp_eT2>::no)
-    source += read_file("defs/" + type_prefix<fp_eT2>() + "_defs.cl");
+    source += read_file("defs/" + rt_type_prefix<fp_eT2>() + "_defs.cl");
 
   if (is_same_type<eT2, uint_eT2>::no &&
       is_same_type<eT1, uint_eT2>::no &&
       is_same_type<uint_eT1, uint_eT2>::no)
-    source += read_file("defs/" + type_prefix<uint_eT2>() + "_defs.cl");
+    source += read_file("defs/" + rt_type_prefix<uint_eT2>() + "_defs.cl");
 
   if (is_same_type<eT1, twoway_promoted_eT>::no &&
       is_same_type<eT2, twoway_promoted_eT>::no &&
@@ -340,7 +344,7 @@ kernel_src::get_twoway_defines()
       is_same_type<fp_eT2, twoway_promoted_eT>::no &&
       is_same_type<uint_eT1, twoway_promoted_eT>::no &&
       is_same_type<uint_eT2, twoway_promoted_eT>::no)
-    source += read_file("defs/" + type_prefix<twoway_promoted_eT>() + "_defs.cl");
+    source += read_file("defs/" + rt_type_prefix<twoway_promoted_eT>() + "_defs.cl");
 
   return source;
   }
@@ -358,133 +362,6 @@ kernel_src::get_twoway_source(const twoway_kernel_id::enum_id num)
   if (twoway_kernel_id::get_deps().count(num) > 0)
     {
     const std::vector<std::string>& deps = twoway_kernel_id::get_deps().at(num);
-    for (const std::string& dep_f : deps)
-      {
-      source += read_file("deps/" + dep_f + ".cl");
-      }
-    }
-
-  source += read_file(filename);
-  return source;
-  }
-
-
-
-template<typename eT1, typename eT2, typename eT3>
-inline
-std::string
-kernel_src::get_threeway_defines()
-  {
-  typedef typename promote_type<eT1, float>::result fp_eT1;
-  typedef typename uint_type<eT1>::result           uint_eT1;
-  typedef typename promote_type<eT2, float>::result fp_eT2;
-  typedef typename uint_type<eT2>::result           uint_eT2;
-  typedef typename promote_type<eT3, float>::result fp_eT3;
-  typedef typename uint_type<eT3>::result           uint_eT3;
-
-  typedef typename promote_type<eT1, eT2>::result                twoway_promoted_eT;
-  typedef typename promote_type<twoway_promoted_eT, eT3>::result threeway_promoted_eT;
-
-  std::string source =
-      "#define PREFIX " + type_prefix<eT1>() + "_" + type_prefix<eT2>() + "_" + type_prefix<eT3>() + "_\n" +
-      "#define eT1 " + type_to_dev_string::map<eT1>() + "\n" +
-      "#define fp_eT1 " + type_to_dev_string::map<fp_eT1>() + "\n" +
-      "#define uint_eT1 " + type_to_dev_string::map<uint_eT1>() + "\n" +
-      "#define ET1_ABS " + type_to_dev_string::abs_func<eT1>() + "\n" +
-      "#define eT2 " + type_to_dev_string::map<eT2>() + "\n" +
-      "#define fp_eT2 " + type_to_dev_string::map<fp_eT2>() + "\n" +
-      "#define uint_eT2 " + type_to_dev_string::map<uint_eT2>() + "\n" +
-      "#define twoway_promoted_eT " + type_to_dev_string::map<twoway_promoted_eT>() + "\n" +
-      "#define eT3 " + type_to_dev_string::map<eT3>() + "\n" +
-      "#define fp_eT3 " + type_to_dev_string::map<fp_eT3>() + "\n" +
-      "#define uint_eT3 " + type_to_dev_string::map<uint_eT3>() + "\n" +
-      "#define threeway_promoted_eT " + type_to_dev_string::map<threeway_promoted_eT>() + "\n";
-
-  source += read_file("defs/" + type_prefix<eT1>() + "_defs.cl");
-
-  if (is_same_type<eT1, fp_eT1>::no)
-    source += read_file("defs/" + type_prefix<fp_eT1>() + "_defs.cl");
-
-  if (is_same_type<eT1, uint_eT1>::no)
-    source += read_file("defs/" + type_prefix<uint_eT1>() + "_defs.cl");
-
-  if (is_same_type<eT2, eT1>::no &&
-      is_same_type<eT2, fp_eT1>::no &&
-      is_same_type<eT2, uint_eT1>::no)
-    source += read_file("defs/" + type_prefix<eT2>() + "_defs.cl");
-
-  if (is_same_type<eT2, fp_eT2>::no &&
-      is_same_type<eT1, fp_eT2>::no &&
-      is_same_type<fp_eT1, fp_eT2>::no)
-    source += read_file("defs/" + type_prefix<fp_eT2>() + "_defs.cl");
-
-  if (is_same_type<eT2, uint_eT2>::no &&
-      is_same_type<eT1, uint_eT2>::no &&
-      is_same_type<uint_eT1, uint_eT2>::no)
-    source += read_file("defs/" + type_prefix<uint_eT2>() + "_defs.cl");
-
-  if (is_same_type<eT1, twoway_promoted_eT>::no &&
-      is_same_type<eT2, twoway_promoted_eT>::no &&
-      is_same_type<fp_eT1, twoway_promoted_eT>::no &&
-      is_same_type<fp_eT2, twoway_promoted_eT>::no &&
-      is_same_type<uint_eT1, twoway_promoted_eT>::no &&
-      is_same_type<uint_eT2, twoway_promoted_eT>::no)
-    source += read_file("defs/" + type_prefix<twoway_promoted_eT>() + "_defs.cl");
-
-  if (is_same_type<eT3, eT2>::no &&
-      is_same_type<eT3, fp_eT2>::no &&
-      is_same_type<eT3, uint_eT2>::no &&
-      is_same_type<eT3, eT1>::no &&
-      is_same_type<eT3, fp_eT1>::no &&
-      is_same_type<eT3, uint_eT1>::no &&
-      is_same_type<eT3, twoway_promoted_eT>::no)
-    source += read_file("defs/" + type_prefix<eT3>() + "_defs.cl");
-
-  if (is_same_type<eT3, fp_eT3>::no &&
-      is_same_type<eT2, fp_eT3>::no &&
-      is_same_type<eT1, fp_eT3>::no &&
-      is_same_type<fp_eT2, fp_eT3>::no &&
-      is_same_type<fp_eT1, fp_eT3>::no &&
-      is_same_type<twoway_promoted_eT, fp_eT3>::no)
-    source += read_file("defs/" + type_prefix<fp_eT3>() + "_defs.cl");
-
-  if (is_same_type<eT3, uint_eT3>::no &&
-      is_same_type<eT2, uint_eT3>::no &&
-      is_same_type<eT1, uint_eT3>::no &&
-      is_same_type<uint_eT2, uint_eT3>::no &&
-      is_same_type<uint_eT1, uint_eT3>::no &&
-      is_same_type<twoway_promoted_eT, uint_eT3>::no)
-    source += read_file("defs/" + type_prefix<uint_eT3>() + "_defs.cl");
-
-  if (is_same_type<eT1, threeway_promoted_eT>::no &&
-      is_same_type<eT2, threeway_promoted_eT>::no &&
-      is_same_type<eT3, threeway_promoted_eT>::no &&
-      is_same_type<fp_eT1, threeway_promoted_eT>::no &&
-      is_same_type<fp_eT2, threeway_promoted_eT>::no &&
-      is_same_type<fp_eT3, threeway_promoted_eT>::no &&
-      is_same_type<uint_eT1, threeway_promoted_eT>::no &&
-      is_same_type<uint_eT2, threeway_promoted_eT>::no &&
-      is_same_type<uint_eT3, threeway_promoted_eT>::no &&
-      is_same_type<twoway_promoted_eT, threeway_promoted_eT>::no)
-    source += read_file("defs/" + type_prefix<threeway_promoted_eT>() + "_defs.cl");
-
-  return source;
-  }
-
-
-
-inline
-std::string
-kernel_src::get_threeway_source(const threeway_kernel_id::enum_id num)
-  {
-  const std::string kernel_name = threeway_kernel_id::get_names()[num];
-  const std::string filename = "threeway/" + kernel_name + ".cl";
-
-  std::string source;
-
-  if (threeway_kernel_id::get_deps().count(num) > 0)
-    {
-    const std::vector<std::string>& deps = threeway_kernel_id::get_deps().at(num);
     for (const std::string& dep_f : deps)
       {
       source += read_file("deps/" + dep_f + ".cl");

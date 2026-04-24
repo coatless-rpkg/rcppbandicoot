@@ -32,12 +32,12 @@ extract_cx(dev_mem_t<eT1> out_mem,
            const uword n_cols,
            const bool imag)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // sanity check
   static_assert( is_cx<eT2>::yes, "eT2 must be complex" );
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "cuda::extract_cx(): CUDA runtime not valid");
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "cuda::extract_cx(): CUDA runtime not valid");
 
   const kernel_dims dims = two_dimensional_grid_dims(n_rows, n_cols);
 

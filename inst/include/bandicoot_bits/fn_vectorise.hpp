@@ -28,7 +28,7 @@ enable_if2
   >::result
 vectorise(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_vectorise_col>(X);
   }
@@ -46,9 +46,9 @@ enable_if2
   >::result
 vectorise(const T1& X, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (dim > 1), "vectorise(): parameter 'dim' must be 0 or 1" );
+  coot_conform_check( (dim > 1), "vectorise(): parameter 'dim' must be 0 or 1" );
 
   return Op<T1, op_vectorise_all>(X, dim, 0);
   }
@@ -61,7 +61,7 @@ inline
 CubeToMatOp<T1, op_vectorise_cube_col>
 vectorise(const BaseCube<typename T1::elem_type, T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return CubeToMatOp<T1, op_vectorise_cube_col>(X.get_ref());
   }

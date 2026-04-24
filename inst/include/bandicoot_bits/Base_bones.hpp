@@ -18,27 +18,30 @@
 
 
 
-template<typename derived>
-struct Base_inv_yes
+template<typename elem_type, typename derived>
+struct Base_extra_yes
   {
   coot_warn_unused inline const Op<derived, op_inv> i() const;   // matrix inverse
+  
+  coot_warn_unused inline bool is_sympd() const;
+  coot_warn_unused inline bool is_sympd(typename get_pod_type<elem_type>::result tol) const;
   };
 
 
-template<typename derived>
-struct Base_inv_no
+template<typename elem_type, typename derived>
+struct Base_extra_no
   {
   };
 
 
-template<typename derived, bool condition>
-struct Base_inv {};
+template<typename elem_type, typename derived, bool condition>
+struct Base_extra {};
 
-template<typename derived>
-struct Base_inv<derived, true>  { typedef Base_inv_yes<derived> result; };
+template<typename elem_type, typename derived>
+struct Base_extra<elem_type, derived, true>  { typedef Base_extra_yes<elem_type, derived> result; };
 
-template<typename derived>
-struct Base_inv<derived, false> { typedef Base_inv_no<derived>  result; };
+template<typename elem_type, typename derived>
+struct Base_extra<elem_type, derived, false> { typedef Base_extra_no<elem_type, derived>  result; };
 
 
 
@@ -98,7 +101,7 @@ struct Base_trans<derived, false> { typedef Base_trans_default<derived> result; 
 
 template<typename elem_type, typename derived>
 struct Base
-  : public Base_inv<derived, is_supported_blas_type<elem_type>::value>::result
+  : public Base_extra<elem_type, derived, is_supported_blas_type<elem_type>::value>::result
   , public Base_eval<elem_type, derived, is_Mat<derived>::value>::result
   , public Base_trans<derived, is_cx<elem_type>::value>::result
   {
@@ -121,7 +124,13 @@ struct Base
 
   coot_warn_unused inline uword index_min() const;
   coot_warn_unused inline uword index_max() const;
-
+  
+  coot_warn_unused inline bool is_symmetric() const;
+  coot_warn_unused inline bool is_symmetric(const typename get_pod_type<elem_type>::result tol) const;
+  
+  coot_warn_unused inline bool is_hermitian() const;
+  coot_warn_unused inline bool is_hermitian(const typename get_pod_type<elem_type>::result tol) const;
+  
   coot_warn_unused inline bool is_finite()  const;
   coot_warn_unused inline bool has_inf()    const;
   coot_warn_unused inline bool has_nan()    const;

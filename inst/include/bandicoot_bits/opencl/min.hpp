@@ -30,9 +30,9 @@ min(dev_mem_t<eT2> dest,
     const uword src_col_offset,
     const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::min(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::min(): OpenCL runtime not valid" );
 
   runtime_t::cq_guard guard;
 
@@ -86,9 +86,9 @@ inline
 eT
 min_vec(dev_mem_t<eT> mem, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::min_vec(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::min_vec(): OpenCL runtime not valid" );
 
   cl_kernel k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::min);
   cl_kernel k_small = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::min_small);
@@ -112,9 +112,9 @@ min_cube_col(dev_mem_t<eT2> dest,
              const uword n_slices,
              const bool post_conv_apply)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::min_cube_col(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::min_cube_col(): OpenCL runtime not valid" );
 
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(post_conv_apply ? twoway_kernel_id::min_cube_col_conv_post : twoway_kernel_id::min_cube_col_conv_pre);
 

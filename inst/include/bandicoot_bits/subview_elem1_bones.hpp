@@ -22,10 +22,6 @@
 // a subview of an object where we are only accessing a vector of indices,
 // and that vector is stored in the T1 (subview_elem1.a)
 //
-// NOTE: this is a very early implementation and backend kernels do not
-// support indirect accesses (yet), so it will often extract the matrix
-// into a standalone matrix before performing operations!
-//
 template<typename eT, typename T1>
 class subview_elem1 : public Base< eT, subview_elem1<eT,T1> >
   {
@@ -54,8 +50,6 @@ class subview_elem1 : public Base< eT, subview_elem1<eT,T1> >
   inline ~subview_elem1();
   inline  subview_elem1() = delete;
 
-                        inline void inplace_op(const twoway_kernel_id::enum_id kernel, const eT val_pre, const eT val_post);
-  template<typename T2> inline void inplace_op(const twoway_kernel_id::enum_id kernel_id, const subview_elem1<eT,T2>& x);
   template<typename T2> inline void inplace_op(const twoway_kernel_id::enum_id kernel_id, const Base<eT,T2>&          x);
 
   coot_inline const Op<subview_elem1<eT,T1>,op_htrans>  t() const;
@@ -74,6 +68,8 @@ class subview_elem1 : public Base< eT, subview_elem1<eT,T1> >
   inline void randu();
   inline void randn();
 
+  coot_warn_unused inline bool is_empty() const;
+
   inline void operator+= (const eT val);
   inline void operator-= (const eT val);
   inline void operator*= (const eT val);
@@ -83,12 +79,18 @@ class subview_elem1 : public Base< eT, subview_elem1<eT,T1> >
   // deliberately returning void
   template<typename T2> inline void operator=   (const subview_elem1<eT,T2>& x);
                         inline void operator=   (const subview_elem1<eT,T1>& x);
+
+  template<typename eglue_type, typename T2> inline void inplace_op(const subview_elem1<eT,T2>& x, const char* op_name);
+
   template<typename T2> inline void operator+=  (const subview_elem1<eT,T2>& x);
   template<typename T2> inline void operator-=  (const subview_elem1<eT,T2>& x);
   template<typename T2> inline void operator%=  (const subview_elem1<eT,T2>& x);
   template<typename T2> inline void operator/=  (const subview_elem1<eT,T2>& x);
 
   template<typename T2> inline void operator=  (const Base<eT,T2>& x);
+
+  template<typename eglue_type, typename T2> inline void inplace_op(const Base<eT, T2>& x, const char* op_name);
+
   template<typename T2> inline void operator+= (const Base<eT,T2>& x);
   template<typename T2> inline void operator-= (const Base<eT,T2>& x);
   template<typename T2> inline void operator%= (const Base<eT,T2>& x);

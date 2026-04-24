@@ -23,7 +23,7 @@ inline
 typename T1::elem_type
 as_scalar(const Base<typename T1::elem_type, T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
 
@@ -32,7 +32,7 @@ as_scalar(const Base<typename T1::elem_type, T1>& X)
 
   if(A.n_elem != 1)
     {
-    coot_debug_check(true, "as_scalar(): expression doesn't evaluate to exactly one element");
+    coot_conform_check(true, "as_scalar(): expression doesn't evaluate to exactly one element");
 
     return Datum<eT>::nan;
     }

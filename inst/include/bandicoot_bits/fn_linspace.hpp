@@ -31,7 +31,7 @@ linspace
   const uword                       num = 100u
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   out_type x;
   x.set_size(num);
@@ -47,6 +47,6 @@ inline
 vec
 linspace(const double start, const double end, const uword num = 100u)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return linspace<vec>(start, end, num);
   }

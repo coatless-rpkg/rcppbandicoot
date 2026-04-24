@@ -38,7 +38,7 @@ struct gemv
         const uword x_offset,
         const uword x_mem_incr)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     coot_ignore(y_mem);
     coot_ignore(A_mem);
     coot_ignore(A_n_rows);
@@ -78,9 +78,9 @@ struct gemv
         const uword x_offset,
         const uword x_mem_incr)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
-    // coot_debug_assert_blas_size(A);  // TODO: adapt this assert for size_t
+    // coot_conform_assert_blas_size(A);  // TODO: adapt this assert for size_t
 
     cublasOperation_t trans_a = (do_trans_A) ? CUBLAS_OP_T : CUBLAS_OP_N;
 
@@ -132,9 +132,9 @@ struct gemv
         const uword x_offset,
         const uword x_mem_incr)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
-    // coot_debug_assert_blas_size(A); // TODO: adapt this assert for size_t
+    // coot_conform_assert_blas_size(A); // TODO: adapt this assert for size_t
 
     cublasOperation_t trans_a = (do_trans_A) ? CUBLAS_OP_T : CUBLAS_OP_N;
 
@@ -186,11 +186,11 @@ struct gemv
         const uword x_offset,
         const uword x_mem_incr)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     coot_check_runtime_error( !get_rt().cuda_rt.is_supported_type<__half>(), "coot::cuda::gemv(): half-precision not supported by device" );
 
-    // coot_debug_assert_blas_size(A);  // TODO: adapt this assert for size_t
+    // coot_conform_assert_blas_size(A);  // TODO: adapt this assert for size_t
 
     // There is no cublasHgemv, so we have to use cublasHgemm instead.
     // To do this, instead of computing y = Ax or y = A'x, we actually compute

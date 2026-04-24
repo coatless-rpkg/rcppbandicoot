@@ -22,7 +22,7 @@ template<typename T1, typename T2, typename eglue_type>
 coot_inline
 eGlueCube<T1, T2, eglue_type>::~eGlueCube()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -33,9 +33,9 @@ eGlueCube<T1, T2, eglue_type>::eGlueCube(const T1& in_A, const T2& in_B)
   : A(in_A)
   , B(in_B)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_assert_same_size
+  coot_conform_assert_same_size
     (
     A.get_n_rows(), A.get_n_cols(), A.get_n_slices(),
     B.get_n_rows(), B.get_n_cols(), B.get_n_slices(),

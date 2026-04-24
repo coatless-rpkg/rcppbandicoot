@@ -27,7 +27,7 @@ enable_if2
   >::result
 repmat(const T1& A, const uword r, const uword c)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_repmat>(A, r, c);
   }

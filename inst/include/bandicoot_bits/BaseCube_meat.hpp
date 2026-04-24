@@ -35,7 +35,7 @@ inline
 void
 BaseCube<elem_type,derived>::print(const std::string extra_text) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap_cube<derived> tmp( (*this).get_ref() );
 
@@ -59,7 +59,7 @@ inline
 void
 BaseCube<elem_type,derived>::print(std::ostream& user_stream, const std::string extra_text) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap_cube<derived> tmp( (*this).get_ref() );
 
@@ -83,7 +83,7 @@ inline
 void
 BaseCube<elem_type,derived>::raw_print(const std::string extra_text) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap_cube<derived> tmp( (*this).get_ref() );
 
@@ -107,7 +107,7 @@ inline
 void
 BaseCube<elem_type,derived>::raw_print(std::ostream& user_stream, const std::string extra_text) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap_cube<derived> tmp( (*this).get_ref() );
 
@@ -131,7 +131,7 @@ BaseCube<elem_type,derived>::raw_print(std::ostream& user_stream, const std::str
 //void
 //BaseCube<elem_type,derived>::brief_print(const std::string extra_text) const
 //  {
-//  coot_extra_debug_sigprint();
+//  coot_debug_sigprint();
 //
 //  const unwrap_cube<derived> tmp( (*this).get_ref() );
 //
@@ -155,7 +155,7 @@ BaseCube<elem_type,derived>::raw_print(std::ostream& user_stream, const std::str
 //void
 //BaseCube<elem_type,derived>::brief_print(std::ostream& user_stream, const std::string extra_text) const
 //  {
-//  coot_extra_debug_sigprint();
+//  coot_debug_sigprint();
 //
 //  const unwrap_cube<derived> tmp( (*this).get_ref() );
 //
@@ -238,10 +238,10 @@ inline
 bool
 BaseCube<elem_type, derived>::is_finite() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // The is_finite kernels only work on contiguous memory.
-  if (is_non_integral<elem_type>::value)
+  if (is_real_or_cx<elem_type>::value)
     {
     Cube<elem_type> tmp((*this).get_ref());
     return tmp.is_finite();
@@ -259,10 +259,10 @@ inline
 bool
 BaseCube<elem_type, derived>::has_inf() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // The has_inf kernels only work on contiguous memory.
-  if (is_non_integral<elem_type>::value)
+  if (is_real_or_cx<elem_type>::value)
     {
     Cube<elem_type> tmp((*this).get_ref());
     return tmp.has_inf();
@@ -280,10 +280,10 @@ inline
 bool
 BaseCube<elem_type, derived>::has_nan() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // The has_nan kernels only work on contiguous memory.
-  if (is_non_integral<elem_type>::value)
+  if (is_real_or_cx<elem_type>::value)
     {
     Cube<elem_type> tmp((*this).get_ref());
     return tmp.has_nan();
@@ -304,7 +304,7 @@ coot_inline
 const derived&
 BaseCube_eval_Cube<elem_type, derived>::eval() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return static_cast<const derived&>(*this);
   }
@@ -319,7 +319,7 @@ inline
 Cube<elem_type>
 BaseCube_eval_expr<elem_type, derived>::eval() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Cube<elem_type>( static_cast<const derived&>(*this) );
   }

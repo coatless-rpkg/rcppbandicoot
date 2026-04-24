@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
-// 
+//
 // Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
-// Copyright 2008-2023 Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2008-2026 Conrad Sanderson (https://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// http://www.apache.org/licenses/LICENSE-2.0
+// https://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,17 +19,78 @@
 #ifndef BANDICOOT_INCLUDES
 #define BANDICOOT_INCLUDES
 
-#include <cassert>  // TODO: remove this after all of the code has been adapted
+// WARNING: the documentation (docs.html) describes the public API (functions, classes, constants);
+// WARNING: any functionality which is _not explicitly_ described in the documentation
+// WARNING: is considered as internal implementation detail, and may be changed or removed without notice.
 
-#undef  CL_USE_DEPRECATED_OPENCL_1_2_APIS
-#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
-
-
-#include "bandicoot_bits/compiler_check.hpp"
 #include "bandicoot_bits/config.hpp"
+#include "bandicoot_bits/compiler_check.hpp"
+
+#include <cstdlib>
+#include <cstddef>
+#include <cstdint>
+#include <cerrno>
+#include <climits>
+#include <cfloat>
+#include <cstring>
+#include <cfenv>
+#include <cassert>  // assert() is currently used by bandicoot_bits/opencl/magma/*
+
+#include <stdexcept>
+#include <new>
+#include <string>
+#include <initializer_list>
+#include <iomanip>
+#include <limits>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <complex>
+#include <array>
+#include <vector>
+#include <utility>
+#include <unordered_map>
+#include <random>
+#include <chrono>
+#include <atomic>
+
+#if defined(COOT_USE_STD_MUTEX)
+  #if defined(__has_include)
+    #if __has_include(<mutex>)
+      #include <mutex>
+    #else
+      #undef COOT_USE_STD_MUTEX
+      #pragma message ("WARNING: use of std::mutex disabled; mutex header not found")
+    #endif
+  #else
+    #include <mutex>
+  #endif
+#endif
+
+#if defined(COOT_HAVE_CXX23)
+  #if defined(__has_include)
+    #if __has_include(<stdfloat>)
+      #include <stdfloat>
+    #endif
+  #else
+    #include <stdfloat>
+  #endif
+#endif
+
+#if ( defined(__unix__) || defined(__unix) || defined(_POSIX_C_SOURCE) || (defined(__APPLE__) && defined(__MACH__)) ) && !defined(_WIN32)
+  #define COOT_HAS_POSIX_FILE_FUNCTIONS
+
+  #include <unistd.h>
+  #include <pwd.h>
+  #include <sys/stat.h>
+#endif
+
+
 #include "bandicoot_bits/compiler_setup.hpp"
 #include "bandicoot_bits/include_opencl.hpp"
 #include "bandicoot_bits/include_cuda.hpp"
+#include "bandicoot_bits/include_vulkan.hpp"
+
 
 #if defined(COOT_USE_OPENMP)
   #if defined(__has_include)
@@ -45,33 +106,6 @@
 #endif
 
 
-#include <mutex>
-#include <cerrno>
-#include <iomanip>
-#include <climits>
-#include <limits>
-#include <cfloat>
-#include <iostream>
-#include <fstream>
-#include <complex>
-#include <vector>
-#include <unordered_map>
-#include <random>
-#include <cstring>
-#include <cstdint>
-#if defined(COOT_HAVE_CXX23)
-  #include <stdfloat>
-#endif
-#include <cfenv>
-
-#if ( defined(__unix__) || defined(__unix) || defined(_POSIX_C_SOURCE) || (defined(__APPLE__) && defined(__MACH__)) ) && !defined(_WIN32)
-  #define COOT_HAS_POSIX_FILE_FUNCTIONS
-
-  #include <unistd.h>
-  #include <pwd.h>
-  #include <sys/stat.h>
-#endif
-
 // For compatibility with Armadillo, if Bandicoot was included first.
 // Note that if Armadillo is never included, it's okay.
 #if !defined(COOT_HAVE_ARMA)
@@ -86,8 +120,10 @@ namespace coot
 
   #include "bandicoot_bits/typedef_missing.hpp"
   #include "bandicoot_bits/coot_forward.hpp"
+  #include "bandicoot_bits/coot_backend_t.hpp"
   #include "bandicoot_bits/coot_static_check.hpp"
   #include "bandicoot_bits/enable_if.hpp"
+  #include "bandicoot_bits/merge_tuple.hpp"
   #include "bandicoot_bits/fp16_shim.hpp"
   #include "bandicoot_bits/typedef_elem.hpp"
   #include "bandicoot_bits/typedef_mat.hpp"
@@ -132,6 +168,92 @@ namespace coot
     #include "bandicoot_bits/cache_bones.hpp"
     }
 
+  // template metaprogramming utilities to generate kernels
+  namespace kernel_gen
+    {
+    // preliminaries
+    #include "bandicoot_bits/kernel_gen/util_strs.hpp"
+    #include "bandicoot_bits/kernel_gen/array_util.hpp"
+    #include "bandicoot_bits/kernel_gen/index_to_str.hpp"
+    #include "bandicoot_bits/kernel_gen/elem_types.hpp"
+    #include "bandicoot_bits/kernel_gen/pointer_arg.hpp"
+    #include "bandicoot_bits/kernel_gen/pointer_access.hpp"
+
+    // type-specific and kernel-specific definitions, backend-agnostic
+    #include "bandicoot_bits/kernel_gen/elem_type_str.hpp"
+    #include "bandicoot_bits/kernel_gen/conv_elem_type_str.hpp"
+    #include "bandicoot_bits/kernel_gen/isnan_str.hpp"
+    #include "bandicoot_bits/kernel_gen/kernels.hpp"
+    #include "bandicoot_bits/kernel_gen/preamble.hpp"
+    #include "bandicoot_bits/kernel_gen/pre_kernel_src.hpp"
+    #include "bandicoot_bits/kernel_gen/post_kernel_src.hpp"
+    #include "bandicoot_bits/kernel_gen/type_defs.hpp"
+    #include "bandicoot_bits/kernel_gen/kernel_funcs.hpp"
+    #include "bandicoot_bits/kernel_gen/kernel_src.hpp"
+    #include "bandicoot_bits/kernel_gen/macro_defn.hpp"
+    #include "bandicoot_bits/kernel_gen/func_prefix.hpp"
+    #include "bandicoot_bits/kernel_gen/func_name_suffix.hpp"
+    #include "bandicoot_bits/kernel_gen/eop_inline_function.hpp"
+    #include "bandicoot_bits/kernel_gen/mtglue_inline_function.hpp"
+
+    // specific definitions for backends
+    #if defined(COOT_USE_CUDA)
+      #include "bandicoot_bits/kernel_gen/cuda/elem_type_str.hpp"
+      #include "bandicoot_bits/kernel_gen/cuda/conv_elem_type_str.hpp"
+      #include "bandicoot_bits/kernel_gen/cuda/isnan_str.hpp"
+      #include "bandicoot_bits/kernel_gen/cuda/pointer_arg.hpp"
+      #include "bandicoot_bits/kernel_gen/cuda/pointer_access.hpp"
+      #include "bandicoot_bits/kernel_gen/cuda/kernels.hpp"
+      #include "bandicoot_bits/kernel_gen/cuda/preamble.hpp"
+      #include "bandicoot_bits/kernel_gen/cuda/pre_kernel_src.hpp"
+      #include "bandicoot_bits/kernel_gen/cuda/post_kernel_src.hpp"
+      #include "bandicoot_bits/kernel_gen/cuda/type_defs.hpp"
+      #include "bandicoot_bits/kernel_gen/cuda/func_prefix.hpp"
+    #endif
+    #if defined(COOT_USE_OPENCL)
+      #include "bandicoot_bits/kernel_gen/opencl/elem_type_str.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/conv_elem_type_str.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/isnan_str.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/pointer_arg.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/pointer_access.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/kernels.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/preamble.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/pre_kernel_src.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/post_kernel_src.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/type_defs.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/func_name_suffix.hpp"
+    #endif
+    #if defined(COOT_USE_VULKAN)
+      #include "bandicoot_bits/kernel_gen/vulkan/elem_type_str.hpp"
+      #include "bandicoot_bits/kernel_gen/vulkan/conv_elem_type_str.hpp"
+      #include "bandicoot_bits/kernel_gen/vulkan/isnan_str.hpp"
+      #include "bandicoot_bits/kernel_gen/vulkan/pointer_arg.hpp"
+      #include "bandicoot_bits/kernel_gen/vulkan/pointer_access.hpp"
+      #include "bandicoot_bits/kernel_gen/vulkan/kernels.hpp"
+      #include "bandicoot_bits/kernel_gen/vulkan/preamble.hpp"
+      #include "bandicoot_bits/kernel_gen/vulkan/pre_kernel_src.hpp"
+      #include "bandicoot_bits/kernel_gen/vulkan/post_kernel_src.hpp"
+      #include "bandicoot_bits/kernel_gen/vulkan/type_defs.hpp"
+      #include "bandicoot_bits/kernel_gen/vulkan/eop_inline_str.hpp"
+    #endif
+
+    // macro definitions built on the previous pieces
+    #include "bandicoot_bits/kernel_gen/logical_name.hpp"
+    #include "bandicoot_bits/kernel_gen/prefix.hpp"
+    #include "bandicoot_bits/kernel_gen/full_name.hpp"
+    #include "bandicoot_bits/kernel_gen/macro_kernel_name.hpp"
+    #include "bandicoot_bits/kernel_gen/macro_kernel_params.hpp"
+    #include "bandicoot_bits/kernel_gen/macro_bounds_check.hpp"
+    #include "bandicoot_bits/kernel_gen/macro_elem_access.hpp"
+    #include "bandicoot_bits/kernel_gen/macro_elem_type.hpp"
+    #include "bandicoot_bits/kernel_gen/macro_conv_elem_type.hpp"
+    #include "bandicoot_bits/kernel_gen/macro_reduction_op.hpp"
+    #include "bandicoot_bits/kernel_gen/macro_kernel_push_params.hpp"
+
+    // finally the kernel_gen object that actually gets used
+    #include "bandicoot_bits/kernel_gen/generator.hpp"
+    }
+
   namespace rt_common
     {
     #include "bandicoot_bits/rt_common/kernels_t.hpp"
@@ -143,6 +265,13 @@ namespace coot
   #include "bandicoot_bits/opencl/def_opencl.hpp"
   #include "bandicoot_bits/opencl/def_clblas.hpp"
   #include "bandicoot_bits/opencl/def_clblast.hpp"
+
+  #include "bandicoot_bits/opencl/magma/magma_types.hpp"
+
+  namespace magma
+    {
+    #include "bandicoot_bits/opencl/magma.hpp"
+    }
 
   namespace opencl
     {
@@ -157,19 +286,15 @@ namespace coot
     #include "bandicoot_bits/opencl/shifted_prefix_sum_bones.hpp"
     #include "bandicoot_bits/opencl/shuffle_bones.hpp"
     #include "bandicoot_bits/opencl/opencl_misc.hpp"
+    #include "bandicoot_bits/opencl/debug.hpp"
+    #include "bandicoot_bits/opencl/to_cl_args.hpp"
+    #include "bandicoot_bits/opencl/set_args.hpp"
     }
 
-  #include "bandicoot_bits/opencl/magma/magma_types.hpp"
   #include "bandicoot_bits/opencl/magma/magmablas_bones.hpp"
-
-  namespace magma
-    {
-    #include "bandicoot_bits/opencl/magma.hpp"
-    }
 
   namespace opencl
     {
-    #include "bandicoot_bits/opencl/debug.hpp"
     #include "bandicoot_bits/opencl/kernel_src.hpp"
     }
 
@@ -196,6 +321,20 @@ namespace coot
     #include "bandicoot_bits/cuda/generic_reduce_uword_aux_bones.hpp"
     #include "bandicoot_bits/cuda/shifted_prefix_sum_bones.hpp"
     #include "bandicoot_bits/cuda/shuffle_bones.hpp"
+    #include "bandicoot_bits/cuda/construct_args.hpp"
+    }
+  #endif
+
+  #if defined(COOT_USE_VULKAN)
+
+  #include "bandicoot_bits/vulkan/def_vulkan.hpp"
+
+  namespace vulkan
+    {
+    #include "bandicoot_bits/vulkan/runtime_bones.hpp"
+    #include "bandicoot_bits/vulkan/error.hpp"
+    #include "bandicoot_bits/vulkan/dispatch.hpp"
+    #include "bandicoot_bits/vulkan/push_constants.hpp"
     }
   #endif
 
@@ -259,7 +398,6 @@ namespace coot
   #include "bandicoot_bits/op_resize_bones.hpp"
   #include "bandicoot_bits/op_reshape_bones.hpp"
   #include "bandicoot_bits/op_vectorise_bones.hpp"
-  #include "bandicoot_bits/op_clamp_bones.hpp"
   #include "bandicoot_bits/op_norm_bones.hpp"
   #include "bandicoot_bits/op_diagmat_bones.hpp"
   #include "bandicoot_bits/op_diagvec_bones.hpp"
@@ -278,7 +416,6 @@ namespace coot
   #include "bandicoot_bits/op_shuffle_bones.hpp"
   #include "bandicoot_bits/op_row_as_mat_bones.hpp"
   #include "bandicoot_bits/op_col_as_mat_bones.hpp"
-  #include "bandicoot_bits/op_replace_bones.hpp"
 
   #include "bandicoot_bits/mtop_conv_to_bones.hpp"
   #include "bandicoot_bits/mtop_all_bones.hpp"
@@ -303,8 +440,6 @@ namespace coot
   #include "bandicoot_bits/glue_conv_bones.hpp"
   #include "bandicoot_bits/glue_conv2_bones.hpp"
   #include "bandicoot_bits/glue_solve_bones.hpp"
-  #include "bandicoot_bits/glue_min_bones.hpp"
-  #include "bandicoot_bits/glue_max_bones.hpp"
 
   #include "bandicoot_bits/mtglue_mixed_bones.hpp"
   #include "bandicoot_bits/mtglue_relational_bones.hpp"
@@ -323,6 +458,23 @@ namespace coot
   #include "bandicoot_bits/def_lapack.hpp"
   #include "bandicoot_bits/translate_blas.hpp"
   #include "bandicoot_bits/translate_lapack.hpp"
+
+  //
+  // classes that underlay metaprogramming
+
+  #include "bandicoot_bits/unwrap.hpp"
+  #include "bandicoot_bits/unwrap_cube.hpp"
+  #include "bandicoot_bits/no_conv_unwrap.hpp"
+  #include "bandicoot_bits/special_cor_cov_unwrap.hpp"
+  #include "bandicoot_bits/SizeProxy.hpp"
+  #include "bandicoot_bits/SizeProxyCube.hpp"
+  #include "bandicoot_bits/ProxyCast.hpp"
+  #include "bandicoot_bits/Proxy.hpp"
+  #include "bandicoot_bits/make_proxy.hpp"
+  #include "bandicoot_bits/strip.hpp"
+  #include "bandicoot_bits/extract_subview.hpp"
+  #include "bandicoot_bits/copy_alias.hpp"
+  #include "bandicoot_bits/steal_or_copy_mem.hpp"
 
   //
   // runtime
@@ -413,7 +565,6 @@ namespace coot
       #include "bandicoot_bits/opencl/generic_reduce_meat.hpp"
       #include "bandicoot_bits/opencl/generic_reduce_uword_aux_meat.hpp"
       #include "bandicoot_bits/opencl/fill.hpp"
-      #include "bandicoot_bits/opencl/eop.hpp"
       #include "bandicoot_bits/opencl/mat_val_proxy.hpp"
       #include "bandicoot_bits/opencl/shifted_prefix_sum_meat.hpp"
       #include "bandicoot_bits/opencl/random_meat.hpp"
@@ -433,8 +584,6 @@ namespace coot
       #include "bandicoot_bits/opencl/linspace.hpp"
       #include "bandicoot_bits/opencl/logspace.hpp"
       #include "bandicoot_bits/opencl/regspace.hpp"
-      #include "bandicoot_bits/opencl/trans.hpp"
-      #include "bandicoot_bits/opencl/clamp.hpp"
       #include "bandicoot_bits/opencl/norm.hpp"
       #include "bandicoot_bits/opencl/mul_diag.hpp"
       #include "bandicoot_bits/opencl/all.hpp"
@@ -454,7 +603,6 @@ namespace coot
       #include "bandicoot_bits/opencl/eig_sym.hpp"
       #include "bandicoot_bits/opencl/prod.hpp"
       #include "bandicoot_bits/opencl/det.hpp"
-      #include "bandicoot_bits/opencl/replace.hpp"
       #include "bandicoot_bits/opencl/reorder_cols.hpp"
       #include "bandicoot_bits/opencl/cross.hpp"
       #include "bandicoot_bits/opencl/rotate_180.hpp"
@@ -464,8 +612,6 @@ namespace coot
       #include "bandicoot_bits/opencl/index_min.hpp"
       #include "bandicoot_bits/opencl/index_max.hpp"
       #include "bandicoot_bits/opencl/extract_cx.hpp"
-      #include "bandicoot_bits/opencl/extract_subview_elem1.hpp"
-      #include "bandicoot_bits/opencl/extract_subview_elem2.hpp"
       }
   #endif
 
@@ -479,7 +625,6 @@ namespace coot
     #include "bandicoot_bits/cuda/generic_reduce_meat.hpp"
     #include "bandicoot_bits/cuda/generic_reduce_uword_aux_meat.hpp"
     #include "bandicoot_bits/cuda/fill.hpp"
-    #include "bandicoot_bits/cuda/eop.hpp"
     #include "bandicoot_bits/cuda/mat_val_proxy.hpp"
     #include "bandicoot_bits/cuda/shifted_prefix_sum_meat.hpp"
     #include "bandicoot_bits/cuda/random_meat.hpp"
@@ -499,7 +644,6 @@ namespace coot
     #include "bandicoot_bits/cuda/logspace.hpp"
     #include "bandicoot_bits/cuda/regspace.hpp"
     #include "bandicoot_bits/cuda/trans.hpp"
-    #include "bandicoot_bits/cuda/clamp.hpp"
     #include "bandicoot_bits/cuda/norm.hpp"
     #include "bandicoot_bits/cuda/mul_diag.hpp"
     #include "bandicoot_bits/cuda/all.hpp"
@@ -519,7 +663,6 @@ namespace coot
     #include "bandicoot_bits/cuda/eig_sym.hpp"
     #include "bandicoot_bits/cuda/prod.hpp"
     #include "bandicoot_bits/cuda/det.hpp"
-    #include "bandicoot_bits/cuda/replace.hpp"
     #include "bandicoot_bits/cuda/reorder_cols.hpp"
     #include "bandicoot_bits/cuda/cross.hpp"
     #include "bandicoot_bits/cuda/rotate_180.hpp"
@@ -529,26 +672,37 @@ namespace coot
     #include "bandicoot_bits/cuda/index_min.hpp"
     #include "bandicoot_bits/cuda/index_max.hpp"
     #include "bandicoot_bits/cuda/extract_cx.hpp"
-    #include "bandicoot_bits/cuda/extract_subview_elem1.hpp"
-    #include "bandicoot_bits/cuda/extract_subview_elem2.hpp"
+    }
+  #endif
+
+  #if defined(COOT_USE_VULKAN)
+  namespace vulkan
+    {
+    #include "bandicoot_bits/vulkan/runtime_meat.hpp"
+    #include "bandicoot_bits/vulkan/to_vk_args.hpp"
+    #include "bandicoot_bits/vulkan/eye.hpp"
+    #include "bandicoot_bits/vulkan/fill.hpp"
+    #include "bandicoot_bits/vulkan/copy.hpp"
+    #include "bandicoot_bits/vulkan/all.hpp"
+    #include "bandicoot_bits/vulkan/relational.hpp"
+    #include "bandicoot_bits/vulkan/accu.hpp"
+    #include "bandicoot_bits/vulkan/dot.hpp"
+    #include "bandicoot_bits/vulkan/min.hpp"
+    #include "bandicoot_bits/vulkan/max.hpp"
+    #include "bandicoot_bits/vulkan/trans.hpp"
+    #include "bandicoot_bits/vulkan/reorder_cols.hpp"
+    #include "bandicoot_bits/vulkan/index_min.hpp"
+    #include "bandicoot_bits/vulkan/index_max.hpp"
+    #include "bandicoot_bits/vulkan/broadcast.hpp"
+    #include "bandicoot_bits/vulkan/any.hpp"
+    #include "bandicoot_bits/vulkan/approx_equal.hpp"
+    #include "bandicoot_bits/vulkan/gemm.hpp"
+    #include "bandicoot_bits/vulkan/random.hpp"
+    #include "bandicoot_bits/vulkan/mat_val_proxy.hpp"
     }
   #endif
 
   #include "bandicoot_bits/coot_rt_meat.hpp"
-
-  //
-  // classes that underlay metaprogramming
-
-  #include "bandicoot_bits/unwrap.hpp"
-  #include "bandicoot_bits/unwrap_cube.hpp"
-  #include "bandicoot_bits/no_conv_unwrap.hpp"
-  #include "bandicoot_bits/special_cor_cov_unwrap.hpp"
-  #include "bandicoot_bits/SizeProxy.hpp"
-  #include "bandicoot_bits/SizeProxyCube.hpp"
-  #include "bandicoot_bits/strip.hpp"
-  #include "bandicoot_bits/extract_subview.hpp"
-  #include "bandicoot_bits/copy_alias.hpp"
-  #include "bandicoot_bits/steal_or_copy_mem.hpp"
 
 
 
@@ -697,7 +851,6 @@ namespace coot
   #include "bandicoot_bits/op_resize_meat.hpp"
   #include "bandicoot_bits/op_reshape_meat.hpp"
   #include "bandicoot_bits/op_vectorise_meat.hpp"
-  #include "bandicoot_bits/op_clamp_meat.hpp"
   #include "bandicoot_bits/op_norm_meat.hpp"
   #include "bandicoot_bits/op_diagmat_meat.hpp"
   #include "bandicoot_bits/op_diagvec_meat.hpp"
@@ -716,7 +869,6 @@ namespace coot
   #include "bandicoot_bits/op_shuffle_meat.hpp"
   #include "bandicoot_bits/op_row_as_mat_meat.hpp"
   #include "bandicoot_bits/op_col_as_mat_meat.hpp"
-  #include "bandicoot_bits/op_replace_meat.hpp"
 
   #include "bandicoot_bits/mtop_conv_to_meat.hpp"
   #include "bandicoot_bits/mtop_all_meat.hpp"
@@ -741,8 +893,6 @@ namespace coot
   #include "bandicoot_bits/glue_conv_meat.hpp"
   #include "bandicoot_bits/glue_conv2_meat.hpp"
   #include "bandicoot_bits/glue_solve_meat.hpp"
-  #include "bandicoot_bits/glue_min_meat.hpp"
-  #include "bandicoot_bits/glue_max_meat.hpp"
 
   #include "bandicoot_bits/mtglue_mixed_meat.hpp"
   #include "bandicoot_bits/mtglue_relational_meat.hpp"

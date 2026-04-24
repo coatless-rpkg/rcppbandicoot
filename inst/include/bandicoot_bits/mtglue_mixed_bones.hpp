@@ -18,6 +18,27 @@
 
 
 
+template<typename mtglue_type> // temporary: we explicitly use the child type to separate this type of mtglue from others (for generated kernels)
+struct mtglue_mixed_core : public traits_glue_or
+  {
+  //
+  // default implementation: use a Proxy and the copy skeleton kernel
+  //
+
+  template<typename out_eT, typename T1, typename T2> inline static void apply(Mat<out_eT>& out,  const mtGlue<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >& X);
+  template<typename out_eT, typename T1, typename T2> inline static void apply(Cube<out_eT>& out, const mtGlueCube<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >& X);
+
+  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+
+  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
+  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
+  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_slices(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
+  };
+
+
+
+// matrix multiplication, not a part of mtglue_mixed_core
 struct mtglue_mixed_times
   {
   template<typename T1, typename T2>
@@ -38,75 +59,47 @@ struct mtglue_mixed_times
 
 
 struct mtglue_mixed_plus
-  : public traits_glue_or
   {
-  template<typename out_eT, typename T1, typename T2>
-  inline static void apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_mixed_plus>& X);
+  public:
 
-  template<typename out_eT, typename T1, typename T2>
-  inline static void apply(Cube<out_eT>& out, const mtGlueCube<out_eT, T1, T2, mtglue_mixed_plus>& X);
+  inline static const char* text() { return "addition"; }
 
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_plus>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_plus>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
-
-  template<typename out_eT, typename T1, typename T2> inline static uword   compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_plus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
-  template<typename out_eT, typename T1, typename T2> inline static uword   compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_plus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_slices(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_plus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
+  struct prefix    { static inline constexpr auto& str() { return "p";         } };
+  struct func_name { static inline constexpr auto& str() { return "coot_plus"; } };
   };
 
 
 
 struct mtglue_mixed_minus
-  : public traits_glue_or
   {
-  template<typename out_eT, typename T1, typename T2>
-  inline static void apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_mixed_minus>& X);
+  public:
 
-  template<typename out_eT, typename T1, typename T2>
-  inline static void apply(Cube<out_eT>& out, const mtGlueCube<out_eT, T1, T2, mtglue_mixed_minus>& X);
+  inline static const char* text() { return "subtraction"; }
 
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_minus>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_minus>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
-
-  template<typename out_eT, typename T1, typename T2> inline static uword   compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_minus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
-  template<typename out_eT, typename T1, typename T2> inline static uword   compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_minus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_slices(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_minus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
+  struct prefix    { static inline constexpr auto& str() { return "m";          } };
+  struct func_name { static inline constexpr auto& str() { return "coot_minus"; } };
   };
 
 
 
 struct mtglue_mixed_div
-  : public traits_glue_or
   {
-  template<typename out_eT, typename T1, typename T2>
-  inline static void apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_mixed_div>& X);
+  public:
 
-  template<typename out_eT, typename T1, typename T2>
-  inline static void apply(Cube<out_eT>& out, const mtGlueCube<out_eT, T1, T2, mtglue_mixed_div>& X);
+  inline static const char* text() { return "element-wise division"; }
 
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_div>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_div>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
-
-  template<typename out_eT, typename T1, typename T2> inline static uword   compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_div>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
-  template<typename out_eT, typename T1, typename T2> inline static uword   compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_div>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_slices(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_div>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
+  struct prefix    { static inline constexpr auto& str() { return "d";        } };
+  struct func_name { static inline constexpr auto& str() { return "coot_div"; } };
   };
 
 
 
 struct mtglue_mixed_schur
-  : public traits_glue_or
   {
-  template<typename out_eT, typename T1, typename T2>
-  inline static void apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_mixed_schur>& X);
+  public:
 
-  template<typename out_eT, typename T1, typename T2>
-  inline static void apply(Cube<out_eT>& out, const mtGlueCube<out_eT, T1, T2, mtglue_mixed_schur>& X);
+  inline static const char* text() { return "element-wise multiplication"; }
 
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_schur>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_schur>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
-
-  template<typename out_eT, typename T1, typename T2> inline static uword   compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_schur>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
-  template<typename out_eT, typename T1, typename T2> inline static uword   compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_schur>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
-  template<typename out_eT, typename T1, typename T2> inline static uword compute_n_slices(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_schur>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices);
+  struct prefix    { static inline constexpr auto& str() { return "s";          } };
+  struct func_name { static inline constexpr auto& str() { return "coot_times"; } };
   };

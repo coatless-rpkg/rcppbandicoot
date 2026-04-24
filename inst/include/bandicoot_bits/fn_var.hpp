@@ -29,7 +29,7 @@ enable_if2
   >::result
 var(const T1& X, const uword norm_type = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return op_var::var_vec(X, norm_type);
   }
@@ -47,7 +47,7 @@ enable_if2
   >::result
 var(const T1& X, const uword norm_type = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_var>(X, norm_type, 0);
   }
@@ -65,7 +65,7 @@ enable_if2
   >::result
 var(const T1& X, const uword norm_type, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_var>(X, norm_type, dim);
   }

@@ -15,17 +15,38 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
-
-
 class cpu_memory
   {
   public:
 
+  // RAII wrapper for automatic deallocation of CPU memory when it goes out of scope
+  template<typename eT>
+  class mem_array
+    {
+    public:
+
+    mem_array(const uword n_elem) : chunk(cpu_memory::acquire<eT>(n_elem))  { }
+
+    ~mem_array()
+      {
+      cpu_memory::release(chunk);
+      }
+
+    eT* memptr()
+      {
+      return chunk;
+      }
+
+    private:
+
+    eT* chunk;
+    };
+
   template<typename eT> inline coot_malloc static eT* acquire(const uword n_elem);
 
   template<typename eT> inline static void release(eT* mem);
-  };
 
+  };
 
 
 template<typename eT>
@@ -34,7 +55,7 @@ coot_malloc
 eT*
 cpu_memory::acquire(const uword n_elem)
   {
-  coot_debug_check
+  coot_conform_check
     (
     ( size_t(n_elem) > (Datum<size_t>::max / sizeof(eT)) ),
     "cpu_memory::acquire(): requested size is too large"
@@ -71,7 +92,6 @@ cpu_memory::acquire(const uword n_elem)
 
   return out_memptr;
   }
-
 
 
 template<typename eT>

@@ -22,11 +22,11 @@ inline
 typename promote_type<eT1, eT2>::result
 dot(dev_mem_t<eT1> mem1, dev_mem_t<eT2> mem2, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename promote_type<eT1, eT2>::result promoted_eT;
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::dot(): cuda runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::dot(): cuda runtime not valid" );
 
   // If we can, try to use cuBLAS.
   if (is_same_type<eT1, eT2>::yes && is_float<eT1>::value)

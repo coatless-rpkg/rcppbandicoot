@@ -22,7 +22,7 @@ inline
 std::tuple<bool, std::string>
 chol(dev_mem_t<eT> mem, const uword n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (get_rt().cl_rt.is_valid() == false)
     {

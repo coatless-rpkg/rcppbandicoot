@@ -17,10 +17,9 @@
 // Utility cleanup function to clean up any allocated memory.
 inline
 void
-chol_cleanup(void* gpu_workspace, char* host_workspace, int* dev_info)
+chol_cleanup(void* gpu_workspace, int* dev_info)
   {
   coot_wrapper(cudaFree)(gpu_workspace);
-  cpu_memory::release(host_workspace);
   coot_wrapper(cudaFree)(dev_info);
   }
 
@@ -34,7 +33,7 @@ inline
 std::tuple<bool, std::string>
 chol(dev_mem_t<eT> mem, const uword n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (get_rt().cuda_rt.is_valid() == false)
     {
@@ -83,14 +82,14 @@ chol(dev_mem_t<eT> mem, const uword n_rows)
     return std::make_tuple(false, "couldn't cudaMalloc() device workspace: " + error_as_string(status2));
     }
 
-  char* host_workspace = cpu_memory::acquire<char>(host_workspace_size);
+  cpu_memory::mem_array<char> host_workspace(host_workspace_size);
 
   // This is an additional error code for cusolverDn; but it is an error code on the device.
   int* dev_info = NULL;
   status2 = coot_wrapper(cudaMalloc)((void**) &dev_info, sizeof(int));
   if (status2 != cudaSuccess)
     {
-    chol_cleanup(gpu_workspace, host_workspace, NULL);
+    chol_cleanup(gpu_workspace, NULL);
     return std::make_tuple(false, "couldn't cudaMalloc() device info holder: " + error_as_string(status2));
     }
 
@@ -104,12 +103,12 @@ chol(dev_mem_t<eT> mem, const uword n_rows)
                                           data_type,
                                           gpu_workspace,
                                           gpu_workspace_size,
-                                          (void*) host_workspace,
+                                          (void*) host_workspace.memptr(),
                                           host_workspace_size,
                                           dev_info);
   if (status != CUSOLVER_STATUS_SUCCESS)
     {
-    chol_cleanup(gpu_workspace, host_workspace, NULL);
+    chol_cleanup(gpu_workspace, NULL);
     return std::make_tuple(false, "couldn't run cusolverDnXpotrf(): " + error_as_string(status));
     }
 
@@ -117,7 +116,7 @@ chol(dev_mem_t<eT> mem, const uword n_rows)
   // decomposition fails!  So we have to process dev_info more carefully.
   int info;
   status2 = coot_wrapper(cudaMemcpy)(&info, dev_info, sizeof(int), cudaMemcpyDeviceToHost);
-  chol_cleanup(gpu_workspace, host_workspace, dev_info);
+  chol_cleanup(gpu_workspace, dev_info);
 
   if (status2 != cudaSuccess)
     {

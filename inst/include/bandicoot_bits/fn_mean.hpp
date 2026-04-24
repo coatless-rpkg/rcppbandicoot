@@ -29,7 +29,7 @@ enable_if2
   >::result
 mean(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return op_mean::mean_all(X);
   }
@@ -47,7 +47,7 @@ enable_if2
   >::result
 mean(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_mean>(X, 0, 0);
   }
@@ -65,7 +65,7 @@ enable_if2
   >::result
 mean(const T1& X, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_mean>(X, dim, 0);
   }

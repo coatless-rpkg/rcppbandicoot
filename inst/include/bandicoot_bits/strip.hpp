@@ -25,7 +25,7 @@ struct strip_diagmat
   strip_diagmat(const T1& X)
     : M(X)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   static constexpr bool do_diagmat = false;
@@ -44,7 +44,7 @@ struct strip_diagmat< Op<T1, op_diagmat> >
   strip_diagmat(const Op<T1, op_diagmat>& X)
     : M(X.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   static constexpr bool do_diagmat = true;
@@ -62,9 +62,9 @@ struct strip_diagmat< Op<Op<T1, op_htrans2>, op_diagmat> >
 
   inline
   strip_diagmat(const Op<Op<T1, op_htrans2>, op_diagmat>& X)
-    : M(X.m.m, X.m.aux)
+    : M(X.m.m, X.m.aux_a)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   static constexpr bool do_diagmat = true;
@@ -82,9 +82,9 @@ struct strip_diagmat< eOp<Op<T1, op_diagmat>, eop_type> >
 
   inline
   strip_diagmat(const eOp<Op<T1, op_diagmat>, eop_type>& X)
-    : M(X.m.Q.m, X.aux, X.aux_uword_a, X.aux_uword_b)
+    : M(X.m.Q.m, X.aux_a, X.aux_uword_a, X.aux_uword_b)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   static constexpr bool do_diagmat = true;
@@ -105,7 +105,7 @@ struct strip_diagmat< Op<Op<T1, op_diagmat>, op_htrans> >
   strip_diagmat(const Op<Op<T1, op_diagmat>, op_htrans>& X)
     : M(X.m.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   static constexpr bool do_diagmat = true;
@@ -125,7 +125,7 @@ struct strip_diagmat< Op<Op<T1, op_diagmat>, op_strans> >
   strip_diagmat(const Op<Op<T1, op_diagmat>, op_strans>& X)
     : M(X.m.m)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   static constexpr bool do_diagmat = true;
@@ -143,9 +143,9 @@ struct strip_diagmat< Op<Op<T1, op_diagmat>, op_htrans2> >
 
   inline
   strip_diagmat(const Op<Op<T1, op_diagmat>, op_htrans2>& X)
-    : M(X.m.m, X.aux)
+    : M(X.m.m, X.aux_a)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   static constexpr bool do_diagmat = true;

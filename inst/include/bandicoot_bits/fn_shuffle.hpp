@@ -29,7 +29,7 @@ shuffle
   const T1& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_shuffle_vec>(X);
   }
@@ -50,7 +50,7 @@ shuffle
   const T1& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_shuffle>(X, 0, 0);
   }
@@ -72,7 +72,7 @@ shuffle
   const uword dim
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_shuffle>(X, dim, 0);
   }

@@ -23,7 +23,7 @@ inline
 eT
 accu(const Mat<eT>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (A.n_elem == 0) { return eT(0); }
 
@@ -38,7 +38,7 @@ inline
 eT
 accu(const subview<eT>& S)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(S.n_elem == 0)  { return eT(0); }
 
@@ -53,7 +53,7 @@ inline
 typename T1::elem_type
 accu(const Base<typename T1::elem_type, T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<T1> U(X.get_ref());
   return accu(U.M);

@@ -75,6 +75,8 @@ class subview_cube : public BaseCube< eT, subview_cube<eT> >
   inline void operator%= (const subview_cube& x);
   inline void operator/= (const subview_cube& x);
 
+  inline bool is_valid_mat_to_cube(const Mat<eT>& x) const;
+
   template<typename T1> inline void operator=  (const Base<eT,T1>& x);
   template<typename T1> inline void operator+= (const Base<eT,T1>& x);
   template<typename T1> inline void operator-= (const Base<eT,T1>& x);
@@ -84,11 +86,7 @@ class subview_cube : public BaseCube< eT, subview_cube<eT> >
   // TODO
   //template<typename gen_type> inline void operator=(const GenCube<eT,gen_type>& x);
 
-  inline static void       extract(Cube<eT>& out, const subview_cube& in);
-  inline static void  plus_inplace(Cube<eT>& out, const subview_cube& in);
-  inline static void minus_inplace(Cube<eT>& out, const subview_cube& in);
-  inline static void schur_inplace(Cube<eT>& out, const subview_cube& in);
-  inline static void   div_inplace(Cube<eT>& out, const subview_cube& in);
+  inline static void extract(Cube<eT>& out, const subview_cube& in);
 
   inline static void       extract(Mat<eT>& out, const subview_cube& in);
   inline static void  plus_inplace(Mat<eT>& out, const subview_cube& in);
@@ -113,6 +111,7 @@ class subview_cube : public BaseCube< eT, subview_cube<eT> >
   // TODO
   //coot_warn_unused inline bool is_finite() const;
   //coot_warn_unused inline bool is_zero(const pod_type tol = 0) const;
+  coot_warn_unused inline bool is_empty() const;
 
   // TODO
   //coot_warn_unused inline bool has_inf()       const;

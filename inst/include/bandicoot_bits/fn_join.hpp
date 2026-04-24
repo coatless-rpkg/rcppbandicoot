@@ -34,7 +34,7 @@ join_cols
   const T2& B
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Glue<T1, T2, glue_join_cols>(A, B, 0);
   }
@@ -56,7 +56,7 @@ join_vert
   const T2& B
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Glue<T1, T2, glue_join_cols>(A, B, 1);
   }
@@ -78,7 +78,7 @@ join_rows
   const T2& B
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Glue<T1, T2, glue_join_rows>(A, B, 0);
   }
@@ -100,7 +100,7 @@ join_horiz
   const T2& B
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Glue<T1, T2, glue_join_rows>(A, B, 1);
   }
@@ -122,7 +122,7 @@ join_cols
   const Base<eT, T3>& C
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Mat<eT> result;
   glue_join_cols::apply(result, A.get_ref(), B.get_ref(), C.get_ref(), "join_cols()");
@@ -143,7 +143,7 @@ join_cols
   const Base<eT, T4>& D
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Mat<eT> result;
   glue_join_cols::apply(result, A.get_ref(), B.get_ref(), C.get_ref(), D.get_ref(), "join_cols()");
@@ -163,7 +163,7 @@ join_vert
   const Base<eT, T3>& C
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Mat<eT> result;
   glue_join_cols::apply(result, A.get_ref(), B.get_ref(), C.get_ref(), "join_vert()");
@@ -184,7 +184,7 @@ join_vert
   const Base<eT, T4>& D
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Mat<eT> result;
   glue_join_cols::apply(result, A.get_ref(), B.get_ref(), C.get_ref(), D.get_ref(), "join_vert()");
@@ -204,7 +204,7 @@ join_rows
   const Base<eT, T3>& C
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Mat<eT> result;
   glue_join_rows::apply(result, A.get_ref(), B.get_ref(), C.get_ref(), "join_rows()");
@@ -225,7 +225,7 @@ join_rows
   const Base<eT, T4>& D
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Mat<eT> result;
   glue_join_rows::apply(result, A.get_ref(), B.get_ref(), C.get_ref(), D.get_ref(), "join_rows()");
@@ -245,7 +245,7 @@ join_horiz
   const Base<eT, T3>& C
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Mat<eT> result;
   glue_join_rows::apply(result, A.get_ref(), B.get_ref(), C.get_ref(), "join_horiz()");
@@ -266,7 +266,7 @@ join_horiz
   const Base<eT, T4>& D
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Mat<eT> result;
   glue_join_rows::apply(result, A.get_ref(), B.get_ref(), C.get_ref(), D.get_ref(), "join_horiz()");

@@ -22,7 +22,7 @@ template<typename eT>
 inline
 diagview<eT>::~diagview()
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
   }
 
 
@@ -35,7 +35,7 @@ diagview<eT>::diagview(const Mat<eT>& in_m, const uword in_row_offset, const uwo
   , n_rows    (in_len                                     )
   , n_elem    (in_len                                     )
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
   }
 
 
@@ -48,7 +48,7 @@ diagview<eT>::diagview(const diagview<eT>& in)
   , n_rows    (in.n_rows    )
   , n_elem    (in.n_elem    )
   {
-  coot_extra_debug_sigprint(coot_str::format("this = %x   in = %x") % this % &in);
+  coot_debug_sigprint(coot_str::format("this = %x; in = %x") % this % &in);
   }
 
 
@@ -61,7 +61,7 @@ diagview<eT>::diagview(diagview<eT>&& in)
   , n_rows    (in.n_rows    )
   , n_elem    (in.n_elem    )
   {
-  coot_extra_debug_sigprint(coot_str::format("this = %x   in = %x") % this % &in);
+  coot_debug_sigprint(coot_str::format("this = %x; in = %x") % this % &in);
 
   // for paranoia
 
@@ -78,18 +78,15 @@ inline
 void
 diagview<eT>::operator= (const diagview<eT>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (n_elem != x.n_elem), "diagview: diagonals have incompatible lengths" );
+  coot_conform_check( (n_elem != x.n_elem), "diagview: diagonals have incompatible lengths" );
 
         Mat<eT>& d_m = const_cast< Mat<eT>& >(m);
   const Mat<eT>& x_m = x.m;
 
   // We can view the diagonal as a subview.
-  coot_rt_t::copy_mat(d_m.get_dev_mem(false), x_m.get_dev_mem(false),
-                      1, n_elem,
-                      mem_offset, 0, d_m.n_rows + 1,
-                      x.mem_offset, 0, x_m.n_rows + 1);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(x));
   }
 
 
@@ -99,14 +96,9 @@ inline
 void
 diagview<eT>::operator+=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
-                        m.get_dev_mem(false), m.get_dev_mem(false),
-                        (eT) val, (eT) 0,
-                        1, n_elem, 1,
-                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols,
-                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOp<diagview<eT>, eop_scalar_plus>(*this, val)));
   }
 
 
@@ -116,14 +108,9 @@ inline
 void
 diagview<eT>::operator-=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_minus_scalar_post,
-                        m.get_dev_mem(false), m.get_dev_mem(false),
-                        (eT) val, (eT) 0,
-                        1, n_elem, 1,
-                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols,
-                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOp<diagview<eT>, eop_scalar_minus_post>(*this, val)));
   }
 
 
@@ -133,14 +120,9 @@ inline
 void
 diagview<eT>::operator*=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
-                        m.get_dev_mem(false), m.get_dev_mem(false),
-                        (eT) val, (eT) 1,
-                        1, n_elem, 1,
-                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols,
-                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOp<diagview<eT>, eop_scalar_times>(*this, val)));
   }
 
 
@@ -150,14 +132,9 @@ inline
 void
 diagview<eT>::operator/=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
-                        m.get_dev_mem(false), m.get_dev_mem(false),
-                        (eT) val, (eT) 1,
-                        1, n_elem, 1,
-                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols,
-                        mem_offset, 0, 0, m.n_rows + 1, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOp<diagview<eT>, eop_scalar_div_post>(*this, val)));
   }
 
 
@@ -168,19 +145,23 @@ inline
 void
 diagview<eT>::operator= (const Mat<eT>& o)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check
+  coot_conform_check
     (
     ( (n_elem != o.n_elem) || ((o.n_rows != 1) && (o.n_cols != 1)) ),
     "diagview: given object has incompatible size"
     );
 
   alias_wrapper<diagview<eT>, Mat<eT>> W(*this, o);
-  coot_rt_t::copy_mat(W.get_dev_mem(false), o.get_dev_mem(false),
-                      1, n_elem,
-                      W.get_row_offset(), 0, W.get_incr(),
-                      0, 0, 1);
+  if (W.using_aux)
+    {
+    coot_rt_t::copy(make_proxy_col(W.aux), make_proxy_col(o));
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), make_proxy_col(o));
+    }
   }
 
 
@@ -190,9 +171,9 @@ inline
 void
 diagview<eT>::operator= (const subview<eT>& o)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check
+  coot_conform_check
     (
     ( (n_elem != o.n_elem) || ((o.n_rows != 1) && (o.n_cols != 1)) ),
     "diagview: given object has incompatible size"
@@ -200,10 +181,14 @@ diagview<eT>::operator= (const subview<eT>& o)
 
   const bool is_vector = (o.n_rows == 1 || o.n_cols == 1);
   alias_wrapper<diagview<eT>, subview<eT>> W(*this, o);
-  coot_rt_t::copy_mat(W.get_dev_mem(false), o.m.get_dev_mem(false),
-                      1, n_elem,
-                      W.get_row_offset(), 0, W.get_incr(),
-                      o.aux_row1, o.aux_col1, is_vector ? 1 : o.m.n_rows + 1);
+  if (W.using_aux)
+    {
+    coot_rt_t::copy(make_proxy_col(W.aux), make_proxy_col(o));
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), make_proxy_col(o));
+    }
   }
 
 
@@ -214,11 +199,58 @@ inline
 void
 diagview<eT>::operator= (const Base<eT,T1>& o)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const unwrap<T1> U( o.get_ref() );
+  const Proxy<T1> P(o.get_ref());
 
-  operator=(U.M);
+  coot_conform_check
+    (
+    ( (n_elem != P.get_n_elem()) || ((P.get_n_rows() != 1) && (P.get_n_cols() != 1)) ),
+    "diagview: given object has incompatible size"
+    );
+
+  alias_wrapper<diagview<eT>, Proxy<T1>> A(*this, P);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    A.using_aux = false;
+    (*this) = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), P);
+    }
+  }
+
+
+
+template<typename eT>
+template<typename eglue_type, typename T1>
+inline
+void
+diagview<eT>::inplace_op(const Base<eT,T1>& o)
+  {
+  const eGlue<diagview<eT>, T1, eglue_type> G(*this, o.get_ref());
+  const Proxy<eGlue<diagview<eT>, T1, eglue_type>> P(G);
+
+  coot_conform_check
+    (
+    ( (n_elem != P.get_n_elem()) || ((P.get_n_rows() != 1) && (P.get_n_cols() != 1)) ),
+    "diagview: given object has incompatible size"
+    );
+
+  alias_wrapper<diagview<eT>, Proxy<T1>> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    // disable copy on deallocation and copy manually
+    A.using_aux = false;
+    (*this) = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(P.P1, P);
+    }
   }
 
 
@@ -229,12 +261,9 @@ inline
 void
 diagview<eT>::operator+=(const Base<eT,T1>& o)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  // TODO: dedicated kernels for these in-place operations
-  Mat<eT> tmp(*this);
-  tmp += o.get_ref();
-  operator=(tmp);
+  inplace_op<eglue_plus>(o);
   }
 
 
@@ -245,12 +274,9 @@ inline
 void
 diagview<eT>::operator-=(const Base<eT,T1>& o)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  // TODO: dedicated kernels for these in-place operations
-  Mat<eT> tmp(*this);
-  tmp -= o.get_ref();
-  operator=(tmp);
+  inplace_op<eglue_minus>(o);
   }
 
 
@@ -261,12 +287,9 @@ inline
 void
 diagview<eT>::operator%=(const Base<eT,T1>& o)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  // TODO: dedicated kernels for these in-place operations
-  Mat<eT> tmp(*this);
-  tmp %= o.get_ref();
-  operator=(tmp);
+  inplace_op<eglue_schur>(o);
   }
 
 
@@ -277,12 +300,9 @@ inline
 void
 diagview<eT>::operator/=(const Base<eT,T1>& o)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  // TODO: dedicated kernels for these in-place operations
-  Mat<eT> tmp(*this);
-  tmp /= o.get_ref();
-  operator=(tmp);
+  inplace_op<eglue_div>(o);
   }
 
 
@@ -293,7 +313,7 @@ inline
 void
 diagview<eT>::extract(Mat<eT>& out, const diagview<eT>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // NOTE: we're assuming that the matrix has already been set to the correct size and there is no aliasing;
   // size setting and alias checking is done by either the Mat contructor or operator=()
@@ -301,10 +321,7 @@ diagview<eT>::extract(Mat<eT>& out, const diagview<eT>& in)
   out.set_size(in.n_rows, in.n_cols); // should be a vector
 
   // A diagonal can be seen as a subvector of the matrix with m_n_rows = n_rows + 1.
-  coot_rt_t::copy_mat(out.get_dev_mem(false), in.m.get_dev_mem(false),
-                      1, in.n_elem,
-                      0, 0, 1,
-                      in.mem_offset, 0, in.m.n_rows + 1);
+  coot_rt_t::copy(make_proxy_col(out), make_proxy(in));
   }
 
 
@@ -358,7 +375,7 @@ inline
 MatValProxy<eT>
 diagview<eT>::operator()(const uword ii)
   {
-  coot_debug_check_bounds( (ii >= n_elem), "diagview::operator(): out of bounds" );
+  coot_conform_check_bounds( (ii >= n_elem), "diagview::operator(): out of bounds" );
 
   const uword index = mem_offset + ii * (m.n_rows + 1);
   return (const_cast< Mat<eT>& >(m)).at(index);
@@ -371,7 +388,7 @@ inline
 eT
 diagview<eT>::operator()(const uword ii) const
   {
-  coot_debug_check_bounds( (ii >= n_elem), "diagview::operator(): out of bounds" );
+  coot_conform_check_bounds( (ii >= n_elem), "diagview::operator(): out of bounds" );
 
   const uword index = mem_offset + ii * (m.n_rows + 1);
   return m.at(index);
@@ -406,7 +423,7 @@ inline
 MatValProxy<eT>
 diagview<eT>::operator()(const uword row, const uword col)
   {
-  coot_debug_check_bounds( ((row >= n_elem) || (col > 0)), "diagview::operator(): out of bounds" );
+  coot_conform_check_bounds( ((row >= n_elem) || (col > 0)), "diagview::operator(): out of bounds" );
 
   const uword index = mem_offset + row * (m.n_rows + 1);
   return (const_cast< Mat<eT>& >(m)).at(index);
@@ -419,7 +436,7 @@ inline
 eT
 diagview<eT>::operator()(const uword row, const uword col) const
   {
-  coot_debug_check_bounds( ((row >= n_elem) || (col > 0)), "diagview::operator(): out of bounds" );
+  coot_conform_check_bounds( ((row >= n_elem) || (col > 0)), "diagview::operator(): out of bounds" );
 
   const uword index = mem_offset + row * (m.n_rows + 1);
   return m.at(index);
@@ -427,36 +444,16 @@ diagview<eT>::operator()(const uword row, const uword col) const
 
 
 
-/* template<typename eT> */
-/* inline */
-/* void */
-/* diagview<eT>::replace(const eT old_val, const eT new_val) */
-/*   { */
-/*   arma_extra_debug_sigprint(); */
+template<typename eT>
+inline
+void
+diagview<eT>::replace(const eT old_val, const eT new_val)
+  {
+  coot_debug_sigprint();
 
-/*   Mat<eT>& x = const_cast< Mat<eT>& >(m); */
-
-/*   const uword local_n_elem = n_elem; */
-
-/*   if(arma_isnan(old_val)) */
-/*     { */
-/*     for(uword ii=0; ii < local_n_elem; ++ii) */
-/*       { */
-/*       eT& val = x.at(ii+row_offset, ii+col_offset); */
-
-/*       val = (arma_isnan(val)) ? new_val : val; */
-/*       } */
-/*     } */
-/*   else */
-/*     { */
-/*     for(uword ii=0; ii < local_n_elem; ++ii) */
-/*       { */
-/*       eT& val = x.at(ii+row_offset, ii+col_offset); */
-
-/*       val = (val == old_val) ? new_val : val; */
-/*       } */
-/*     } */
-/*   } */
+  const eOp<diagview<eT>, eop_replace> E(*this, 'j', old_val, new_val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
+  }
 
 
 
@@ -481,14 +478,12 @@ inline
 void
 diagview<eT>::clamp(const eT min_val, const eT max_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  // TODO: a dedicated implementation could be possible
-  Mat<eT> tmp(*this);
+  coot_conform_check( (min_val > max_val), "clamp(): min_val must be less than max_val" );
 
-  tmp.clamp(min_val, max_val);
-
-  (*this).operator=(tmp);
+  const eOp<diagview<eT>, eop_clamp> E(*this, 'j', min_val, max_val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
@@ -498,11 +493,9 @@ inline
 void
 diagview<eT>::fill(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::fill(m.get_dev_mem(false), val,
-                  1, n_elem,
-                  mem_offset, 0, m.n_rows + 1);
+  coot_rt_t::fill(make_proxy(*this), val);
   }
 
 
@@ -512,7 +505,7 @@ inline
 void
 diagview<eT>::zeros()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).fill(eT(0));
   }
@@ -524,7 +517,7 @@ inline
 void
 diagview<eT>::ones()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).fill(eT(1));
   }
@@ -536,7 +529,7 @@ inline
 void
 diagview<eT>::randu()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Col<eT> r;
   r.randu(n_elem);
@@ -550,9 +543,19 @@ inline
 void
 diagview<eT>::randn()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Col<eT> r;
   r.randn(n_elem);
   operator=(r);
+  }
+
+
+
+template<typename eT>
+inline
+bool
+diagview<eT>::is_empty() const
+  {
+  return (n_elem == 0);
   }

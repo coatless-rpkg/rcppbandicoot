@@ -24,16 +24,16 @@ inline
 T
 randu(const uword n_rows, const uword n_cols, const typename coot_Mat_Col_Row_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   if (is_Col<T>::value)
     {
-    coot_debug_check( (n_cols != 1), "randu(): incompatible size" );
+    coot_conform_check( (n_cols != 1), "randu(): incompatible size" );
     }
   else if (is_Row<T>::value)
     {
-    coot_debug_check( (n_rows != 1), "randu(): incompatible size" );
+    coot_conform_check( (n_rows != 1), "randu(): incompatible size" );
     }
 
   T out(n_rows, n_cols);
@@ -49,7 +49,7 @@ inline
 T
 randu(const uword n_elem, const typename coot_Mat_Col_Row_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   const uword n_rows = (is_Row<T>::value) ? uword(1) : n_elem;
@@ -68,7 +68,7 @@ inline
 T
 randu(const SizeMat& s, const typename coot_Mat_Col_Row_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return randu<T>(s.n_rows, s.n_cols);
@@ -82,7 +82,7 @@ inline
 T
 randu(const uword n_rows, const uword n_cols, const uword n_slices, const typename coot_Cube_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   T out(n_rows, n_cols, n_slices);
@@ -98,7 +98,7 @@ inline
 T
 randu(const SizeCube& s, const typename coot_Cube_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return randu<T>(s.n_rows, s.n_cols, s.n_slices);

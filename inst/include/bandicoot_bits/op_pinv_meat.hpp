@@ -21,9 +21,9 @@ inline
 void
 op_pinv::apply(Mat<eT2>& out, const Op<T1, op_pinv>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const typename T1::elem_type tol = in.aux;
+  const typename T1::elem_type tol = in.aux_a;
 
   const std::tuple<bool, std::string> result = apply_direct(out, in.m, tol);
   if (std::get<0>(result) == false)
@@ -39,7 +39,7 @@ inline
 std::tuple<bool, std::string>
 op_pinv::apply_direct(Mat<eT2>& out, const T1& in, const typename T1::elem_type tol)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If `in` is a diagmat():
   //    stored in a vector: apply_direct_diag_vec()
@@ -64,13 +64,7 @@ op_pinv::apply_direct(Mat<eT2>& out, const T1& in, const typename T1::elem_type 
       {
       // Extract the diagonal into a standalone vector for easier processing.
       // Note that aliases don't need to be handled since we are not operating on `in` now.
-      const uword N = (std::min)(U.M.n_rows, U.M.n_cols);
-      Col<typename T1::elem_type> diag(N);
-      // Extract the diagonal.
-      coot_rt_t::copy_mat(diag.get_dev_mem(false), U.get_dev_mem(false),
-                          1, N,
-                          0, 0, 1,
-                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows() + 1);
+      Col<typename T1::elem_type> diag = U.M.diag();
 
       return apply_direct_diag(out, diag, tol);
       }
@@ -119,9 +113,9 @@ inline
 std::tuple<bool, std::string>
 op_pinv::apply_direct_diag(Mat<eT>& out, const Mat<eT>& in, const eT tol)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check(in.n_rows != 1 && in.n_cols != 1, "op_pinv::apply_direct_diag_vec(): given input is not a vector (internal error)");
+  coot_conform_check(in.n_rows != 1 && in.n_cols != 1, "op_pinv::apply_direct_diag_vec(): given input is not a vector (internal error)");
 
   if (in.n_rows == 0 || in.n_cols == 0)
     {
@@ -144,13 +138,7 @@ op_pinv::apply_direct_diag(Mat<eT>& out, const Mat<eT>& in, const eT tol)
     }
 
   // Find the values that are below tolerance.
-  Mat<eT> abs_in(in.n_rows, in.n_cols);
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_abs,
-                        abs_in.get_dev_mem(false), in.get_dev_mem(false),
-                        (eT) 0, (eT) 0,
-                        abs_in.n_rows, abs_in.n_cols, 1,
-                        0, 0, 0, abs_in.n_rows, abs_in.n_cols,
-                        0, 0, 0, abs_in.n_rows, abs_in.n_cols);
+  Mat<eT> abs_in = abs(in);
 
   // Compute tolerance if not given.
   eT tol_use = tol;
@@ -161,39 +149,19 @@ op_pinv::apply_direct_diag(Mat<eT>& out, const Mat<eT>& in, const eT tol)
     }
 
   Mat<uword> tol_indicator(in.n_rows, in.n_cols);
-  coot_rt_t::relational_scalar_op(tol_indicator.get_dev_mem(false), abs_in.get_dev_mem(false), abs_in.n_elem, (eT) tol_use, twoway_kernel_id::rel_gt_scalar, "pinv()");
+  const mtOp<uword, Mat<eT>, mtop_rel_core<mtop_rel_gt_post>> M(abs_in, (eT) tol_use);
+  const mtOp<eT, mtOp<uword, Mat<eT>, mtop_rel_core<mtop_rel_gt_post>>, mtop_conv_to> M2(M);
 
   // Now invert the diagonal.  Any zero values need to changed to 1, so as to not produce infs or nans.
+  // After that, we have to zero out any values below the tolerance.
   Mat<eT> out_vec(abs_in.n_rows, abs_in.n_cols);
-  coot_rt_t::copy_mat(out_vec.get_dev_mem(false), in.get_dev_mem(false),
-                      out_vec.n_rows, out_vec.n_cols,
-                      0, 0, out_vec.n_rows,
-                      0, 0, in.n_rows);
-  coot_rt_t::replace(out_vec.get_dev_mem(false), out_vec.get_dev_mem(false),
-                     (eT) 0.0, (eT) 1.0,
-                     out_vec.n_rows, out_vec.n_cols, 1,
-                     0, 0, 0, out_vec.n_rows, out_vec.n_cols,
-                     0, 0, 0, out_vec.n_rows, out_vec.n_cols);
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
-                        out_vec.get_dev_mem(false), out_vec.get_dev_mem(false),
-                        (eT) 0, (eT) 1,
-                        out_vec.n_rows, out_vec.n_cols, 1,
-                        0, 0, 0, out_vec.n_rows, out_vec.n_cols,
-                        0, 0, 0, out_vec.n_rows, out_vec.n_cols);
-
-  // Zero out any values that are below the tolerance.
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_mul_array,
-                     out_vec.get_dev_mem(false), out_vec.get_dev_mem(false), tol_indicator.get_dev_mem(false),
-                     out_vec.n_rows, out_vec.n_cols,
-                     0, 0, out_vec.n_rows,
-                     0, 0, out_vec.n_rows,
-                     0, 0, tol_indicator.n_rows);
+  const eOp<Mat<eT>, eop_replace> E(in, 'j', (eT) 0.0, (eT) 1.0);
+  const eOp<eOp<Mat<eT>, eop_replace>, eop_scalar_div_pre> E2(E, (eT) 1);
+  const eGlue<eOp<eOp<Mat<eT>, eop_replace>, eop_scalar_div_pre>, mtOp<eT, mtOp<uword, Mat<eT>, mtop_rel_core<mtop_rel_gt_post>>, mtop_conv_to>, eglue_schur> E4(E2, M2);
+  coot_rt_t::copy(make_proxy(out_vec), make_proxy(E4));
 
   // Now set the diagonal of the other matrix.
-  coot_rt_t::copy_mat(out.get_dev_mem(false), out_vec.get_dev_mem(false),
-                      1, N,
-                      0, 0, out.n_rows + 1,
-                      0, 0, 1);
+  out.diag() = out_vec;
 
   return std::make_tuple(true, "");
   }
@@ -205,10 +173,10 @@ inline
 std::tuple<bool, std::string>
 op_pinv::apply_direct_diag(Mat<eT2>& out, const Mat<eT1>& in, const eT1 tol, const typename enable_if<is_same_type<eT1, eT2>::no>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
-  coot_debug_check(in.n_rows != 1 && in.n_cols != 1, "op_pinv::apply_direct_diag_vec(): given input is not a vector (internal error)");
+  coot_conform_check(in.n_rows != 1 && in.n_cols != 1, "op_pinv::apply_direct_diag_vec(): given input is not a vector (internal error)");
 
   if (in.n_rows == 0 || in.n_cols == 0)
     {
@@ -231,13 +199,7 @@ op_pinv::apply_direct_diag(Mat<eT2>& out, const Mat<eT1>& in, const eT1 tol, con
     }
 
   // Find the values that are below tolerance.
-  Mat<eT1> abs_in(in.n_rows, in.n_cols);
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_abs,
-                        abs_in.get_dev_mem(false), in.get_dev_mem(false),
-                        (eT1) 0, (eT1) 0,
-                        abs_in.n_rows, abs_in.n_cols, 1,
-                        0, 0, 0, abs_in.n_rows, abs_in.n_cols,
-                        0, 0, 0, abs_in.n_rows, abs_in.n_cols);
+  Mat<eT1> abs_in = abs(in);
 
   // Compute tolerance if not given.
   eT1 tol_use = tol;
@@ -248,39 +210,19 @@ op_pinv::apply_direct_diag(Mat<eT2>& out, const Mat<eT1>& in, const eT1 tol, con
     }
 
   Mat<uword> tol_indicator(in.n_rows, in.n_cols);
-  coot_rt_t::relational_scalar_op(tol_indicator.get_dev_mem(false), abs_in.get_dev_mem(false), abs_in.n_elem, (eT1) tol_use, twoway_kernel_id::rel_gt_scalar, "pinv()");
+  const mtOp<uword, Mat<eT1>, mtop_rel_core<mtop_rel_gt_post>> M(abs_in, (eT1) tol_use);
+  const mtOp<eT1, mtOp<uword, Mat<eT1>, mtop_rel_core<mtop_rel_gt_post>>, mtop_conv_to> M2(M);
 
   // Now invert the diagonal.  Any zero values need to changed to 1, so as to not produce infs or nans.
   Mat<eT1> out_vec(abs_in.n_rows, abs_in.n_cols);
-  coot_rt_t::copy_mat(out_vec.get_dev_mem(false), in.get_dev_mem(false),
-                      out_vec.n_rows, out_vec.n_cols,
-                      0, 0, out_vec.n_rows,
-                      0, 0, in.n_rows);
-  coot_rt_t::replace(out_vec.get_dev_mem(false), out_vec.get_dev_mem(false),
-                     (eT1) 0.0, (eT1) 1.0,
-                     out_vec.n_rows, out_vec.n_cols, 1,
-                     0, 0, 0, out_vec.n_rows, out_vec.n_cols,
-                     0, 0, 0, out_vec.n_rows, out_vec.n_cols);
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
-                        out_vec.get_dev_mem(false), out_vec.get_dev_mem(false),
-                        (eT1) 0, (eT1) 1,
-                        out_vec.n_rows, out_vec.n_cols, 1,
-                        0, 0, 0, out_vec.n_rows, out_vec.n_cols,
-                        0, 0, 0, out_vec.n_rows, out_vec.n_cols);
-
-  // Zero out any values that are below the tolerance.
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_mul_array,
-                     out_vec.get_dev_mem(false), out_vec.get_dev_mem(false), tol_indicator.get_dev_mem(false),
-                     out_vec.n_rows, out_vec.n_cols,
-                     0, 0, out_vec.n_rows,
-                     0, 0, out_vec.n_rows,
-                     0, 0, tol_indicator.n_rows);
+  const eOp<Mat<eT1>, eop_replace> E(in, 'j', (eT1) 0.0, (eT1) 1.0);
+  const eOp<eOp<Mat<eT1>, eop_replace>, eop_scalar_div_pre> E2(E, (eT1) 1);
+  const eGlue<eOp<eOp<Mat<eT1>, eop_replace>, eop_scalar_div_pre>, mtOp<eT1, mtOp<uword, Mat<eT1>, mtop_rel_core<mtop_rel_gt_post>>, mtop_conv_to>, eglue_schur> E3(E2, M2);
+  coot_rt_t::copy(make_proxy(out_vec), make_proxy(E3));
 
   // Now set the diagonal of the other matrix.  This also performs the conversion.
-  coot_rt_t::copy_mat(out.get_dev_mem(false), out_vec.get_dev_mem(false),
-                      1, N,
-                      0, 0, out.n_rows + 1,
-                      0, 0, 1);
+  diagview<eT2> out_d(out, 0, 0, (std::min)(out.n_rows, out.n_cols));
+  coot_rt_t::copy(make_proxy(out_d), make_proxy_col(out_vec));
 
   return std::make_tuple(true, "");
   }
@@ -292,7 +234,7 @@ inline
 std::tuple<bool, std::string>
 op_pinv::apply_direct_sym(Mat<eT>& out, Mat<eT>& in, const eT tol)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (in.n_rows == 0 || in.n_cols == 0)
     {
@@ -315,13 +257,7 @@ op_pinv::apply_direct_sym(Mat<eT>& out, Mat<eT>& in, const eT tol)
     return std::make_tuple(false, "eigendecomposition failed");
     }
 
-  Col<eT> abs_eigvals(in.n_rows);
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_abs,
-                        abs_eigvals.get_dev_mem(false), eigvals.get_dev_mem(false),
-                        (eT) 0, (eT) 0,
-                        abs_eigvals.n_rows, abs_eigvals.n_cols, 1,
-                        0, 0, 0, abs_eigvals.n_rows, abs_eigvals.n_cols,
-                        0, 0, 0, eigvals.n_rows, eigvals.n_cols);
+  Col<eT> abs_eigvals = abs(eigvals);
 
   Col<uword> eigval_order(in.n_rows);
   // This also sorts `abs_eigvals`.
@@ -333,7 +269,8 @@ op_pinv::apply_direct_sym(Mat<eT>& out, Mat<eT>& in, const eT tol)
   const eT tol_use = (tol == eT(0)) ? in.n_rows * abs_eigvals[0] * Datum<eT>::eps : tol;
 
   Col<uword> tol_indicators(eigval_order.n_elem);
-  coot_rt_t::relational_scalar_op(tol_indicators.get_dev_mem(false), abs_eigvals.get_dev_mem(false), eigval_order.n_elem, tol_use, twoway_kernel_id::rel_gteq_scalar, "pinv()");
+  const mtOp<uword, Col<eT>, mtop_rel_core<mtop_rel_gt_post>> M(abs_eigvals, tol_use);
+  coot_rt_t::copy(make_proxy(tol_indicators), make_proxy(M));
   const uword num_eigvals = coot_rt_t::accu(tol_indicators.get_dev_mem(false), eigval_order.n_elem);
   if (num_eigvals == 0)
     {
@@ -348,19 +285,11 @@ op_pinv::apply_direct_sym(Mat<eT>& out, Mat<eT>& in, const eT tol)
   coot_rt_t::reorder_cols(filtered_eigvecs.get_dev_mem(false), in.get_dev_mem(false), in.n_rows, eigval_order.get_dev_mem(false), num_eigvals);
 
   //
-  // 3. Invert the eigenvalues we kept.
+  // 3. Invert the eigenvalues we kept.  Avoid divergence by replacing 0s with 1s.
   //
-  coot_rt_t::replace(filtered_eigvals.get_dev_mem(false), filtered_eigvals.get_dev_mem(false),
-                     (eT) 0, (eT) 1,
-                     num_eigvals, 1, 1,
-                     0, 0, 0, num_eigvals, 1,
-                     0, 0, 0, num_eigvals, 1); // avoid divergence
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
-                        filtered_eigvals.get_dev_mem(false), filtered_eigvals.get_dev_mem(false),
-                        (eT) 0, (eT) 1,
-                        filtered_eigvals.n_rows, filtered_eigvals.n_cols, 1,
-                        0, 0, 0, filtered_eigvals.n_rows, filtered_eigvals.n_cols,
-                        0, 0, 0, filtered_eigvals.n_rows, filtered_eigvals.n_cols);
+  const eOp<Col<eT>, eop_replace> E(filtered_eigvals, 'j', (eT) 0, (eT) 1);
+  const eOp<eOp<Col<eT>, eop_replace>, eop_scalar_div_pre> E2(E, (eT) 1);
+  coot_rt_t::copy(make_proxy(filtered_eigvals), make_proxy(E2));
 
   //
   // 4. Construct output.
@@ -389,7 +318,7 @@ inline
 std::tuple<bool, std::string>
 op_pinv::apply_direct_sym(Mat<eT2>& out, Mat<eT1>& in, const eT1 tol, const typename enable_if<is_same_type<eT1, eT2>::no>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   // We need to perform this into a temporary, and then convert.
@@ -401,10 +330,7 @@ op_pinv::apply_direct_sym(Mat<eT2>& out, Mat<eT1>& in, const eT1 tol, const type
     }
 
   out.set_size(tmp.n_rows, tmp.n_cols);
-  coot_rt_t::copy_mat(out.get_dev_mem(false), tmp.get_dev_mem(false),
-                      out.n_rows, out.n_cols,
-                      0, 0, out.n_rows,
-                      0, 0, tmp.n_rows);
+  coot_rt_t::copy(make_proxy(out), make_proxy(tmp));
   return status; // (true, "")
   }
 
@@ -416,7 +342,7 @@ inline
 std::tuple<bool, std::string>
 op_pinv::apply_direct_gen(Mat<eT>& out, Mat<eT>& in, const eT tol)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (in.n_rows == 0 || in.n_cols == 0)
     {
@@ -433,7 +359,7 @@ op_pinv::apply_direct_gen(Mat<eT>& out, Mat<eT>& in, const eT tol)
   if (in.n_rows < in.n_cols)
     {
     tmp_in.set_size(in.n_cols, in.n_rows);
-    coot_rt_t::htrans(tmp_in.get_dev_mem(false), in.get_dev_mem(false), in.n_rows, in.n_cols);
+    coot_rt_t::copy(make_proxy(tmp_in), make_proxy(in.t()));
     }
 
   //
@@ -466,7 +392,8 @@ op_pinv::apply_direct_gen(Mat<eT>& out, Mat<eT>& in, const eT tol)
   // 3. Keep singular values that are greater than the tolerance.
   //
   Col<uword> S_above_tol(S.n_elem);
-  coot_rt_t::relational_scalar_op(S_above_tol.get_dev_mem(false), S.get_dev_mem(false), S_above_tol.n_elem, tol_use, twoway_kernel_id::rel_gteq_scalar, "pinv()");
+  const mtOp<uword, Col<eT>, mtop_rel_core<mtop_rel_gteq_post>> M(S, tol_use);
+  coot_rt_t::copy(make_proxy(S_above_tol), make_proxy(M));
   const uword num_svs = coot_rt_t::accu(S_above_tol.get_dev_mem(false), S_above_tol.n_elem);
   if (num_svs == 0)
     {
@@ -481,11 +408,7 @@ op_pinv::apply_direct_gen(Mat<eT>& out, Mat<eT>& in, const eT tol)
   Mat<eT> filtered_V;
   if (num_svs != V.n_rows)
     {
-    filtered_V.set_size(num_svs, V.n_cols);
-    coot_rt_t::copy_mat(filtered_V.get_dev_mem(false), V.get_dev_mem(false),
-                        num_svs, V.n_cols,
-                        0, 0, filtered_V.n_rows,
-                        0, 0, V.n_rows);
+    filtered_V = V.rows(0, num_svs - 1);
     }
   else
     {
@@ -493,19 +416,11 @@ op_pinv::apply_direct_gen(Mat<eT>& out, Mat<eT>& in, const eT tol)
     }
 
   //
-  // 4. Invert singular values.
+  // 4. Invert singular values.  Avoid divergence by replacing 0s with 1s.
   //
-  coot_rt_t::replace(filtered_S.get_dev_mem(false), filtered_S.get_dev_mem(false),
-                     (eT) 0, (eT) 1,
-                     num_svs, 1, 1,
-                     0, 0, 0, num_svs, 1,
-                     0, 0, 0, num_svs, 1); // avoid divergence
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_pre,
-                        filtered_S.get_dev_mem(false), filtered_S.get_dev_mem(false),
-                        (eT) 0, (eT) 1,
-                        num_svs, 1, 1,
-                        0, 0, 0, num_svs, 1,
-                        0, 0, 0, num_svs, 1);
+  const eOp<Mat<eT>, eop_replace> E(filtered_S, 'j', (eT) 0, (eT) 1);
+  const eOp<eOp<Mat<eT>, eop_replace>, eop_scalar_div_pre> E2(E, (eT) 1);
+  coot_rt_t::copy(make_proxy(filtered_S), make_proxy(E2));
 
   //
   // 5. Reconstruct as subset of V * diagmat(inv_s) * subset of U
@@ -555,7 +470,7 @@ inline
 std::tuple<bool, std::string>
 op_pinv::apply_direct_gen(Mat<eT2>& out, Mat<eT1>& in, const eT1 tol, const typename enable_if<is_same_type<eT1, eT2>::no>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   // We need to perform this into a temporary, and then convert.
@@ -567,10 +482,7 @@ op_pinv::apply_direct_gen(Mat<eT2>& out, Mat<eT1>& in, const eT1 tol, const type
     }
 
   out.set_size(tmp.n_rows, tmp.n_cols);
-  coot_rt_t::copy_mat(out.get_dev_mem(false), tmp.get_dev_mem(false),
-                      out.n_rows, out.n_cols,
-                      0, 0, out.n_rows,
-                      0, 0, tmp.n_rows);
+  coot_rt_t::copy(make_proxy(out), make_proxy(tmp));
   return status; // (true, "")
   }
 

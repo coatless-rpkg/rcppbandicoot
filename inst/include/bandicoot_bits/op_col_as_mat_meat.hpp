@@ -23,7 +23,7 @@ inline
 void
 op_col_as_mat::apply(Mat<typename T1::elem_type>& out, const CubeToMatOp<T1, op_col_as_mat>& expr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
 
@@ -33,7 +33,7 @@ op_col_as_mat::apply(Mat<typename T1::elem_type>& out, const CubeToMatOp<T1, op_
 
   const uword in_col = expr.aux_uword;
 
-  coot_debug_check_bounds( (in_col >= A.n_cols), "Cube::col_as_mat(): index out of bounds" );
+  coot_conform_check_bounds( (in_col >= A.n_cols), "Cube::col_as_mat(): index out of bounds" );
 
   const uword A_n_rows = A.n_rows;
   const uword A_n_cols = A.n_cols;
@@ -41,13 +41,8 @@ op_col_as_mat::apply(Mat<typename T1::elem_type>& out, const CubeToMatOp<T1, op_
 
   out.set_size(A_n_rows, A_n_slices);
 
-  coot_rt_t::copy_mat(out.get_dev_mem(false),
-                      A.get_dev_mem(false),
-                      A_n_rows, A_n_slices,
-                      // no offsets required for the output
-                      0, 0, A_n_rows,
-                      // pretend that the input cube is "flattened" into a 2D matrix
-                      in_col * A_n_rows, 0, A_n_rows * A_n_cols);
+  Proxy<subview<eT>> PA(A.get_dev_mem(false), in_col * A_n_rows, 0, A_n_rows, A_n_slices, A_n_rows * A_n_cols);
+  coot_rt_t::copy(make_proxy(out), PA);
   }
 
 

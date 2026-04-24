@@ -47,7 +47,7 @@ join_cols(dev_mem_t<eT> out,
           const uword D_col_offset,
           const uword D_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // When the types are all the same, we can use cudaMemcpy2D().
 
@@ -141,43 +141,41 @@ join_cols(dev_mem_t<eT5> out,
           const uword D_col_offset,
           const uword D_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword A_n_elem = A_n_rows * A_n_cols;
   const uword B_n_elem = B_n_rows * B_n_cols;
   const uword C_n_elem = C_n_rows * C_n_cols;
   const uword D_n_elem = D_n_rows * D_n_cols;
 
+  // TODO: clean these proxies when this can be represented as a generated kernel
+
   // If the types are different, we need to perform a cast during the copy.
   if (A_n_elem > 0)
     {
-    copy_mat(out, A,
-             A_n_rows, A_n_cols,
-             out_row_offset, out_col_offset, out_M_n_rows,
-             A_row_offset, A_col_offset, A_M_n_rows);
+    const Proxy<subview<eT5>> P_out(out, out_row_offset, out_col_offset, A_n_rows, A_n_cols, out_M_n_rows);
+    const Proxy<subview<eT1>> PA(A, A_row_offset, A_col_offset, A_n_rows, A_n_cols, A_M_n_rows);
+    copy(P_out, PA);
     }
 
   if (B_n_elem > 0)
     {
-    copy_mat(out, B,
-             B_n_rows, B_n_cols,
-             A_n_rows + out_row_offset, out_col_offset, out_M_n_rows,
-             B_row_offset, B_col_offset, B_M_n_rows);
+    const Proxy<subview<eT5>> P_out(out, A_n_rows + out_row_offset, out_col_offset, B_n_rows, B_n_cols, out_M_n_rows);
+    const Proxy<subview<eT2>> PB(B, B_row_offset, B_col_offset, B_n_rows, B_n_cols, B_M_n_rows);
+    copy(P_out, PB);
     }
 
   if (C_n_elem > 0)
     {
-    copy_mat(out, C,
-             C_n_rows, C_n_cols,
-             A_n_rows + B_n_rows + out_row_offset, out_col_offset, out_M_n_rows,
-             C_row_offset, C_col_offset, C_M_n_rows);
+    const Proxy<subview<eT5>> P_out(out, A_n_rows + B_n_rows + out_row_offset, out_col_offset, C_n_rows, C_n_cols, out_M_n_rows);
+    const Proxy<subview<eT3>> PC(C, C_row_offset, C_col_offset, C_n_rows, C_n_cols, C_M_n_rows);
+    copy(P_out, PC);
     }
 
   if (D_n_elem > 0)
     {
-    copy_mat(out, D,
-             D_n_rows, D_n_cols,
-             A_n_rows + B_n_rows + C_n_rows + out_row_offset, out_col_offset, out_M_n_rows,
-             D_row_offset, D_col_offset, D_M_n_rows);
+    const Proxy<subview<eT5>> P_out(out, A_n_rows + B_n_rows + C_n_rows + out_row_offset, out_col_offset, D_n_rows, D_n_cols, out_M_n_rows);
+    const Proxy<subview<eT4>> PD(D, D_row_offset, D_col_offset, D_n_rows, D_n_cols, D_M_n_rows);
+    copy(P_out, PD);
     }
   }

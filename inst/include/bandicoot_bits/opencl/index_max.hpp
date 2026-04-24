@@ -29,9 +29,9 @@ index_max(dev_mem_t<uword> dest,
           const uword src_col_offset,
           const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::index_max(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::index_max(): OpenCL runtime not valid" );
 
   runtime_t::cq_guard guard;
 
@@ -89,9 +89,9 @@ index_max_cube_col(dev_mem_t<uword> dest,
                    const uword n_cols,
                    const uword n_slices)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::index_max_cube_col(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::index_max_cube_col(): OpenCL runtime not valid" );
 
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::index_max_cube_col);
 
@@ -132,9 +132,9 @@ inline
 uword
 index_max_vec(dev_mem_t<eT> mem, const uword n_elem, eT* max_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::index_max_vec(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::index_max_vec(): OpenCL runtime not valid" );
 
   cl_kernel k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::index_max);
   cl_kernel k_small = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::index_max_small);

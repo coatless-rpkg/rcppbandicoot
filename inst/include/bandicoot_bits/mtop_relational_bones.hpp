@@ -16,180 +16,151 @@
 
 
 
-class mtop_rel_lt_pre
+template<typename mtop_type>
+class mtop_rel_core
   : public traits_op_passthru
   {
   public:
 
   template<typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_lt_pre>& X);
+  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_core<mtop_type> >& X);
+  template<typename T1>
+  inline static void apply(Cube<uword>& out, const mtOpCube<uword, T1, mtop_rel_core<mtop_type> >& X);
 
-  // specialization for conversions, to avoid computing the conversion
-  template<typename eT2, typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_rel_lt_pre>& X);
+  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_core<mtop_type> >& op, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_core<mtop_type> >& op, const uword in_n_rows, const uword in_n_cols);
 
-  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_lt_pre>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_lt_pre>& op, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1> inline static uword compute_n_rows(const mtOpCube<uword, T1, mtop_rel_core<mtop_type> >& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices);
+  template<typename T1> inline static uword compute_n_cols(const mtOpCube<uword, T1, mtop_rel_core<mtop_type> >& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices);
+  template<typename T1> inline static uword compute_n_slices(const mtOpCube<uword, T1, mtop_rel_core<mtop_type> >& op, const uword in_n_rows, const uword in_n_cols, const uword in_n_slices);
+  };
+
+
+
+class mtop_rel_lt_pre
+  {
+  public:
+
+  struct prefix { static inline constexpr auto& str() { return "LP"; } };
+
+  inline static const char* text() { return "operator<"; }
+
+  using equiv_mtglue = mtglue_rel_gt;
   };
 
 
 
 class mtop_rel_lt_post
-  : public traits_op_passthru
   {
   public:
 
-  template<typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_lt_post>& X);
+  struct prefix { static inline constexpr auto& str() { return "Lp"; } };
 
-  // specialization for conversions, to avoid computing the conversion
-  template<typename eT2, typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_rel_lt_post>& X);
+  inline static const char* text() { return "operator<"; }
 
-  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_lt_post>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_lt_post>& op, const uword in_n_rows, const uword in_n_cols);
+  using equiv_mtglue = mtglue_rel_lt;
   };
 
 
 
 class mtop_rel_gt_pre
-  : public traits_op_passthru
   {
   public:
 
-  template<typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_gt_pre>& X);
+  struct prefix { static inline constexpr auto& str() { return "GP"; } };
 
-  // specialization for conversions, to avoid computing the conversion
-  template<typename eT2, typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_rel_gt_pre>& X);
+  inline static const char* text() { return "operator>"; }
 
-  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_gt_pre>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_gt_pre>& op, const uword in_n_rows, const uword in_n_cols);
+  using equiv_mtglue = mtglue_rel_lt;
   };
 
 
 
 class mtop_rel_gt_post
-  : public traits_op_passthru
   {
   public:
 
-  template<typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_gt_post>& X);
+  struct prefix { static inline constexpr auto& str() { return "Gp"; } };
 
-  // specialization for conversions, to avoid computing the conversion
-  template<typename eT2, typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_rel_gt_post>& X);
+  inline static const char* text() { return "operator>"; }
 
-  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_gt_post>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_gt_post>& op, const uword in_n_rows, const uword in_n_cols);
+  using equiv_mtglue = mtglue_rel_gt;
   };
 
 
 
 class mtop_rel_lteq_pre
-  : public traits_op_passthru
   {
   public:
 
-  template<typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_lteq_pre>& X);
+  struct prefix { static inline constexpr auto& str() { return "lP"; } };
 
-  // specialization for conversions, to avoid computing the conversion
-  template<typename eT2, typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_rel_lteq_pre>& X);
+  inline static const char* text() { return "operator<="; }
 
-  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_lteq_pre>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_lteq_pre>& op, const uword in_n_rows, const uword in_n_cols);
+  using equiv_mtglue = mtglue_rel_gteq;
   };
 
 
 
 class mtop_rel_lteq_post
-  : public traits_op_passthru
   {
   public:
 
-  template<typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_lteq_post> &X);
+  struct prefix { static inline constexpr auto& str() { return "lp"; } };
 
-  // specialization for conversions, to avoid computing the conversion
-  template<typename eT2, typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_rel_lteq_post>& X);
+  inline static const char* text() { return "operator<="; }
 
-  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_lteq_post>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_lteq_post>& op, const uword in_n_rows, const uword in_n_cols);
+  using equiv_mtglue = mtglue_rel_lteq;
   };
 
 
 
 class mtop_rel_gteq_pre
-  : public traits_op_passthru
   {
   public:
 
-  template<typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_gteq_pre>& X);
+  struct prefix { static inline constexpr auto& str() { return "gP"; } };
 
-  // specialization for conversions, to avoid computing the conversion
-  template<typename eT2, typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_rel_gteq_pre>& X);
+  inline static const char* text() { return "operator>="; }
 
-  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_gteq_pre>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_gteq_pre>& op, const uword in_n_rows, const uword in_n_cols);
+  using equiv_mtglue = mtglue_rel_lteq;
   };
 
 
 
 class mtop_rel_gteq_post
-  : public traits_op_passthru
   {
   public:
 
-  template<typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_gteq_post>& X);
+  struct prefix { static inline constexpr auto& str() { return "gp"; } };
 
-  // specialization for conversions, to avoid computing the conversion
-  template<typename eT2, typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_rel_gteq_post>& X);
+  inline static const char* text() { return "operator>="; }
 
-  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_gteq_post>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_gteq_post>& op, const uword in_n_rows, const uword in_n_cols);
+  using equiv_mtglue = mtglue_rel_gteq;
   };
 
 
 
 class mtop_rel_eq
-  : public traits_op_passthru
   {
   public:
 
-  template<typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_eq>& X);
+  struct prefix { static inline constexpr auto& str() { return "e"; } };
 
-  // specialization for conversions, to avoid computing the conversion
-  template<typename eT2, typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_rel_eq>& X);
+  inline static const char* text() { return "operator=="; }
 
-  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_eq>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_eq>& op, const uword in_n_rows, const uword in_n_cols);
+  using equiv_mtglue = mtglue_rel_eq;
   };
 
 
 
 class mtop_rel_noteq
-  : public traits_op_passthru
   {
   public:
 
-  template<typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, T1, mtop_rel_noteq>& X);
+  struct prefix { static inline constexpr auto& str() { return "n"; } };
 
-  // specialization for conversions, to avoid computing the conversion
-  template<typename eT2, typename T1>
-  inline static void apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_rel_noteq>& X);
+  inline static const char* text() { return "operator!="; }
 
-  template<typename T1> inline static uword compute_n_rows(const mtOp<uword, T1, mtop_rel_noteq>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const mtOp<uword, T1, mtop_rel_noteq>& op, const uword in_n_rows, const uword in_n_cols);
+  using equiv_mtglue = mtglue_rel_noteq;
   };

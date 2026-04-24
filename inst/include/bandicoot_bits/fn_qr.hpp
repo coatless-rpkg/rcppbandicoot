@@ -28,9 +28,9 @@ qr
   const Base<typename T1::elem_type,T1>& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (&Q == &R), "qr(): Q and R are the same object");
+  coot_conform_check( (&Q == &R), "qr(): Q and R are the same object");
 
   const bool status = false;
 
@@ -44,7 +44,7 @@ qr
     {
     Q.reset();
     R.reset();
-    coot_debug_warn_level(3, "qr(): decomposition failed");
+    coot_warn(3, "qr(): decomposition failed");
     }
 
   return status;

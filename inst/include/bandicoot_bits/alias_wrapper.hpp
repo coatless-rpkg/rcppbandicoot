@@ -48,7 +48,15 @@ struct is_any_alias
 
   template<typename T2, typename... Args>
   coot_inline
-  typename enable_if2< !is_Mat<T2>::value && !is_subview<T2>::value && !is_diagview<T2>::value && !is_Cube<T2>::value && !is_subview_cube<T2>::value, bool >::result
+  bool
+  check(const Proxy<T2>& t2, const Args&... args)
+    {
+    return t2.is_alias(in) || check(args...);
+    }
+
+  template<typename T2, typename... Args>
+  coot_inline
+  typename enable_if2< !is_Mat<T2>::value && !is_subview<T2>::value && !is_diagview<T2>::value && !is_Cube<T2>::value && !is_subview_cube<T2>::value && !is_Proxy<T2>::value, bool >::result
   check(const T2&, const Args&... args)
     {
     return check(args...);
@@ -63,9 +71,17 @@ struct is_any_alias
     }
 
   template<typename T2>
+  coot_inline
+  bool
+  check(const Proxy<T2>& t2)
+    {
+    return t2.is_alias(in);
+    }
+
+  template<typename T2>
   constexpr static
   coot_inline
-  typename enable_if2< !is_Mat<T2>::value && !is_subview<T2>::value && !is_diagview<T2>::value && !is_Cube<T2>::value && !is_subview_cube<T2>::value, bool >::result
+  typename enable_if2< !is_Mat<T2>::value && !is_subview<T2>::value && !is_diagview<T2>::value && !is_Cube<T2>::value && !is_subview_cube<T2>::value && !is_Proxy<T2>::value, bool >::result
   check(const T2&)
     {
     return false;
@@ -76,14 +92,73 @@ struct is_any_alias
 
 
 
-template<typename TDest, typename... TArgs>
-struct alias_wrapper
+template<typename T1>
+struct is_any_inexact_alias
+  {
+  inline is_any_inexact_alias(const T1& in_p) : in(in_p) { }
+
+  template<typename T2, typename... Args>
+  coot_inline
+  typename enable_if2< is_Mat<T2>::value || is_subview<T2>::value || is_diagview<T2>::value || is_Cube<T2>::value || is_subview_cube<T2>::value, bool >::result
+  check(const T2& t2, const Args&... args)
+    {
+    return is_inexact_alias(in, t2) || check(args...);
+    }
+
+  template<typename T2, typename... Args>
+  coot_inline
+  bool
+  check(const Proxy<T2>& t2, const Args&... args)
+    {
+    return t2.is_inexact_alias(in) || check(args...);
+    }
+
+  template<typename T2, typename... Args>
+  coot_inline
+  typename enable_if2< !is_Mat<T2>::value && !is_subview<T2>::value && !is_diagview<T2>::value && !is_Cube<T2>::value && !is_subview_cube<T2>::value && !is_Proxy<T2>::value, bool >::result
+  check(const T2&, const Args&... args)
+    {
+    return check(args...);
+    }
+
+  template<typename T2>
+  coot_inline
+  typename enable_if2< is_Mat<T2>::value || is_subview<T2>::value || is_diagview<T2>::value || is_Cube<T2>::value || is_subview_cube<T2>::value, bool >::result
+  check(const T2& t2)
+    {
+    return is_inexact_alias(in, t2);
+    }
+
+  template<typename T2>
+  coot_inline
+  bool
+  check(const Proxy<T2>& t2)
+    {
+    return t2.is_inexact_alias(in);
+    }
+
+  template<typename T2>
+  constexpr static
+  coot_inline
+  typename enable_if2< !is_Mat<T2>::value && !is_subview<T2>::value && !is_diagview<T2>::value && !is_Cube<T2>::value && !is_subview_cube<T2>::value && !is_Proxy<T2>::value, bool >::result
+  check(const T2&)
+    {
+    return false;
+    }
+
+  const T1& in;
+  };
+
+
+
+template<bool inexact, typename TDest, typename... TArgs>
+struct alias_wrapper_helper
   {
   // dest: the output matrix to be used for the operation
   // arg: the input, which may be an alias of the output
-  alias_wrapper(TDest& dest_in, const TArgs&... args)
+  alias_wrapper_helper(TDest& dest_in, const TArgs&... args)
     : dest(dest_in)
-    , using_aux(is_any_alias<TDest>(dest).check(args...))
+    , using_aux(inexact ? is_any_inexact_alias<TDest>(dest).check(args...) : is_any_alias<TDest>(dest).check(args...))
     , use(using_aux ? aux : dest)
     {
     if (using_aux)
@@ -92,7 +167,7 @@ struct alias_wrapper
       }
     }
 
-  ~alias_wrapper()
+  void cleanup()
     {
     if (using_aux)
       {
@@ -121,14 +196,14 @@ struct alias_wrapper
 
 
 
-template<typename eT, typename... TArgs>
-struct alias_wrapper<subview<eT>, TArgs...>
+template<bool inexact, typename eT, typename... TArgs>
+struct alias_wrapper_helper<inexact, subview<eT>, TArgs...>
   {
   // dest: the output matrix to be used for the operation
   // arg: the input, which may be an alias of the output
-  alias_wrapper(subview<eT>& dest_in, const TArgs&... args)
+  alias_wrapper_helper(subview<eT>& dest_in, const TArgs&... args)
     : dest(dest_in)
-    , using_aux(is_any_alias<subview<eT>>(dest).check(args...))
+    , using_aux(inexact ? is_any_inexact_alias<subview<eT>>(dest).check(args...) : is_any_alias<subview<eT>>(dest).check(args...))
     {
     if (using_aux)
       {
@@ -136,7 +211,7 @@ struct alias_wrapper<subview<eT>, TArgs...>
       }
     }
 
-  ~alias_wrapper()
+  void cleanup()
     {
     if (using_aux)
       {
@@ -164,14 +239,14 @@ struct alias_wrapper<subview<eT>, TArgs...>
 
 
 
-template<typename eT, typename... TArgs>
-struct alias_wrapper<diagview<eT>, TArgs...>
+template<bool inexact, typename eT, typename... TArgs>
+struct alias_wrapper_helper<inexact, diagview<eT>, TArgs...>
   {
   // dest: the output matrix to be used for the operation
   // arg: the input, which may be an alias of the output
-  alias_wrapper(diagview<eT>& dest_in, const TArgs&... args)
+  alias_wrapper_helper(diagview<eT>& dest_in, const TArgs&... args)
     : dest(dest_in)
-    , using_aux(is_any_alias<diagview<eT>>(dest).check(args...))
+    , using_aux(inexact ? is_any_inexact_alias<diagview<eT>>(dest).check(args...) : is_any_alias<diagview<eT>>(dest).check(args...))
     {
     if (using_aux)
       {
@@ -179,7 +254,7 @@ struct alias_wrapper<diagview<eT>, TArgs...>
       }
     }
 
-  ~alias_wrapper()
+  void cleanup()
     {
     if (using_aux)
       {
@@ -208,14 +283,14 @@ struct alias_wrapper<diagview<eT>, TArgs...>
 
 
 
-template<typename eT, typename... TArgs>
-struct alias_wrapper<Cube<eT>, TArgs...>
+template<bool inexact, typename eT, typename... TArgs>
+struct alias_wrapper_helper<inexact, Cube<eT>, TArgs...>
   {
   // dest: the output cube to be used for the operation
   // arg: the input, which may be an alias of the output
-  alias_wrapper(Cube<eT>& dest_in, const TArgs&... args)
+  alias_wrapper_helper(Cube<eT>& dest_in, const TArgs&... args)
     : dest(dest_in)
-    , using_aux(is_any_alias<Cube<eT>>(dest).check(args...))
+    , using_aux(inexact ? is_any_inexact_alias<Cube<eT>>(dest).check(args...) : is_any_alias<Cube<eT>>(dest).check(args...))
     , use(using_aux ? aux : dest)
     {
     if (using_aux)
@@ -224,7 +299,7 @@ struct alias_wrapper<Cube<eT>, TArgs...>
       }
     }
 
-  ~alias_wrapper()
+  void cleanup()
     {
     if (using_aux)
       {
@@ -254,22 +329,22 @@ struct alias_wrapper<Cube<eT>, TArgs...>
 
 
 
-template<typename eT, typename... TArgs>
-struct alias_wrapper<subview_cube<eT>, TArgs...>
+template<bool inexact, typename eT, typename... TArgs>
+struct alias_wrapper_helper<inexact, subview_cube<eT>, TArgs...>
   {
   // dest: the output cube to be used for the operation
   // arg: the input, which may be an alias of the output
-  alias_wrapper(subview_cube<eT>& dest_in, const TArgs&... args)
+  alias_wrapper_helper(subview_cube<eT>& dest_in, const TArgs&... args)
     : dest(dest_in)
-    , using_aux(is_any_alias<subview_cube<eT>>(dest).check(args...))
+    , using_aux(inexact ? is_any_inexact_alias<subview_cube<eT>>(dest).check(args...) : is_any_alias<subview_cube<eT>>(dest).check(args...))
     {
     if (using_aux)
       {
-      aux.set_size(dest.n_rows, dest.n_cols);
+      aux.set_size(dest.n_rows, dest.n_cols, dest.n_slices);
       }
     }
 
-  ~alias_wrapper()
+  void cleanup()
     {
     if (using_aux)
       {
@@ -286,12 +361,30 @@ struct alias_wrapper<subview_cube<eT>, TArgs...>
   inline uword get_n_elem()   const { return using_aux ? aux.n_elem : dest.n_elem; }
 
   coot_inline dev_mem_t<eT> get_dev_mem(const bool synchronise = false) { return using_aux ? aux.get_dev_mem(synchronise) : dest.m.get_dev_mem(synchronise); }
-  coot_inline uword         get_row_offset() const                      { return using_aux ? 0 : dest.aux_row1;                                            }
-  coot_inline uword         get_col_offset() const                      { return using_aux ? 0 : dest.aux_col1;                                            }
-  coot_inline uword         get_M_n_rows() const                        { return using_aux ? aux.n_rows : dest.m.n_rows;                                   }
-  coot_inline uword         get_incr() const                            { return 1;                                                                        }
+  coot_inline uword         get_row_offset() const                      { return using_aux ? 0 : dest.aux_row1;                                              }
+  coot_inline uword         get_col_offset() const                      { return using_aux ? 0 : dest.aux_col1;                                              }
+  coot_inline uword         get_M_n_rows() const                        { return using_aux ? aux.n_rows : dest.m.n_rows;                                     }
+  coot_inline uword         get_incr() const                            { return 1;                                                                          }
 
-  subview<eT>& dest;
-  Cube<eT>     aux;
-  bool         using_aux;
+  subview_cube<eT>& dest;
+  Cube<eT>          aux;
+  bool              using_aux;
+  };
+
+
+
+template<typename TDest, typename... TArgs>
+struct alias_wrapper : public alias_wrapper_helper<false, TDest, TArgs...>
+  {
+  alias_wrapper(TDest& dest_in, const TArgs&... args) : alias_wrapper_helper<false, TDest, TArgs...>(dest_in, args...) { }
+  ~alias_wrapper() { alias_wrapper_helper<false, TDest, TArgs...>::cleanup(); }
+  };
+
+
+
+template<typename TDest, typename... TArgs>
+struct inexact_alias_wrapper : public alias_wrapper_helper<true, TDest, TArgs...>
+  {
+  inexact_alias_wrapper(TDest& dest_in, const TArgs&... args) : alias_wrapper_helper<true, TDest, TArgs...>(dest_in, args...) { }
+  ~inexact_alias_wrapper() { alias_wrapper_helper<true, TDest, TArgs...>::cleanup(); }
   };

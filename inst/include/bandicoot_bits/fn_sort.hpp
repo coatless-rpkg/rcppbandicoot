@@ -32,7 +32,7 @@ sort
   const T1& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_sort_vec>(X, 0, 0);
   }
@@ -53,7 +53,7 @@ sort
   const T1& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_sort>(X, 0, 0);
   }
@@ -75,11 +75,11 @@ sort
   const T2* sort_direction
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (sort_direction != nullptr) ? sort_direction[0] : char(0);
 
-  coot_debug_check( (sig != 'a') && (sig != 'd'), "sort(): unknown sort direction" );
+  coot_conform_check( (sig != 'a') && (sig != 'd'), "sort(): unknown sort direction" );
 
   const uword sort_type = (sig == 'a') ? 0 : 1;
 
@@ -103,11 +103,11 @@ sort
   const T2* sort_direction
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (sort_direction != nullptr) ? sort_direction[0] : char(0);
 
-  coot_debug_check( (sig != 'a') && (sig != 'd'), "sort(): unknown sort direction" );
+  coot_conform_check( (sig != 'a') && (sig != 'd'), "sort(): unknown sort direction" );
 
   const uword sort_type = (sig == 'a') ? 0 : 1;
 
@@ -132,11 +132,11 @@ sort
   const uword dim
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (sort_direction != nullptr) ? sort_direction[0] : char(0);
 
-  coot_debug_check( (sig != 'a') && (sig != 'd'), "sort(): unknown sort direction" );
+  coot_conform_check( (sig != 'a') && (sig != 'd'), "sort(): unknown sort direction" );
 
   const uword sort_type = (sig == 'a') ? 0 : 1;
 

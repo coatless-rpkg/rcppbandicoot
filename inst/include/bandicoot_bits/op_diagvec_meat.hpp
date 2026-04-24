@@ -21,7 +21,7 @@ inline
 void
 op_diagvec::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_diagvec>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Extract diagonal id.
   const sword k = (in.aux_uword_b == 0) ? sword(in.aux_uword_a) : -sword(in.aux_uword_a);
@@ -37,7 +37,7 @@ inline
 void
 op_diagvec::apply(Mat<out_eT>& out, const Op<T1, op_diagvec>& in, const typename enable_if<is_same_type<out_eT, typename T1::elem_type>::no>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   // Extract diagonal id.
@@ -51,15 +51,15 @@ op_diagvec::apply(Mat<out_eT>& out, const Op<T1, op_diagvec>& in, const typename
 
 
 
-template<typename eT>
+template<typename eT, typename T1>
 inline
 void
-op_diagvec::apply_direct(Mat<eT>& out, const Mat<eT>& in, const sword k)
+op_diagvec::apply_direct(Mat<eT>& out, const T1& in, const sword k)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If out and in are the same matrix, we can't do the operation in-place.
-  if (&out == &in)
+  if (is_alias(out, in))
     {
     Mat<eT> tmp(in);
     op_diagvec::apply_direct(out, tmp, k);
@@ -67,32 +67,10 @@ op_diagvec::apply_direct(Mat<eT>& out, const Mat<eT>& in, const sword k)
     }
 
   const uword len = (std::min)(in.n_rows, in.n_cols) - std::abs(k);
-
   out.set_size(len, 1);
 
-  const uword row_offset = (k < 0) ? uword(-k) : 0;
-  const uword col_offset = (k > 0) ? uword( k) : 0;
-
-  const uword mem_offset = row_offset + col_offset * in.n_rows;
-
-  coot_rt_t::copy_mat(out.get_dev_mem(false), in.get_dev_mem(false),
-                      1, len,
-                      0, 0, 1,
-                      mem_offset, 0, in.n_rows + 1);
-  }
-
-
-
-template<typename eT>
-inline
-void
-op_diagvec::apply_direct(Mat<eT>& out, const subview<eT>& in, const sword k)
-  {
-  coot_extra_debug_sigprint();
-
-  // Subviews must be extracted.
-  Mat<eT> tmp(in);
-  op_diagvec::apply_direct(out, tmp, k);
+  const diagview<eT> d = in.diag(k); // must be subview or Mat
+  coot_rt_t::copy(make_proxy_col(out), make_proxy(d));
   }
 
 

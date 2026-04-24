@@ -18,9 +18,9 @@ inline
 void
 reorder_cols(dev_mem_t<eT> out, const dev_mem_t<eT> in, const uword n_rows, const dev_mem_t<uword> ordering, const uword out_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::reorder_cols(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::reorder_cols(): OpenCL runtime not valid" );
 
   runtime_t::cq_guard guard;
 

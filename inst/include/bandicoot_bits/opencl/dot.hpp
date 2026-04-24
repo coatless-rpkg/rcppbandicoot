@@ -22,9 +22,9 @@ inline
 typename promote_type<eT1, eT2>::result
 dot(dev_mem_t<eT1> mem1, dev_mem_t<eT2> mem2, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::dot(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::dot(): OpenCL runtime not valid" );
 
   // We could use clblasSdot() and clblasDdot(), but the slowness of the sasum() and dasum() implementations
   // makes me think we're better off using our own kernel here.

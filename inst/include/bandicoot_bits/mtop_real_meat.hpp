@@ -21,7 +21,7 @@ inline
 void
 mtop_real::apply(Mat<out_eT>& out, const mtOp<out_eT, T1, mtop_real>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   unwrap<T1> U(in.q);
 

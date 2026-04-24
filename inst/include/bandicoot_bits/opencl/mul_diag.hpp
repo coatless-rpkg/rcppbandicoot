@@ -39,7 +39,7 @@ mul_diag
   const uword B_M_n_rows
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   cl_mem diag_arg_ptr;
   cl_mem mat_arg_ptr;
@@ -90,7 +90,7 @@ mul_diag
     // diagmat(A) * B'
     kernel = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::mul_rowwise_trans);
 
-    coot_debug_check( mem_overlaps(C_mem, 0, C_n_rows * C_n_cols, B_mem, 0, C_n_rows * C_n_cols), "coot::opencl::mul_diag(): incorrect call, alias and transpose not allowed" );
+    coot_conform_check( mem_overlaps(C_mem, 0, C_n_rows * C_n_cols, B_mem, 0, C_n_rows * C_n_cols), "coot::opencl::mul_diag(): incorrect call, alias and transpose not allowed" );
 
     diag_arg_ptr = A_mem.cl_mem_ptr.ptr;
     mat_arg_ptr  = B_mem.cl_mem_ptr.ptr;
@@ -108,7 +108,7 @@ mul_diag
     // A' * diagmat(B)
     kernel = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::mul_colwise_trans);
 
-    coot_debug_check( mem_overlaps(C_mem, 0, C_n_rows * C_n_cols, A_mem, 0, C_n_rows * C_n_cols), "coot::opencl::mul_diag(): incorrect call, alias and transpose not allowed" );
+    coot_conform_check( mem_overlaps(C_mem, 0, C_n_rows * C_n_cols, A_mem, 0, C_n_rows * C_n_cols), "coot::opencl::mul_diag(): incorrect call, alias and transpose not allowed" );
 
     diag_arg_ptr = B_mem.cl_mem_ptr.ptr;
     mat_arg_ptr  = A_mem.cl_mem_ptr.ptr;

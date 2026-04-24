@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// 
+//
 // Copyright 2017-2025 Ryan Curtin (https://www.ratml.org)
 // Copyright 2017      Conrad Sanderson (https://conradsanderson.id.au)
 //
@@ -14,6 +14,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // ------------------------------------------------------------------------
+
+
+
+// IDs for generated kernels; not called "gen_kernel_id" because the intention
+// is that all other kernel_id classes will be removed and replaced with
+// generated kernels
+struct kernel_id
+  {
+  enum enum_id
+    {
+    preamble, // all the introductory definitions
+    fill,
+    copy,
+    sum_colwise,
+    sum_rowwise,
+    mean_colwise,
+    mean_rowwise,
+    max_colwise,
+    max_rowwise,
+    min_colwise,
+    min_rowwise
+    };
+  };
+
 
 
 
@@ -87,11 +111,7 @@ struct oneway_kernel_id
   {
   enum enum_id
     {
-    fill = 0,
-    fill_sve1,
-    fill_sve2,
-    //
-    mul_colwise,
+    mul_colwise = 0,
     mul_rowwise,
     mul_colwise_trans,
     mul_rowwise_trans,
@@ -190,10 +210,6 @@ struct oneway_kernel_id
     // NOTE: the order and names of kernels in "names" must match the order and names in the kernel_id enum
 
     std::vector<std::string> names;
-
-    names.push_back("fill");
-    names.push_back("fill_sve1");
-    names.push_back("fill_sve2");
 
     names.push_back("mul_colwise");
     names.push_back("mul_rowwise");
@@ -552,130 +568,7 @@ struct twoway_kernel_id
   {
   enum enum_id
     {
-    equ_array_plus_scalar = 0,
-    equ_array_neg_pre,
-    equ_array_neg_post,
-    equ_array_minus_scalar_pre_pre,
-    equ_array_minus_scalar_pre_post,
-    equ_array_minus_scalar_post,
-    equ_array_mul_scalar,
-    equ_array_div_scalar_pre,
-    equ_array_div_scalar_post,
-    equ_array_mod_scalar,
-    equ_array_square_pre,
-    equ_array_square_post,
-    equ_array_sqrt_pre,
-    equ_array_sqrt_post,
-    equ_array_exp_pre,
-    equ_array_exp_post,
-    equ_array_exp2_pre,
-    equ_array_exp2_post,
-    equ_array_exp10_pre,
-    equ_array_exp10_post,
-    equ_array_trunc_exp_pre,
-    equ_array_trunc_exp_post,
-    equ_array_log_pre,
-    equ_array_log_post,
-    equ_array_log2_pre,
-    equ_array_log2_post,
-    equ_array_log10_pre,
-    equ_array_log10_post,
-    equ_array_trunc_log_pre,
-    equ_array_trunc_log_post,
-    equ_array_cos_pre,
-    equ_array_cos_post,
-    equ_array_sin_pre,
-    equ_array_sin_post,
-    equ_array_tan_pre,
-    equ_array_tan_post,
-    equ_array_acos_pre,
-    equ_array_acos_post,
-    equ_array_asin_pre,
-    equ_array_asin_post,
-    equ_array_atan_pre,
-    equ_array_atan_post,
-    equ_array_cosh_pre,
-    equ_array_cosh_post,
-    equ_array_sinh_pre,
-    equ_array_sinh_post,
-    equ_array_tanh_pre,
-    equ_array_tanh_post,
-    equ_array_acosh_pre,
-    equ_array_acosh_post,
-    equ_array_asinh_pre,
-    equ_array_asinh_post,
-    equ_array_atanh_pre,
-    equ_array_atanh_post,
-    equ_array_sinc_pre,
-    equ_array_sinc_post,
-    equ_array_abs,
-    equ_array_pow_pre,
-    equ_array_pow_post,
-    equ_array_floor_pre,
-    equ_array_floor_post,
-    equ_array_ceil_pre,
-    equ_array_ceil_post,
-    equ_array_round_pre,
-    equ_array_round_post,
-    equ_array_trunc_pre,
-    equ_array_trunc_post,
-    equ_array_sign_pre,
-    equ_array_sign_post,
-    equ_array_erf_pre,
-    equ_array_erf_post,
-    equ_array_erfc_pre,
-    equ_array_erfc_post,
-    equ_array_lgamma_pre,
-    equ_array_lgamma_post,
-    replace,
-    clamp,
-    //
-    extract_sve1,
-    equ_array_plus_scalar_sve1,
-    equ_array_minus_scalar_pre_pre_sve1,
-    equ_array_minus_scalar_pre_post_sve1,
-    equ_array_minus_scalar_post_sve1,
-    equ_array_mul_scalar_sve1,
-    equ_array_div_scalar_pre_sve1,
-    equ_array_div_scalar_post_sve1,
-    //
-    inplace_sve1_eq_array,
-    inplace_sve1_plus_array,
-    inplace_sve1_minus_array,
-    inplace_sve1_mul_array,
-    inplace_sve1_div_array,
-    //
-    inplace_sve1_eq_sve1,
-    inplace_sve1_plus_sve1,
-    inplace_sve1_minus_sve1,
-    inplace_sve1_mul_sve1,
-    inplace_sve1_div_sve1,
-    //
-    extract_sve2,
-    equ_array_plus_scalar_sve2,
-    equ_array_minus_scalar_pre_pre_sve2,
-    equ_array_minus_scalar_pre_post_sve2,
-    equ_array_minus_scalar_post_sve2,
-    equ_array_mul_scalar_sve2,
-    equ_array_div_scalar_pre_sve2,
-    equ_array_div_scalar_post_sve2,
-    //
-    inplace_sve2_eq_array,
-    inplace_sve2_plus_array,
-    inplace_sve2_minus_array,
-    inplace_sve2_mul_array,
-    inplace_sve2_div_array,
-    //
-    inplace_sve2_eq_sve2,
-    inplace_sve2_plus_sve2,
-    inplace_sve2_minus_sve2,
-    inplace_sve2_mul_sve2,
-    inplace_sve2_div_sve2,
-    //
-    equ_array_min_array_cube,
-    equ_array_max_array_cube,
-    //
-    sum_colwise_conv_pre,
+    sum_colwise_conv_pre = 0,
     sum_rowwise_conv_pre,
     sum_colwise_conv_post,
     sum_rowwise_conv_post,
@@ -699,9 +592,6 @@ struct twoway_kernel_id
     dot,
     dot_small,
     //
-    convert_type,
-    convert_type_cube,
-    //
     broadcast_set,
     broadcast_plus,
     broadcast_minus_pre,
@@ -717,23 +607,6 @@ struct twoway_kernel_id
     broadcast_subset_div_pre,
     broadcast_subset_div_post,
     //
-    htrans,
-    strans,
-    //
-    rel_gt_scalar,
-    rel_lt_scalar,
-    rel_gteq_scalar,
-    rel_lteq_scalar,
-    rel_eq_scalar,
-    rel_neq_scalar,
-    rel_gt_array,
-    rel_lt_array,
-    rel_gteq_array,
-    rel_lteq_array,
-    rel_eq_array,
-    rel_neq_array,
-    rel_and_array,
-    rel_or_array,
     rel_all_neq,
     rel_all_neq_small,
     rel_all_neq_colwise,
@@ -760,129 +633,6 @@ struct twoway_kernel_id
     {
     std::vector<std::string> names;
 
-    names.push_back("equ_array_plus_scalar");
-    names.push_back("equ_array_neg_pre");
-    names.push_back("equ_array_neg_post");
-    names.push_back("equ_array_minus_scalar_pre_pre");
-    names.push_back("equ_array_minus_scalar_pre_post");
-    names.push_back("equ_array_minus_scalar_post");
-    names.push_back("equ_array_mul_scalar");
-    names.push_back("equ_array_div_scalar_pre");
-    names.push_back("equ_array_div_scalar_post");
-    names.push_back("equ_array_mod_scalar");
-    names.push_back("equ_array_square_pre");
-    names.push_back("equ_array_square_post");
-    names.push_back("equ_array_sqrt_pre");
-    names.push_back("equ_array_sqrt_post");
-    names.push_back("equ_array_exp_pre");
-    names.push_back("equ_array_exp_post");
-    names.push_back("equ_array_exp2_pre");
-    names.push_back("equ_array_exp2_post");
-    names.push_back("equ_array_exp10_pre");
-    names.push_back("equ_array_exp10_post");
-    names.push_back("equ_array_trunc_exp_pre");
-    names.push_back("equ_array_trunc_exp_post");
-    names.push_back("equ_array_log_pre");
-    names.push_back("equ_array_log_post");
-    names.push_back("equ_array_log2_pre");
-    names.push_back("equ_array_log2_post");
-    names.push_back("equ_array_log10_pre");
-    names.push_back("equ_array_log10_post");
-    names.push_back("equ_array_trunc_log_pre");
-    names.push_back("equ_array_trunc_log_post");
-    names.push_back("equ_array_cos_pre");
-    names.push_back("equ_array_cos_post");
-    names.push_back("equ_array_sin_pre");
-    names.push_back("equ_array_sin_post");
-    names.push_back("equ_array_tan_pre");
-    names.push_back("equ_array_tan_post");
-    names.push_back("equ_array_acos_pre");
-    names.push_back("equ_array_acos_post");
-    names.push_back("equ_array_asin_pre");
-    names.push_back("equ_array_asin_post");
-    names.push_back("equ_array_atan_pre");
-    names.push_back("equ_array_atan_post");
-    names.push_back("equ_array_cosh_pre");
-    names.push_back("equ_array_cosh_post");
-    names.push_back("equ_array_sinh_pre");
-    names.push_back("equ_array_sinh_post");
-    names.push_back("equ_array_tanh_pre");
-    names.push_back("equ_array_tanh_post");
-    names.push_back("equ_array_acosh_pre");
-    names.push_back("equ_array_acosh_post");
-    names.push_back("equ_array_asinh_pre");
-    names.push_back("equ_array_asinh_post");
-    names.push_back("equ_array_atanh_pre");
-    names.push_back("equ_array_atanh_post");
-    names.push_back("equ_array_sinc_pre");
-    names.push_back("equ_array_sinc_post");
-    names.push_back("equ_array_abs");
-    names.push_back("equ_array_pow_pre");
-    names.push_back("equ_array_pow_post");
-    names.push_back("equ_array_floor_pre");
-    names.push_back("equ_array_floor_post");
-    names.push_back("equ_array_ceil_pre");
-    names.push_back("equ_array_ceil_post");
-    names.push_back("equ_array_round_pre");
-    names.push_back("equ_array_round_post");
-    names.push_back("equ_array_trunc_pre");
-    names.push_back("equ_array_trunc_post");
-    names.push_back("equ_array_sign_pre");
-    names.push_back("equ_array_sign_post");
-    names.push_back("equ_array_erf_pre");
-    names.push_back("equ_array_erf_post");
-    names.push_back("equ_array_erfc_pre");
-    names.push_back("equ_array_erfc_post");
-    names.push_back("equ_array_lgamma_pre");
-    names.push_back("equ_array_lgamma_post");
-    names.push_back("replace");
-    names.push_back("clamp");
-
-    names.push_back("extract_sve1");
-    names.push_back("equ_array_plus_scalar_sve1");
-    names.push_back("equ_array_minus_scalar_pre_pre_sve1");
-    names.push_back("equ_array_minus_scalar_pre_post_sve1");
-    names.push_back("equ_array_minus_scalar_post_sve1");
-    names.push_back("equ_array_mul_scalar_sve1");
-    names.push_back("equ_array_div_scalar_pre_sve1");
-    names.push_back("equ_array_div_scalar_post_sve1");
-
-    names.push_back("inplace_sve1_eq_array");
-    names.push_back("inplace_sve1_plus_array");
-    names.push_back("inplace_sve1_minus_array");
-    names.push_back("inplace_sve1_mul_array");
-    names.push_back("inplace_sve1_div_array");
-
-    names.push_back("inplace_sve1_eq_sve1");
-    names.push_back("inplace_sve1_plus_sve1");
-    names.push_back("inplace_sve1_minus_sve1");
-    names.push_back("inplace_sve1_mul_sve1");
-    names.push_back("inplace_sve1_div_sve1");
-
-    names.push_back("extract_sve2");
-    names.push_back("equ_array_plus_scalar_sve2");
-    names.push_back("equ_array_minus_scalar_pre_pre_sve2");
-    names.push_back("equ_array_minus_scalar_pre_post_sve2");
-    names.push_back("equ_array_minus_scalar_post_sve2");
-    names.push_back("equ_array_mul_scalar_sve2");
-    names.push_back("equ_array_div_scalar_pre_sve2");
-    names.push_back("equ_array_div_scalar_post_sve2");
-
-    names.push_back("inplace_sve2_eq_array");
-    names.push_back("inplace_sve2_plus_array");
-    names.push_back("inplace_sve2_minus_array");
-    names.push_back("inplace_sve2_mul_array");
-    names.push_back("inplace_sve2_div_array");
-
-    names.push_back("inplace_sve2_eq_sve2");
-    names.push_back("inplace_sve2_plus_sve2");
-    names.push_back("inplace_sve2_minus_sve2");
-    names.push_back("inplace_sve2_mul_sve2");
-    names.push_back("inplace_sve2_div_sve2");
-
-    names.push_back("equ_array_min_array_cube");
-    names.push_back("equ_array_max_array_cube");
-
     names.push_back("sum_colwise_conv_pre");
     names.push_back("sum_rowwise_conv_pre");
     names.push_back("sum_colwise_conv_post");
@@ -907,9 +657,6 @@ struct twoway_kernel_id
     names.push_back("dot");
     names.push_back("dot_small");
 
-    names.push_back("convert_type");
-    names.push_back("convert_type_cube");
-
     names.push_back("broadcast_set");
     names.push_back("broadcast_plus");
     names.push_back("broadcast_minus_pre");
@@ -925,23 +672,6 @@ struct twoway_kernel_id
     names.push_back("broadcast_subset_div_pre");
     names.push_back("broadcast_subset_div_post");
 
-    names.push_back("htrans");
-    names.push_back("strans");
-
-    names.push_back("rel_gt_scalar");
-    names.push_back("rel_lt_scalar");
-    names.push_back("rel_gteq_scalar");
-    names.push_back("rel_lteq_scalar");
-    names.push_back("rel_eq_scalar");
-    names.push_back("rel_neq_scalar");
-    names.push_back("rel_gt_array");
-    names.push_back("rel_lt_array");
-    names.push_back("rel_gteq_array");
-    names.push_back("rel_lteq_array");
-    names.push_back("rel_eq_array");
-    names.push_back("rel_neq_array");
-    names.push_back("rel_and_array");
-    names.push_back("rel_or_array");
     names.push_back("rel_all_neq");
     names.push_back("rel_all_neq_small");
     names.push_back("rel_all_neq_colwise");
@@ -982,97 +712,6 @@ struct twoway_kernel_id
 
     deps[rel_any_neq] = { "or_subgroup_reduce_u32" };
     deps[rel_all_neq] = { "and_subgroup_reduce_u32" };
-
-    return deps;
-    }
-
-
-
-  static
-  inline
-  const std::unordered_map<enum_id, std::vector<std::string>>&
-  get_deps()
-    {
-    static const std::unordered_map<enum_id, std::vector<std::string>> deps = init_deps();
-
-    return deps;
-    }
-
-  };
-
-
-
-struct threeway_kernel_id
-  {
-  enum enum_id
-    {
-    equ_array_plus_array = 0,
-    equ_array_minus_array,
-    equ_array_mul_array,
-    equ_array_div_array,
-    //
-    equ_array_min_array,
-    equ_array_max_array,
-    //
-    equ_array_atan2,
-    equ_array_hypot,
-    //
-    equ_array_plus_array_cube,
-    equ_array_minus_array_cube,
-    equ_array_mul_array_cube,
-    equ_array_div_array_cube,
-    //
-    invalid_kernel
-    };
-
-
-
-  static
-  inline
-  std::vector<std::string>
-  init_names()
-    {
-    std::vector<std::string> names;
-
-    names.push_back("equ_array_plus_array");
-    names.push_back("equ_array_minus_array");
-    names.push_back("equ_array_mul_array");
-    names.push_back("equ_array_div_array");
-
-    names.push_back("equ_array_min_array");
-    names.push_back("equ_array_max_array");
-
-    names.push_back("equ_array_atan2");
-    names.push_back("equ_array_hypot");
-
-    names.push_back("equ_array_plus_array_cube");
-    names.push_back("equ_array_minus_array_cube");
-    names.push_back("equ_array_mul_array_cube");
-    names.push_back("equ_array_div_array_cube");
-
-    return names;
-    }
-
-
-
-  static
-  inline
-  const std::vector<std::string>&
-  get_names()
-    {
-    static const std::vector<std::string> names = init_names();
-
-    return names;
-    }
-
-
-
-  static
-  inline
-  std::unordered_map<enum_id, std::vector<std::string>>
-  init_deps()
-    {
-    std::unordered_map<enum_id, std::vector<std::string>> deps;
 
     return deps;
     }

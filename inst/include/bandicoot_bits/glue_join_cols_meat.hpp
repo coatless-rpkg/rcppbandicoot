@@ -22,7 +22,7 @@ inline
 void
 glue_join_cols::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_join_cols>& glue)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const std::string func_name = (glue.aux_uword == 0) ? "join_cols()" : "join_vert()";
 
@@ -36,7 +36,7 @@ glue_join_cols::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_join_cols>& glue
   const uword B_n_rows = U2.M.n_rows;
   const uword B_n_cols = U2.M.n_cols;
 
-  coot_debug_check
+  coot_conform_check
     (
     ( (A_n_cols != B_n_cols) && ( (A_n_rows > 0) || (A_n_cols > 0) ) && ( (B_n_rows > 0) || (B_n_cols > 0) ) ),
     func_name + ": number of columns must be the same in both objects"
@@ -77,7 +77,7 @@ inline
 void
 glue_join_cols::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const std::string& func_name)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const no_conv_unwrap<T1> U1(A);
   const no_conv_unwrap<T2> U2(B);
@@ -94,9 +94,9 @@ glue_join_cols::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const
   const uword out_n_rows = A_n_rows + B_n_rows + C_n_rows;
   const uword out_n_cols = ((std::max)((std::max)(A_n_cols, B_n_cols), C_n_cols));
 
-  coot_debug_check( ((A_n_cols != out_n_cols) && ((A_n_rows > 0) || (A_n_cols > 0))), func_name + ": number of columns must be the same" );
-  coot_debug_check( ((B_n_cols != out_n_cols) && ((B_n_rows > 0) || (B_n_cols > 0))), func_name + ": number of columns must be the same" );
-  coot_debug_check( ((C_n_cols != out_n_cols) && ((C_n_rows > 0) || (C_n_cols > 0))), func_name + ": number of columns must be the same" );
+  coot_conform_check( ((A_n_cols != out_n_cols) && ((A_n_rows > 0) || (A_n_cols > 0))), func_name + ": number of columns must be the same" );
+  coot_conform_check( ((B_n_cols != out_n_cols) && ((B_n_rows > 0) || (B_n_cols > 0))), func_name + ": number of columns must be the same" );
+  coot_conform_check( ((C_n_cols != out_n_cols) && ((C_n_rows > 0) || (C_n_cols > 0))), func_name + ": number of columns must be the same" );
 
   // Shortcut: if there is nothing to do, leave early.
   if (out_n_rows == 0 || out_n_cols == 0)
@@ -131,7 +131,7 @@ inline
 void
 glue_join_cols::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const T4& D, const std::string& func_name)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const no_conv_unwrap<T1> U1(A);
   const no_conv_unwrap<T2> U2(B);
@@ -151,10 +151,10 @@ glue_join_cols::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const
   const uword out_n_rows = A_n_rows + B_n_rows + C_n_rows + D_n_rows;
   const uword out_n_cols = (std::max)((std::max)((std::max)(A_n_cols, B_n_cols), C_n_cols), D_n_cols);
 
-  coot_debug_check( ((A_n_cols != out_n_cols) && ((A_n_rows > 0) || (A_n_cols > 0))), func_name + ": number of columns must be the same" );
-  coot_debug_check( ((B_n_cols != out_n_cols) && ((B_n_rows > 0) || (B_n_cols > 0))), func_name + ": number of columns must be the same" );
-  coot_debug_check( ((C_n_cols != out_n_cols) && ((C_n_rows > 0) || (C_n_cols > 0))), func_name + ": number of columns must be the same" );
-  coot_debug_check( ((D_n_cols != out_n_cols) && ((D_n_rows > 0) || (D_n_cols > 0))), func_name + ": number of columns must be the same" );
+  coot_conform_check( ((A_n_cols != out_n_cols) && ((A_n_rows > 0) || (A_n_cols > 0))), func_name + ": number of columns must be the same" );
+  coot_conform_check( ((B_n_cols != out_n_cols) && ((B_n_rows > 0) || (B_n_cols > 0))), func_name + ": number of columns must be the same" );
+  coot_conform_check( ((C_n_cols != out_n_cols) && ((C_n_rows > 0) || (C_n_cols > 0))), func_name + ": number of columns must be the same" );
+  coot_conform_check( ((D_n_cols != out_n_cols) && ((D_n_rows > 0) || (D_n_cols > 0))), func_name + ": number of columns must be the same" );
 
   // Shortcut: if there is nothing to do, leave early.
   if (out_n_rows == 0 || out_n_cols == 0)

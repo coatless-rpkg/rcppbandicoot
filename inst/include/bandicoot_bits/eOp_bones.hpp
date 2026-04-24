@@ -33,15 +33,17 @@ class eOp : public Base< typename T1::elem_type, eOp<T1, eop_type> >
 
   coot_aligned const SizeProxy<T1> m;
 
-  coot_aligned       elem_type  aux;          // storage of auxiliary data, user defined format
+  coot_aligned       elem_type  aux_a;        // storage of auxiliary data, user defined format
+  coot_aligned       elem_type  aux_b;        // storage of auxiliary data, user defined format
   coot_aligned       uword      aux_uword_a;  // storage of auxiliary data, uword format
   coot_aligned       uword      aux_uword_b;  // storage of auxiliary data, uword format
 
   inline         ~eOp();
   inline explicit eOp(const T1& in_m);
-  inline          eOp(const T1& in_m, const elem_type in_aux);
+  inline          eOp(const T1& in_m, const elem_type in_aux_a);
   inline          eOp(const T1& in_m, const uword in_aux_uword_a, const uword in_aux_uword_b);
-  inline          eOp(const T1& in_m, const elem_type in_aux, const uword in_aux_uword_a, const uword in_aux_uword_b);
+  inline          eOp(const T1& in_m, const elem_type in_aux_a, const uword in_aux_uword_a, const uword in_aux_uword_b);
+  inline          eOp(const T1& in_m, const char junk, const elem_type in_aux_a, const elem_type in_aux_b);
 
   coot_inline uword get_n_rows() const;
   coot_inline uword get_n_cols() const;

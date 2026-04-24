@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
 // Copyright 2023 Ryan Curtin (http://www.ratml.org)
+// Copyright 2026 Conrad Sanderson (https://conradsanderson.id.au)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +18,12 @@
 
 
 #if defined(COOT_USE_OPENCL)
+  
+  #undef  CL_USE_DEPRECATED_OPENCL_1_2_APIS
+  #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+  
   #define CL_TARGET_OPENCL_VERSION COOT_TARGET_OPENCL_VERSION
+  
   #if defined(__APPLE__)
     #include <OpenCL/opencl.h>
     #include <OpenCL/cl_platform.h>
@@ -25,12 +31,31 @@
     #include <CL/opencl.h>
     #include <CL/cl_platform.h>
   #endif
-
+  
   #if defined(COOT_USE_CLBLAST)
-    #include <clblast_c.h>
+    #if defined(__has_include)
+      #if __has_include(<clblast_c.h>)
+        #include <clblast_c.h>
+      #else
+        #undef COOT_USE_CLBLAST
+        #pragma message ("WARNING: use of CLBlast disabled; clblast_c.h header not found")
+      #endif
+    #else
+      #include <clblast_c.h>
+    #endif
   #endif
-
+  
   #if defined(COOT_USE_CLBLAS)
-    #include <clBLAS.h>
+    #if defined(__has_include)
+      #if __has_include(<clBLAS.h>)
+        #include <clBLAS.h>
+      #else
+        #undef COOT_USE_CLBLAS
+        #pragma message ("WARNING: use of clBLAS disabled; clBLAS.h header not found")
+      #endif
+    #else
+      #include <clBLAS.h>
+    #endif
   #endif
+  
 #endif

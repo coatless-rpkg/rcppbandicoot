@@ -21,7 +21,7 @@ template<typename eT, typename T1>
 inline
 subview_elem1<eT,T1>::~subview_elem1()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -31,7 +31,7 @@ subview_elem1<eT,T1>::subview_elem1(const Mat<eT>& in_m, const Base<uword,T1>& i
   : m(in_m)
   , a(in_a)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -43,121 +43,8 @@ subview_elem1<eT,T1>::subview_elem1(const Cube<eT>& in_q, const Base<uword,T1>& 
   ,      m( fake_m )
   ,      a( in_a   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
-
-
-
-template<typename eT, typename T1>
-inline
-void
-subview_elem1<eT,T1>::inplace_op(const twoway_kernel_id::enum_id kernel_id, const eT val_pre, const eT val_post)
-  {
-  coot_extra_debug_sigprint();
-
-  // For now we need to instantiate the actual indices we will use.
-  const unwrap<T1> U(a.get_ref());
-  const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
-
-  coot_debug_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::elem(): indices must be a vector" );
-
-  // A bounds check is tedious but the only way that we can give the user an error.
-  coot_debug_check( E.M.max() >= m.n_elem, "Mat::elem(): index out of bounds" );
-
-  alias_wrapper<Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E.M);
-
-  coot_rt_t::eop_scalar_subview_elem1(kernel_id,
-                                      A.get_dev_mem(false),
-                                      E.M.get_dev_mem(false),
-                                      m.get_dev_mem(false),
-                                      E.M.get_dev_mem(false),
-                                      val_pre, val_post,
-                                      E.M.n_elem);
-  }
-
-
-
-template<typename eT, typename T1>
-template<typename T2>
-inline
-void
-subview_elem1<eT,T1>::inplace_op(const twoway_kernel_id::enum_id kernel_id, const subview_elem1<eT,T2>& x)
-  {
-  coot_extra_debug_sigprint();
-
-  if(is_alias(m, x.m))
-    {
-    coot_extra_debug_print("subview_elem1::inplace_op(): aliasing detected");
-
-    const Mat<eT> tmp(x);
-    inplace_op(kernel_id, tmp);
-    }
-  else
-    {
-    // Make sure the results will be the same size.
-    SizeProxy<T1> S1(a.get_ref());
-    SizeProxy<T2> S2(x.a.get_ref());
-
-    coot_debug_check( S1.get_n_rows() != 1 && S1.get_n_cols() != 1, "Mat::elem(): indices must be a vector" );
-    coot_debug_check( S2.get_n_rows() != 1 && S2.get_n_cols() != 1, "Mat::elem(): indices must be a vector" );
-
-    coot_debug_check( S1.get_n_elem() != S2.get_n_elem(), "Mat::elem(): size mismatch" );
-
-    // We have to unwrap both index vectors.
-    const unwrap<T1> U1(a.get_ref());
-    const unwrap<T2> U2(x.a.get_ref());
-
-    const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-    const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-
-    coot_debug_check( E1.M.max() >= m.n_elem, "Mat::elem(): index out of bounds" );
-    coot_debug_check( E2.M.max() >= x.m.n_elem, "Mat::elem(): index out of bounds" );
-
-    alias_wrapper<Mat<eT>, Mat<eT>, Mat<uword>, Mat<uword>> A(const_cast<Mat<eT>&>(m), const_cast<Mat<eT>&>(x.m), E1.M, E2.M);
-
-    coot_rt_t::eop_subview_elem1(kernel_id,
-                                 A.get_dev_mem(false),
-                                 E1.M.get_dev_mem(false),
-                                 x.m.get_dev_mem(false),
-                                 E2.M.get_dev_mem(false),
-                                 E1.M.n_elem);
-    }
-  }
-
-
-
-template<typename eT, typename T1>
-template<typename T2>
-inline
-void
-subview_elem1<eT,T1>::inplace_op(const twoway_kernel_id::enum_id kernel_id, const Base<eT,T2>& x)
-  {
-  coot_extra_debug_sigprint();
-
-  const unwrap<T1> U1(a.get_ref());
-  const unwrap<T2> U2(x.get_ref());
-
-  const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-  const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-
-  coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): indices must be a vector" );
-  coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): argument must be a vector" );
-
-  coot_debug_check( E1.M.n_elem != E2.M.n_elem, "Mat::elem(): size mismatch" );
-
-  alias_wrapper<Mat<eT>, Mat<uword>, Mat<eT>> A(const_cast<Mat<eT>&>(m), E1.M, E2.M);
-
-  coot_rt_t::eop_subview_elem1_array(kernel_id,
-                                     A.get_dev_mem(false),
-                                     E1.M.get_dev_mem(false),
-                                     E2.M.get_dev_mem(false),
-                                     E1.M.n_elem);
-  }
-
-
-
-//
-//
 
 
 
@@ -196,12 +83,10 @@ inline
 void
 subview_elem1<eT,T1>::replace(const eT old_val, const eT new_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  // ugly, slow implementation until we have kernels that can handle any kind of subview addressing
-  Mat<eT> tmp(*this);
-  tmp.replace(old_val, new_val);
-  (*this).operator=(tmp);
+  const eOp<subview_elem1<eT, T1>, eop_replace> E(*this, 'j', old_val, new_val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
@@ -211,7 +96,7 @@ subview_elem1<eT,T1>::replace(const eT old_val, const eT new_val)
 //void
 //subview_elem1<eT,T1>::clean(const pod_type threshold)
 //  {
-//  coot_extra_debug_sigprint();
+//  coot_debug_sigprint();
 //
 //  Mat<eT> tmp(*this);
 //
@@ -227,12 +112,12 @@ inline
 void
 subview_elem1<eT,T1>::clamp(const eT min_val, const eT max_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  // ugly, slow implementation until we have kernels that can handle any kind of subview addressing
-  Mat<eT> tmp(*this);
-  tmp.clamp(min_val, max_val);
-  (*this).operator=(tmp);
+  coot_conform_check( (min_val > max_val), "clamp(): min_val must be less than max_val" );
+
+  const eOp<subview_elem1<eT, T1>, eop_clamp> E(*this, 'j', min_val, max_val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
@@ -242,19 +127,9 @@ inline
 void
 subview_elem1<eT,T1>::fill(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  // For now we need to instantiate the actual indices we will use.
-  unwrap<T1> U(a.get_ref());
-  extract_subview<typename unwrap<T1>::stored_type> E(U.M);
-
-  // A bounds check is tedious but the only way that we can give the user an error.
-  coot_debug_check( E.M.max() >= m.n_elem, "Mat::elem(): index out of bounds" );
-
-  coot_rt_t::fill_subview_elem1(m.get_dev_mem(false),
-                                E.M.get_dev_mem(false),
-                                val,
-                                E.M.n_elem);
+  coot_rt_t::fill(make_proxy(*this), val);
   }
 
 
@@ -264,7 +139,7 @@ inline
 void
 subview_elem1<eT,T1>::zeros()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   fill(eT(0));
   }
@@ -276,7 +151,7 @@ inline
 void
 subview_elem1<eT,T1>::ones()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   fill(eT(1));
   }
@@ -288,7 +163,7 @@ inline
 void
 subview_elem1<eT,T1>::randu()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // until we are able to index subviews in any arbitrary way in a generated kernel,
   // we use a slow implementation where we generate all the random numbers and
@@ -296,7 +171,7 @@ subview_elem1<eT,T1>::randu()
   unwrap<T1> U(a.get_ref());
   extract_subview<typename unwrap<T1>::stored_type> E(U.M);
 
-  coot_debug_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::elem(): indices must be a vector" );
+  coot_conform_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::elem(): indices must be a vector" );
 
   Col<eT> tmp(E.M.n_elem, fill::randu);
   (*this).operator=(tmp);
@@ -309,7 +184,7 @@ inline
 void
 subview_elem1<eT,T1>::randn()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // until we are able to index subviews in any arbitrary way in a generated kernel,
   // we use a slow implementation where we generate all the random numbers and
@@ -317,7 +192,7 @@ subview_elem1<eT,T1>::randn()
   unwrap<T1> U(a.get_ref());
   extract_subview<typename unwrap<T1>::stored_type> E(U.M);
 
-  coot_debug_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::elem(): indices must be a vector" );
+  coot_conform_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::elem(): indices must be a vector" );
 
   Col<eT> tmp(E.M.n_elem, fill::randn);
   (*this).operator=(tmp);
@@ -327,12 +202,24 @@ subview_elem1<eT,T1>::randn()
 
 template<typename eT, typename T1>
 inline
+bool
+subview_elem1<eT,T1>::is_empty() const
+  {
+  SizeProxy<T1> S(a.get_ref());
+  return (S.get_n_elem() == 0);
+  }
+
+
+
+template<typename eT, typename T1>
+inline
 void
 subview_elem1<eT,T1>::operator+= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::equ_array_plus_scalar_sve1, val, (eT) 0);
+  const eOp<subview_elem1<eT, T1>, eop_scalar_plus> E(*this, val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
@@ -342,9 +229,10 @@ inline
 void
 subview_elem1<eT,T1>::operator-= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::equ_array_minus_scalar_post_sve1, val, (eT) 0);
+  const eOp<subview_elem1<eT, T1>, eop_scalar_minus_post> E(*this, val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
@@ -354,9 +242,10 @@ inline
 void
 subview_elem1<eT,T1>::operator*= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::equ_array_mul_scalar_sve1, val, (eT) 1);
+  const eOp<subview_elem1<eT, T1>, eop_scalar_times> E(*this, val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
@@ -366,9 +255,10 @@ inline
 void
 subview_elem1<eT,T1>::operator/= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::equ_array_div_scalar_post_sve1, val, (eT) 1);
+  const eOp<subview_elem1<eT, T1>, eop_scalar_div_post> E(*this, val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
@@ -384,9 +274,25 @@ inline
 void
 subview_elem1<eT,T1>::operator= (const subview_elem1<eT,T2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_eq_sve1, x);
+  const Proxy<subview_elem1<eT, T1>> P_out(*this);
+  const Proxy<subview_elem1<eT, T2>> P_in(x);
+
+  coot_assert_same_size(P_out.get_n_rows(), P_out.get_n_cols(), P_in.get_n_rows(), P_in.get_n_cols(), "Mat::elem()");
+
+  inexact_alias_wrapper<Mat<eT>, Proxy<subview_elem1<eT, T2>>> A((*this).m, P_in);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(A.use, P_in);
+    // special handling: disable copy after inexact_alias_wrapper deallocation and do it ourselves
+    A.using_aux = false;
+    *this = A.use;
+    }
+  else
+    {
+    coot_rt_t::copy(P_out, P_in);
+    }
   }
 
 
@@ -397,9 +303,52 @@ inline
 void
 subview_elem1<eT,T1>::operator= (const subview_elem1<eT,T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_eq_sve1, x);
+  const Proxy<subview_elem1<eT, T1>> P_out(*this);
+  const Proxy<subview_elem1<eT, T1>> P_in(x);
+
+  coot_assert_same_size(P_out.get_n_rows(), P_out.get_n_cols(), P_in.get_n_rows(), P_in.get_n_cols(), "Mat::elem()");
+
+  inexact_alias_wrapper<Mat<eT>, Proxy<subview_elem1<eT, T1>>> A(access::rw((*this).m), P_in);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.use), P_in);
+    // special handling: disable copy after inexact_alias_wrapper deallocation and do it ourselves
+    A.using_aux = false;
+    *this = A.use;
+    }
+  else
+    {
+    coot_rt_t::copy(P_out, P_in);
+    }
+  }
+
+
+
+template<typename eT, typename T1>
+template<typename eglue_type, typename T2>
+inline
+void
+subview_elem1<eT,T1>::inplace_op(const subview_elem1<eT,T2>& x, const char* op_name)
+  {
+  const eGlue<subview_elem1<eT, T1>, subview_elem1<eT, T2>, eglue_type> G(*this, x);
+  const Proxy<eGlue<subview_elem1<eT, T1>, subview_elem1<eT, T2>, eglue_type>> P(G);
+
+  coot_assert_same_size(P.P1.get_n_rows(), P.P1.get_n_cols(), P.P2.get_n_rows(), P.P2.get_n_cols(), op_name);
+
+  inexact_alias_wrapper<Mat<eT>, Proxy<subview_elem1<eT, T2>>> A(access::rw((*this).m), P.P2);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.use), P);
+    // special handling: disable copy after inexact_alias_wrapper deallocation and do it ourselves
+    A.using_aux = false;
+    *this = A.use;
+    }
+  else
+    {
+    coot_rt_t::copy(P.P1, P);
+    }
   }
 
 
@@ -410,9 +359,9 @@ inline
 void
 subview_elem1<eT,T1>::operator+= (const subview_elem1<eT,T2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_plus_sve1, x);
+  inplace_op<eglue_plus>(x, "Mat::elem()::operator+=");
   }
 
 
@@ -423,9 +372,9 @@ inline
 void
 subview_elem1<eT,T1>::operator-= (const subview_elem1<eT,T2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_minus_sve1, x);
+  inplace_op<eglue_minus>(x, "Mat::elem()::operator+=");
   }
 
 
@@ -436,9 +385,9 @@ inline
 void
 subview_elem1<eT,T1>::operator%= (const subview_elem1<eT,T2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_mul_sve1, x);
+  inplace_op<eglue_schur>(x, "Mat::elem()::operator+=");
   }
 
 
@@ -449,9 +398,9 @@ inline
 void
 subview_elem1<eT,T1>::operator/= (const subview_elem1<eT,T2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_div_sve1, x);
+  inplace_op<eglue_div>(x, "Mat::elem()::operator+=");
   }
 
 
@@ -462,9 +411,52 @@ inline
 void
 subview_elem1<eT,T1>::operator= (const Base<eT,T2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_eq_array, x);
+  const Proxy<subview_elem1<eT, T1>> P_out(*this);
+  const Proxy<T2> P_in(x.get_ref());
+
+  coot_assert_same_size(P_out.get_n_rows(), P_out.get_n_cols(), P_in.get_n_rows(), P_in.get_n_cols(), "Mat::elem()");
+
+  inexact_alias_wrapper<Mat<eT>, Proxy<T2>> A(access::rw((*this).m), P_in);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.use), P_in);
+    // special handling: disable copy after inexact_alias_wrapper deallocation and do it ourselves
+    A.using_aux = false;
+    *this = A.use;
+    }
+  else
+    {
+    coot_rt_t::copy(P_out, P_in);
+    }
+  }
+
+
+
+template<typename eT, typename T1>
+template<typename eglue_type, typename T2>
+inline
+void
+subview_elem1<eT,T1>::inplace_op(const Base<eT,T2>& x, const char* op_name)
+  {
+  const eGlue<subview_elem1<eT, T1>, T2, eglue_type> G(*this, x.get_ref());
+  const Proxy<eGlue<subview_elem1<eT, T1>, T2, eglue_type>> P(G);
+
+  coot_assert_same_size(P.P1.get_n_rows(), P.P1.get_n_cols(), P.P2.get_n_rows(), P.P2.get_n_cols(), op_name);
+
+  inexact_alias_wrapper<Mat<eT>, Proxy<T2>> A(access::rw((*this).m), P.P2);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.use), P);
+    // special handling: disable copy after inexact_alias_wrapper deallocation and do it ourselves
+    A.using_aux = false;
+    *this = A.use;
+    }
+  else
+    {
+    coot_rt_t::copy(P.P1, P);
+    }
   }
 
 
@@ -475,9 +467,9 @@ inline
 void
 subview_elem1<eT,T1>::operator+= (const Base<eT,T2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_plus_array, x);
+  inplace_op<eglue_plus>(x, "Mat::elem()::operator+=");
   }
 
 
@@ -488,9 +480,9 @@ inline
 void
 subview_elem1<eT,T1>::operator-= (const Base<eT,T2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_minus_array, x);
+  inplace_op<eglue_minus>(x, "Mat::elem()::operator-=");
   }
 
 
@@ -501,9 +493,9 @@ inline
 void
 subview_elem1<eT,T1>::operator%= (const Base<eT,T2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_mul_array, x);
+  inplace_op<eglue_schur>(x, "Mat::elem()::operator%=");
   }
 
 
@@ -514,9 +506,9 @@ inline
 void
 subview_elem1<eT,T1>::operator/= (const Base<eT,T2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve1_div_array, x);
+  inplace_op<eglue_div>(x, "Mat::elem()::operator/=");
   }
 
 
@@ -531,32 +523,12 @@ inline
 void
 subview_elem1<eT,T1>::extract(Mat<eT>& actual_out, const subview_elem1<eT,T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const unwrap<T1> U(in.a.get_ref());
-  const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+  alias_wrapper<Mat<eT>, Mat<eT>, T1> W(actual_out, in.m, in.a.get_ref());
 
-  coot_debug_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::elem(): indices must be a vector" );
-  coot_debug_check( E.M.max() >= in.m.n_elem, "Mat::extract(): index out of bounds" );
+  Proxy<subview_elem1<eT, T1>> P(in);
+  W.use.set_size(P.get_n_elem(), 1);
 
-  if (is_alias(actual_out, E.M) || is_alias(actual_out, in.m))
-    {
-    Mat<eT> tmp(E.M.n_elem, 1);
-
-    coot_rt_t::extract_subview_elem1(tmp.get_dev_mem(false),
-                                     in.m.get_dev_mem(false),
-                                     E.M.get_dev_mem(false),
-                                     E.M.n_elem);
-
-    actual_out.steal_mem(tmp);
-    }
-  else
-    {
-    actual_out.set_size(E.M.n_elem, 1);
-
-    coot_rt_t::extract_subview_elem1(actual_out.get_dev_mem(false),
-                                     in.m.get_dev_mem(false),
-                                     E.M.get_dev_mem(false),
-                                     E.M.n_elem);
-    }
+  coot_rt_t::copy(make_proxy_col(W.use), P);
   }

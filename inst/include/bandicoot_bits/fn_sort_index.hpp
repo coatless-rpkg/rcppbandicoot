@@ -27,7 +27,7 @@ sort_index
   const Base<typename T1::elem_type, T1>& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<uword, T1, mtop_sort_index>(X.get_ref(), 0, 0);
   }
@@ -49,11 +49,11 @@ sort_index
   const T2* sort_direction
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (sort_direction != nullptr) ? sort_direction[0] : char(0);
 
-  coot_debug_check( ((sig != 'a') && (sig != 'd')), "sort_index(): unknown sort direction" );
+  coot_conform_check( ((sig != 'a') && (sig != 'd')), "sort_index(): unknown sort direction" );
 
   return mtOp<uword, T1, mtop_sort_index>(X, ((sig == 'a') ? 0 : 1), 0);
   }
@@ -69,7 +69,7 @@ stable_sort_index
   const Base<typename T1::elem_type, T1>& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<uword, T1, mtop_sort_index>(X.get_ref(), 0, 1);
   }
@@ -91,11 +91,11 @@ stable_sort_index
   const T2* sort_direction
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (sort_direction != nullptr) ? sort_direction[0] : char(0);
 
-  coot_debug_check( ((sig != 'a') && (sig != 'd')), "stable_sort_index(): unknown sort direction" );
+  coot_conform_check( ((sig != 'a') && (sig != 'd')), "stable_sort_index(): unknown sort direction" );
 
   return mtOp<uword, T1, mtop_sort_index>(X, ((sig == 'a') ? 0 : 1), 1);
   }

@@ -21,14 +21,14 @@ inline
 void
 mtop_sort_index::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_sort_index>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword sort_type      = in.aux_uword_a;
   const uword is_stable_sort = in.aux_uword_b;
 
   const char* func_name = (is_stable_sort == 0) ? "sort_index()" : "stable_sort_index()";
 
-  coot_debug_check( (sort_type > 1), std::string(func_name) + ": parameter 'sort_type' must be 0 or 1" );
+  coot_conform_check( (sort_type > 1), std::string(func_name) + ": parameter 'sort_type' must be 0 or 1" );
 
   typedef typename T1::elem_type eT;
 
@@ -56,14 +56,14 @@ inline
 void
 mtop_sort_index::apply(Mat<uword>& out, const mtOp<uword, Mat<eT>, mtop_sort_index>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword sort_type      = in.aux_uword_a;
   const uword is_stable_sort = in.aux_uword_b;
 
   const char* func_name = (is_stable_sort == 0) ? "sort_index()" : "stable_sort_index()";
 
-  coot_debug_check( (sort_type > 1), std::string(func_name) + ": parameter 'sort_type' must be 0 or 1" );
+  coot_conform_check( (sort_type > 1), std::string(func_name) + ": parameter 'sort_type' must be 0 or 1" );
 
   // No unwrapping is necessary, but we do need to copy the input to a temporary matrix, since sort_index() will destroy the input matrix.
   Mat<eT> tmp(in.q);

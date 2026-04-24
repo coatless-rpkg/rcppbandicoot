@@ -21,14 +21,14 @@ inline
 void
 op_shuffle::apply(Mat<typename T1::elem_type>& out, const Op<T1,op_shuffle>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<T1> U(in.m);
   if (U.M.is_empty()) { return; }
 
   const uword dim = in.aux_uword_a;
 
-  coot_debug_check( (dim > 1), "shuffle(): parameter 'dim' must be 0 or 1" );
+  coot_conform_check( (dim > 1), "shuffle(): parameter 'dim' must be 0 or 1" );
 
   // If the output is an alias of the input, allocate a temporary matrix.
   alias_wrapper<Mat<typename T1::elem_type>, typename unwrap<T1>::stored_type> W(out, U.M);
@@ -45,7 +45,7 @@ inline
 void
 op_shuffle_vec::apply(Mat<typename T1::elem_type>& out, const Op<T1,op_shuffle_vec>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<T1> U(in.m);
   if (U.M.is_empty()) { return; }

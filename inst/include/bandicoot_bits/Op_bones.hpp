@@ -59,17 +59,17 @@ class Op
   typedef typename get_pod_type<elem_type>::result pod_type;
 
   inline explicit Op(const T1& in_m);
-  inline          Op(const T1& in_m, const elem_type in_aux);
-  inline          Op(const T1& in_m, const elem_type in_aux,         const uword in_aux_uword_a, const uword in_aux_uword_b);
+  inline          Op(const T1& in_m, const elem_type in_aux_a);
+  inline          Op(const T1& in_m, const elem_type in_aux_a,       const uword in_aux_uword_a, const uword in_aux_uword_b);
   inline          Op(const T1& in_m, const uword     in_aux_uword_a, const uword in_aux_uword_b);
   inline          Op(const T1& in_m, const uword     in_aux_uword_a, const uword in_aux_uword_b, const uword in_aux_uword_c, const char junk);
   // `junk` is ignored and exists to disambiguate specializations; pass any constant char
-  inline          Op(const T1& in_m, const char      junk,           const elem_type in_aux,     const elem_type in_aux_b);
+  inline          Op(const T1& in_m, const char      junk,           const elem_type in_aux_a,   const elem_type in_aux_b);
 
   inline         ~Op();
 
   coot_aligned const T1&       m;
-  coot_aligned       elem_type aux;
+  coot_aligned       elem_type aux_a;
   coot_aligned       elem_type aux_b;
   coot_aligned       uword     aux_uword_a;
   coot_aligned       uword     aux_uword_b;

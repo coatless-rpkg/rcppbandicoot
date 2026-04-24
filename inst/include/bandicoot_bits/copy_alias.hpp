@@ -25,7 +25,7 @@ struct copy_alias
     : M_internal((&in == &out) ? new Mat<eT>(in) : NULL)
     , M         ((&in == &out) ? *M_internal     : in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   template<typename eT2>
@@ -33,7 +33,7 @@ struct copy_alias
     : M_internal(NULL)
     , M(in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   ~copy_alias()

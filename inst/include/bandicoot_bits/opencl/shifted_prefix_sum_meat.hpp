@@ -24,7 +24,7 @@ inline
 void
 shifted_prefix_sum_small(dev_mem_t<eT> mem, const uword n_elem, const size_t total_num_threads, const size_t local_group_size)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   runtime_t::cq_guard guard;
 
@@ -55,7 +55,7 @@ inline
 void
 shifted_prefix_sum_large(dev_mem_t<eT> mem, const uword n_elem, const size_t total_num_threads, const size_t local_group_size)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // For arrays larger than we can handle in a single work-group, we operate recursively:
   // we perform up-sweeps until it fits in a single workgroup;
@@ -113,7 +113,7 @@ inline
 void
 shifted_prefix_sum(dev_mem_t<eT> mem, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n_elem == 0)
     {

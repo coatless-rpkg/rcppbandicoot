@@ -135,6 +135,26 @@ perform_type_mapping<double>()
 
 
 
+template<>
+inline
+std::string
+perform_type_mapping<cx_float>()
+  {
+  return "cx_float";
+  }
+
+
+
+template<>
+inline
+std::string
+perform_type_mapping<cx_double>()
+  {
+  return "cx_double";
+  }
+
+
+
 struct type_to_dev_string
   {
   template<typename T>

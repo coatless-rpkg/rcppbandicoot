@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
 // Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
-// Copyright 2017      Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2017-2026 Conrad Sanderson (https://conradsanderson.id.au)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,27 +19,27 @@
 
 struct coot_config
   {
-  #if defined(COOT_NO_DEBUG)
-    static constexpr bool debug = false;
+  #if defined(COOT_CHECK_CONFORMANCE)
+    static constexpr bool check_conform = true;
   #else
-    static constexpr bool debug = true;
+    static constexpr bool check_conform = false;
   #endif
-
-
-  #if defined(COOT_EXTRA_DEBUG)
-    static constexpr bool extra_debug = true;
+  
+  
+  #if defined(COOT_OPTIMISE_POWEXPR)
+    static constexpr bool optimise_powexpr = true;
   #else
-    static constexpr bool extra_debug = false;
+    static constexpr bool optimise_powexpr = false;
   #endif
-
-
+  
+  
   #if defined(COOT_GOOD_COMPILER)
     static constexpr bool good_comp = true;
   #else
     static constexpr bool good_comp = false;
   #endif
-
-
+  
+  
   #if (  \
          defined(COOT_EXTRA_MAT_BONES)   || defined(COOT_EXTRA_MAT_MEAT)   \
       || defined(COOT_EXTRA_COL_BONES)   || defined(COOT_EXTRA_COL_MEAT)   \
@@ -49,8 +49,8 @@ struct coot_config
   #else
     static constexpr bool extra_code = false;
   #endif
-
-
+  
+  
   // TODO: may need to link with -lbandicoot anyway, to provide the runtime library
   #if defined(COOT_USE_WRAPPER)
     static constexpr bool wrapper = true;

@@ -22,7 +22,7 @@ inline
 void
 find(dev_mem_t<uword>& out, uword& out_len, const dev_mem_t<eT> A, const uword n_elem, const uword k, const uword find_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If the vector is empty, don't do anything.
   if (n_elem == 0)
@@ -38,8 +38,10 @@ find(dev_mem_t<uword>& out, uword& out_len, const dev_mem_t<eT> A, const uword n
   const size_t num_threads = reduce_kernel_group_size(nnz_k, n_elem, "find");
 
   // First, allocate temporary memory for the prefix sum.
-  dev_mem_t<uword> counts_mem;
-  counts_mem.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(num_threads + 1);
+  dev_mem_t<uword>            counts_mem;
+  runtime_t::mem_array<uword> counts_mem_array(num_threads + 1);
+
+  counts_mem.cl_mem_ptr = counts_mem_array.memptr();
 
   runtime_t::adapt_uword cl_n_elem(n_elem);
   runtime_t::adapt_uword cl_A_offset(A.cl_mem_ptr.offset);
@@ -139,6 +141,4 @@ find(dev_mem_t<uword>& out, uword& out_len, const dev_mem_t<eT> A, const uword n
 
     coot_check_cl_error(status, "coot::opencl::find(): could not run find_last kernel");
     }
-
-  get_rt().cl_rt.release_memory(counts_mem.cl_mem_ptr);
   }

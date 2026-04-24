@@ -28,7 +28,7 @@ eig_sym
   const typename coot_real_only<typename T1::elem_type>::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   // X will be destroyed during computation of the eigenvalues, and so we need a new object.
@@ -36,7 +36,7 @@ eig_sym
   Mat<eT> tmp(X.get_ref());
 
   // check size
-  coot_debug_check( tmp.n_rows != tmp.n_cols, "eig_sym(): matrix must be square" );
+  coot_conform_check( tmp.n_rows != tmp.n_cols, "eig_sym(): matrix must be square" );
 
   eigval.set_size(tmp.n_rows);
 
@@ -55,7 +55,7 @@ eig_sym
 
   if (!std::get<0>(result))
     {
-    coot_debug_warn_level(3, "eig_sym(): " + std::get<1>(result));
+    coot_warn(3, "eig_sym(): " + std::get<1>(result));
     }
 
   return std::get<0>(result);
@@ -74,7 +74,7 @@ eig_sym
   const typename coot_real_only<typename T1::elem_type>::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   // X will be destroyed during computation of the eigenvalues, and so we need a new object.
@@ -82,7 +82,7 @@ eig_sym
   Mat<eT> tmp(X.get_ref());
 
   // check size
-  coot_debug_check( tmp.n_rows != tmp.n_cols, "eig_sym(): matrix must be square" );
+  coot_conform_check( tmp.n_rows != tmp.n_cols, "eig_sym(): matrix must be square" );
 
   Col<eT> eigval(tmp.n_rows);
 
@@ -122,17 +122,17 @@ eig_sym
   const typename coot_real_only<typename T1::elem_type>::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   // The eigenvectors will end up in the matrix we work on.
   typedef typename T1::elem_type eT;
   eigvec = expr.get_ref();
 
-  coot_debug_check( (method[0] != 's'), "eig_sym(): invalid decomposition type; only \"std\" is supported");
+  coot_conform_check( (method[0] != 's'), "eig_sym(): invalid decomposition type; only \"std\" is supported");
 
   // check size
-  coot_debug_check( eigvec.n_rows != eigvec.n_cols, "eig_sym(): matrix must be square" );
+  coot_conform_check( eigvec.n_rows != eigvec.n_cols, "eig_sym(): matrix must be square" );
 
   eigval.set_size(eigvec.n_rows);
 
@@ -152,7 +152,7 @@ eig_sym
 
   if (!std::get<0>(result))
     {
-    coot_debug_warn_level(3, "eig_sym(): " + std::get<1>(result));
+    coot_warn(3, "eig_sym(): " + std::get<1>(result));
     }
 
   return std::get<0>(result);

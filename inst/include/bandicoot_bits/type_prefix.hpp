@@ -20,22 +20,24 @@
 template<typename eT>
 inline
 std::string
-type_prefix()
+rt_type_prefix()
   {
   // We can't really use SFINAE because it's possible that uword (e.g. size_t) and u64/u32 are the same type.
   // But that's not guaranteed!
-       if(is_same_type<eT,u8    >::yes)  { return "u8"; }
-  else if(is_same_type<eT,s8    >::yes)  { return "s8"; }
-  else if(is_same_type<eT,u16   >::yes)  { return "u16"; }
-  else if(is_same_type<eT,s16   >::yes)  { return "s16"; }
-  else if(is_same_type<eT,u32   >::yes)  { return "u32"; }
-  else if(is_same_type<eT,s32   >::yes)  { return "s32"; }
-  else if(is_same_type<eT,u64   >::yes)  { return "u64"; }
-  else if(is_same_type<eT,s64   >::yes)  { return "s64"; }
-  else if(is_same_type<eT,fp16  >::yes)  { return "h";   }
-  else if(is_same_type<eT,float >::yes)  { return "f";   }
-  else if(is_same_type<eT,double>::yes)  { return "d";   }
-  else if(is_same_type<eT,uword >::yes)
+       if(is_same_type<eT,u8       >::yes)  { return "u8"; }
+  else if(is_same_type<eT,s8       >::yes)  { return "s8"; }
+  else if(is_same_type<eT,u16      >::yes)  { return "u16"; }
+  else if(is_same_type<eT,s16      >::yes)  { return "s16"; }
+  else if(is_same_type<eT,u32      >::yes)  { return "u32"; }
+  else if(is_same_type<eT,s32      >::yes)  { return "s32"; }
+  else if(is_same_type<eT,u64      >::yes)  { return "u64"; }
+  else if(is_same_type<eT,s64      >::yes)  { return "s64"; }
+  else if(is_same_type<eT,fp16     >::yes)  { return "h";   }
+  else if(is_same_type<eT,float    >::yes)  { return "f";   }
+  else if(is_same_type<eT,double   >::yes)  { return "d";   }
+  else if(is_same_type<eT,cx_float >::yes)  { return "c";   }
+  else if(is_same_type<eT,cx_double>::yes)  { return "z";   }
+  else if(is_same_type<eT,uword    >::yes)
     {
          if (sizeof(uword) == sizeof(u32)) { return "u32"; }
     else if (sizeof(uword) == sizeof(u64)) { return "u64"; }

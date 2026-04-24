@@ -51,7 +51,7 @@ template<typename eT>
 inline
 subview<eT>::~subview()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -66,7 +66,7 @@ subview<eT>::subview(const Mat<eT>& in_m, const uword in_row1, const uword in_co
   , n_cols(in_n_cols)
   , n_elem(in_n_rows*in_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -81,7 +81,7 @@ subview<eT>::subview(const subview<eT>& x)
   , n_cols(x.n_cols)
   , n_elem(x.n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -96,7 +96,7 @@ subview<eT>::subview(subview<eT>&& x)
   , n_cols(x.n_cols)
   , n_elem(x.n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // for paranoia
   access::rw(x.aux_row1) = 0;
@@ -113,7 +113,7 @@ inline
 void
 subview<eT>::operator= (const subview<eT>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // TODO: this is currently a "better-than-nothing" solution; replace with code using a dedicated kernel
 
@@ -141,7 +141,7 @@ inline
 void
 subview<eT>::operator= (subview<eT>&& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // TODO: this is currently a "better-than-nothing" solution; replace with code using a dedicated kernel
 
@@ -169,7 +169,7 @@ inline
 void
 subview<eT>::operator= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(n_elem == 1)
     {
@@ -179,7 +179,7 @@ subview<eT>::operator= (const eT val)
     }
   else
     {
-    coot_debug_assert_same_size(n_rows, n_cols, 1, 1, "subview::operator=");
+    coot_conform_assert_same_size(n_rows, n_cols, 1, 1, "subview::operator=");
     }
   }
 
@@ -190,14 +190,9 @@ inline
 void
 subview<eT>::operator+= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
-                        m.dev_mem, m.dev_mem,
-                        (eT) val, (eT) 0,
-                        n_rows, n_cols, 1,
-                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOp<subview<eT>, eop_scalar_plus>(*this, val)));
   }
 
 
@@ -207,14 +202,9 @@ inline
 void
 subview<eT>::operator-= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_minus_scalar_post,
-                        m.dev_mem, m.dev_mem,
-                        (eT) val, (eT) 0,
-                        n_rows, n_cols, 1,
-                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOp<subview<eT>, eop_scalar_minus_post>(*this, val)));
   }
 
 
@@ -224,14 +214,9 @@ inline
 void
 subview<eT>::operator*= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
-                        m.dev_mem, m.dev_mem,
-                        (eT) val, (eT) 1,
-                        n_rows, n_cols, 1,
-                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOp<subview<eT>, eop_scalar_times>(*this, val)));
   }
 
 
@@ -241,14 +226,9 @@ inline
 void
 subview<eT>::operator/= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
-                        m.dev_mem, m.dev_mem,
-                        (eT) val, (eT) 1,
-                        n_rows, n_cols, 1,
-                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, 0, m.n_rows, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOp<subview<eT>, eop_scalar_div_post>(*this, val)));
   }
 
 
@@ -259,16 +239,13 @@ inline
 void
 subview<eT>::operator= (const Base<eT, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   no_conv_unwrap<T1> U(in.get_ref());
 
   coot_assert_same_size(n_rows, n_cols, U.M.n_rows, U.M.n_cols, "subview::operator=");
 
-  coot_rt_t::copy_mat(m.dev_mem, U.get_dev_mem(false),
-                      n_rows, n_cols,
-                      aux_row1, aux_col1, m.n_rows,
-                      U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+  coot_rt_t::copy(make_proxy(*this), make_proxy(U.M));
   }
 
 
@@ -279,18 +256,24 @@ inline
 void
 subview<eT>::operator+= (const Base<eT, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const no_conv_unwrap<T1> U(in.get_ref());
+  // Create the Proxy locally so we can do a size check.
+  const eGlue<subview<eT>, T1, eglue_plus> G(*this, in.get_ref());
+  const Proxy<eGlue<subview<eT>, T1, eglue_plus>> P(G);
+  coot_assert_same_size(n_rows, n_cols, P.get_n_rows(), P.get_n_cols(), "subview::operator+=");
 
-  coot_assert_same_size(n_rows, n_cols, U.M.n_rows, U.M.n_cols, "subview::operator+=");
-
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_plus_array,
-                     m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                     n_rows, n_cols,
-                     aux_row1, aux_col1, m.n_rows,
-                     aux_row1, aux_col1, m.n_rows,
-                     U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+  inexact_alias_wrapper<subview<eT>, Proxy<eGlue<subview<eT>, T1, eglue_plus>>> A(*this, P);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), P);
+    }
   }
 
 
@@ -301,18 +284,24 @@ inline
 void
 subview<eT>::operator-= (const Base<eT, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const no_conv_unwrap<T1> U(in.get_ref());
+  // Create the Proxy locally so we can do a size check.
+  const eGlue<subview<eT>, T1, eglue_minus> G(*this, in.get_ref());
+  const Proxy<eGlue<subview<eT>, T1, eglue_minus>> P(G);
+  coot_assert_same_size(n_rows, n_cols, P.get_n_rows(), P.get_n_cols(), "subview::operator-=");
 
-  coot_assert_same_size(n_rows, n_cols, U.M.n_rows, U.M.n_cols, "subview::operator-=");
-
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_minus_array,
-                     m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                     n_rows, n_cols,
-                     aux_row1, aux_col1, m.n_rows,
-                     aux_row1, aux_col1, m.n_rows,
-                     U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+  inexact_alias_wrapper<subview<eT>, Proxy<eGlue<subview<eT>, T1, eglue_minus>>> A(*this, P);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), P);
+    }
   }
 
 
@@ -323,18 +312,24 @@ inline
 void
 subview<eT>::operator%= (const Base<eT, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const no_conv_unwrap<T1> U(in.get_ref());
+  // Create the Proxy locally so we can do a size check.
+  const eGlue<subview<eT>, T1, eglue_schur> G(*this, in.get_ref());
+  const Proxy<eGlue<subview<eT>, T1, eglue_schur>> P(G);
+  coot_assert_same_size(n_rows, n_cols, P.get_n_rows(), P.get_n_cols(), "subview::operator%=");
 
-  coot_assert_same_size(n_rows, n_cols, U.M.n_rows, U.M.n_cols, "subview::operator%=");
-
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_mul_array,
-                     m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                     n_rows, n_cols,
-                     aux_row1, aux_col1, m.n_rows,
-                     aux_row1, aux_col1, m.n_rows,
-                     U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+  inexact_alias_wrapper<subview<eT>, Proxy<eGlue<subview<eT>, T1, eglue_schur>>> A(*this, P);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), P);
+    }
   }
 
 
@@ -345,18 +340,24 @@ inline
 void
 subview<eT>::operator/= (const Base<eT, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const no_conv_unwrap<T1> U(in.get_ref());
+  // Create the Proxy locally so we can do a size check.
+  const eGlue<subview<eT>, T1, eglue_div> G(*this, in.get_ref());
+  const Proxy<eGlue<subview<eT>, T1, eglue_div>> P(G);
+  coot_assert_same_size(n_rows, n_cols, P.get_n_rows(), P.get_n_cols(), "subview::operator/=");
 
-  coot_assert_same_size(n_rows, n_cols, U.M.n_rows, U.M.n_cols, "subview::operator/=");
-
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_div_array,
-                     m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                     n_rows, n_cols,
-                     aux_row1, aux_col1, m.n_rows,
-                     aux_row1, aux_col1, m.n_rows,
-                     U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+  inexact_alias_wrapper<subview<eT>, Proxy<eGlue<subview<eT>, T1, eglue_div>>> A(*this, P);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), P);
+    }
   }
 
 
@@ -365,7 +366,7 @@ template<typename eT>
 inline
 subview<eT>::operator arma::Mat<eT> () const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   #if defined(COOT_HAVE_ARMA)
     {
@@ -393,12 +394,12 @@ coot_inline
 diagview<eT>
 subview<eT>::diag(const sword in_id)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword row_offset = ((in_id < 0) ? uword(-in_id) : 0);
   const uword col_offset = ((in_id > 0) ? uword( in_id) : 0);
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     ((row_offset > 0) && (row_offset >= n_rows)) || ((col_offset > 0) && (col_offset >= n_cols)),
     "subview::diag(): requested diagonal out of bounds"
@@ -416,12 +417,12 @@ coot_inline
 const diagview<eT>
 subview<eT>::diag(const sword in_id) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword row_offset = ((in_id < 0) ? uword(-in_id) : 0);
   const uword col_offset = ((in_id > 0) ? uword( in_id) : 0);
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     ((row_offset > 0) && (row_offset >= n_rows)) || ((col_offset > 0) && (col_offset >= n_cols)),
     "subview::diag(): requested diagonal out of bounds"
@@ -439,15 +440,12 @@ inline
 void
 subview<eT>::clamp(const eT min_val, const eT max_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (min_val > max_val), "clamp(): min_val must be less than max_val" );
+  coot_conform_check( (min_val > max_val), "clamp(): min_val must be less than max_val" );
 
-  coot_rt_t::clamp(m.get_dev_mem(false), m.get_dev_mem(false),
-                   min_val, max_val,
-                   n_rows, n_cols,
-                   aux_row1, aux_col1, m.n_rows,
-                   aux_row1, aux_col1, m.n_rows);
+  const eOp<subview<eT>, eop_clamp> E(*this, 'j', min_val, max_val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
@@ -457,9 +455,9 @@ inline
 void
 subview<eT>::fill(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::fill(m.dev_mem, val, n_rows, n_cols, aux_row1, aux_col1, m.n_rows);
+  coot_rt_t::fill(make_proxy(*this), val);
   }
 
 
@@ -469,7 +467,7 @@ inline
 void
 subview<eT>::zeros()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).fill(eT(0));
   }
@@ -481,7 +479,7 @@ inline
 void
 subview<eT>::ones()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).fill(eT(1));
   }
@@ -493,7 +491,7 @@ inline
 void
 subview<eT>::eye()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // TODO: this is currently a "better-than-nothing" solution; replace with code using a dedicated kernel
 
@@ -570,7 +568,7 @@ inline
 MatValProxy<eT>
 subview<eT>::operator()(const uword ii)
   {
-  coot_debug_check( (ii >= n_elem), "subview::operator(): index out of bounds");
+  coot_conform_check_bounds( (ii >= n_elem), "subview::operator(): index out of bounds");
 
   const uword in_col = ii / n_rows;
   const uword in_row = ii % n_rows;
@@ -587,7 +585,7 @@ inline
 eT
 subview<eT>::operator()(const uword ii) const
   {
-  coot_debug_check( (ii >= n_elem), "subview::operator(): index out of bounds");
+  coot_conform_check_bounds( (ii >= n_elem), "subview::operator(): index out of bounds");
 
   const uword in_col = ii / n_rows;
   const uword in_row = ii % n_rows;
@@ -624,7 +622,7 @@ inline
 MatValProxy<eT>
 subview<eT>::operator()(const uword in_row, const uword in_col)
   {
-  coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols)), "subview::operator(): index out of bounds");
+  coot_conform_check_bounds( ((in_row >= n_rows) || (in_col >= n_cols)), "subview::operator(): index out of bounds");
 
   return MatValProxy<eT>(access::rw(this->m), in_row + aux_row1 + (in_col + aux_col1) * m.n_rows);
   }
@@ -636,7 +634,7 @@ inline
 eT
 subview<eT>::operator()(const uword in_row, const uword in_col) const
   {
-  coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols)), "subview::operator(): index out of bounds");
+  coot_conform_check_bounds( ((in_row >= n_rows) || (in_col >= n_cols)), "subview::operator(): index out of bounds");
 
   return MatValProxy<eT>::get_val(this->m, in_row + aux_row1 + (in_col + aux_col1) * m.n_rows);
   }
@@ -648,7 +646,7 @@ inline
 eT
 subview<eT>::front() const
   {
-  coot_debug_check( (n_elem == 0), "subview::front(): matrix is empty" );
+  coot_conform_check( (n_elem == 0), "subview::front(): matrix is empty" );
 
   return m.at(aux_row1, aux_col1);
   }
@@ -660,7 +658,7 @@ inline
 eT
 subview<eT>::back() const
   {
-  coot_debug_check( (n_elem == 0), "subview::back(): matrix is empty" );
+  coot_conform_check( (n_elem == 0), "subview::back(): matrix is empty" );
 
   return m.at(aux_row1 + n_rows - 1, aux_col1 + n_cols - 1);
   }
@@ -767,91 +765,16 @@ inline
 void
 subview<eT>::extract(Mat<eT1>& out, const subview<eT>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // NOTE: we're assuming that the matrix has already been set to the correct size and there is no aliasing;
   // size setting and alias checking is done by either the Mat contructor or operator=()
 
-  coot_extra_debug_print(coot_str::format("out.n_rows = %d   out.n_cols = %d    in.m.n_rows = %d  in.m.n_cols = %d") % out.n_rows % out.n_cols % in.m.n_rows % in.m.n_cols );
+  coot_debug_print(coot_str::format("out.n_rows: %u; out.n_cols: %u; in.m.n_rows: %u; in.m.n_cols: %u") % out.n_rows % out.n_cols % in.m.n_rows % in.m.n_cols );
 
   if(in.n_elem == 0)  { return; }
 
-  coot_rt_t::copy_mat(out.get_dev_mem(false), in.m.get_dev_mem(false),
-                      in.n_rows, in.n_cols,
-                      0, 0, out.n_rows,
-                      in.aux_row1, in.aux_col1, in.m.n_rows);
-  }
-
-
-
-// X += Y.submat(...)
-template<typename eT>
-template<typename eT1>
-inline
-void
-subview<eT>::plus_inplace(Mat<eT1>& out, const subview<eT>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  // TODO: this is currently a "better-than-nothing" solution; replace with code using a dedicated kernel
-
-  const Mat<eT> tmp(in);
-
-  out += tmp;
-  }
-
-
-
-// X -= Y.submat(...)
-template<typename eT>
-template<typename eT1>
-inline
-void
-subview<eT>::minus_inplace(Mat<eT1>& out, const subview<eT>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  // TODO: this is currently a "better-than-nothing" solution; replace with code using a dedicated kernel
-
-  const Mat<eT> tmp(in);
-
-  out -= tmp;
-  }
-
-
-
-// X %= Y.submat(...)
-template<typename eT>
-template<typename eT1>
-inline
-void
-subview<eT>::schur_inplace(Mat<eT1>& out, const subview<eT>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  // TODO: this is currently a "better-than-nothing" solution; replace with code using a dedicated kernel
-
-  const Mat<eT> tmp(in);
-
-  out %= tmp;
-  }
-
-
-
-// X /= Y.submat(...)
-template<typename eT>
-template<typename eT1>
-inline
-void
-subview<eT>::div_inplace(Mat<eT1>& out, const subview<eT>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  // TODO: this is currently a "better-than-nothing" solution; replace with code using a dedicated kernel
-
-  const Mat<eT> tmp(in);
-
-  out /= tmp;
+  coot_rt_t::copy(make_proxy(out), make_proxy(in));
   }
 
 
@@ -865,7 +788,7 @@ coot_inline
 subview_each1<subview<eT>, 0>
 subview<eT>::each_col()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each1<subview<eT>, 0>(*this);
   }
@@ -877,7 +800,7 @@ coot_inline
 subview_each1<subview<eT>, 1>
 subview<eT>::each_row()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each1<subview<eT>, 1>(*this);
   }
@@ -889,7 +812,7 @@ coot_inline
 const subview_each1<subview<eT>, 0>
 subview<eT>::each_col() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each1<subview<eT>, 0>(*this);
   }
@@ -901,7 +824,7 @@ coot_inline
 const subview_each1<subview<eT>, 1>
 subview<eT>::each_row() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each1<subview<eT>, 1>(*this);
   }
@@ -914,7 +837,7 @@ inline
 subview_each2<subview<eT>, 0, T1>
 subview<eT>::each_col(const Base<uword, T1>& indices)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each2<subview<eT>, 0, T1>(*this, indices);
   }
@@ -927,7 +850,7 @@ inline
 subview_each2<subview<eT>, 1, T1>
 subview<eT>::each_row(const Base<uword, T1>& indices)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each2<subview<eT>, 1, T1>(*this, indices);
   }
@@ -940,7 +863,7 @@ inline
 const subview_each2<subview<eT>, 0, T1>
 subview<eT>::each_col(const Base<uword, T1>& indices) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each2<subview<eT>, 0, T1>(*this, indices);
   }
@@ -953,7 +876,7 @@ inline
 const subview_each2<subview<eT>, 1, T1>
 subview<eT>::each_row(const Base<uword, T1>& indices) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each2<subview<eT>, 1, T1>(*this, indices);
   }
@@ -979,7 +902,7 @@ inline
 subview_col<eT>::subview_col(const Mat<eT>& in_m, const uword in_col)
   : subview<eT>(in_m, 0, in_col, in_m.n_rows, 1)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -989,7 +912,18 @@ inline
 subview_col<eT>::subview_col(const Mat<eT>& in_m, const uword in_col, const uword in_row1, const uword in_n_rows)
   : subview<eT>(in_m, in_row1, in_col, in_n_rows, 1)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
+  }
+
+
+
+template<typename eT>
+inline
+subview_col<eT>::subview_col(const char junk, const Mat<eT>& in_m, const uword in_aux_row1, const uword in_n_rows)
+  : subview<eT>(in_m, in_aux_row1, 0, in_n_rows, 1)
+  {
+  coot_debug_sigprint();
+  coot_ignore(junk);
   }
 
 
@@ -999,7 +933,7 @@ inline
 void
 subview_col<eT>::operator=(const subview<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   subview<eT>::operator=(X);
   }
@@ -1011,7 +945,7 @@ inline
 void
 subview_col<eT>::operator=(const subview_col<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   subview<eT>::operator=(X); // interprets 'subview_col' as 'subview'
   }
@@ -1023,7 +957,7 @@ inline
 void
 subview_col<eT>::operator=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   subview<eT>::operator=(val); // interprets 'subview_col' as 'subview'
   }
@@ -1036,7 +970,7 @@ inline
 void
 subview_col<eT>::operator=(const Base<eT,T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   subview<eT>::operator=(X); // interprets 'subview_col' as 'subview'
   }
@@ -1092,7 +1026,7 @@ inline
 subview_row<eT>::subview_row(const Mat<eT>& in_m, const uword in_row)
   : subview<eT>(in_m, in_row, 0, 1, in_m.n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -1102,7 +1036,7 @@ inline
 subview_row<eT>::subview_row(const Mat<eT>& in_m, const uword in_row, const uword in_col1, const uword in_n_cols)
   : subview<eT>(in_m, in_row, in_col1, 1, in_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -1112,7 +1046,7 @@ inline
 void
 subview_row<eT>::operator=(const subview<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   subview<eT>::operator=(X);
   }
@@ -1124,7 +1058,7 @@ inline
 void
 subview_row<eT>::operator=(const subview_row<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   subview<eT>::operator=(X); // interprets 'subview_row' as 'subview'
   }
@@ -1136,7 +1070,7 @@ inline
 void
 subview_row<eT>::operator=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   subview<eT>::operator=(val); // interprets 'subview_row' as 'subview'
   }
@@ -1149,7 +1083,7 @@ inline
 void
 subview_row<eT>::operator=(const Base<eT,T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   subview<eT>::operator=(X);
   }
