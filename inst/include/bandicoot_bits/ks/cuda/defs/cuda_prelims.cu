@@ -12,10 +12,15 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 
+#include <cuComplex.h>
+
 // These statically-compiled definitions are available in any Bandicoot kernel.
 #define uchar  unsigned char
 #define ushort unsigned short
 #define uint   unsigned int
+
+#define cx_float cuFloatComplex
+#define cx_double cuDoubleComplex
 
 #define COOT_FN2(ARG1, ARG2)  ARG1 ## ARG2
 #define COOT_FN(ARG1, ARG2) COOT_FN2(ARG1, ARG2)

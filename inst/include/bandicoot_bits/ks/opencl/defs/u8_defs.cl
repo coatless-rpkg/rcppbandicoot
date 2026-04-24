@@ -23,3 +23,8 @@ inline bool coot_isnan_uchar(const uchar x) { return false; }
 inline uchar coot_absdiff_uchar(const uchar x, const uchar y) { return (x > y) ? (x - y) : (y - x); }
 
 inline uchar coot_conj_uchar(const uchar x) { return x; }
+
+inline uchar coot_plus_uchar(const uchar a, const uchar b)  { return a + b; }
+inline uchar coot_minus_uchar(const uchar a, const uchar b) { return a - b; }
+inline uchar coot_mul_uchar(const uchar a, const uchar b)   { return a * b; }
+inline uchar coot_div_uchar(const uchar a, const uchar b)   { return a / b; }

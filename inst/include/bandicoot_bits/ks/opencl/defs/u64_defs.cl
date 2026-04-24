@@ -23,3 +23,8 @@ inline bool coot_isnan_ulong(const ulong x) { return false; }
 inline ulong coot_absdiff_ulong(const ulong x, const ulong y) { return (x > y) ? (x - y) : (y - x); }
 
 inline ulong coot_conj_ulong(const ulong x) { return x; }
+
+inline ulong coot_plus_ulong(const ulong a, const ulong b)  { return a + b; }
+inline ulong coot_minus_ulong(const ulong a, const ulong b) { return a - b; }
+inline ulong coot_mul_ulong(const ulong a, const ulong b)   { return a * b; }
+inline ulong coot_div_ulong(const ulong a, const ulong b)   { return a / b; }

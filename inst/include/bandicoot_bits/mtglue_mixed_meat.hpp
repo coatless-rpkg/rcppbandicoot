@@ -31,9 +31,6 @@ mtglue_mixed_times::apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_
   {
   coot_debug_sigprint();
 
-  typedef typename T1::elem_type in_eT1;
-  typedef typename T2::elem_type in_eT2;
-
   // For mixed matrix multiplication, we have to convert both results to the output type.
   const partial_unwrap<mtOp<out_eT, T1, mtop_conv_to>> tmp1(mtOp<out_eT, T1, mtop_conv_to>(X.A));
   const partial_unwrap<mtOp<out_eT, T2, mtop_conv_to>> tmp2(mtOp<out_eT, T2, mtop_conv_to>(X.B));

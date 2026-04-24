@@ -19,14 +19,24 @@ jobs:
       matrix:
         config:
           - {os: macos-latest,   r: 'release'}
-          - {os: ubuntu-latest,   r: 'release'}
+          - {os: ubuntu-latest,  r: 'release'}
+          - {os: windows-latest, r: 'release'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      INTEL_OPENCL_URL: "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/b6dccdb7-b503-41ea-bd4b-a78e9c2d8dd6/w_opencl_runtime_p_2025.1.0.972.exe"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+
+      - name: Restore execute bit on shell scripts (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        # NTFS drops the git-stored +x bit on checkout, so R CMD build
+        # otherwise warns "did not have execute permissions: corrected"
+        # every run. chmod via MSYS bash lands in a form R's tar sees.
+        run: chmod +x configure cleanup
 
       - uses: r-lib/actions/setup-pandoc@v2
 
@@ -38,11 +48,76 @@ jobs:
 
       - name: Install clblast via Homebrew (macOS)
         if: runner.os == 'macOS'
-        run: brew install clblast clblas
+        run: brew install clblast clblas clinfo
 
       - name: Install clblast via apt (Ubuntu)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y opencl-headers ocl-icd-opencl-dev libclblast-dev
+
+      - name: Cache Intel OpenCL Runtime
+        if: runner.os == 'Windows'
+        id: cache-opencl-win
+        uses: actions/cache@v5
+        with:
+          # Default install location is x86 ...
+          path: C:\Program Files (x86)\Common Files\Intel\Shared Libraries
+          # Key is derived from INTEL_OPENCL_URL, so bumping the runtime
+          # URL above automatically invalidates the cache.
+          key: intel-opencl-runtime-${{ env.INTEL_OPENCL_URL }}
+          
+      - name: Install OpenCL SDK (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          vcpkg install opencl:x64-windows clblast:x64-windows
+          # Convert to forward slashes to avoid escaping issues in configure.win
+          $vcpkgPath = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" -replace '\\','/'
+
+          # Register OpenCL location
+          echo "OPENCL_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
+          echo "OPENCL_LIBS=-L$vcpkgPath/lib -lOpenCL" >> $env:GITHUB_ENV
+
+          # Register CLBlast location
+          echo "CLBLAST_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
+          echo "CLBLAST_LIBS=-L$vcpkgPath/lib -lclblast" >> $env:GITHUB_ENV
+
+          # Add vcpkg bin to PATH so DLLs can be found at runtime
+          echo "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows\bin" >> $env:GITHUB_PATH
+          
+      - name: Install Intel CPU Runtime for OpenCL (Windows)
+        if: runner.os == 'Windows' && steps.cache-opencl-win.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          # Download
+          curl -o opencl-installer.exe "${{ env.INTEL_OPENCL_URL }}"
+          
+          # Extract MSI from the self-extracting exe
+          $proc = Start-Process "./opencl-installer.exe" "-s -x -f extracted" -NoNewWindow -PassThru
+          $proc.WaitForExit()
+          
+          # Install via msiexec
+          $msi = Get-ChildItem ./extracted/*.msi | Select-Object -First 1
+          # Write the MSI log outside the repo so it doesn't end up in the
+          # package tarball (R CMD check flags it as a non-standard top-level file).
+          $logPath = "$env:RUNNER_TEMP\intel-opencl-install.log"
+          $proc = Start-Process "msiexec" "/i `"$msi`" /qn /l*! `"$logPath`"" -NoNewWindow -PassThru
+          $proc.WaitForExit()
+
+          if ($proc.ExitCode -ne 0) {
+            Get-Content $logPath
+            exit $proc.ExitCode
+          }
+          
+          Remove-Item -Recurse -Force extracted, opencl-installer.exe
+      
+      - name: Register Intel OpenCL ICD (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $dllPath = "C:\Program Files (x86)\Common Files\Intel\Shared Libraries\bin\OpenCL.dll"
+          REG ADD "HKLM\SOFTWARE\Khronos\OpenCL\Vendors" /v $dllPath /t REG_DWORD /d 0 /f
+          REG ADD "HKLM\SOFTWARE\Wow6432Node\Khronos\OpenCL\Vendors" /v $dllPath /t REG_DWORD /d 0 /f
+          Add-Content $env:GITHUB_PATH "C:\Program Files (x86)\Common Files\Intel\Shared Libraries\bin\"
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:

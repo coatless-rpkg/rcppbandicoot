@@ -23,3 +23,8 @@ inline bool coot_isnan_char(const char x) { return false; }
 inline char coot_absdiff_char(const char x, const char y) { return abs(x - y); }
 
 inline char coot_conj_char(const char x) { return x; }
+
+inline char coot_plus_char(const char a, const char b)  { return a + b; }
+inline char coot_minus_char(const char a, const char b) { return a - b; }
+inline char coot_mul_char(const char a, const char b)   { return a * b; }
+inline char coot_div_char(const char a, const char b)   { return a / b; }

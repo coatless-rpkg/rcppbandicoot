@@ -22,5 +22,9 @@ inline bool coot_isnan_double(const double x) { return isnan(x); }
 
 inline double coot_absdiff_double(const double x, const double y) { return fabs(x - y); }
 
-inline    double coot_conj_double(const double x)       { return x; }
-//inline cx_double coot_conj_cx_double(const cx_double x) { return cx_double(x.x, -x.y); }
+inline double coot_conj_double(const double x) { return x; }
+
+inline double coot_plus_double(const double a, const double b)  { return a + b; }
+inline double coot_minus_double(const double a, const double b) { return a - b; }
+inline double coot_mul_double(const double a, const double b)   { return a * b; }
+inline double coot_div_double(const double a, const double b)   { return a / b; }

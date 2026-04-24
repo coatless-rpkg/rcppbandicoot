@@ -23,3 +23,8 @@ inline bool coot_isnan_ushort(const ushort x) { return false; }
 inline ushort coot_absdiff_ushort(const ushort x, const ushort y) { return (x > y) ? (x - y) : (y - x); }
 
 inline ushort coot_conj_ushort(const ushort x) { return x; }
+
+inline ushort coot_plus_ushort(const ushort a, const ushort b)  { return a + b; }
+inline ushort coot_minus_ushort(const ushort a, const ushort b) { return a - b; }
+inline ushort coot_mul_ushort(const ushort a, const ushort b)   { return a * b; }
+inline ushort coot_div_ushort(const ushort a, const ushort b)   { return a / b; }
