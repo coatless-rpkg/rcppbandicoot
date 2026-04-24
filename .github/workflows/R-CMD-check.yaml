@@ -53,9 +53,9 @@ jobs:
         with:
           # Default install location is x86 ...
           path: C:\Program Files (x86)\Common Files\Intel\Shared Libraries
-          # Keep this version pinned to the INTEL_OPENCL_URL above so a URL
-          # bump invalidates the cache.
-          key: intel-opencl-runtime-2025.1.0.972
+          # Key is derived from INTEL_OPENCL_URL, so bumping the runtime
+          # URL above automatically invalidates the cache.
+          key: intel-opencl-runtime-${{ env.INTEL_OPENCL_URL }}
           
       - name: Install OpenCL SDK (Windows)
         if: runner.os == 'Windows'
