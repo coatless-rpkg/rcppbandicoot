@@ -38,9 +38,9 @@ broadcast_op(const twoway_kernel_id::enum_id op,
              const uword src_col_offset,
              const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::broadcast_op(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::broadcast_op(): OpenCL runtime not valid" );
 
   runtime_t::cq_guard guard;
 
@@ -111,9 +111,9 @@ broadcast_subset_op(const twoway_kernel_id::enum_id op,
                     const uword indices_offset,
                     const uword indices_incr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::broadcast_subset_op(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::broadcast_subset_op(): OpenCL runtime not valid" );
 
   runtime_t::cq_guard guard;
 

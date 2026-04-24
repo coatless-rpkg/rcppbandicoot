@@ -39,9 +39,9 @@ broadcast_op(const twoway_kernel_id::enum_id op,
              const uword src_col_offset,
              const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::broadcast_op(): CUDA runtime not valid");
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::broadcast_op(): CUDA runtime not valid");
 
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT2, eT1>(op);
 
@@ -111,9 +111,9 @@ broadcast_subset_op(const twoway_kernel_id::enum_id op,
                     const uword indices_offset,
                     const uword indices_incr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::broadcast_subset_op(): CUDA runtime not valid");
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::broadcast_subset_op(): CUDA runtime not valid");
 
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT2, eT1>(op);
 

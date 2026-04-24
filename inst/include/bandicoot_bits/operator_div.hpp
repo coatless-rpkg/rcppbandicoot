@@ -29,7 +29,7 @@ operator/
   const T1&                    X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_scalar_div_pre>(X, k);
   }
@@ -47,7 +47,7 @@ operator/
   const typename T1::elem_type k
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_scalar_div_post>(X, k);
   }
@@ -69,7 +69,7 @@ operator/
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eGlue<T1, T2, eglue_div>(X, Y);
   }
@@ -83,7 +83,7 @@ typename
 enable_if2
   <
   (is_coot_type<T1>::value && is_coot_type<T2>::value && (is_same_type<typename T1::elem_type, typename T2::elem_type>::no) && (is_promotable<typename T1::elem_type, typename T2::elem_type>::value)),
-  const mtGlue<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_div>
+  const mtGlue<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_core<mtglue_mixed_div> >
   >::result
 operator/
   (
@@ -91,9 +91,9 @@ operator/
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtGlue<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_div>( X, Y );
+  return mtGlue<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_core<mtglue_mixed_div> >( X, Y );
   }
 
 
@@ -107,7 +107,7 @@ operator/
   const Base<typename parent::elem_type,T2>& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each1_aux::operator_div(X, Y.get_ref());
   }
@@ -123,7 +123,7 @@ operator/
   const subview_each1<parent,mode>&          Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each1_aux::operator_div(X.get_ref(), Y);
   }
@@ -139,7 +139,7 @@ operator/
   const Base<typename parent::elem_type,T2>& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each2_aux::operator_div(X, Y.get_ref());
   }
@@ -155,7 +155,7 @@ operator/
   const subview_each2<parent,mode,TB>&       Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_each2_aux::operator_div(X.get_ref(), Y);
   }

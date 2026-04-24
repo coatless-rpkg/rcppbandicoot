@@ -25,12 +25,12 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const Op<T1, op_clamp>
+  const eOp<T1, eop_clamp>
   >::result
 clamp(const T1& X, const typename T1::elem_type min_val, const typename T1::elem_type max_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // junk argument required for two-aux-val constructor
-  return Op<T1, op_clamp>(X, '\0', min_val, max_val);
+  return eOp<T1, eop_clamp>(X, '\0', min_val, max_val);
   }

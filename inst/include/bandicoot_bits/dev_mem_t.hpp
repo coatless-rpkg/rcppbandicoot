@@ -27,12 +27,26 @@ struct coot_cl_mem
 
 
 
-// this can hold either CUDA memory or CL memory
+// Vulkan memory is represented as a buffer coupled with its backing device
+// memory and an offset.
+struct coot_vk_mem
+  {
+  VkBuffer buffer;
+  VkDeviceMemory memory;
+  size_t offset;
+  size_t byte_offset;
+  size_t byte_size;
+  };
+
+
+
+// This can hold either CUDA memory, CL memory, or Vulkan memory.
 template<typename eT>
 union dev_mem_t
   {
   coot_cl_mem cl_mem_ptr;
   typename cuda_type<eT>::type* cuda_mem_ptr;
+  coot_vk_mem vk_mem_ptr;
 
   // Manual overloading when we set a CUDA pointer: ensure the last bytes of dev_mem_t are 0 so that comparisons work.
   dev_mem_t& operator=(const eT* cuda_other_mem)

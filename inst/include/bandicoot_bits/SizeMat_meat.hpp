@@ -23,7 +23,7 @@ SizeMat::SizeMat(const uword in_n_rows, const uword in_n_cols)
   : n_rows(in_n_rows)
   , n_cols(in_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 

@@ -21,7 +21,7 @@ inline
 void
 op_reshape::apply(Mat<out_eT>& out, const Op<T1, op_reshape>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If we are reshaping to an empty matrix, just clear the output and return.
   if (in.aux_uword_a == 0 || in.aux_uword_b == 0)
@@ -41,7 +41,7 @@ inline
 void
 op_reshape::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_reshape>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Op<T1, op_reshape> op_tmp(in.m.q, in.aux_uword_a, in.aux_uword_b);
   op_reshape::apply(out, op_tmp);
@@ -54,7 +54,7 @@ inline
 void
 op_reshape::apply_direct(Mat<eT>& out, const Mat<eT>& in, const uword new_n_rows, const uword new_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword new_n_elem = new_n_rows * new_n_cols;
 
@@ -81,17 +81,14 @@ op_reshape::apply_direct(Mat<eT>& out, const Mat<eT>& in, const uword new_n_rows
     if (new_n_elem > in.n_elem)
       {
       // Set all the memory to zeros, since some zero elements will be needed.
-      coot_rt_t::fill(out.get_dev_mem(false), eT(0), new_n_rows, new_n_cols, 0, 0, new_n_rows);
+      out.zeros();
       }
 
     if (in.n_elem > 0)
       {
-      // We treat both out and in as column vectors here.
-      const uword elems_to_copy = (std::min)(new_n_elem, in.n_elem);
-      coot_rt_t::copy_mat(out.get_dev_mem(false), in.get_dev_mem(false),
-                          elems_to_copy, 1,
-                          0, 0, elems_to_copy,
-                          0, 0, elems_to_copy);
+      // We have to use the size of `in` for the copy, so we make an alias.
+      Mat<eT> out_alias(out.get_dev_mem(false), in.n_rows, in.n_cols);
+      coot_rt_t::copy(make_proxy(out_alias), make_proxy(in));
       }
     }
   }
@@ -103,7 +100,7 @@ inline
 void
 op_reshape::apply_direct(Mat<out_eT>& out, const Mat<eT>& in, const uword new_n_rows, const uword new_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword new_n_elem = new_n_rows * new_n_cols;
 
@@ -112,17 +109,14 @@ op_reshape::apply_direct(Mat<out_eT>& out, const Mat<eT>& in, const uword new_n_
   if (new_n_elem > in.n_elem)
     {
     // Set all the memory to zeros, since some zero elements will be needed.
-    coot_rt_t::fill(out.get_dev_mem(false), out_eT(0), new_n_rows, new_n_cols, 0, 0, new_n_rows);
+    out.zeros();
     }
 
   if (in.n_elem > 0)
     {
-    // We treat both out and in as column vectors here.
-    const uword elems_to_copy = (std::min)(new_n_elem, in.n_elem);
-    coot_rt_t::copy_mat(out.get_dev_mem(false), in.get_dev_mem(false),
-                        elems_to_copy, 1,
-                        0, 0, elems_to_copy,
-                        0, 0, elems_to_copy);
+    // We have to use the size of `in` for the copy, so we make an alias.
+    Mat<out_eT> out_alias(out.get_dev_mem(false), in.n_rows, in.n_cols);
+    coot_rt_t::copy(make_proxy(out_alias), make_proxy(in));
     }
   }
 
@@ -133,7 +127,7 @@ inline
 void
 op_reshape::apply_direct(Mat<eT>& out, const subview<eT>& in, const uword new_n_rows, const uword new_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if ((&out) == (&in.m))
     {
@@ -150,25 +144,22 @@ op_reshape::apply_direct(Mat<eT>& out, const subview<eT>& in, const uword new_n_
 
   if (new_n_elem > in.n_elem)
     {
-    // Set all the memory to zeros, since some zero elements will be needed.
-    coot_rt_t::fill(out.get_dev_mem(false), eT(0),
-                    new_n_elem - in.n_elem, 1,
-                    in.n_elem, 0, new_n_elem - in.n_elem);
+    // Set all the memory to zeros, since some zero elements will be needed.  Equivalent to
+    //   out.subvec(in.n_elem, new_n_elem - 1).fill(0)
+    subview_col<eT> s('j', out, in.n_elem, new_n_elem - in.n_elem);
+    coot_rt_t::fill(make_proxy(s), eT(0));
 
     if (in.n_elem > 0)
       {
-      coot_rt_t::copy_mat(out.get_dev_mem(false), in.m.get_dev_mem(false),
-                          in.n_rows, in.n_cols,
-                          0, 0, in.n_rows /* intentionally not out.n_rows */,
-                          in.aux_row1, in.aux_col1, in.m.n_rows);
+      // Treat `out` like a 2-D object with the same size as `in`.
+      Mat<eT> out_alias(out.get_dev_mem(false), in.n_rows, in.n_cols);
+      coot_rt_t::copy(make_proxy(out_alias), make_proxy(in));
       }
     }
   else if (new_n_elem == in.n_elem && in.n_elem > 0)
     {
-    coot_rt_t::copy_mat(out.get_dev_mem(false), in.m.get_dev_mem(false),
-                        in.n_rows, in.n_cols,
-                        0, 0, in.n_rows /* intentionally not out.n_rows */,
-                        in.aux_row1, in.aux_col1, in.m.n_rows);
+    Mat<eT> out_alias(out.get_dev_mem(false), in.n_rows, in.n_cols);
+    coot_rt_t::copy(make_proxy(out_alias), make_proxy(in));
     }
   else
     {
@@ -187,7 +178,7 @@ inline
 void
 op_reshape::apply_direct(Mat<out_eT>& out, const subview<eT>& in, const uword new_n_rows, const uword new_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword new_n_elem = new_n_rows * new_n_cols;
 
@@ -195,24 +186,21 @@ op_reshape::apply_direct(Mat<out_eT>& out, const subview<eT>& in, const uword ne
 
   if (new_n_elem > in.n_elem)
     {
-    // Set all the memory to zeros, since some zero elements will be needed.
-    coot_rt_t::fill(out.get_dev_mem(false), out_eT(0),
-                    new_n_elem - in.n_elem, 1,
-                    in.n_elem, 0, new_n_rows - in.n_elem);
+    // Set all the memory to zeros, since some zero elements will be needed.  Equivalent to
+    //   out.subvec(in.n_elem, new_n_elem - 1).fill(0)
+    subview_col<eT> s('j', out, in.n_elem, new_n_elem - in.n_elem);
+    coot_rt_t::fill(make_proxy(s), eT(0));
+
     if (in.n_elem > 0)
       {
-      coot_rt_t::copy_mat(out.get_dev_mem(false), in.m.get_dev_mem(false),
-                          in.n_rows, in.n_cols,
-                          0, 0, in.n_rows /* intentionally not out.n_rows */,
-                          in.aux_row1, in.aux_col1, in.m.n_rows);
+      Mat<out_eT> out_alias(out.get_dev_mem(false), in.n_rows, in.n_cols);
+      coot_rt_t::copy(make_proxy(out_alias), make_proxy(in));
       }
     }
   else if (new_n_elem == in.n_elem && in.n_elem > 0)
     {
-    coot_rt_t::copy_mat(out.get_dev_mem(false), in.m.get_dev_mem(false),
-                        in.n_rows, in.n_cols,
-                        0, 0, in.n_rows /* intentionally not out.n_rows */,
-                        in.aux_row1, in.aux_col1, in.m.n_rows);
+    Mat<out_eT> out_alias(out.get_dev_mem(false), in.n_rows, in.n_cols);
+    coot_rt_t::copy(make_proxy(out), make_proxy(in));
     }
   else
     {

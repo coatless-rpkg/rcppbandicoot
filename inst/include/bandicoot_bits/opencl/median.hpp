@@ -32,9 +32,9 @@ median(dev_mem_t<eT2> dest,
        const uword src_col_offset,
        const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::median(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::median(): OpenCL runtime not valid" );
 
   if (dim == 0)
     {
@@ -51,21 +51,17 @@ median(dev_mem_t<eT2> dest,
           dest_offset, dest_mem_incr,
           src_row_offset + (middle_element - 1), src_col_offset, src_M_n_rows);
 
-      eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
-                 dest, dest,
-                 eT2(2), eT2(1),
-                 1, n_cols, 1,
-                 dest_offset, 0, 0, dest_mem_incr, n_cols,
-                 dest_offset, 0, 0, dest_mem_incr, n_cols);
+      // Divide by 2.
+      Mat<eT2> dest_alias(dest, dest_mem_incr, n_cols);
+      dest_alias.row(0) /= 2;
       }
     else
       {
       // Odd number of elements: the middle element is the result.
       // Now extract that row into the output.
-      copy_mat(dest, src,
-               1, n_cols,
-               dest_offset, 0, dest_mem_incr,
-               src_row_offset + middle_element, src_col_offset, src_M_n_rows);
+      const Proxy<subview<eT2>> P_dest(dest, dest_offset, 0, 1, n_cols, dest_mem_incr);
+      const Proxy<subview<eT1>> P_src(src, src_row_offset + middle_element, src_col_offset, 1, n_cols, src_M_n_rows);
+      copy(P_dest, P_src);
       }
     }
   else
@@ -83,23 +79,17 @@ median(dev_mem_t<eT2> dest,
           dest_offset, dest_mem_incr,
           src_row_offset, src_col_offset + (middle_element - 1), src_M_n_rows);
 
-      eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
-                 dest, dest,
-                 eT2(2), eT2(1),
-                 // logically treat as column vector so dest_mem_incr can be used
-                 1, n_rows, 1,
-                 dest_offset, 0, 0, dest_mem_incr, n_rows,
-                 dest_offset, 0, 0, dest_mem_incr, n_rows);
+      // Divide by 2.
+      Mat<eT2> dest_alias(dest, dest_mem_incr, n_rows);
+      dest_alias.row(0) /= 2;
       }
     else
       {
       // Odd number of elements: the middle element is the result.
       // Now extract the column into the output.
-      copy_mat(dest, src,
-               // logically treat as column vector so dest_mem_incr can be used
-               1, n_rows,
-               dest_offset, 0, dest_mem_incr,
-               src_row_offset + (src_col_offset + middle_element) * n_rows, 0, 1);
+      const Proxy<subview<eT2>> P_dest(dest, dest_offset, 0, 1, n_rows, dest_mem_incr);
+      const Proxy<subview<eT1>> P_src(src, src_row_offset + (src_col_offset + middle_element) * n_rows, 0, 1, n_rows, 1);
+      copy(P_dest, P_src);
       }
     }
   }
@@ -111,9 +101,9 @@ inline
 eT
 median_vec(dev_mem_t<eT> mem, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::median_vec(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::median_vec(): OpenCL runtime not valid" );
 
   // Sort the data.
   sort_vec(mem, n_elem, 0);

@@ -21,7 +21,7 @@ inline
 void
 mtop_find_nonfinite::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_find_nonfinite>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (in.is_computed)
     {

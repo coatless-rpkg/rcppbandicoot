@@ -14,138 +14,33 @@
 
 
 
-/**
- * Run a CUDA elementwise kernel that uses a scalar.
- */
-template<typename eT>
+template<typename T1>
 inline
 void
-fill(dev_mem_t<eT> dest,
-     const eT val,
-     const uword n_rows,
-     const uword n_cols,
-     const uword row_offset,
-     const uword col_offset,
-     const uword M_n_rows)
+fill(const Proxy<T1>& dest, const typename T1::elem_type val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  if (n_rows == 0 || n_cols == 0)
+  if (dest.is_empty())
+    {
     return;
+    }
 
-  // Get kernel.
-  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::fill);
+  CUfunction kernel = get_rt().cuda_rt.get_kernel<kernel_id::fill, Proxy<T1>>();
 
-  typedef typename cuda_type<eT>::type ceT;
-
-  const ceT* dest_ptr = dest.cuda_mem_ptr + row_offset + (col_offset * M_n_rows);
+  typedef typename cuda_type<typename Proxy<T1>::elem_type>::type ceT;
   const ceT conv_val = to_cuda_type(val);
-  const void* args[] = {
-      &dest_ptr,
-      &conv_val,
-      (uword*) &n_rows,
-      (uword*) &n_cols,
-      (uword*) &M_n_rows };
 
-  const kernel_dims dims = two_dimensional_grid_dims(n_rows, n_cols);
+  const auto& args = construct_args(dest, val);
+  const kernel_dims dims = grid_dims(dest);
 
   CUresult result = coot_wrapper(cuLaunchKernel)(
       kernel,
       dims.d[0], dims.d[1], dims.d[2],
       dims.d[3], dims.d[4], dims.d[5],
       0, NULL, // shared mem and stream
-      (void**) args, // arguments
+      (void**) args.data(),
       0);
 
   coot_check_cuda_error( result, "coot::cuda::fill(): cuLaunchKernel() failed" );
-  }
-
-
-
-/**
- * Fill a subview_elem1 with a constant value.
- */
-template<typename eT>
-inline
-void
-fill_subview_elem1(dev_mem_t<eT> dest,
-                   const dev_mem_t<uword> dest_locs,
-                   const eT val,
-                   const uword n_elem)
-  {
-  coot_extra_debug_sigprint();
-
-  if (n_elem == 0)
-    return;
-
-  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::fill_sve1);
-
-  typedef typename cuda_type<eT>::type ceT;
-
-  const ceT conv_val = to_cuda_type(val);
-  const void* args[] = {
-      &dest.cuda_mem_ptr,
-      &dest_locs.cuda_mem_ptr,
-      &conv_val,
-      (uword*) &n_elem };
-
-  const kernel_dims dims = one_dimensional_grid_dims(n_elem);
-
-  CUresult result = coot_wrapper(cuLaunchKernel)(
-      kernel,
-      dims.d[0], dims.d[1], dims.d[2],
-      dims.d[3], dims.d[4], dims.d[5],
-      0, NULL, // shared mem and stream
-      (void**) args, // arguments
-      0);
-
-  coot_check_cuda_error( result, "coot::cuda::fill_subview_elem1(): cuLaunchKernel() failed" );
-  }
-
-
-
-/**
- * Fill a subview_elem1 with a constant value.
- */
-template<typename eT>
-inline
-void
-fill_subview_elem2(dev_mem_t<eT> dest,
-                   const dev_mem_t<uword> dest_row_locs,
-                   const dev_mem_t<uword> dest_col_locs,
-                   const eT val,
-                   const uword n_rows,
-                   const uword n_cols,
-                   const uword dest_n_rows)
-  {
-  coot_extra_debug_sigprint();
-
-  if (n_rows == 0 || n_cols == 0)
-    return;
-
-  CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::fill_sve2);
-
-  typedef typename cuda_type<eT>::type ceT;
-
-  const ceT conv_val = to_cuda_type(val);
-  const void* args[] = {
-      &dest.cuda_mem_ptr,
-      &dest_row_locs.cuda_mem_ptr,
-      &dest_col_locs.cuda_mem_ptr,
-      &conv_val,
-      (uword*) &n_rows,
-      (uword*) &n_cols,
-      (uword*) &dest_n_rows };
-
-  const kernel_dims dims = two_dimensional_grid_dims(n_rows, n_cols);
-
-  CUresult result = coot_wrapper(cuLaunchKernel)(
-      kernel,
-      dims.d[0], dims.d[1], dims.d[2],
-      dims.d[3], dims.d[4], dims.d[5],
-      0, NULL, // shared mem and stream
-      (void**) args, // arguments
-      0);
-
-  coot_check_cuda_error( result, "coot::cuda::fill_subview_elem2(): cuLaunchKernel() failed" );
   }

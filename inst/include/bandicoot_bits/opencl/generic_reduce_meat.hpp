@@ -175,7 +175,7 @@ generic_reduce(const dev_mem_t<eT> mem,
   dev_mem_t<aux_eT> first_aux_mem_ptr = first_aux.get_dev_mem(false);
   // Just use the first pointer if there is no need for secondary auxiliary
   // space.
-  dev_mem_t<aux_eT> second_aux_mem_ptr = (second_aux_size == 0) ? first_aux_mem_ptr : second_aux.get_dev_mem(false);;
+  dev_mem_t<aux_eT> second_aux_mem_ptr = (second_aux_size == 0) ? first_aux_mem_ptr : second_aux.get_dev_mem(false);
 
   const bool first_buffer = generic_reduce_inner(mem,
                                                  n_elem,

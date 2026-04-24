@@ -22,7 +22,7 @@ inline
 std::tuple<bool, std::string>
 eig_sym(dev_mem_t<eT> mem, const uword n_rows, const bool eigenvectors, dev_mem_t<eT> eigenvalues)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (get_rt().cl_rt.is_valid() == false)
     {
@@ -33,9 +33,6 @@ eig_sym(dev_mem_t<eT> mem, const uword n_rows, const bool eigenvectors, dev_mem_
   magma_int_t status = 0;
   magma_int_t lwork;
   magma_int_t liwork;
-  eT* work_mem;
-  eT* wA_mem;
-  int* iwork_mem;
 
   magma_vec_t jobz = (eigenvectors) ? MagmaVec : MagmaNoVec;
 
@@ -75,36 +72,53 @@ eig_sym(dev_mem_t<eT> mem, const uword n_rows, const bool eigenvectors, dev_mem_
   lwork = (magma_int_t) aux_work;
   liwork = aux_iwork;
 
-  eT* eigenvalues_cpu = cpu_memory::acquire<eT>(n_rows);
-  work_mem = cpu_memory::acquire<eT>(lwork);
-  wA_mem = cpu_memory::acquire<eT>(n_rows * n_rows);
-  iwork_mem = cpu_memory::acquire<int>(liwork);
+  cpu_memory::mem_array<eT>  eigenvalues_cpu(n_rows);
+  cpu_memory::mem_array<eT>  work_mem(lwork);
+  cpu_memory::mem_array<eT>  wA_mem(n_rows * n_rows);
+  cpu_memory::mem_array<int> iwork_mem(liwork);
 
   if (is_float<eT>::value)
     {
-    status = magma_ssyevd_gpu(jobz, MagmaUpper, n_rows, mem.cl_mem_ptr.ptr, mem.cl_mem_ptr.offset, n_rows, (float*) eigenvalues_cpu, (float*) wA_mem, n_rows, (float*) work_mem, lwork, iwork_mem, liwork, &info);
+    status = magma_ssyevd_gpu(jobz,
+                              MagmaUpper,
+                              n_rows,
+                              mem.cl_mem_ptr.ptr,
+                              mem.cl_mem_ptr.offset,
+                              n_rows,
+                              (float*) eigenvalues_cpu.memptr(),
+                              (float*) wA_mem.memptr(),
+                              n_rows,
+                              (float*) work_mem.memptr(),
+                              lwork,
+                              iwork_mem.memptr(),
+                              liwork,
+                              &info);
     }
   else if(is_double<eT>::value)
     {
-    status = magma_dsyevd_gpu(jobz, MagmaUpper, n_rows, mem.cl_mem_ptr.ptr, mem.cl_mem_ptr.offset, n_rows, (double*) eigenvalues_cpu, (double*) wA_mem, n_rows, (double*) work_mem, lwork, iwork_mem, liwork, &info);
+    status = magma_dsyevd_gpu(jobz,
+                              MagmaUpper,
+                              n_rows,
+                              mem.cl_mem_ptr.ptr,
+                              mem.cl_mem_ptr.offset,
+                              n_rows,
+                              (double*) eigenvalues_cpu.memptr(),
+                              (double*) wA_mem.memptr(),
+                              n_rows,
+                              (double*) work_mem.memptr(),
+                              lwork,
+                              iwork_mem.memptr(),
+                              liwork,
+                              &info);
     }
   else
     {
-    cpu_memory::release(eigenvalues_cpu);
-    cpu_memory::release(work_mem);
-    cpu_memory::release(wA_mem);
-    cpu_memory::release(iwork_mem);
     return std::make_tuple(false, "not implemented for given type; must be float or double");
     }
 
   // Process the returned info.
   if (status != MAGMA_SUCCESS)
     {
-    cpu_memory::release(eigenvalues_cpu);
-    cpu_memory::release(work_mem);
-    cpu_memory::release(wA_mem);
-    cpu_memory::release(iwork_mem);
-
     if (info < 0)
       {
       std::ostringstream oss;
@@ -127,12 +141,7 @@ eig_sym(dev_mem_t<eT> mem, const uword n_rows, const bool eigenvectors, dev_mem_
     }
 
   // Copy eigenvalues to the device memory we were given.
-  copy_into_dev_mem<eT>(eigenvalues, eigenvalues_cpu, n_rows);
-
-  cpu_memory::release(eigenvalues_cpu);
-  cpu_memory::release(work_mem);
-  cpu_memory::release(wA_mem);
-  cpu_memory::release(iwork_mem);
+  copy_into_dev_mem<eT>(eigenvalues, eigenvalues_cpu.memptr(), n_rows);
 
   return std::make_tuple(true, "");
   }

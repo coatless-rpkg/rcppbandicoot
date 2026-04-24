@@ -24,7 +24,7 @@ inline
 typename T1::elem_type
 trace(const Base<typename T1::elem_type, T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
 
@@ -46,7 +46,7 @@ inline
 typename T1::elem_type
 trace(const Op<T1, op_diagmat>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return accu(X.m);
   }

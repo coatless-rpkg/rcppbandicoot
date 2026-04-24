@@ -28,7 +28,7 @@ operator*
   const typename T1::elem_type               k
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_scalar_times>(X.get_ref(), k);
   }
@@ -45,7 +45,7 @@ operator*
   const BaseCube<typename T1::elem_type,T1>& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_scalar_times>(X.get_ref(), k);
   }

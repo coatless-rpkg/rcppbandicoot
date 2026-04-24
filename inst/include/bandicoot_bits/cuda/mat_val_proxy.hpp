@@ -20,7 +20,7 @@ inline
 eT
 get_val(const dev_mem_t<eT> mem, const uword index)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // We'll just use cudaMemcpy() to copy back the single value.
   // This is inefficient, but without using Unified Memory, I don't see
@@ -46,7 +46,7 @@ inline
 void
 set_val(dev_mem_t<eT> mem, const uword index, const eT in_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // We'll just use cudaMemcpy() to copy over the single value.
 
@@ -58,76 +58,4 @@ set_val(dev_mem_t<eT> mem, const uword index, const eT in_val)
                                                 cudaMemcpyHostToDevice);
 
   coot_check_cuda_error(status, "coot::cuda::set_val(): couldn't access device memory");
-  }
-
-
-
-template<typename eT>
-inline
-void
-val_add_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
-  {
-  coot_extra_debug_sigprint();
-
-  // We'll run a kernel with only one worker to update the index.
-  eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
-             mem, mem,
-             val, (eT) 0,
-             1, 1, 1,
-             index, 0, 0, index + 1, 1,
-             index, 0, 0, index + 1, 1);
-  }
-
-
-
-template<typename eT>
-inline
-void
-val_minus_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
-  {
-  coot_extra_debug_sigprint();
-
-  // We'll run a kernel with only one worker to update the index.
-  eop_scalar(twoway_kernel_id::equ_array_minus_scalar_post,
-             mem, mem,
-             val, (eT) 0,
-             1, 1, 1,
-             index, 0, 0, index + 1, 1,
-             index, 0, 0, index + 1, 1);
-  }
-
-
-
-template<typename eT>
-inline
-void
-val_mul_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
-  {
-  coot_extra_debug_sigprint();
-
-  // We'll run a kernel with only one worker to update the index.
-  eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
-             mem, mem,
-             val, (eT) 1,
-             1, 1, 1,
-             index, 0, 0, index + 1, 1,
-             index, 0, 0, index + 1, 1);
-  }
-
-
-
-template<typename eT>
-inline
-void
-val_div_inplace(dev_mem_t<eT> mem, const uword index, const eT val)
-  {
-  coot_extra_debug_sigprint();
-
-  // We'll run a kernel with only one worker to update the index.
-  eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
-             mem, mem,
-             val, (eT) 1,
-             1, 1, 1,
-             index, 0, 0, index + 1, 1,
-             index, 0, 0, index + 1, 1);
   }

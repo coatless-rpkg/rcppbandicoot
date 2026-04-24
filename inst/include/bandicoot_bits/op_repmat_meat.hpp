@@ -21,7 +21,7 @@ inline
 void
 op_repmat::apply(Mat<out_eT>& out, const Op<T1, op_repmat>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword copies_per_row = in.aux_uword_a;
   const uword copies_per_col = in.aux_uword_b;
@@ -68,7 +68,7 @@ inline
 void
 op_repmat::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_repmat>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword copies_per_row = in.aux_uword_a;
   const uword copies_per_col = in.aux_uword_b;

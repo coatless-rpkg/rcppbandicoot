@@ -34,9 +34,9 @@ approx_equal(const dev_mem_t<eT> A,
              const eT abs_tol,
              const eT rel_tol)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::approx_equal_cube(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::approx_equal_cube(): OpenCL runtime not valid" );
 
   cl_int status = 0;
 
@@ -165,9 +165,9 @@ approx_equal_cube(const dev_mem_t<eT> A,
                   const eT abs_tol,
                   const eT rel_tol)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::approx_equal_cube(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::approx_equal_cube(): OpenCL runtime not valid" );
 
   cl_int status = 0;
 

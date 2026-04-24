@@ -19,7 +19,7 @@ inline
 void
 stable_sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const uword sort_type, const size_t total_num_threads, const size_t local_group_size)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // For a stable sort, we can never shuffle points in reverse order,
   // so we have to take a different strategy for floating-point numbers
@@ -28,13 +28,16 @@ stable_sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A,
   // sort_index_vec_multiple_workgroups() function (below).
 
   // We'll sort the top two bits, and then do sub-sorts on each group.
-  dev_mem_t<uword> hist;
-  dev_mem_t<eT> A_temp;
-  dev_mem_t<uword> out_temp;
+  dev_mem_t<uword>            hist;
+  dev_mem_t<eT>               A_temp;
+  dev_mem_t<uword>            out_temp;
+  runtime_t::mem_array<uword> hist_array(4 * total_num_threads);
+  runtime_t::mem_array<eT>    A_temp_array(n_elem);
+  runtime_t::mem_array<uword> out_temp_array(n_elem);
 
-  hist.cl_mem_ptr     = get_rt().cl_rt.acquire_memory<uword>(4 * total_num_threads);
-  A_temp.cl_mem_ptr   = get_rt().cl_rt.acquire_memory<eT>(n_elem);
-  out_temp.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(n_elem);
+  hist.cl_mem_ptr     = hist_array.memptr();
+  A_temp.cl_mem_ptr   = A_temp_array.memptr();
+  out_temp.cl_mem_ptr = out_temp_array.memptr();
 
   cl_int status = 0;
 
@@ -134,8 +137,8 @@ stable_sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A,
     {
     // Reallocate the histogram vector to the correct size that we'll need.
     get_rt().cl_rt.synchronise();
-    get_rt().cl_rt.release_memory(hist.cl_mem_ptr);
-    hist.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(4 * (pow2_num_threads1 + pow2_num_threads2));
+    hist_array = std::move( runtime_t::mem_array<uword>(4 * (pow2_num_threads1 + pow2_num_threads2)) );
+    hist.cl_mem_ptr = hist_array.memptr();
     }
 
   const uword hist_offset = 4 * pow2_num_threads1;
@@ -247,9 +250,6 @@ stable_sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A,
     }
 
   get_rt().synchronise();
-  get_rt().cl_rt.release_memory(hist.cl_mem_ptr);
-  get_rt().cl_rt.release_memory(A_temp.cl_mem_ptr);
-  get_rt().cl_rt.release_memory(out_temp.cl_mem_ptr);
   }
 
 
@@ -259,16 +259,19 @@ inline
 void
 sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const uword sort_type, const size_t total_num_threads, const size_t local_group_size)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // First create auxiliary memory.
-  dev_mem_t<uword> hist;
-  dev_mem_t<eT> A_temp;
-  dev_mem_t<uword> out_temp;
+  dev_mem_t<uword>            hist;
+  dev_mem_t<eT>               A_temp;
+  dev_mem_t<uword>            out_temp;
+  runtime_t::mem_array<uword> hist_array(4 * total_num_threads);
+  runtime_t::mem_array<eT>    A_temp_array(n_elem);
+  runtime_t::mem_array<uword> out_temp_array(n_elem);
 
-  hist.cl_mem_ptr     = get_rt().cl_rt.acquire_memory<uword>(4 * total_num_threads);
-  A_temp.cl_mem_ptr   = get_rt().cl_rt.acquire_memory<eT>(n_elem);
-  out_temp.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(n_elem);
+  hist.cl_mem_ptr     = hist_array.memptr();
+  A_temp.cl_mem_ptr   = A_temp_array.memptr();
+  out_temp.cl_mem_ptr = out_temp_array.memptr();
 
   cl_int status = 0;
 
@@ -358,9 +361,6 @@ sort_index_vec_multiple_workgroups(dev_mem_t<uword> out, dev_mem_t<eT> A, const 
     }
 
   get_rt().synchronise();
-  get_rt().cl_rt.release_memory(hist.cl_mem_ptr);
-  get_rt().cl_rt.release_memory(A_temp.cl_mem_ptr);
-  get_rt().cl_rt.release_memory(out_temp.cl_mem_ptr);
   }
 
 
@@ -370,7 +370,7 @@ inline
 void
 sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const uword sort_type, const uword stable_sort)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   runtime_t::cq_guard guard;
 
@@ -412,10 +412,13 @@ sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const 
     }
 
   // First, allocate temporary matrices we will use during computation.
-  dev_mem_t<eT> tmp_mem;
-  tmp_mem.cl_mem_ptr = get_rt().cl_rt.acquire_memory<eT>(n_elem);
-  dev_mem_t<uword> tmp_mem_index;
-  tmp_mem_index.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(n_elem);
+  dev_mem_t<eT>               tmp_mem;
+  dev_mem_t<uword>            tmp_mem_index;
+  runtime_t::mem_array<eT>    tmp_mem_array(n_elem);
+  runtime_t::mem_array<uword> tmp_mem_index_array(n_elem);
+
+  tmp_mem.cl_mem_ptr       = tmp_mem_array.memptr();
+  tmp_mem_index.cl_mem_ptr = tmp_mem_index_array.memptr();
 
   cl_int status = 0;
 
@@ -439,6 +442,4 @@ sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const 
   coot_check_cl_error(status, "coot::opencl::sort_index_vec(): failed to run kernel");
 
   get_rt().cl_rt.synchronise();
-  get_rt().cl_rt.release_memory(tmp_mem.cl_mem_ptr);
-  get_rt().cl_rt.release_memory(tmp_mem_index.cl_mem_ptr);
   }

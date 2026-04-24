@@ -30,9 +30,9 @@ sum(dev_mem_t<eT2> dest,
     const uword src_col_offset,
     const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::sum(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::sum(): OpenCL runtime not valid" );
 
   runtime_t::cq_guard guard;
 

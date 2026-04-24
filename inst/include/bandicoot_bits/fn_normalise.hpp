@@ -35,7 +35,7 @@ normalise
   const typename coot_real_or_cx_only<typename T1::elem_type>::result* junk2 = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk1);
   coot_ignore(junk2);
 
@@ -61,7 +61,7 @@ normalise
   const typename coot_real_or_cx_only<typename T1::elem_type>::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return Op<T1, op_normalise_mat>(X, p, dim);

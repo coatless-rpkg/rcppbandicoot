@@ -29,11 +29,11 @@ enable_if2
   >::result
 conv(const T1& A, const T2& B, const char* shape = "full")
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (shape != nullptr) ? shape[0] : char(0);
 
-  coot_debug_check( ((sig != 'f') && (sig != 's')), "conv(): unsupported value of 'shape' parameter" );
+  coot_conform_check( ((sig != 'f') && (sig != 's')), "conv(): unsupported value of 'shape' parameter" );
 
   const uword mode = (sig == 's') ? uword(1) : uword(0);
 
@@ -53,11 +53,11 @@ enable_if2
   >::result
 conv2(const T1& A, const T2& B, const char* shape = "full")
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (shape != nullptr) ? shape[0] : char(0);
 
-  coot_debug_check( ((sig != 'f') && (sig != 's')), "conv2(): unsupported value of 'shape' parameter" );
+  coot_conform_check( ((sig != 'f') && (sig != 's')), "conv2(): unsupported value of 'shape' parameter" );
 
   const uword mode = (sig == 's') ? uword(1) : uword(0);
 

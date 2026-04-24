@@ -32,7 +32,7 @@ enable_if2
   >::result
 diagvec(const T1& X, const sword k = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword a = (std::abs)(k);
   const uword b = (k < 0) ? 1 : 0;

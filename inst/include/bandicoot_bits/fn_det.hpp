@@ -27,7 +27,7 @@ det
   const typename coot_real_only<typename T1::elem_type>::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   typedef typename T1::elem_type eT;
@@ -57,7 +57,7 @@ det
   const typename coot_real_only<typename T1::elem_type>::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   typedef typename T1::elem_type eT;
@@ -67,7 +67,7 @@ det
   if(status == false)
     {
     out_val = eT(0);
-    coot_debug_warn_level(3, "det(): failed to find determinant");
+    coot_warn(3, "det(): failed to find determinant");
     }
 
   return status;

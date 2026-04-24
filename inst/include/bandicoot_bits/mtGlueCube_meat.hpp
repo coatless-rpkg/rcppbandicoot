@@ -22,7 +22,7 @@ mtGlueCube<out_eT, T1, T2, mtglue_type>::mtGlueCube(const T1& in_A, const T2& in
   : A(in_A)
   , B(in_B)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -31,5 +31,5 @@ template<typename out_eT, typename T1, typename T2, typename mtglue_type>
 inline
 mtGlueCube<out_eT, T1, T2, mtglue_type>::~mtGlueCube()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }

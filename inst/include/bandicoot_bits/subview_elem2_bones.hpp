@@ -17,9 +17,8 @@
 // ------------------------------------------------------------------------
 
 
-
-template<typename eT, typename T1, typename T2>
-class subview_elem2 : public Base< eT, subview_elem2<eT,T1,T2> >
+template<typename eT, typename sve2_type>
+class subview_elem2 : public Base< eT, subview_elem2<eT, sve2_type> >
   {
   public:
 
@@ -32,27 +31,18 @@ class subview_elem2 : public Base< eT, subview_elem2<eT,T1,T2> >
 
   coot_aligned const Mat<eT>& m;
 
-  coot_aligned const Base<uword,T1>& base_ri;
-  coot_aligned const Base<uword,T2>& base_ci;
-
-  const bool all_rows;
-  const bool all_cols;
-
+  coot_aligned sve2_type r; // holds row and column indices (if given)
 
   protected:
 
-  coot_inline subview_elem2(const Mat<eT>& in_m, const Base<uword,T1>& in_ri, const Base<uword,T2>& in_ci, const bool in_all_rows, const bool in_all_cols);
+  template<typename T1, typename T2>
+  coot_inline subview_elem2(const Mat<eT>& in_m, const Base<uword,T1>& in_ri, const Base<uword,T2>& in_ci);
 
 
   public:
 
   inline ~subview_elem2();
   inline  subview_elem2() = delete;
-
-                                     inline void inplace_op(const twoway_kernel_id::enum_id kernel,    const eT val_pre, const eT val_post);
-  template<typename T3, typename T4> inline void inplace_op(const twoway_kernel_id::enum_id kernel_id, const subview_elem2<eT,T3,T4>& x);
-  template<typename expr>            inline void inplace_op(const twoway_kernel_id::enum_id kernel_id, const Base<eT,expr>& x);
-
 
   inline void replace(const eT old_val, const eT new_val);
 
@@ -66,20 +56,25 @@ class subview_elem2 : public Base< eT, subview_elem2<eT,T1,T2> >
   inline void randu();
   inline void randn();
 
+  coot_warn_unused inline bool is_empty() const;
+
   inline void operator+= (const eT val);
   inline void operator-= (const eT val);
   inline void operator*= (const eT val);
   inline void operator/= (const eT val);
 
+  template<typename sve2_type2>                      inline void inplace_eq(const subview_elem2<eT, sve2_type2>& x);
+  template<typename expr>                            inline void inplace_eq(const Base<eT, expr>& x);
+  template<typename eglue_type, typename sve2_type2> inline void inplace_op(const subview_elem2<eT, sve2_type2>& x, const char* op_name);
+  template<typename eglue_type, typename expr>       inline void inplace_op(const Base<eT, expr>& x, const char* op_name);
 
   // deliberately returning void
-  template<typename T3, typename T4> inline void operator=   (const subview_elem2<eT,T3,T4>& x);
-                                     inline void operator=   (const subview_elem2<eT,T1,T2>& x);
-
-  template<typename T3, typename T4> inline void operator+=  (const subview_elem2<eT,T3,T4>& x);
-  template<typename T3, typename T4> inline void operator-=  (const subview_elem2<eT,T3,T4>& x);
-  template<typename T3, typename T4> inline void operator%=  (const subview_elem2<eT,T3,T4>& x);
-  template<typename T3, typename T4> inline void operator/=  (const subview_elem2<eT,T3,T4>& x);
+  template<typename sve2_type2> inline void operator=   (const subview_elem2<eT,sve2_type2>& x);
+                                inline void operator=   (const subview_elem2<eT,sve2_type>& x);
+  template<typename sve2_type2> inline void operator+=  (const subview_elem2<eT,sve2_type2>& x);
+  template<typename sve2_type2> inline void operator-=  (const subview_elem2<eT,sve2_type2>& x);
+  template<typename sve2_type2> inline void operator%=  (const subview_elem2<eT,sve2_type2>& x);
+  template<typename sve2_type2> inline void operator/=  (const subview_elem2<eT,sve2_type2>& x);
 
   template<typename expr> inline void operator=  (const Base<eT,expr>& x);
   template<typename expr> inline void operator+= (const Base<eT,expr>& x);
@@ -91,4 +86,54 @@ class subview_elem2 : public Base< eT, subview_elem2<eT,T1,T2> >
 
 
   friend class Mat<eT>;
+  };
+
+
+
+template<typename eT, typename T1, typename T2>
+class subview_elem2_both
+  {
+  public:
+
+  coot_aligned const Base<uword,T1>& base_ri;
+  coot_aligned const Base<uword,T2>& base_ci;
+
+  coot_inline subview_elem2_both(const Base<uword,T1>& in_ri, const Base<uword,T2>& in_ci);
+
+  inline void randu(subview_elem2<eT, subview_elem2_both<eT, T1, T2>>& base);
+  inline void randn(subview_elem2<eT, subview_elem2_both<eT, T1, T2>>& base);
+
+  inline bool is_empty(const subview_elem2<eT, subview_elem2_both<eT, T1, T2>>& s) const;
+  };
+
+template<typename eT, typename T1>
+class subview_elem2_all_cols
+  {
+  public:
+
+  coot_aligned const Base<uword,T1>& base_ri;
+
+  template<typename T2>
+  coot_inline subview_elem2_all_cols(const Base<uword,T1>& in_ri, const Base<uword,T2>& in_ci /* ignored */);
+
+  inline void randu(subview_elem2<eT, subview_elem2_all_cols<eT, T1>>& base);
+  inline void randn(subview_elem2<eT, subview_elem2_all_cols<eT, T1>>& base);
+
+  inline bool is_empty(const subview_elem2<eT, subview_elem2_all_cols<eT, T1>>& s) const;
+  };
+
+template<typename eT, typename T2>
+class subview_elem2_all_rows
+  {
+  public:
+
+  coot_aligned const Base<uword,T2>& base_ci;
+
+  template<typename T1>
+  coot_inline subview_elem2_all_rows(const Base<uword,T1>& in_ri /* ignored */, const Base<uword,T2>& in_ci);
+
+  inline void randu(subview_elem2<eT, subview_elem2_all_rows<eT, T2>>& base);
+  inline void randn(subview_elem2<eT, subview_elem2_all_rows<eT, T2>>& base);
+
+  inline bool is_empty(const subview_elem2<eT, subview_elem2_all_rows<eT, T2>>& s) const;
   };

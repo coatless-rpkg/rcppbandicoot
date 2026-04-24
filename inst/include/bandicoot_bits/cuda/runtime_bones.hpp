@@ -26,6 +26,9 @@ struct runtime_t
 
   inline bool load_cached_kernel(const std::string& kernel_name, CUfunction& kernel);
 
+  template<kernel_id::enum_id num, typename... ProxyTypes>
+  inline std::tuple<std::vector<std::string>, std::string> generate_kernel();
+
   inline std::string generate_kernel(const zeroway_kernel_id::enum_id num);
 
   template<typename eT>
@@ -40,10 +43,10 @@ struct runtime_t
   template<typename eT1, typename eT2>
   inline std::string generate_kernel(const twoway_kernel_id::enum_id num);
 
-  template<typename eT1, typename eT2, typename eT3>
-  inline std::string generate_kernel(const threeway_kernel_id::enum_id num);
+  inline void compile_kernel(const std::string& kernel_name, const std::string& source, CUfunction& function, const std::vector<std::string>& def_args = {});
 
-  inline void compile_kernel(const std::string& kernel_name, const std::string& source, CUfunction& function);
+  template<kernel_id::enum_id num, typename... ProxyTypes>
+  inline CUfunction get_kernel();
 
   inline const CUfunction& get_kernel(const zeroway_kernel_id::enum_id num);
 
@@ -58,9 +61,6 @@ struct runtime_t
 
   template<typename eT2, typename eT1>
   inline const CUfunction& get_kernel(const twoway_kernel_id::enum_id num);
-
-  template<typename eT3, typename eT2, typename eT1>
-  inline const CUfunction& get_kernel(const threeway_kernel_id::enum_id num);
 
   template<typename eT>
   inline typename cuda_type<eT>::type* acquire_memory(const uword n_elem);
@@ -90,6 +90,10 @@ struct runtime_t
   // TODO: is it necessary to have a lock() and unlock()?
   // since all CUdevice and CUcontext are are pointers, I don't think we need to specifically lock them
 
+  template<typename eT>
+  class mem_array;
+  
+
   private:
 
   // internal functions to actually get the right kernel
@@ -98,6 +102,11 @@ struct runtime_t
   inline
   std::tuple<bool, CUfunction&>
   get_kernel(rt_common::kernels_t<HeldType>& k, const EnumType num);
+
+  template<kernel_id::enum_id num, typename... ProxyTypes>
+  inline
+  std::tuple<bool, CUfunction&>
+  get_kernel(std::unordered_map<std::string, CUfunction>& k);
 
   template<typename EnumType>
   inline
@@ -112,17 +121,41 @@ struct runtime_t
   coot_aligned bool                     nvrtc_cubin; // if false we must use PTX
 
   coot_aligned std::vector<std::string> nvrtc_opts;
+  coot_aligned std::vector<std::string> nvrtc_defs; // TODO: merge with nvrtc_opts when all kernels are generated
   std::string                           unique_host_device_id;
   std::string                           gpu_arch_str;
   std::string                           src_preamble;
 
-  coot_aligned std::unordered_map<zeroway_kernel_id::enum_id, CUfunction>                                                                    zeroway_kernels;
-  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_kernel_id::enum_id, CUfunction>>                                               oneway_kernels;
-  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_real_kernel_id::enum_id, CUfunction>>                                          oneway_real_kernels;
-  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_integral_kernel_id::enum_id, CUfunction>>                                      oneway_integral_kernels;
-  coot_aligned rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<twoway_kernel_id::enum_id, CUfunction>>>                         twoway_kernels;
-  coot_aligned rt_common::kernels_t<rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<threeway_kernel_id::enum_id, CUfunction>>>> threeway_kernels;
+  coot_aligned std::unordered_map<std::string, CUfunction>                                                           gen_kernels;
+  coot_aligned std::unordered_map<zeroway_kernel_id::enum_id, CUfunction>                                            zeroway_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_kernel_id::enum_id, CUfunction>>                       oneway_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_real_kernel_id::enum_id, CUfunction>>                  oneway_real_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_integral_kernel_id::enum_id, CUfunction>>              oneway_integral_kernels;
+  coot_aligned rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<twoway_kernel_id::enum_id, CUfunction>>> twoway_kernels;
 
   coot_aligned CUdevice cuDevice;
   coot_aligned CUcontext context;
+  };
+
+
+// RAII wrapper for automatic deallocation of CUDA memory when it goes out of scope
+template<typename eT>
+class runtime_t::mem_array
+  {
+  public:
+
+  inline ~mem_array();
+  inline  mem_array(const uword n_elem);
+
+             mem_array(const mem_array&) = delete;
+  mem_array& operator=(const mem_array&) = delete;
+
+  inline            mem_array(mem_array&& other) noexcept;
+  inline mem_array& operator=(mem_array&& other) noexcept;
+
+  typename cuda_type<eT>::type* memptr() { return chunk; }
+
+  private:
+
+  typename cuda_type<eT>::type* chunk;
   };

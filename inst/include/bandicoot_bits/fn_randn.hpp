@@ -24,16 +24,16 @@ inline
 T
 randn(const uword n_rows, const uword n_cols, const distr_param& param = distr_param(), const typename coot_Mat_Col_Row_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   if(is_Col<T>::value)
     {
-    coot_debug_check( (n_cols != 1), "randn(): incompatible size" );
+    coot_conform_check( (n_cols != 1), "randn(): incompatible size" );
     }
   else if(is_Row<T>::value)
     {
-    coot_debug_check( (n_rows != 1), "randn(): incompatible size" );
+    coot_conform_check( (n_rows != 1), "randn(): incompatible size" );
     }
 
   T out(n_rows, n_cols);
@@ -51,7 +51,7 @@ inline
 T
 randn(const uword n_elem, const distr_param& param = distr_param(), const typename coot_Mat_Col_Row_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   const uword n_rows = (is_Row<T>::value) ? uword(1) : n_elem;
@@ -68,7 +68,7 @@ inline
 T
 randn(const SizeMat& s, const distr_param& param = distr_param(), const typename coot_Mat_Col_Row_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return randn<T>(s.n_rows, s.n_cols, param);
@@ -82,7 +82,7 @@ inline
 T
 randn(const uword n_rows, const uword n_cols, const uword n_slices, const distr_param& param = distr_param(), const typename coot_Cube_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   T out(n_rows, n_cols, n_slices, fill::none);
@@ -100,7 +100,7 @@ inline
 T
 randn(const SizeCube& s, const distr_param& param = distr_param(), const typename coot_Cube_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return randn<T>(s.n_rows, s.n_cols, s.n_slices, param);

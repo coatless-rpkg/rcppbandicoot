@@ -30,7 +30,7 @@ enable_if2
   >::result
 diagmat(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_diagmat>(X);
   }
@@ -49,7 +49,7 @@ enable_if2
   >::result
 diagmat(const T1& X, const sword k)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword a = (std::abs)(k);
   const uword b = (k < 0) ? 1 : 0;
@@ -71,7 +71,7 @@ enable_if2
   >::result
 diagmat(const Op<T1, op_htrans>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_diagmat>(X.m);
   }
@@ -89,7 +89,7 @@ enable_if2
   >::result
 diagmat(const Op<T1, op_htrans>& X, const sword k)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword a = (std::abs)(k);
   const uword b = (k < 0) ? 3 : 2;

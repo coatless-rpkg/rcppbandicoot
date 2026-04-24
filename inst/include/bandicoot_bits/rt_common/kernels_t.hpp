@@ -28,4 +28,6 @@ struct kernels_t
   HeldType   h_kernels;
   HeldType   f_kernels;
   HeldType   d_kernels;
+  HeldType   c_kernels;
+  HeldType   z_kernels;
   };

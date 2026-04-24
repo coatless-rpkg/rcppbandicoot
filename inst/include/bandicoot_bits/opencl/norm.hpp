@@ -19,7 +19,7 @@ inline
 eT
 vec_norm_1(dev_mem_t<eT> mem, const uword n_elem, const typename coot_real_only<eT>::result* junk = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_1);
@@ -56,7 +56,7 @@ vec_norm_2(dev_mem_t<eT> mem, const uword n_elem, const typename coot_real_only<
   // Note that Armadillo does not check for underflow or overflow for the
   // general k-norm case (where k != 2), so we don't do that either.
 
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_2);
@@ -114,7 +114,7 @@ inline
 eT
 vec_norm_k(dev_mem_t<eT> mem, const uword n_elem, const uword k, const typename coot_real_only<eT>::result* junk = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_k);
@@ -143,7 +143,7 @@ inline
 eT
 vec_norm_min(dev_mem_t<eT> mem, const uword n_elem, const typename coot_real_only<eT>::result* junk = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_min);

@@ -24,6 +24,10 @@ class op_htrans
   template<typename out_eT, typename T1>
   inline static void apply(Mat<out_eT>& out, const Op<T1, op_htrans>& in);
 
+  // custom path: use specialized cuBLAS/CLBlast implementation if this is not part of a larger operation
+  template<typename eT>
+  inline static void apply(Mat<eT>& out, const Op<Mat<eT>, op_htrans>& in, const typename coot_blas_type_only<eT>::result* = 0);
+
   template<typename T1> inline static uword compute_n_rows(const Op<T1, op_htrans>& op, const uword in_n_rows, const uword in_n_cols);
   template<typename T1> inline static uword compute_n_cols(const Op<T1, op_htrans>& op, const uword in_n_rows, const uword in_n_cols);
   };

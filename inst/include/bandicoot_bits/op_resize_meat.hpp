@@ -20,7 +20,7 @@ inline
 void
 op_resize::apply(Mat<out_eT>& out, const Op<T1, op_resize>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword new_n_rows = in.aux_uword_a;
   const uword new_n_cols = in.aux_uword_b;
@@ -45,7 +45,7 @@ inline
 void
 op_resize::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_resize>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword new_n_rows = in.aux_uword_a;
   const uword new_n_cols = in.aux_uword_b;
@@ -64,7 +64,7 @@ inline
 void
 op_resize::apply_mat_inplace(Mat<eT>& A, const uword new_n_rows, const uword new_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if ((A.n_rows == new_n_rows) && (A.n_cols == new_n_cols))
     {
@@ -90,7 +90,7 @@ inline
 void
 op_resize::apply_mat_noalias(Mat<out_eT>& out, const Mat<in_eT>& A, const uword new_n_rows, const uword new_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   out.set_size(new_n_rows, new_n_cols);
 

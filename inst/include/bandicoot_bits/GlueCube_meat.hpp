@@ -24,7 +24,7 @@ GlueCube<T1,T2,glue_type>::GlueCube(const BaseCube<typename T1::elem_type, T1>& 
   : A(in_A.get_ref())
   , B(in_B.get_ref())
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -33,5 +33,5 @@ template<typename T1, typename T2, typename glue_type>
 inline
 GlueCube<T1,T2,glue_type>::~GlueCube()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }

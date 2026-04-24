@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
 // Copyright 2023 Ryan Curtin (http://www.ratml.org)
+// Copyright 2026 Conrad Sanderson (https://conradsanderson.id.au)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +18,21 @@
 
 
 #if defined(COOT_USE_CUDA)
+  #if defined(__has_include)
+    #if __has_include(<cuda.h>)
+      #include <cuda.h>
+    #else
+      #undef COOT_USE_CUDA
+      #pragma message ("WARNING: use of CUDA disabled; cuda.h header not found")
+    #endif
+  #else
+    #include <cuda.h>
+  #endif
+#endif
 
-  #include <cuda.h>
+
+#if defined(COOT_USE_CUDA)
+
   #include <cuda_fp16.h>
   #include <cuda_runtime_api.h>
   #include <cuda_runtime.h>

@@ -21,7 +21,7 @@ inline
 void
 op_symmat::apply(Mat<out_eT>& out, const Op<T1, op_symmat>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword lower = in.aux_uword_a;
 
@@ -30,11 +30,11 @@ op_symmat::apply(Mat<out_eT>& out, const Op<T1, op_symmat>& in)
 
   if (lower)
     {
-    coot_debug_check( (E.M.n_rows != E.M.n_cols), "symmatl(): given matrix must be square sized" );
+    coot_conform_check( (E.M.n_rows != E.M.n_cols), "symmatl(): given matrix must be square sized" );
     }
   else
     {
-    coot_debug_check( (E.M.n_rows != E.M.n_cols), "symmatu(): given matrix must be square sized" );
+    coot_conform_check( (E.M.n_rows != E.M.n_cols), "symmatu(): given matrix must be square sized" );
     }
 
   // It's okay if `out` is an alias of `E.M`; the kernel can be run in-place with no problems.
@@ -56,7 +56,7 @@ inline
 void
 op_symmat::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_symmat>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword lower = in.aux_uword_a;
 
@@ -65,11 +65,11 @@ op_symmat::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_s
 
   if (lower)
     {
-    coot_debug_check( (E.M.n_rows != E.M.n_cols), "symmatl(): given matrix must be square sized" );
+    coot_conform_check( (E.M.n_rows != E.M.n_cols), "symmatl(): given matrix must be square sized" );
     }
   else
     {
-    coot_debug_check( (E.M.n_rows != E.M.n_cols), "symmatu(): given matrix must be square sized" );
+    coot_conform_check( (E.M.n_rows != E.M.n_cols), "symmatu(): given matrix must be square sized" );
     }
 
   // Aliases are not possible if a conversion is involved.

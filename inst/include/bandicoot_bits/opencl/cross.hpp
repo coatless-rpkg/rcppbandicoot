@@ -22,9 +22,9 @@ inline
 void
 cross(dev_mem_t<eT2> out, const dev_mem_t<eT1> A, const dev_mem_t<eT1> B)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::cross(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::cross(): OpenCL runtime not valid" );
 
   runtime_t::cq_guard guard;
 

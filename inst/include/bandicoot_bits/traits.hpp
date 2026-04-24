@@ -237,12 +237,8 @@ template<typename T>
 struct is_subview_elem2
   { static constexpr bool value = false; };
 
-template<typename eT, typename T1, typename T2>
-struct is_subview_elem2< subview_elem2<eT, T1, T2> >
-  { static constexpr bool value = true; };
-
-template<typename eT, typename T1, typename T2>
-struct is_subview_elem2< const subview_elem2<eT, T1, T2> >
+template<typename eT, typename sve2_type>
+struct is_subview_elem2< subview_elem2<eT, sve2_type> >
   { static constexpr bool value = true; };
 
 
@@ -542,6 +538,26 @@ struct is_coot_cube_type
   || is_subview_cube<T1>::value
   //|| is_subview_cube_slices<T1>::value
   ;
+  };
+
+
+
+//
+//
+//
+
+
+
+template<typename T>
+struct is_Proxy
+  {
+  static const bool value = false;
+  };
+
+template<typename T>
+struct is_Proxy< Proxy<T> >
+  {
+  static const bool value = true;
   };
 
 
@@ -884,17 +900,18 @@ struct is_signed
 
 
 template<typename T>
-struct is_non_integral
+struct is_real_or_cx
   {
   static constexpr bool value = false;
   };
 
 
-template<> struct is_non_integral<              fp16    > { static constexpr bool value = true; };
-template<> struct is_non_integral<              float   > { static constexpr bool value = true; };
-template<> struct is_non_integral<              double  > { static constexpr bool value = true; };
-template<> struct is_non_integral< std::complex<float>  > { static constexpr bool value = true; };
-template<> struct is_non_integral< std::complex<double> > { static constexpr bool value = true; };
+template<> struct is_real_or_cx<              fp16    > { static constexpr bool value = true; };
+template<> struct is_real_or_cx<              float   > { static constexpr bool value = true; };
+template<> struct is_real_or_cx<              double  > { static constexpr bool value = true; };
+template<> struct is_real_or_cx< std::complex<float>  > { static constexpr bool value = true; };
+template<> struct is_real_or_cx< std::complex<double> > { static constexpr bool value = true; };
+// TODO: add std::complex<fp16> ?
 
 
 

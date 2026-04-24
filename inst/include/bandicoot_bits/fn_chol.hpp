@@ -22,11 +22,11 @@ inline
 bool
 chol(Mat<typename T1::elem_type>& out, const Base<typename T1::elem_type, T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   out = X.get_ref();
 
-  coot_debug_check( out.n_rows != out.n_cols, "chol(): given matrix must be square sized" );
+  coot_conform_check( out.n_rows != out.n_cols, "chol(): given matrix must be square sized" );
 
   if (out.n_rows == 0 || out.n_cols == 0)
     {
@@ -37,7 +37,7 @@ chol(Mat<typename T1::elem_type>& out, const Base<typename T1::elem_type, T1>& X
   if (std::get<0>(result) == false)
     {
     out.reset();
-    coot_debug_warn_level(3, "coot::chol(): " + std::get<1>(result));
+    coot_warn(3, "coot::chol(): " + std::get<1>(result));
     }
 
   return std::get<0>(result);
@@ -51,11 +51,11 @@ inline
 Mat<typename T1::elem_type>
 chol(const Base<typename T1::elem_type, T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   Mat<typename T1::elem_type> out(X.get_ref());
 
-  coot_debug_check( out.n_rows != out.n_cols, "chol(): given matrix must be square sized" );
+  coot_conform_check( out.n_rows != out.n_cols, "chol(): given matrix must be square sized" );
 
   if (out.n_rows == 0 || out.n_cols == 0)
     {

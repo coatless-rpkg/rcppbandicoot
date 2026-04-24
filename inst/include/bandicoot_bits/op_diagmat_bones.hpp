@@ -19,11 +19,7 @@ class op_diagmat
   {
   public:
 
-  template<                 typename T1> inline static void apply(Mat<typename T1::elem_type>& out, const Op<T1, op_diagmat>& in);
-  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT                >& out, const Op<T1, op_diagmat>& in, const typename enable_if<is_same_type<out_eT, typename T1::elem_type>::no>::result* junk = 0);
-
-  template<typename eT> inline static void apply_direct(Mat<eT>& out, const Mat<eT>& in);
-  template<typename eT> inline static void apply_direct(Mat<eT>& out, const subview<eT>& in);
+  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT>& out, const Op<T1, op_diagmat>& in);
 
   template<typename T1> inline static uword compute_n_rows(const Op<T1, op_diagmat>& op, const uword in_n_rows, const uword in_n_cols);
   template<typename T1> inline static uword compute_n_cols(const Op<T1, op_diagmat>& op, const uword in_n_rows, const uword in_n_cols);
@@ -35,14 +31,8 @@ class op_diagmat2
   {
   public:
 
-  template<                 typename T1> inline static void apply(Mat<typename T1::elem_type>& out, const Op<T1, op_diagmat2>& in);
-  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT                >& out, const Op<T1, op_diagmat2>& in, const typename enable_if<is_same_type<out_eT, typename T1::elem_type>::no>::result* junk = 0);
-
-  template<                 typename T1> inline static void apply(Mat<typename T1::elem_type>& out, const Op<Op<T1, op_htrans2>, op_diagmat2>& in);
-  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT                >& out, const Op<Op<T1, op_htrans2>, op_diagmat2>& in, const typename enable_if<is_same_type<out_eT, typename T1::elem_type>::no>::result* junk = 0);
-
-  template<typename eT> inline static void apply_direct(Mat<eT>& out, const Mat<eT>& in, const sword k, const bool swap);
-  template<typename eT> inline static void apply_direct(Mat<eT>& out, const subview<eT>& in, const sword k, const bool swap);
+  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT>& out, const Op<T1, op_diagmat2>& in);
+  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT>& out, const Op<Op<T1, op_htrans2>, op_diagmat2>& in);
 
   template<typename T1> inline static uword compute_n_rows(const Op<T1, op_diagmat2>& op, const uword in_n_rows, const uword in_n_cols);
   template<typename T1> inline static uword compute_n_cols(const Op<T1, op_diagmat2>& op, const uword in_n_rows, const uword in_n_cols);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// 
+//
 // Copyright 2023 Ryan Curtin (http://www.ratml.org/)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,7 @@ inline
 bool
 coot_init(const bool print_info = false)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return init_rt(print_info);
   }
@@ -31,7 +31,7 @@ inline
 bool
 coot_init(const char* backend, const bool print_info = false, const uword first_id = 0, const uword second_id = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   uword device_id = 0;
   uword platform_id = 0;
@@ -51,6 +51,11 @@ coot_init(const char* backend, const bool print_info = false, const uword first_
     backend_val = CUDA_BACKEND;
     device_id = first_id;
     }
+  else if (backend_str == "vulkan")
+    {
+    backend_val = VULKAN_BACKEND;
+    device_id = first_id;
+    }
   else
     {
     throw std::runtime_error("coot_init(): unknown backend '" + backend_str + "'");
@@ -58,4 +63,4 @@ coot_init(const char* backend, const bool print_info = false, const uword first_
 
   return init_rt(backend_val, platform_id, device_id, print_info);
   }
-  
+

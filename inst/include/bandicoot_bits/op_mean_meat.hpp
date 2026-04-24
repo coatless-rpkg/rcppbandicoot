@@ -21,7 +21,7 @@ inline
 void
 op_mean::apply(Mat<out_eT>& out, const Op<T1, op_mean>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   unwrap<T1> U(in.m);
 
@@ -36,7 +36,7 @@ inline
 void
 op_mean::apply(Mat<eT>& out, const Op<mtOp<eT, T1, mtop_conv_to>, op_mean>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   unwrap<T1> U(in.m.q);
 
@@ -51,7 +51,7 @@ inline
 void
 op_mean::apply_direct(Mat<out_eT>& out, const Mat<in_eT>& in, const uword dim, const bool post_conv_apply)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // We can't apply the kernel into an alias.
   copy_alias<in_eT> C(in, out);
@@ -85,7 +85,7 @@ inline
 void
 op_mean::apply_direct(Mat<out_eT>& out, const subview<in_eT>& in, const uword dim, const bool post_conv_apply)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If `in` is a subview of `out`, we need to make a copy.
   if (((void*) &in.m) == ((void*) &out))
@@ -124,7 +124,7 @@ inline
 typename T1::elem_type
 op_mean::mean_all(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
   unwrap<T1> U(X);
@@ -144,7 +144,7 @@ inline
 eT
 op_mean::mean_all_direct(const Mat<eT>& M)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return coot_rt_t::accu(M.get_dev_mem(false), M.n_elem) / eT(M.n_elem);
   }
 
@@ -155,7 +155,7 @@ inline
 eT
 op_mean::mean_all_direct(const subview<eT>& M)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return coot_rt_t::accu_subview(M.m.get_dev_mem(false), M.m.n_rows, M.aux_row1, M.aux_col1, M.n_rows, M.n_cols) / eT(M.n_elem);
   }
 

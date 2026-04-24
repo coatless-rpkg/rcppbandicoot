@@ -27,10 +27,10 @@ op_sort::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_sort>& in)
   const uword sort_type = in.aux_uword_a;
   const uword dim       = in.aux_uword_b;
 
-  coot_debug_check( (sort_type > 1), "sort(): parameter 'sort_type' must be 0 or 1" );
-  coot_debug_check( (dim > 1),       "sort(): parameter 'dim' must be 0 or 1"       );
+  coot_conform_check( (sort_type > 1), "sort(): parameter 'sort_type' must be 0 or 1" );
+  coot_conform_check( (dim > 1),       "sort(): parameter 'dim' must be 0 or 1"       );
   // TODO: implement has_nan() and use it here
-  //coot_debug_check( (X.has_nan()),   "sort(): detected NaN"                         );
+  //coot_conform_check( (X.has_nan()),   "sort(): detected NaN"                         );
 
   coot_rt_t::sort(out.get_dev_mem(false), out.n_rows, out.n_cols, sort_type, dim, 0, 0, out.n_rows);
   }
@@ -42,7 +42,7 @@ inline
 void
 op_sort::apply(Mat<out_eT>& out, const Op<T1, op_sort>& in, const typename enable_if<!is_same_type<out_eT, typename T1::elem_type>::value>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   typedef typename T1::elem_type eT;
@@ -101,7 +101,7 @@ inline
 void
 op_sort_vec::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_sort_vec>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Compute the input, then sort in-place.
   out = in.m;
@@ -117,7 +117,7 @@ inline
 void
 op_sort_vec::apply(Mat<out_eT>& out, const Op<T1, op_sort_vec>& in, const typename enable_if<!is_same_type<out_eT, typename T1::elem_type>::value>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Apply the sort to a temporary vector of the same type, then perform the conversion.
   typedef typename T1::elem_type eT;

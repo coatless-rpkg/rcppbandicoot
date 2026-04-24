@@ -23,7 +23,7 @@ inline
 eT
 op_norm::vec_norm_1(const Mat<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return coot_rt_t::vec_norm_1(X.get_dev_mem(false), X.n_elem);
   }
 
@@ -34,7 +34,7 @@ inline
 eT
 op_norm::vec_norm_1(const subview<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   // TODO: a better implementation would be much more efficient and avoid this
   // extraction.
   Mat<eT> tmp(X);
@@ -48,7 +48,7 @@ inline
 eT
 op_norm::vec_norm_2(const Mat<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return coot_rt_t::vec_norm_2(X.get_dev_mem(false), X.n_elem);
   }
 
@@ -59,7 +59,7 @@ inline
 eT
 op_norm::vec_norm_2(const subview<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   // TODO: a better implementation would be much more efficient and avoid this
   // extraction.
   Mat<eT> tmp(X);
@@ -73,7 +73,7 @@ inline
 eT
 op_norm::vec_norm_k(const Mat<eT>& X, const uword k)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return coot_rt_t::vec_norm_k(X.get_dev_mem(false), X.n_elem, k);
   }
 
@@ -84,7 +84,7 @@ inline
 eT
 op_norm::vec_norm_k(const subview<eT>& X, const uword k)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   // TODO: a better implementation would be much more efficient and avoid this
   // extraction.
   Mat<eT> tmp(X);
@@ -98,7 +98,7 @@ inline
 eT
 op_norm::vec_norm_min(const Mat<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return coot_rt_t::vec_norm_min(X.get_dev_mem(false), X.n_elem);
   }
 
@@ -109,7 +109,7 @@ inline
 eT
 op_norm::vec_norm_min(const subview<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   // TODO: a better implementation would be much more efficient and avoid this
   // extraction.
   Mat<eT> tmp(X);
@@ -123,7 +123,7 @@ inline
 eT
 op_norm::vec_norm_max(const Mat<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return coot_rt_t::max_abs(X.get_dev_mem(false), X.n_elem);
   }
 
@@ -134,7 +134,7 @@ inline
 eT
 op_norm::vec_norm_max(const subview<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   // TODO: a better implementation would be much more efficient and avoid this
   // extraction.
   Mat<eT> tmp(X);
@@ -148,7 +148,7 @@ inline
 eT
 op_norm::mat_norm_1(const Mat<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // TODO: a dedicated implementation could be faster
   Mat<eT> result = max( sum( abs(X), 0 ), 1 );
@@ -162,7 +162,7 @@ inline
 eT
 op_norm::mat_norm_1(const subview<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   // TODO: a better implementation would be much more efficient and avoid this
   // extraction.
   Mat<eT> tmp(X);
@@ -176,11 +176,11 @@ inline
 eT
 op_norm::mat_norm_2(const Mat<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (X.is_finite() == false)
     {
-    coot_debug_warn_level(1, "norm(): given matrix has non-finite elements");
+    coot_warn(1, "norm(): given matrix has non-finite elements");
     }
 
   if (is_fp16<eT>::value == false)
@@ -207,7 +207,7 @@ inline
 eT
 op_norm::mat_norm_2(const subview<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   // TODO: a better implementation would be much more efficient and avoid this
   // extraction.
   Mat<eT> tmp(X);
@@ -221,7 +221,7 @@ inline
 eT
 op_norm::mat_norm_inf(const Mat<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // TODO: a dedicated implementation could be faster
   Mat<eT> result = max( sum( abs(X), 1 ), 0 );
@@ -235,7 +235,7 @@ inline
 eT
 op_norm::mat_norm_inf(const subview<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   // TODO: a better implementation would be much more efficient and avoid this
   // extraction.
   Mat<eT> tmp(X);

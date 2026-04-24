@@ -29,7 +29,7 @@ enable_if2
   >::result
 median(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return op_median::median_all(X);
   }
@@ -47,7 +47,7 @@ enable_if2
   >::result
 median(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_median>(X, 0, 0);
   }
@@ -65,7 +65,7 @@ enable_if2
   >::result
 median(const T1& X, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_median>(X, dim, 0);
   }

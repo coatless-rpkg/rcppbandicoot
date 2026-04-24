@@ -23,7 +23,7 @@ inline
 void
 op_row_as_mat::apply(Mat<typename T1::elem_type>& out, const CubeToMatOp<T1, op_row_as_mat>& expr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
 
@@ -33,7 +33,7 @@ op_row_as_mat::apply(Mat<typename T1::elem_type>& out, const CubeToMatOp<T1, op_
 
   const uword in_row = expr.aux_uword;
 
-  coot_debug_check_bounds( (in_row >= A.n_rows), "Cube::row_as_mat(): index out of bounds" );
+  coot_conform_check_bounds( (in_row >= A.n_rows), "Cube::row_as_mat(): index out of bounds" );
 
   const uword A_n_cols   = A.n_cols;
   const uword A_n_rows   = A.n_rows;
@@ -41,15 +41,12 @@ op_row_as_mat::apply(Mat<typename T1::elem_type>& out, const CubeToMatOp<T1, op_
 
   out.set_size(A_n_slices, A_n_cols);
 
-  // This implementation could be adapted to use a single kernel.
+  // This implementation could be improved to use a single kernel call, but would likely need a specialized Proxy.
   for (uword s = 0; s < A_n_slices; ++s)
     {
-    coot_rt_t::copy_mat(out.get_dev_mem(false),
-                        A.get_dev_mem(false),
-                        // copy as a 1xN vector so that we can skip elements
-                        1, A_n_cols,
-                        s, 0, A_n_slices,
-                        in_row + s * A_n_rows * A_n_cols, 0, A_n_rows);
+    Proxy<subview<eT>> P_out(out.get_dev_mem(false), s, 0, 1, A_n_cols, A_n_slices);
+    Proxy<subview<eT>> PA(A.get_dev_mem(false), in_row + s * A_n_rows * A_n_cols, 0, 1, A_n_cols, A_n_rows);
+    coot_rt_t::copy(P_out, PA);
     }
   }
 

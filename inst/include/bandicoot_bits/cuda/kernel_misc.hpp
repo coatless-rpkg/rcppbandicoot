@@ -133,3 +133,48 @@ inline kernel_dims three_dimensional_grid_dims(const uword n_rows, const uword n
 
   return result;
   }
+
+
+
+template<typename T1>
+inline
+typename
+enable_if2
+  <
+  (Proxy<T1>::num_dims == 1),
+  kernel_dims
+  >::result
+grid_dims(const Proxy<T1>& x)
+  {
+  return one_dimensional_grid_dims(x.get_n_elem());
+  }
+
+
+
+template<typename T1>
+inline
+typename
+enable_if2
+  <
+  (Proxy<T1>::num_dims == 2),
+  kernel_dims
+  >::result
+grid_dims(const Proxy<T1>& x)
+  {
+  return two_dimensional_grid_dims(x.get_n_rows(), x.get_n_cols());
+  }
+
+
+
+template<typename T1>
+inline
+typename
+enable_if2
+  <
+  (Proxy<T1>::num_dims == 3),
+  kernel_dims
+  >::result
+grid_dims(const Proxy<T1>& x)
+  {
+  return three_dimensional_grid_dims(x.get_n_rows(), x.get_n_cols(), x.get_n_slices());
+  }

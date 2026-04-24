@@ -22,7 +22,7 @@ inline
 bool
 op_det::apply_direct(typename T1::elem_type& out_val, const Base<typename T1::elem_type, T1>& expr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
 
@@ -37,7 +37,7 @@ op_det::apply_direct(typename T1::elem_type& out_val, const Base<typename T1::el
 
   Mat<eT> A(expr.get_ref());
 
-  coot_debug_check( (A.n_rows != A.n_cols), "det(): given matrix must be square sized" );
+  coot_conform_check( (A.n_rows != A.n_cols), "det(): given matrix must be square sized" );
 
   if (A.n_rows == 0)
     {
@@ -51,7 +51,7 @@ op_det::apply_direct(typename T1::elem_type& out_val, const Base<typename T1::el
   std::tuple<bool, std::string> result = coot_rt_t::det(A.get_dev_mem(true), A.n_rows, out_val);
   if (std::get<0>(result) != true)
     {
-    coot_debug_warn_level(3, "det(): " + std::get<1>(result));
+    coot_warn(3, "det(): " + std::get<1>(result));
     }
 
   return std::get<0>(result);
@@ -64,7 +64,7 @@ inline
 eT
 op_det::apply_diagmat(const Mat<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (X.n_rows == 1 || X.n_cols == 1)
     return coot_rt_t::prod(X.get_dev_mem(false), X.n_elem);

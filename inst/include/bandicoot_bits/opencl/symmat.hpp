@@ -25,9 +25,9 @@ inline
 void
 symmat(dev_mem_t<eT2> out, const dev_mem_t<eT1> in, const uword size, const uword lower)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::symmat(): OpenCL runtime not valid");
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::symmat(): OpenCL runtime not valid");
 
   runtime_t::cq_guard guard;
 

@@ -22,9 +22,9 @@ inline
 void
 regspace(dev_mem_t<eT> mem, const uword mem_incr, const eT start, const eT delta, const eT end, const uword num, const bool desc)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "cuda::regspace(): CUDA runtime not valid");
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "cuda::regspace(): CUDA runtime not valid");
 
   const kernel_dims dims = one_dimensional_grid_dims(num);
 

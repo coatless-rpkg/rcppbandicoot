@@ -23,7 +23,7 @@ inline
 CubeToMatOp<T1, op_type>::CubeToMatOp(const T1& in_m)
   : m(in_m)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -34,7 +34,7 @@ CubeToMatOp<T1, op_type>::CubeToMatOp(const T1& in_m, const uword in_aux_uword)
   : m(in_m)
   , aux_uword(in_aux_uword)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -43,5 +43,5 @@ template<typename T1, typename op_type>
 inline
 CubeToMatOp<T1, op_type>::~CubeToMatOp()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }

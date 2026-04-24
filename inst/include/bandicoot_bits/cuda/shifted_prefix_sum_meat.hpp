@@ -24,7 +24,7 @@ inline
 void
 shifted_prefix_sum_small(dev_mem_t<eT> mem, const uword offset, const uword n_elem, const kernel_dims& dims)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename cuda_type<eT>::type ceT;
   ceT* mem_ptr = mem.cuda_mem_ptr + offset;
@@ -51,7 +51,7 @@ inline
 void
 shifted_prefix_sum_large(dev_mem_t<eT> mem, const uword offset, const uword n_elem, const kernel_dims& dims)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // For arrays larger than we can handle in a single block, we operate recursively:
   // we perform up-sweeps until it fits in a single block;
@@ -101,7 +101,7 @@ inline
 void
 shifted_prefix_sum(dev_mem_t<eT> mem, const uword offset, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n_elem == 0)
     {

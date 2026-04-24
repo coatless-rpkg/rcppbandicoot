@@ -31,7 +31,7 @@ logspace
   const uword                       num = 50u
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   out_type x;
   x.set_size(num);
@@ -47,6 +47,6 @@ inline
 vec
 logspace(const double start, const double end, const uword num = 50u)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return logspace<vec>(start, end, num);
   }

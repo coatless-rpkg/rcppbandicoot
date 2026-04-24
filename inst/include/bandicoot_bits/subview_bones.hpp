@@ -73,10 +73,6 @@ class subview : public Base<eT, subview<eT> >
   inline explicit operator arma::Mat<eT> () const;
 
   template<typename eT1> inline static void       extract(Mat<eT1>& out, const subview& in);
-  template<typename eT1> inline static void  plus_inplace(Mat<eT1>& out, const subview& in);
-  template<typename eT1> inline static void minus_inplace(Mat<eT1>& out, const subview& in);
-  template<typename eT1> inline static void schur_inplace(Mat<eT1>& out, const subview& in);
-  template<typename eT1> inline static void   div_inplace(Mat<eT1>& out, const subview& in);
 
   inline       subview_each1<subview<eT>, 0> each_col();
   inline       subview_each1<subview<eT>, 1> each_row();
@@ -161,6 +157,12 @@ class subview_col : public subview<eT>
   inline subview_col(const Mat<eT>& in_m, const uword in_col);
   inline subview_col(const Mat<eT>& in_m, const uword in_col, const uword in_row1, const uword in_n_rows);
 
+  public:
+
+  // for internal use only; the size of in_m doesn't matter, and this can be used to access a contiguous subset of memory;
+  // in_m will be reinterpreted as a vectorised column
+  inline subview_col(const char junk, const Mat<eT>& in_m, const uword in_aux_row1, const uword in_n_rows);
+
 
   private:
 
@@ -210,6 +212,7 @@ class subview_row : public subview<eT>
   friend class Mat<eT>;
   friend class Row<eT>;
   friend class subview<eT>;
+  friend class op_row_as_mat; // used to make an alias
 
   subview_row();
   };

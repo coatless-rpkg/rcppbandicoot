@@ -23,7 +23,7 @@ inline
 const SizeMat
 size(const uword n_rows, const uword n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return SizeMat(n_rows, n_cols);
   }
@@ -36,7 +36,7 @@ inline
 const SizeMat
 size(const Base<typename T1::elem_type, T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   SizeProxy<T1> S(X.get_ref());
 
@@ -52,7 +52,7 @@ inline
 const SizeMat
 size(const Mat<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return SizeMat( X.n_rows, X.n_cols );
   }
@@ -66,7 +66,7 @@ inline
 const SizeMat
 size(const Row<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return SizeMat( X.n_rows, X.n_cols );
   }
@@ -80,7 +80,7 @@ inline
 const SizeMat
 size(const Col<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return SizeMat( X.n_rows, X.n_cols );
   }
@@ -92,7 +92,7 @@ inline
 const SizeCube
 size(const uword n_rows, const uword n_cols, const uword n_slices)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return SizeCube(n_rows, n_cols, n_slices);
   }
@@ -105,7 +105,7 @@ inline
 const SizeCube
 size(const BaseCube<typename T1::elem_type, T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const SizeProxyCube<T1> P(X.get_ref());
 
@@ -121,7 +121,7 @@ inline
 const SizeCube
 size(const Cube<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return SizeCube( X.n_rows, X.n_cols, X.n_slices );
   }
@@ -134,7 +134,7 @@ inline
 uword
 size(const BaseCube<typename T1::elem_type, T1>& X, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const SizeProxyCube<T1> P(X.get_ref());
 

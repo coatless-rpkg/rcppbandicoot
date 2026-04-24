@@ -29,7 +29,7 @@ inline
 void
 mtglue_mixed_times::apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_mixed_times>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type in_eT1;
   typedef typename T2::elem_type in_eT2;
@@ -93,74 +93,51 @@ mtglue_mixed_times::compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_tim
 
 
 //
-// mtglue_mixed_plus
+// mtglue_mixed_base
 //
 
 
 
+template<typename mtglue_type>
 template<typename out_eT, typename T1, typename T2>
 inline
 void
-mtglue_mixed_plus::apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_mixed_plus>& X)
+mtglue_mixed_core<mtglue_type>::apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  unwrap<T1> UA(X.A.get_ref());
-  unwrap<T2> UB(X.B.get_ref());
+  const Proxy<mtGlue<out_eT, T1, T2, mtglue_mixed_core<mtglue_type>>> P_in(x);
+  const inexact_alias_wrapper<Mat<out_eT>, Proxy<mtGlue<out_eT, T1, T2, mtglue_mixed_core<mtglue_type>>>> A(out, P_in);
 
-  // Make sure we are not operating on an alias.
-  alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type, typename unwrap<T2>::stored_type> A(out, UA.M, UB.M);
-
-  coot_assert_same_size( UA.M, UB.M, "mtglue_mixed_plus::apply()" );
-
-  A.use.set_size(UA.M.n_rows, UA.M.n_cols);
-
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_plus_array,
-                     A.get_dev_mem(false),
-                     UA.get_dev_mem(false),
-                     UB.get_dev_mem(false),
-                     A.use.n_rows, A.use.n_cols,
-                     0, 0, A.use.n_rows,
-                     UA.get_row_offset(), UA.get_col_offset(), UA.get_M_n_rows(),
-                     UB.get_row_offset(), UB.get_col_offset(), UB.get_M_n_rows());
+  A.use.set_size(P_in.get_n_rows(), P_in.get_n_cols());
+  coot_rt_t::copy(make_proxy(A.use), P_in);
   }
 
 
 
+template<typename mtglue_type>
 template<typename out_eT, typename T1, typename T2>
 inline
 void
-mtglue_mixed_plus::apply(Cube<out_eT>& out, const mtGlueCube<out_eT, T1, T2, mtglue_mixed_plus>& X)
+mtglue_mixed_core<mtglue_type>::apply(Cube<out_eT>& out, const mtGlueCube<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  unwrap_cube<T1> UA(X.A.get_ref());
-  unwrap_cube<T2> UB(X.B.get_ref());
+  const Proxy<mtGlueCube<out_eT, T1, T2, mtglue_mixed_core<mtglue_type>>> P_in(x);
+  const inexact_alias_wrapper<Cube<out_eT>, Proxy<mtGlueCube<out_eT, T1, T2, mtglue_mixed_core<mtglue_type>>>> A(out, P_in);
 
-  // Make sure we are not operating on an alias.
-  alias_wrapper<Cube<out_eT>, typename unwrap_cube<T1>::stored_type, typename unwrap_cube<T2>::stored_type> A(out, UA.M, UB.M);
-
-  coot_assert_same_size( UA.M, UB.M, "mtglue_mixed_plus::apply()" );
-
-  A.use.set_size(UA.M.n_rows, UA.M.n_cols, UA.M.n_slices);
-
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
-                      A.get_dev_mem(false),
-                      UA.get_dev_mem(false),
-                      UB.get_dev_mem(false),
-                      A.use.n_rows, A.use.n_cols, A.use.n_slices,
-                      0, 0, 0, A.use.n_rows, A.use.n_cols,
-                      UA.get_row_offset(), UA.get_col_offset(), UA.get_slice_offset(), UA.get_M_n_rows(), UA.get_M_n_cols(),
-                      UB.get_row_offset(), UB.get_col_offset(), UB.get_slice_offset(), UB.get_M_n_rows(), UB.get_M_n_cols());
+  A.use.set_size(P_in.get_n_rows(), P_in.get_n_cols(), P_in.get_n_slices());
+  coot_rt_t::copy(make_proxy(A.use), P_in);
   }
 
 
 
 
+template<typename mtglue_type>
 template<typename out_eT, typename T1, typename T2>
 inline
 uword
-mtglue_mixed_plus::compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_plus>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
+mtglue_mixed_core<mtglue_type>::compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_core<mtglue_type>>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
   coot_ignore(A_n_cols);
@@ -172,10 +149,11 @@ mtglue_mixed_plus::compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_plus
 
 
 
+template<typename mtglue_type>
 template<typename out_eT, typename T1, typename T2>
 inline
 uword
-mtglue_mixed_plus::compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_plus>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
+mtglue_mixed_core<mtglue_type>::compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_core<mtglue_type>>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
   {
   coot_ignore(glue);
   coot_ignore(A_n_rows);
@@ -187,10 +165,11 @@ mtglue_mixed_plus::compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_plus
 
 
 
+template<typename mtglue_type>
 template<typename out_eT, typename T1, typename T2>
 inline
 uword
-mtglue_mixed_plus::compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_plus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
+mtglue_mixed_core<mtglue_type>::compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_core<mtglue_type>>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
   {
   coot_ignore(glue);
   coot_ignore(A_n_cols);
@@ -204,10 +183,11 @@ mtglue_mixed_plus::compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_
 
 
 
+template<typename mtglue_type>
 template<typename out_eT, typename T1, typename T2>
 inline
 uword
-mtglue_mixed_plus::compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_plus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
+mtglue_mixed_core<mtglue_type>::compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_core<mtglue_type>>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
   {
   coot_ignore(glue);
   coot_ignore(A_n_rows);
@@ -221,448 +201,11 @@ mtglue_mixed_plus::compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_
 
 
 
+template<typename mtglue_type>
 template<typename out_eT, typename T1, typename T2>
 inline
 uword
-mtglue_mixed_plus::compute_n_slices(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_plus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_rows);
-  coot_ignore(A_n_cols);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-  coot_ignore(B_n_slices);
-
-  return A_n_slices;
-  }
-
-
-
-//
-// mtglue_mixed_minus
-//
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-void
-mtglue_mixed_minus::apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_mixed_minus>& X)
-  {
-  coot_extra_debug_sigprint();
-
-  unwrap<T1> UA(X.A.get_ref());
-  unwrap<T2> UB(X.B.get_ref());
-
-  // Make sure we are not operating on an alias.
-  alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type, typename unwrap<T2>::stored_type> A(out, UA.M, UB.M);
-
-  coot_assert_same_size( UA.M, UB.M, "mtglue_mixed_minus::apply()" );
-
-  A.use.set_size(UA.M.n_rows, UA.M.n_cols);
-
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_minus_array,
-                     A.get_dev_mem(false),
-                     UA.get_dev_mem(false),
-                     UB.get_dev_mem(false),
-                     A.use.n_rows, A.use.n_cols,
-                     0, 0, A.use.n_rows,
-                     UA.get_row_offset(), UA.get_col_offset(), UA.get_M_n_rows(),
-                     UB.get_row_offset(), UB.get_col_offset(), UB.get_M_n_rows());
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-void
-mtglue_mixed_minus::apply(Cube<out_eT>& out, const mtGlueCube<out_eT, T1, T2, mtglue_mixed_minus>& X)
-  {
-  coot_extra_debug_sigprint();
-
-  unwrap_cube<T1> UA(X.A.get_ref());
-  unwrap_cube<T2> UB(X.B.get_ref());
-
-  // Make sure we are not operating on an alias.
-  alias_wrapper<Cube<out_eT>, typename unwrap_cube<T1>::stored_type, typename unwrap_cube<T2>::stored_type> A(out, UA.M, UB.M);
-
-  coot_assert_same_size( UA.M, UB.M, "mtglue_mixed_minus::apply()" );
-
-  A.use.set_size(UA.M.n_rows, UA.M.n_cols, UA.M.n_slices);
-
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
-                      A.get_dev_mem(false),
-                      UA.get_dev_mem(false),
-                      UB.get_dev_mem(false),
-                      A.use.n_rows, A.use.n_cols, A.use.n_slices,
-                      0, 0, 0, A.use.n_rows, A.use.n_cols,
-                      UA.get_row_offset(), UA.get_col_offset(), UA.get_slice_offset(), UA.get_M_n_rows(), UA.get_M_n_cols(),
-                      UB.get_row_offset(), UB.get_col_offset(), UB.get_slice_offset(), UB.get_M_n_rows(), UB.get_M_n_cols());
-  }
-
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_minus::compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_minus>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_cols);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-
-  return A_n_rows;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_minus::compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_minus>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_rows);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-
-  return A_n_cols;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_minus::compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_minus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_cols);
-  coot_ignore(A_n_slices);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-  coot_ignore(B_n_slices);
-
-  return A_n_rows;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_minus::compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_minus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_rows);
-  coot_ignore(A_n_slices);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-  coot_ignore(B_n_slices);
-
-  return A_n_cols;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_minus::compute_n_slices(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_minus>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_rows);
-  coot_ignore(A_n_cols);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-  coot_ignore(B_n_slices);
-
-  return A_n_slices;
-  }
-
-
-
-//
-// mtglue_mixed_div
-//
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-void
-mtglue_mixed_div::apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_mixed_div>& X)
-  {
-  coot_extra_debug_sigprint();
-
-  unwrap<T1> UA(X.A.get_ref());
-  unwrap<T2> UB(X.B.get_ref());
-
-  // Make sure we are not operating on an alias.
-  alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type, typename unwrap<T2>::stored_type> A(out, UA.M, UB.M);
-
-  coot_assert_same_size( UA.M, UB.M, "mtglue_mixed_div::apply()" );
-
-  A.use.set_size(UA.M.n_rows, UA.M.n_cols);
-
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_div_array,
-                     A.get_dev_mem(false),
-                     UA.get_dev_mem(false),
-                     UB.get_dev_mem(false),
-                     A.use.n_rows, A.use.n_cols,
-                     0, 0, A.use.n_rows,
-                     UA.get_row_offset(), UA.get_col_offset(), UA.get_M_n_rows(),
-                     UB.get_row_offset(), UB.get_col_offset(), UB.get_M_n_rows());
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-void
-mtglue_mixed_div::apply(Cube<out_eT>& out, const mtGlueCube<out_eT, T1, T2, mtglue_mixed_div>& X)
-  {
-  coot_extra_debug_sigprint();
-
-  unwrap_cube<T1> UA(X.A.get_ref());
-  unwrap_cube<T2> UB(X.B.get_ref());
-
-  // Make sure we are not operating on an alias.
-  alias_wrapper<Cube<out_eT>, typename unwrap_cube<T1>::stored_type, typename unwrap_cube<T2>::stored_type> A(out, UA.M, UB.M);
-
-  coot_assert_same_size( UA.M, UB.M, "mtglue_mixed_div::apply()" );
-
-  A.use.set_size(UA.M.n_rows, UA.M.n_cols, UA.M.n_slices);
-
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
-                      A.get_dev_mem(false),
-                      UA.get_dev_mem(false),
-                      UB.get_dev_mem(false),
-                      A.use.n_rows, A.use.n_cols, A.use.n_slices,
-                      0, 0, 0, A.use.n_rows, A.use.n_cols,
-                      UA.get_row_offset(), UA.get_col_offset(), UA.get_slice_offset(), UA.get_M_n_rows(), UA.get_M_n_cols(),
-                      UB.get_row_offset(), UB.get_col_offset(), UB.get_slice_offset(), UB.get_M_n_rows(), UB.get_M_n_cols());
-  }
-
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_div::compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_div>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_cols);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-
-  return A_n_rows;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_div::compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_div>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_rows);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-
-  return A_n_cols;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_div::compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_div>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_cols);
-  coot_ignore(A_n_slices);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-  coot_ignore(B_n_slices);
-
-  return A_n_rows;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_div::compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_div>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_rows);
-  coot_ignore(A_n_slices);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-  coot_ignore(B_n_slices);
-
-  return A_n_cols;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_div::compute_n_slices(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_div>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_rows);
-  coot_ignore(A_n_cols);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-  coot_ignore(B_n_slices);
-
-  return A_n_slices;
-  }
-
-
-
-//
-// mtglue_mixed_schur
-//
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-void
-mtglue_mixed_schur::apply(Mat<out_eT>& out, const mtGlue<out_eT, T1, T2, mtglue_mixed_schur>& X)
-  {
-  coot_extra_debug_sigprint();
-
-  unwrap<T1> UA(X.A.get_ref());
-  unwrap<T2> UB(X.B.get_ref());
-
-  // Make sure we are not operating on an alias.
-  alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type, typename unwrap<T2>::stored_type> A(out, UA.M, UB.M);
-
-  coot_assert_same_size( UA.M, UB.M, "mtglue_mixed_schur::apply()" );
-
-  A.use.set_size(UA.M.n_rows, UA.M.n_cols);
-
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_mul_array,
-                     A.get_dev_mem(false),
-                     UA.get_dev_mem(false),
-                     UB.get_dev_mem(false),
-                     A.use.n_rows, A.use.n_cols,
-                     0, 0, A.use.n_rows,
-                     UA.get_row_offset(), UA.get_col_offset(), UA.get_M_n_rows(),
-                     UB.get_row_offset(), UB.get_col_offset(), UB.get_M_n_rows());
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-void
-mtglue_mixed_schur::apply(Cube<out_eT>& out, const mtGlueCube<out_eT, T1, T2, mtglue_mixed_schur>& X)
-  {
-  coot_extra_debug_sigprint();
-
-  unwrap_cube<T1> UA(X.A.get_ref());
-  unwrap_cube<T2> UB(X.B.get_ref());
-
-  // Make sure we are not operating on an alias.
-  alias_wrapper<Cube<out_eT>, typename unwrap_cube<T1>::stored_type, typename unwrap_cube<T2>::stored_type> A(out, UA.M, UB.M);
-
-  coot_assert_same_size( UA.M, UB.M, "mtglue_mixed_schur::apply()" );
-
-  A.use.set_size(UA.M.n_rows, UA.M.n_cols, UA.M.n_slices);
-
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
-                      A.get_dev_mem(false),
-                      UA.get_dev_mem(false),
-                      UB.get_dev_mem(false),
-                      A.use.n_rows, A.use.n_cols, A.use.n_slices,
-                      0, 0, 0, A.use.n_rows, A.use.n_cols,
-                      UA.get_row_offset(), UA.get_col_offset(), UA.get_slice_offset(), UA.get_M_n_rows(), UA.get_M_n_cols(),
-                      UB.get_row_offset(), UB.get_col_offset(), UB.get_slice_offset(), UB.get_M_n_rows(), UB.get_M_n_cols());
-  }
-
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_schur::compute_n_rows(const mtGlue<out_eT, T1, T2, mtglue_mixed_schur>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_cols);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-
-  return A_n_rows;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_schur::compute_n_cols(const mtGlue<out_eT, T1, T2, mtglue_mixed_schur>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_rows);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-
-  return A_n_cols;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_schur::compute_n_rows(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_schur>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_cols);
-  coot_ignore(A_n_slices);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-  coot_ignore(B_n_slices);
-
-  return A_n_rows;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_schur::compute_n_cols(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_schur>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
-  {
-  coot_ignore(glue);
-  coot_ignore(A_n_rows);
-  coot_ignore(A_n_slices);
-  coot_ignore(B_n_rows);
-  coot_ignore(B_n_cols);
-  coot_ignore(B_n_slices);
-
-  return A_n_cols;
-  }
-
-
-
-template<typename out_eT, typename T1, typename T2>
-inline
-uword
-mtglue_mixed_schur::compute_n_slices(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_schur>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
+mtglue_mixed_core<mtglue_type>::compute_n_slices(const mtGlueCube<out_eT, T1, T2, mtglue_mixed_core<mtglue_type>>& glue, const uword A_n_rows, const uword A_n_cols, const uword A_n_slices, const uword B_n_rows, const uword B_n_cols, const uword B_n_slices)
   {
   coot_ignore(glue);
   coot_ignore(A_n_rows);

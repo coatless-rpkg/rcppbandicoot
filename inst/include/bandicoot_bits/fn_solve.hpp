@@ -32,7 +32,7 @@ solve
   const Base<typename T1::elem_type, T2>& B
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Glue<T1, T2, glue_solve>(A.get_ref(), B.get_ref());
   }
@@ -53,7 +53,7 @@ solve
   const Base<typename T1::elem_type, T2>& B
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const std::tuple<bool, std::string> result = glue_solve::apply(out, A.get_ref(), B.get_ref(), 0 /* no flags */);
 
@@ -83,7 +83,7 @@ solve
   const solve_opts::opts&                 opts
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Glue<T1, T2, glue_solve>(A.get_ref(), B.get_ref(), opts.flags);
   }
@@ -105,7 +105,7 @@ solve
   const solve_opts::opts&                 opts
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const std::tuple<bool, std::string> result = glue_solve::apply(out, A.get_ref(), B.get_ref(), opts.flags);
 

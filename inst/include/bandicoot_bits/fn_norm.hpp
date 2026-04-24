@@ -34,7 +34,7 @@ norm
   const typename coot_real_or_cx_only<typename T1::elem_type>::result* junk = nullptr
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   typedef typename T1::pod_type T;
@@ -55,7 +55,7 @@ norm
     if(k == uword(1))  { return op_norm::vec_norm_1(U.M); }
     if(k == uword(2))  { return op_norm::vec_norm_2(U.M); }
 
-    coot_debug_check( (k == 0), "norm(): k must be greater than zero" );
+    coot_conform_check( (k == 0), "norm(): k must be greater than zero" );
 
     return op_norm::vec_norm_k(U.M, int(k));
     }
@@ -83,7 +83,7 @@ norm
   const typename coot_real_or_cx_only<typename T1::elem_type>::result* junk = nullptr
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   typedef typename T1::pod_type T;

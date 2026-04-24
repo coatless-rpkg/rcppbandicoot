@@ -21,7 +21,7 @@ inline
 void
 op_var::apply(Mat<out_eT>& out, const Op<T1, op_var>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword norm_type = in.aux_uword_a;
   const uword dim = in.aux_uword_b;
@@ -38,16 +38,13 @@ inline
 void
 op_var::apply_direct(Mat<out_eT>& out, const Mat<in_eT>& in, const uword dim, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // We require a temporary for the output because we don't have any kernels that perform a conversion and variance computation at the same time.
   Mat<in_eT> tmp;
   apply_direct(tmp, in, dim, norm_type);
   out.set_size(tmp.n_rows, tmp.n_cols);
-  coot_rt_t::copy_mat(out.get_dev_mem(false), tmp.get_dev_mem(false),
-                      out.n_rows, out.n_cols,
-                      0, 0, out.n_rows,
-                      0, 0, tmp.n_rows);
+  coot_rt_t::copy(make_proxy(out), make_proxy(tmp));
   }
 
 
@@ -57,7 +54,7 @@ inline
 void
 op_var::apply_direct(Mat<eT>& out, const Mat<eT>& in, const uword dim, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Our kernel can't handle aliases.
   copy_alias<eT> C(in, out);
@@ -96,7 +93,7 @@ inline
 void
 op_var::apply_direct(Mat<out_eT>& out, const subview<in_eT>& in, const uword dim, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // This will require a conversion, so just extract the subview.
   Mat<out_eT> tmp(in);
@@ -110,7 +107,7 @@ inline
 void
 op_var::apply_direct(Mat<eT>& out, const subview<eT>& in, const uword dim, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If `in` is a subview of `out`, we need to extract it.
   if (((void*) &in.m) == ((void*) &out))
@@ -154,7 +151,7 @@ inline
 typename T1::elem_type
 op_var::var_vec(const T1& X, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
   unwrap<T1> U(X);
@@ -174,7 +171,7 @@ inline
 eT
 op_var::var_vec_direct(const Mat<eT>& M, const eT mean_val, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return coot_rt_t::var_vec(M.get_dev_mem(false), mean_val, M.n_elem, norm_type);
   }
 
@@ -185,7 +182,7 @@ inline
 eT
 op_var::var_vec_direct(const subview<eT>& M, const eT mean_val, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   return coot_rt_t::var_vec_subview(M.m.get_dev_mem(false), mean_val, M.m.n_rows, M.m.n_cols, M.aux_row1, M.aux_col1, M.n_rows, M.n_cols, norm_type);
   }
 

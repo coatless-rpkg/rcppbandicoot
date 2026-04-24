@@ -38,7 +38,7 @@ struct gemv
         const uword x_offset,
         const uword x_mem_incr)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     coot_ignore(y_mem);
     coot_ignore(A_mem);
     coot_ignore(A_n_rows);
@@ -78,9 +78,9 @@ struct gemv
         const uword x_offset,
         const uword x_mem_incr)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
-    // coot_debug_assert_blas_size(A);  // TODO: adapt this assert for size_t
+    // coot_conform_assert_blas_size(A);  // TODO: adapt this assert for size_t
 
     // clBLAS and clBlast take parameters as `size_t`s
 
@@ -100,7 +100,8 @@ struct gemv
     #if defined(COOT_USE_CLBLAST)
       {
       // Paranoia: make sure y is all zeros before.
-      fill(y_mem, (float) 0.0, 1, (do_trans_A) ? N : M, y_offset, 0, y_mem_incr);
+      Proxy<subview<float>> P(y_mem, y_offset, 0, 1, (do_trans_A) ? N : M, y_mem_incr);
+      fill(P, 0.0f);
 
       const CLBlastTranspose transA = (do_trans_A) ? CLBlastTransposeYes : CLBlastTransposeNo;
       CLBlastStatusCode status = coot_wrapper(CLBlastSgemv)(CLBlastLayoutColMajor,
@@ -177,9 +178,9 @@ struct gemv
         const uword x_offset,
         const uword x_mem_incr)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
-    // coot_debug_assert_blas_size(A); // TODO: adapt this assert for size_t
+    // coot_conform_assert_blas_size(A); // TODO: adapt this assert for size_t
 
     // clBLAS and CLBlast takes parameters as `size_t`s
 
@@ -199,7 +200,8 @@ struct gemv
     #if defined(COOT_USE_CLBLAST)
       {
       // Paranoia: make sure y is all zeros before.
-      fill(y_mem, 0.0, 1, (do_trans_A) ? N : M, y_offset, 0, y_mem_incr);
+      Proxy<subview<double>> P(y_mem, y_offset, 0, 1, (do_trans_A) ? N : M, y_mem_incr);
+      fill(P, 0.0);
 
       const CLBlastTranspose transA = (do_trans_A) ? CLBlastTransposeYes : CLBlastTransposeNo;
       CLBlastStatusCode status = coot_wrapper(CLBlastDgemv)(CLBlastLayoutColMajor,
@@ -276,9 +278,9 @@ struct gemv
         const uword x_offset,
         const uword x_mem_incr)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
-    // coot_debug_assert_blas_size(A);  // TODO: adapt this assert for size_t
+    // coot_conform_assert_blas_size(A);  // TODO: adapt this assert for size_t
 
     // only CLBlast has support for fp16 multiplication
     #if defined(COOT_USE_CLBLAST)
@@ -287,7 +289,8 @@ struct gemv
       const size_t N = size_t(A_n_cols);
 
       // Paranoia: make sure y is all zeros before.
-      fill(y_mem, (fp16) 0, 1, (do_trans_A) ? N : M, y_offset, 0, y_mem_incr);
+      Proxy<subview<fp16>> P(y_mem, y_offset, 0, 1, (do_trans_A) ? N : M, y_mem_incr);
+      fill(P, (fp16) 0);
 
       const size_t cl_lda = size_t(A_M_n_rows);
       const size_t cl_incx = size_t(x_mem_incr);
@@ -298,9 +301,6 @@ struct gemv
       const size_t cl_x_offset = x_mem.cl_mem_ptr.offset + size_t(x_offset);
 
       cl_command_queue queue = get_rt().cl_rt.get_cq();
-
-      // Paranoia: make sure y is all zeros before.
-      fill(y_mem, (fp16) 0.0, 1, (do_trans_A) ? N : M, y_offset, 0, y_mem_incr);
 
       const CLBlastTranspose transA = (do_trans_A) ? CLBlastTransposeYes : CLBlastTransposeNo;
       CLBlastStatusCode status = coot_wrapper(CLBlastHgemv)(CLBlastLayoutColMajor,

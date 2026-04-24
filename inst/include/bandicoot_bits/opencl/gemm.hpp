@@ -42,7 +42,7 @@ struct gemm
         const uword B_col_offset,
         const uword B_M_n_rows)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     coot_ignore(C_mem);
     coot_ignore(C_n_rows);
     coot_ignore(C_n_cols);
@@ -90,9 +90,9 @@ struct gemm
         const uword B_col_offset,
         const uword B_M_n_rows)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
-    // coot_debug_assert_blas_size(A,B);  // TODO: adapt this assert for size_t
+    // coot_conform_assert_blas_size(A,B);  // TODO: adapt this assert for size_t
 
     const size_t M = size_t(C_n_rows);
     const size_t N = size_t(C_n_cols);
@@ -111,7 +111,8 @@ struct gemm
     #if defined(COOT_USE_CLBLAST)
       {
       // paranoia: CLBlast doesn't seem to like it when C is not initialized to 0
-      fill(C_mem, (float) 0.0, M, N, C_row_offset, C_col_offset, C_M_n_rows);
+      Proxy<subview<float>> P(C_mem, C_row_offset, C_col_offset, M, N, C_M_n_rows);
+      fill(P, 0.0f);
 
       const CLBlastTranspose transA = (do_trans_A) ? CLBlastTransposeYes : CLBlastTransposeNo;
       const CLBlastTranspose transB = (do_trans_B) ? CLBlastTransposeYes : CLBlastTransposeNo;
@@ -200,9 +201,9 @@ struct gemm
         const uword B_col_offset,
         const uword B_M_n_rows)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
-    // coot_debug_assert_blas_size(A,B);  // TODO: adapt this assert for size_t
+    // coot_conform_assert_blas_size(A,B);  // TODO: adapt this assert for size_t
 
     const size_t M = size_t(C_n_rows);
     const size_t N = size_t(C_n_cols);
@@ -221,7 +222,8 @@ struct gemm
     #if defined(COOT_USE_CLBLAST)
       {
       // paranoia: CLBlast doesn't seem to like it when C is not initialized to 0
-      fill(C_mem, 0.0, M, N, C_row_offset, C_col_offset, C_M_n_rows);
+      Proxy<subview<double>> P(C_mem, C_row_offset, C_col_offset, M, N, C_M_n_rows);
+      fill(P, 0.0);
 
       const CLBlastTranspose transA = (do_trans_A) ? CLBlastTransposeYes : CLBlastTransposeNo;
       const CLBlastTranspose transB = (do_trans_B) ? CLBlastTransposeYes : CLBlastTransposeNo;
@@ -311,7 +313,7 @@ struct gemm
         const uword B_col_offset,
         const uword B_M_n_rows)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     // Only CLBlast has support for half-precision GEMM.
 
@@ -322,7 +324,8 @@ struct gemm
       const size_t K = (do_trans_A) ? size_t(A_n_rows) : size_t(A_n_cols);
 
       // paranoia: CLBlast doesn't seem to like it when C is not initialized to 0
-      fill(C_mem, (fp16) 0, M, N, C_row_offset, C_col_offset, C_M_n_rows);
+      Proxy<subview<fp16>> P(C_mem, C_row_offset, C_col_offset, M, N, C_M_n_rows);
+      fill(P, (fp16) 0);
 
       const size_t lda = size_t(A_M_n_rows);
       const size_t ldb = size_t(B_M_n_rows);
@@ -333,9 +336,6 @@ struct gemm
       const size_t C_mem_offset = C_mem.cl_mem_ptr.offset + C_row_offset + C_col_offset * C_M_n_rows;
 
       cl_command_queue queue = get_rt().cl_rt.get_cq();
-
-      // paranoia: CLBlast doesn't seem to like it when C is not initialized to 0
-      fill(C_mem, (fp16) 0.0, M, N, C_row_offset, C_col_offset, C_M_n_rows);
 
       const CLBlastTranspose transA = (do_trans_A) ? CLBlastTransposeYes : CLBlastTransposeNo;
       const CLBlastTranspose transB = (do_trans_B) ? CLBlastTransposeYes : CLBlastTransposeNo;

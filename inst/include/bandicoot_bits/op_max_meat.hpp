@@ -21,11 +21,11 @@ inline
 void
 op_max::apply(Mat<eT2>& out, const Op<T1, op_max>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword dim = in.aux_uword_a;
 
-  coot_debug_check( (dim > 1), "max(): parameter 'dim' must be 0 or 1" );
+  coot_conform_check( (dim > 1), "max(): parameter 'dim' must be 0 or 1" );
 
   // We have to consider type conversion carefully here.  If eT2 != T1::elem_type, then
   // the original operation was mtOp<eT2, Op<T1, op_max>, mtop_conv_to>, and so we want to
@@ -65,7 +65,7 @@ inline
 void
 op_max::apply_noalias(Mat<out_eT>& out, const Mat<in_eT>& A, const uword dim, const bool post_conv_apply)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(dim == 0)
     {
@@ -97,7 +97,7 @@ inline
 void
 op_max::apply_noalias(Mat<out_eT>& out, const subview<in_eT>& sv, const uword dim, const bool post_conv_apply)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(dim == 0)
     {
@@ -151,7 +151,7 @@ inline
 typename T1::elem_type
 op_max::apply_direct(const Base<typename T1::elem_type, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<T1> U(in.get_ref());
   const Mat<typename T1::elem_type>& A = U.M;
@@ -166,7 +166,7 @@ inline
 typename T1::elem_type
 op_max::apply_direct(const BaseCube<typename T1::elem_type, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap_cube<T1> U(in.get_ref());
   const Cube<typename T1::elem_type>& A = U.M;
@@ -182,7 +182,7 @@ inline
 typename T1::elem_type
 op_max::apply_direct(const eOp<T1, eop_abs>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<T1> U(in.m.Q);
   const Mat<typename T1::elem_type>& A = U.M;
@@ -197,11 +197,11 @@ inline
 void
 op_max::apply(Cube<eT2>& out, const OpCube<T1, op_max>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword dim = in.aux_uword_a;
 
-  coot_debug_check( (dim > 2), "max(): parameter 'dim' must be 0 or 1 or 2" );
+  coot_conform_check( (dim > 2), "max(): parameter 'dim' must be 0 or 1 or 2" );
 
   if (is_same_type<eT2, typename T1::elem_type>::no)
     {
@@ -233,7 +233,7 @@ inline
 void
 op_max::apply_noalias(Cube<out_eT>& out, const Cube<in_eT>& A, const uword dim, const bool post_conv_apply)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   out.set_size((dim == 0 && A.n_rows > 0) ? 1 : A.n_rows,
                (dim == 1 && A.n_cols > 0) ? 1 : A.n_cols,

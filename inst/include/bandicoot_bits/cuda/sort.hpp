@@ -30,7 +30,7 @@ sort(dev_mem_t<eT> mem,
      const uword col_offset,
      const uword M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If the matrix is empty, don't do anything.
   if (n_rows == 0 || n_cols == 0)
@@ -39,8 +39,10 @@ sort(dev_mem_t<eT> mem,
     }
 
   // First, allocate a temporary matrix we will use during computation.
-  dev_mem_t<eT> tmp_mem;
-  tmp_mem.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<eT>(n_rows * n_cols);
+  dev_mem_t<eT>            tmp_mem({{ NULL, 0 }});
+  runtime_t::mem_array<eT> tmp_mem_array(n_rows * n_cols);
+
+  tmp_mem.cuda_mem_ptr = tmp_mem_array.memptr();
 
   CUfunction kernel;
   if (dim == 0)
@@ -76,7 +78,6 @@ sort(dev_mem_t<eT> mem,
   coot_check_cuda_error(result, "coot::cuda::sort(): cuLaunchKernel() failed");
 
   get_rt().cuda_rt.synchronise();
-  get_rt().cuda_rt.release_memory(tmp_mem.cuda_mem_ptr);
   }
 
 
@@ -89,7 +90,7 @@ inline
 void
 sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If the vector is empty, don't do anything.
   if (n_elem == 0)
@@ -104,8 +105,10 @@ sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
   const size_t pow2_num_threads = std::min(mtpb, next_pow2(num_threads));
 
   // First, allocate temporary memory we will use during computation.
-  dev_mem_t<eT> tmp_mem;
-  tmp_mem.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<eT>(n_elem);
+  dev_mem_t<eT>            tmp_mem({{ NULL, 0 }});
+  runtime_t::mem_array<eT> tmp_mem_array(n_elem);
+
+  tmp_mem.cuda_mem_ptr = tmp_mem_array.memptr();
 
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(sort_type == 0 ? oneway_kernel_id::radix_sort_asc : oneway_kernel_id::radix_sort_desc);
 
@@ -125,5 +128,4 @@ sort_vec(dev_mem_t<eT> A, const uword n_elem, const uword sort_type)
   coot_check_cuda_error(result, "coot::cuda::sort(): cuLaunchKernel() failed");
 
   get_rt().cuda_rt.synchronise();
-  get_rt().cuda_rt.release_memory(tmp_mem.cuda_mem_ptr);
   }

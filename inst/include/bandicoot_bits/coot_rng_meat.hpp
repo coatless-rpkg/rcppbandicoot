@@ -20,7 +20,7 @@
 template<typename eT>
 inline void coot_rng::fill_randu(dev_mem_t<eT> dest, const uword n)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_rt_t::fill_randu(dest, n);
   }
@@ -30,7 +30,7 @@ inline void coot_rng::fill_randu(dev_mem_t<eT> dest, const uword n)
 template<typename eT>
 inline void coot_rng::fill_randn(dev_mem_t<eT> dest, const uword n, const distr_param& param)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   double mu, sd;
   if (param.state == 0)
@@ -56,7 +56,7 @@ inline void coot_rng::fill_randn(dev_mem_t<eT> dest, const uword n, const distr_
     coot_stop_runtime_error("randn(): incorrect distribution parameter settings");
     }
 
-  coot_debug_check( (sd < 0.0), "randn(): incorrect distribution parameters: sd must be greater than or equal to 0" );
+  coot_conform_check( (sd < 0.0), "randn(): incorrect distribution parameters: sd must be greater than or equal to 0" );
 
   coot_rt_t::fill_randn(dest, n, mu, sd);
   }
@@ -66,7 +66,7 @@ inline void coot_rng::fill_randn(dev_mem_t<eT> dest, const uword n, const distr_
 template<typename eT>
 inline void coot_rng::fill_randi(dev_mem_t<eT> dest, const uword n, const distr_param& param)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   int a = 0;
   int b = 0;
@@ -90,7 +90,7 @@ inline void coot_rng::fill_randi(dev_mem_t<eT> dest, const uword n, const distr_
     coot_stop_runtime_error("randi(): incorrect distribution parameter settings");
     }
 
-  coot_debug_check( (a > b), "randi(): incorrect distribution parameters: a must be less than b" );
+  coot_conform_check( (a > b), "randi(): incorrect distribution parameters: a must be less than b" );
 
   coot_rt_t::fill_randi(dest, n, a, b);
   }

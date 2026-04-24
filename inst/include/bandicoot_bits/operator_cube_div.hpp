@@ -28,7 +28,7 @@ operator/
   const typename T1::elem_type               k
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_scalar_div_post>(X.get_ref(), k);
   }
@@ -45,7 +45,7 @@ operator/
   const BaseCube<typename T1::elem_type,T1>& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_scalar_div_pre>(X.get_ref(), k);
   }
@@ -62,7 +62,7 @@ operator/
   const BaseCube<typename T1::elem_type,T2>& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eGlueCube<T1, T2, eglue_div>(X.get_ref(), Y.get_ref());
   }
@@ -75,7 +75,7 @@ typename
 enable_if2
   <
   (is_coot_cube_type<T1>::value && is_coot_cube_type<T2>::value && (is_same_type<typename T1::elem_type, typename T2::elem_type>::no) && (is_promotable<typename T1::elem_type, typename T2::elem_type>::value)),
-  const mtGlueCube<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_div>
+  const mtGlueCube<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_core<mtglue_mixed_div> >
   >::result
 operator/
   (
@@ -83,7 +83,7 @@ operator/
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtGlueCube<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_div>( X, Y );
+  return mtGlueCube<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_core<mtglue_mixed_div> >( X, Y );
   }

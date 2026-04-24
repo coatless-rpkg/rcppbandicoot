@@ -28,16 +28,18 @@ approx_equal
   const typename T1::pod_type tol
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::pod_type T;
 
   const char sig = (method != nullptr) ? method[0] : char(0);
 
-  coot_debug_check( ((sig != 'a') && (sig != 'r') && (sig != 'b')), "approx_equal(): argument 'method' must be \"absdiff\" or \"reldiff\" or \"both\"" );
+  coot_conform_check( ((sig != 'a') && (sig != 'r') && (sig != 'b')), "approx_equal(): argument 'method' must be \"absdiff\" or \"reldiff\" or \"both\"" );
 
-  coot_debug_check( (sig == 'b'), "approx_equal(): argument 'method' is \"both\", but only one 'tol' argument has been given" );
-
+  coot_conform_check( (sig == 'b'), "approx_equal(): argument 'method' is \"both\", but only one 'tol' argument has been given" );
+  
+  coot_conform_check( ((tol >= T(0)) == false), "approx_equal(): argument 'tol' must be >= 0" );
+  
   unwrap<T1> UA(A.get_ref());
   unwrap<T2> UB(B.get_ref());
 
@@ -100,12 +102,17 @@ approx_equal
   const typename T1::pod_type rel_tol
   )
   {
-  coot_extra_debug_sigprint();
-
+  coot_debug_sigprint();
+  
+  typedef typename T1::pod_type T;
+  
   const char sig = (method != nullptr) ? method[0] : char(0);
 
-  coot_debug_check( ((sig != 'a') && (sig != 'r') && (sig != 'b')), "approx_equal(): argument 'method' must be \"absdiff\" or \"reldiff\" or \"both\"" );
-
+  coot_conform_check( ((sig != 'a') && (sig != 'r') && (sig != 'b')), "approx_equal(): argument 'method' must be \"absdiff\" or \"reldiff\" or \"both\"" );
+  
+  coot_conform_check( ((abs_tol >= T(0)) == false), "approx_equal(): argument 'abs_tol' must be >= 0" );
+  coot_conform_check( ((rel_tol >= T(0)) == false), "approx_equal(): argument 'rel_tol' must be >= 0" );
+  
   unwrap<T1> UA(A.get_ref());
   unwrap<T2> UB(B.get_ref());
 
@@ -147,16 +154,18 @@ approx_equal
   const typename T1::pod_type tol
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::pod_type T;
 
   const char sig = (method != nullptr) ? method[0] : char(0);
 
-  coot_debug_check( ((sig != 'a') && (sig != 'r') && (sig != 'b')), "approx_equal(): argument 'method' must be \"absdiff\" or \"reldiff\" or \"both\"" );
+  coot_conform_check( ((sig != 'a') && (sig != 'r') && (sig != 'b')), "approx_equal(): argument 'method' must be \"absdiff\" or \"reldiff\" or \"both\"" );
 
-  coot_debug_check( (sig == 'b'), "approx_equal(): argument 'method' is \"both\", but only one 'tol' argument has been given" );
-
+  coot_conform_check( (sig == 'b'), "approx_equal(): argument 'method' is \"both\", but only one 'tol' argument has been given" );
+  
+  coot_conform_check( ((tol >= T(0)) == false), "approx_equal(): argument 'tol' must be >= 0" );
+  
   unwrap_cube<T1> UA(A.get_ref());
   unwrap_cube<T2> UB(B.get_ref());
 
@@ -229,12 +238,17 @@ approx_equal
   const typename T1::pod_type rel_tol
   )
   {
-  coot_extra_debug_sigprint();
-
+  coot_debug_sigprint();
+  
+  typedef typename T1::pod_type T;
+  
   const char sig = (method != nullptr) ? method[0] : char(0);
 
-  coot_debug_check( ((sig != 'a') && (sig != 'r') && (sig != 'b')), "approx_equal(): argument 'method' must be \"absdiff\" or \"reldiff\" or \"both\"" );
-
+  coot_conform_check( ((sig != 'a') && (sig != 'r') && (sig != 'b')), "approx_equal(): argument 'method' must be \"absdiff\" or \"reldiff\" or \"both\"" );
+  
+  coot_conform_check( ((abs_tol >= T(0)) == false), "approx_equal(): argument 'abs_tol' must be >= 0" );
+  coot_conform_check( ((rel_tol >= T(0)) == false), "approx_equal(): argument 'rel_tol' must be >= 0" );
+  
   unwrap_cube<T1> UA(A.get_ref());
   unwrap_cube<T2> UB(B.get_ref());
 

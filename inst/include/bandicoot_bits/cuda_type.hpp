@@ -53,7 +53,7 @@ to_cuda_type(const eT& x)
 
 
 // If eT is std::float16_t, then CUDA doesn't have a conversion operator.
-// However, we can just reinterpret the existing version.a
+// However, we can just reinterpret the existing version.
 #if defined(COOT_HAVE_CXX23) && defined(__STDCPP_FLOAT16_T__) && (__STDCPP_FLOAT16_T__ == 1)
 template<typename eT>
 inline

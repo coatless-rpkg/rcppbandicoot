@@ -17,621 +17,47 @@
 // ------------------------------------------------------------------------
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
-subview_elem2<eT,T1,T2>::~subview_elem2()
+subview_elem2<eT, sve2_type>::~subview_elem2()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
+template<typename T1, typename T2>
 coot_inline
-subview_elem2<eT,T1,T2>::subview_elem2
+subview_elem2<eT, sve2_type>::subview_elem2
   (
   const Mat<eT>&        in_m,
   const Base<uword,T1>& in_ri,
-  const Base<uword,T2>& in_ci,
-  const bool            in_all_rows,
-  const bool            in_all_cols
+  const Base<uword,T2>& in_ci
   )
-  : m        (in_m       )
-  , base_ri  (in_ri      )
-  , base_ci  (in_ci      )
-  , all_rows (in_all_rows)
-  , all_cols (in_all_cols)
+  : m(in_m        )
+  , r(in_ri, in_ci)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::inplace_op(const twoway_kernel_id::enum_id kernel_id,
-                                    const eT val_pre,
-                                    const eT val_post)
+subview_elem2<eT, sve2_type>::randu()
   {
-  coot_extra_debug_sigprint();
-
-  if (all_cols && all_rows)
-    {
-    // we are using... no indices at all?  This shouldn't happen...
-    coot_rt_t::eop_scalar(kernel_id,
-                          m.get_dev_mem(false), m.get_dev_mem(false),
-                          val_pre, val_post,
-                          m.n_rows, m.n_cols, 1,
-                          0, 0, 0, m.n_rows, m.n_cols,
-                          0, 0, 0, m.n_rows, m.n_cols);
-    }
-  else if (all_cols)
-    {
-    // we are only using the row indices
-    const unwrap<T1> U(base_ri.get_ref());
-    const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
-
-    coot_debug_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::rows(): column indices must be a vector" );
-
-    // A bounds check is tedious but the only way that we can give the user an error.
-    coot_debug_check( E.M.max() >= m.n_rows, "Mat::rows(): index out of bounds" );
-
-    alias_wrapper<Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E.M);
-
-    coot_rt_t::eop_scalar_subview_elem2(kernel_id,
-                                        A.get_dev_mem(false),
-                                        E.M.get_dev_mem(false),
-                                        dev_mem_t<uword>({{ nullptr, 0 }}), // no column indices
-                                        A.get_dev_mem(false),
-                                        E.M.get_dev_mem(false),
-                                        dev_mem_t<uword>({{ nullptr, 0 }}), // no column indices
-                                        val_pre, val_post,
-                                        E.M.n_elem, A.get_n_cols(),
-                                        A.get_n_rows(), A.get_n_rows());
-    }
-  else if (all_rows)
-    {
-    // we are only using the column indices
-    const unwrap<T2> U(base_ci.get_ref());
-    const extract_subview<typename unwrap<T2>::stored_type> E(U.M);
-
-    coot_debug_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::cols(): row indices must be a vector" );
-
-    // A bounds check is tedious but the only way that we can give the user an error.
-    coot_debug_check( E.M.max() >= m.n_cols, "Mat::cols(): index out of bounds" );
-
-    alias_wrapper<Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E.M);
-
-    coot_rt_t::eop_scalar_subview_elem2(kernel_id,
-                                        A.get_dev_mem(false),
-                                        dev_mem_t<uword>({{ nullptr, 0 }}), // no row indices
-                                        E.M.get_dev_mem(false),
-                                        A.get_dev_mem(false),
-                                        dev_mem_t<uword>({{ nullptr, 0 }}), // no row indices
-                                        E.M.get_dev_mem(false),
-                                        val_pre, val_post,
-                                        A.get_n_rows(), E.M.n_elem,
-                                        A.get_n_rows(), A.get_n_rows());
-    }
-  else
-    {
-    // we have to unwrap both sets of indices
-    const unwrap<T1> U1(base_ri.get_ref());
-    const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-
-    const unwrap<T2> U2(base_ci.get_ref());
-    const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-
-    coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-    coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-
-    // A bounds check is tedious but the only way that we can give the user an error.
-    coot_debug_check( E1.M.max() >= m.n_rows, "Mat::elem(): row index out of bounds" );
-    coot_debug_check( E2.M.max() >= m.n_cols, "Mat::elem(): column index out of bounds" );
-
-    alias_wrapper<Mat<eT>, Mat<uword>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E1.M, E2.M);
-
-    coot_rt_t::eop_scalar_subview_elem2(kernel_id,
-                                        A.get_dev_mem(false),
-                                        E1.M.get_dev_mem(false),
-                                        E2.M.get_dev_mem(false),
-                                        A.get_dev_mem(false),
-                                        E1.M.get_dev_mem(false),
-                                        E2.M.get_dev_mem(false),
-                                        val_pre, val_post,
-                                        E1.M.n_elem, E2.M.n_elem,
-                                        A.get_n_rows(), A.get_n_rows());
-    }
+  r.randu(*this);
   }
 
 
 
-template<typename eT, typename T1, typename T2>
-template<typename T3, typename T4>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::inplace_op(const twoway_kernel_id::enum_id kernel_id, const subview_elem2<eT, T3, T4>& x)
+subview_elem2<eT, sve2_type>::randn()
   {
-  coot_extra_debug_sigprint();
-
-  // ouch, lots of possible cases...
-  if (x.all_rows && x.all_cols)
-    {
-    (*this).operator=(x.m); // this shouldn't happen...
-    }
-
-  if (all_rows && all_cols)
-    {
-    const_cast<Mat<eT>&>(m).operator=(x.get_ref()); // this shouldn't happen...
-    }
-  else if (all_rows)
-    {
-    if (x.all_rows)
-      {
-      const unwrap<T2> U2(base_ci.get_ref());
-      const unwrap<T4> U4(x.base_ci.get_ref());
-
-      const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-      const extract_subview<typename unwrap<T4>::stored_type> E4(U4.M);
-
-      coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
-      coot_debug_check( E4.M.n_rows != 1 && E4.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
-
-      coot_debug_check( x.m.n_rows != m.n_rows && E4.M.n_elem != E2.M.n_elem, "Mat::cols(): size mismatch" );
-
-      alias_wrapper<Mat<eT>, Mat<uword>, Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E2.M, const_cast<Mat<eT>&>(x.m), E4.M);
-
-      coot_rt_t::eop_subview_elem2(kernel_id,
-                                   A.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no row indices
-                                   E2.M.get_dev_mem(false),
-                                   x.m.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no row indices
-                                   E4.M.get_dev_mem(false),
-                                   A.use.n_rows,
-                                   E2.M.n_elem,
-                                   A.use.n_rows,
-                                   x.m.n_rows);
-      }
-    else if (x.all_cols)
-      {
-      const unwrap<T2> U2(base_ci.get_ref());
-      const unwrap<T3> U3(x.base_ri.get_ref());
-
-      const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-      const extract_subview<typename unwrap<T3>::stored_type> E3(U3.M);
-
-      coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
-      coot_debug_check( E3.M.n_rows != 1 && E3.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
-
-      coot_debug_check( E3.M.n_elem != m.n_rows && x.m.n_cols != E2.M.n_elem, "Mat::cols(): size mismatch" );
-
-      alias_wrapper<Mat<eT>, Mat<uword>, Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E2.M, const_cast<Mat<eT>&>(x.m), E3.M);
-
-      coot_rt_t::eop_subview_elem2(kernel_id,
-                                   A.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no row indices
-                                   E2.M.get_dev_mem(false),
-                                   x.m.get_dev_mem(false),
-                                   E3.M.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no column indices
-                                   A.use.n_rows,
-                                   E2.M.n_elem,
-                                   A.use.n_rows,
-                                   x.m.n_rows);
-      }
-    else
-      {
-      const unwrap<T2> U2(base_ci.get_ref());
-      const unwrap<T3> U3(x.base_ri.get_ref());
-      const unwrap<T4> U4(x.base_ci.get_ref());
-
-      const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-      const extract_subview<typename unwrap<T3>::stored_type> E3(U3.M);
-      const extract_subview<typename unwrap<T4>::stored_type> E4(U4.M);
-
-      coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
-      coot_debug_check( E3.M.n_rows != 1 && E3.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-      coot_debug_check( E4.M.n_rows != 1 && E4.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-
-      coot_debug_check( E3.M.n_elem != m.n_rows && E4.M.n_elem != E2.M.n_elem, "Mat::cols(): size mismatch" );
-
-      alias_wrapper<Mat<eT>, Mat<uword>, Mat<eT>, Mat<uword>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E2.M, const_cast<Mat<eT>&>(x.m), E3.M, E4.M);
-
-      coot_rt_t::eop_subview_elem2(kernel_id,
-                                   A.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no row indices
-                                   E2.M.get_dev_mem(false),
-                                   x.m.get_dev_mem(false),
-                                   E3.M.get_dev_mem(false),
-                                   E4.M.get_dev_mem(false),
-                                   A.use.n_rows,
-                                   E2.M.n_elem,
-                                   A.use.n_rows,
-                                   x.m.n_rows);
-      }
-    }
-  else if (all_cols)
-    {
-    if (x.all_rows)
-      {
-      const unwrap<T1> U1(base_ri.get_ref());
-      const unwrap<T4> U4(x.base_ci.get_ref());
-
-      const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-      const extract_subview<typename unwrap<T4>::stored_type> E4(U4.M);
-
-      coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
-      coot_debug_check( E4.M.n_rows != 1 && E4.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-
-      coot_debug_check( x.m.n_rows != E1.M.n_elem && E4.M.n_elem != m.n_cols, "Mat::rows(): size mismatch" );
-
-      alias_wrapper<Mat<eT>, Mat<uword>, Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E1.M, const_cast<Mat<eT>&>(x.m), E4.M);
-
-      coot_rt_t::eop_subview_elem2(kernel_id,
-                                   A.get_dev_mem(false),
-                                   E1.M.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no column indices
-                                   x.m.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no row indices
-                                   E4.M.get_dev_mem(false),
-                                   E1.M.n_elem,
-                                   A.use.n_cols,
-                                   A.use.n_rows,
-                                   x.m.n_rows);
-      }
-    else if (x.all_cols)
-      {
-      const unwrap<T1> U1(base_ri.get_ref());
-      const unwrap<T3> U3(x.base_ri.get_ref());
-
-      const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-      const extract_subview<typename unwrap<T3>::stored_type> E3(U3.M);
-
-      coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
-      coot_debug_check( E3.M.n_rows != 1 && E3.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
-
-      coot_debug_check( E3.M.n_elem != E1.M.n_elem && x.m.n_cols != m.n_cols, "Mat::rows(): size mismatch" );
-
-      alias_wrapper<Mat<eT>, Mat<uword>, Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E1.M, const_cast<Mat<eT>&>(x.m), E3.M);
-
-      coot_rt_t::eop_subview_elem2(kernel_id,
-                                   A.get_dev_mem(false),
-                                   E1.M.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no column indices
-                                   x.m.get_dev_mem(false),
-                                   E3.M.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no column indices
-                                   E1.M.n_elem,
-                                   A.use.n_cols,
-                                   A.use.n_rows,
-                                   x.m.n_rows);
-      }
-    else
-      {
-      const unwrap<T1> U1(base_ri.get_ref());
-      const unwrap<T3> U3(x.base_ri.get_ref());
-      const unwrap<T4> U4(x.base_ci.get_ref());
-
-      const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-      const extract_subview<typename unwrap<T3>::stored_type> E3(U3.M);
-      const extract_subview<typename unwrap<T4>::stored_type> E4(U4.M);
-
-      coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
-      coot_debug_check( E3.M.n_rows != 1 && E3.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-      coot_debug_check( E4.M.n_rows != 1 && E4.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-
-      coot_debug_check( E3.M.n_elem != E1.M.n_elem && E4.M.n_elem != m.n_cols, "Mat::rows(): size mismatch" );
-
-      alias_wrapper<Mat<eT>, Mat<uword>, Mat<eT>, Mat<uword>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E1.M, const_cast<Mat<eT>&>(x.m), E3.M, E4.M);
-
-      coot_rt_t::eop_subview_elem2(kernel_id,
-                                   A.get_dev_mem(false),
-                                   E1.M.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no column indices
-                                   x.m.get_dev_mem(false),
-                                   E3.M.get_dev_mem(false),
-                                   E4.M.get_dev_mem(false),
-                                   E1.M.n_elem,
-                                   A.use.n_cols,
-                                   A.use.n_rows,
-                                   x.m.n_rows);
-      }
-    }
-  else
-    {
-    if (x.all_rows)
-      {
-      const unwrap<T1> U1(base_ri.get_ref());
-      const unwrap<T2> U2(base_ci.get_ref());
-      const unwrap<T4> U4(x.base_ci.get_ref());
-
-      const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-      const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-      const extract_subview<typename unwrap<T4>::stored_type> E4(U4.M);
-
-      coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-      coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-      coot_debug_check( E4.M.n_rows != 1 && E4.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
-
-      coot_debug_check( x.m.n_rows != E1.M.n_elem && E4.M.n_elem != E2.M.n_elem, "Mat::elem(): size mismatch" );
-
-      alias_wrapper<Mat<eT>, Mat<uword>, Mat<uword>, Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E1.M, E2.M, const_cast<Mat<eT>&>(x.m), E4.M);
-
-      coot_rt_t::eop_subview_elem2(kernel_id,
-                                   A.get_dev_mem(false),
-                                   E1.M.get_dev_mem(false),
-                                   E2.M.get_dev_mem(false),
-                                   x.m.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no row indices
-                                   E4.M.get_dev_mem(false),
-                                   E1.M.n_elem,
-                                   E2.M.n_elem,
-                                   A.use.n_rows,
-                                   x.m.n_rows);
-      }
-    else if (x.all_cols)
-      {
-      const unwrap<T1> U1(base_ri.get_ref());
-      const unwrap<T2> U2(base_ci.get_ref());
-      const unwrap<T3> U3(x.base_ri.get_ref());
-
-      const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-      const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-      const extract_subview<typename unwrap<T3>::stored_type> E3(U3.M);
-
-      coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-      coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-      coot_debug_check( E3.M.n_rows != 1 && E3.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
-
-      coot_debug_check( E3.M.n_elem != E1.M.n_elem && x.m.n_cols != E2.M.n_elem, "Mat::elem(): size mismatch" );
-
-      alias_wrapper<Mat<eT>, Mat<uword>, Mat<uword>, Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E1.M, E2.M, const_cast<Mat<eT>&>(x.m), E3.M);
-
-      coot_rt_t::eop_subview_elem2(kernel_id,
-                                   A.get_dev_mem(false),
-                                   E1.M.get_dev_mem(false),
-                                   E2.M.get_dev_mem(false),
-                                   x.m.get_dev_mem(false),
-                                   E3.M.get_dev_mem(false),
-                                   dev_mem_t<uword>({{ nullptr, 0 }}), // no column indices
-                                   E1.M.n_elem,
-                                   E2.M.n_elem,
-                                   A.use.n_rows,
-                                   x.m.n_rows);
-      }
-    else
-      {
-      const unwrap<T1> U1(base_ri.get_ref());
-      const unwrap<T2> U2(base_ci.get_ref());
-      const unwrap<T3> U3(x.base_ri.get_ref());
-      const unwrap<T4> U4(x.base_ci.get_ref());
-
-      const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-      const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-      const extract_subview<typename unwrap<T3>::stored_type> E3(U3.M);
-      const extract_subview<typename unwrap<T4>::stored_type> E4(U4.M);
-
-      coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-      coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-      coot_debug_check( E3.M.n_rows != 1 && E3.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-      coot_debug_check( E4.M.n_rows != 1 && E4.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-
-      coot_debug_check( E3.M.n_elem != E1.M.n_elem && E4.M.n_elem != E2.M.n_elem, "Mat::elem(): size mismatch" );
-
-      alias_wrapper<Mat<eT>, Mat<uword>, Mat<uword>, Mat<eT>, Mat<uword>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E1.M, E2.M, const_cast<Mat<eT>&>(x.m), E3.M, E4.M);
-
-      coot_rt_t::eop_subview_elem2(kernel_id,
-                                   A.get_dev_mem(false),
-                                   E1.M.get_dev_mem(false),
-                                   E2.M.get_dev_mem(false),
-                                   x.m.get_dev_mem(false),
-                                   E3.M.get_dev_mem(false),
-                                   E4.M.get_dev_mem(false),
-                                   E1.M.n_elem,
-                                   E2.M.n_elem,
-                                   A.use.n_rows,
-                                   x.m.n_rows);
-      }
-    }
-  }
-
-
-
-template<typename eT, typename T1, typename T2>
-template<typename expr>
-inline
-void
-subview_elem2<eT,T1,T2>::inplace_op(const twoway_kernel_id::enum_id kernel_id, const Base<eT,expr>& x)
-  {
-  coot_extra_debug_sigprint();
-
-  if (all_rows && all_cols)
-    {
-    const_cast<Mat<eT>&>(m).operator=(x.get_ref()); // this shouldn't happen...
-    }
-  else if (all_rows)
-    {
-    const unwrap<T2> U2(base_ci.get_ref());
-    const unwrap<expr> U3(x.get_ref());
-
-    const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-    const extract_subview<typename unwrap<expr>::stored_type> E3(U3.M);
-
-    coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::rows(): column indices must be a vector" );
-
-    coot_debug_check( E3.M.n_rows != m.n_rows && E3.M.n_cols != E2.M.n_elem, "Mat::rows(): size mismatch" );
-
-    alias_wrapper<Mat<eT>, Mat<uword>, Mat<eT>> A(const_cast<Mat<eT>&>(m), E2.M, E3.M);
-
-    coot_rt_t::eop_subview_elem2_array(kernel_id,
-                                       A.get_dev_mem(false),
-                                       dev_mem_t<uword>({{ nullptr, 0 }}), // no row indices
-                                       E2.M.get_dev_mem(false),
-                                       E3.M.get_dev_mem(false),
-                                       A.use.n_rows,
-                                       E2.M.n_elem,
-                                       A.use.n_rows);
-    }
-  else if (all_cols)
-    {
-    const unwrap<T1> U1(base_ri.get_ref());
-    const unwrap<expr> U3(x.get_ref());
-
-    const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-    const extract_subview<typename unwrap<expr>::stored_type> E3(U3.M);
-
-    coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::cols(): row indices must be a vector" );
-
-    coot_debug_check( E3.M.n_rows != E1.M.n_elem && E3.M.n_cols != m.n_cols, "Mat::cols(): size mismatch" );
-
-    alias_wrapper<Mat<eT>, Mat<uword>, Mat<eT>> A(const_cast<Mat<eT>&>(m), E1.M, E3.M);
-
-    coot_rt_t::eop_subview_elem2_array(kernel_id,
-                                       A.get_dev_mem(false),
-                                       E1.M.get_dev_mem(false),
-                                       dev_mem_t<uword>({{ nullptr, 0 }}), // no column indices
-                                       E3.M.get_dev_mem(false),
-                                       E1.M.n_elem,
-                                       A.use.n_cols,
-                                       A.use.n_rows);
-    }
-  else
-    {
-    const unwrap<T1> U1(base_ri.get_ref());
-    const unwrap<T2> U2(base_ci.get_ref());
-    const unwrap<expr> U3(x.get_ref());
-
-    const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-    const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-    const extract_subview<typename unwrap<expr>::stored_type> E3(U3.M);
-
-    coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-    coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-
-    coot_debug_check( E3.M.n_rows != E1.M.n_elem && E3.M.n_cols != E2.M.n_elem, "Mat::elem(): size mismatch" );
-
-    alias_wrapper<Mat<eT>, Mat<uword>, Mat<uword>, Mat<eT>> A(const_cast<Mat<eT>&>(m), E1.M, E2.M, E3.M);
-
-    coot_rt_t::eop_subview_elem2_array(kernel_id,
-                                       A.get_dev_mem(false),
-                                       E1.M.get_dev_mem(false),
-                                       E2.M.get_dev_mem(false),
-                                       E3.M.get_dev_mem(false),
-                                       E1.M.n_elem,
-                                       E2.M.n_elem,
-                                       A.use.n_rows);
-    }
-  }
-
-
-
-template<typename eT, typename T1, typename T2>
-inline
-void
-subview_elem2<eT,T1,T2>::randu()
-  {
-  coot_extra_debug_sigprint();
-
-  // until we are able to index subviews in any arbitrary way in a generated kernel,
-  // we use a slow implementation where we generate all the random numbers and
-  // then insert them.
-  if (all_cols && all_rows)
-    {
-    Mat<eT> tmp(m.n_rows, m.n_cols, fill::randu);
-    (*this).operator=(tmp);
-    }
-  else if (all_cols)
-    {
-    unwrap<T1> U1(base_ri.get_ref());
-
-    extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-
-    coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
-
-    Mat<eT> tmp(E1.M.n_elem, m.n_cols, fill::randu);
-    (*this).operator=(tmp);
-    }
-  else if (all_rows)
-    {
-    unwrap<T2> U2(base_ci.get_ref());
-
-    extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-
-    coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
-
-    Mat<eT> tmp(m.n_rows, E2.M.n_elem, fill::randu);
-    (*this).operator=(tmp);
-    }
-  else
-    {
-    unwrap<T1> U1(base_ri.get_ref());
-    unwrap<T2> U2(base_ci.get_ref());
-
-    extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-    extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-
-    coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-    coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-
-    Mat<eT> tmp(E1.M.n_elem, E2.M.n_elem, fill::randu);
-    (*this).operator=(tmp);
-    }
-  }
-
-
-
-template<typename eT, typename T1, typename T2>
-inline
-void
-subview_elem2<eT,T1,T2>::randn()
-  {
-  coot_extra_debug_sigprint();
-
-  // until we are able to index subviews in any arbitrary way in a generated kernel,
-  // we use a slow implementation where we generate all the random numbers and
-  // then insert them.
-  if (all_cols && all_rows)
-    {
-    Mat<eT> tmp(m.n_rows, m.n_cols, fill::randn);
-    (*this).operator=(tmp);
-    }
-  else if (all_cols)
-    {
-    unwrap<T1> U1(base_ri.get_ref());
-
-    extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-
-    coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
-
-    Mat<eT> tmp(E1.M.n_elem, m.n_cols, fill::randn);
-    (*this).operator=(tmp);
-    }
-  else if (all_rows)
-    {
-    unwrap<T2> U2(base_ci.get_ref());
-
-    extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-
-    coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
-
-    Mat<eT> tmp(m.n_rows, E2.M.n_elem, fill::randn);
-    (*this).operator=(tmp);
-    }
-  else
-    {
-    unwrap<T1> U1(base_ri.get_ref());
-    unwrap<T2> U2(base_ci.get_ref());
-
-    extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-    extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-
-    coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-    coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-
-    Mat<eT> tmp(E1.M.n_elem, E2.M.n_elem, fill::randn);
-    (*this).operator=(tmp);
-    }
+  r.randn(*this);
   }
 
 
@@ -641,29 +67,25 @@ subview_elem2<eT,T1,T2>::randn()
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::replace(const eT old_val, const eT new_val)
+subview_elem2<eT, sve2_type>::replace(const eT old_val, const eT new_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  Mat<eT> tmp(*this);
-
-  // ugly, slow implementation until we have kernels that can handle any kind of subview addressing
-  tmp.replace(old_val, new_val);
-
-  (*this).operator=(tmp);
+  const eOp<subview_elem2<eT, sve2_type>, eop_replace> E(*this, 'j', old_val, new_val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
 
-//template<typename eT, typename T1, typename T2>
+//template<typename eT, typename sve2_type>
 //inline
 //void
-//subview_elem2<eT,T1,T2>::clean(const pod_type threshold)
+//subview_elem2<eT, sve2_type>::clean(const pod_type threshold)
 //  {
-//  coot_extra_debug_sigprint();
+//  coot_debug_sigprint();
 //
 //  Mat<eT> tmp(*this);
 //
@@ -674,175 +96,116 @@ subview_elem2<eT,T1,T2>::replace(const eT old_val, const eT new_val)
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::clamp(const eT min_val, const eT max_val)
+subview_elem2<eT, sve2_type>::clamp(const eT min_val, const eT max_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  Mat<eT> tmp(*this);
+  coot_conform_check( (min_val > max_val), "clamp(): min_val must be less than max_val" );
 
-  // ugly, slow implementation until we have kernels that can handle any kind of subview addressing
-  tmp.clamp(min_val, max_val);
-
-  (*this).operator=(tmp);
+  const eOp<subview_elem2<eT, sve2_type>, eop_clamp> E(*this, 'j', min_val, max_val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::fill(const eT val)
+subview_elem2<eT, sve2_type>::fill(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  if (all_rows && all_cols)
-    {
-    // no subview at all?
-    coot_rt_t::fill(m.get_dev_mem(false), val, m.n_rows, m.n_cols, 0, 0, m.n_rows);
-    }
-  else if (all_cols)
-    {
-    // we are only using the row indices
-    const unwrap<T1> U(base_ri.get_ref());
-    const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
-
-    coot_debug_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::rows(): column indices must be a vector" );
-
-    // A bounds check is tedious but the only way that we can give the user an error.
-    coot_debug_check( E.M.max() >= m.n_rows, "Mat::rows(): index out of bounds" );
-
-    alias_wrapper<Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E.M);
-
-    coot_rt_t::fill_subview_elem2(A.get_dev_mem(false),
-                                  E.M.get_dev_mem(false),
-                                  dev_mem_t<uword>({{ nullptr, 0 }}),
-                                  val,
-                                  E.M.n_elem,
-                                  A.get_n_cols(),
-                                  A.get_n_rows());
-    }
-  else if (all_rows)
-    {
-    // we are only using the column indices
-    const unwrap<T2> U(base_ci.get_ref());
-    const extract_subview<typename unwrap<T2>::stored_type> E(U.M);
-
-    coot_debug_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
-
-    // A bounds check is tedious but the only way that we can give the user an error.
-    coot_debug_check( E.M.max() >= m.n_rows, "Mat::cols(): index out of bounds" );
-
-    alias_wrapper<Mat<eT>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E.M);
-
-    coot_rt_t::fill_subview_elem2(A.get_dev_mem(false),
-                                  dev_mem_t<uword>({{ nullptr, 0 }}),
-                                  E.M.get_dev_mem(false),
-                                  val,
-                                  A.get_n_rows(),
-                                  E.M.n_elem,
-                                  A.get_n_rows());
-    }
-  else
-    {
-    // we have to unwrap both sets of indices
-    const unwrap<T1> U1(base_ri.get_ref());
-    const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-
-    const unwrap<T2> U2(base_ci.get_ref());
-    const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-
-    coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-    coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-
-    // A bounds check is tedious but the only way that we can give the user an error.
-    coot_debug_check( E1.M.max() >= m.n_rows, "Mat::elem(): row index out of bounds" );
-    coot_debug_check( E2.M.max() >= m.n_cols, "Mat::elem(): column index out of bounds" );
-
-    alias_wrapper<Mat<eT>, Mat<uword>, Mat<uword>> A(const_cast<Mat<eT>&>(m), E1.M, E2.M);
-
-    coot_rt_t::fill_subview_elem2(A.get_dev_mem(false),
-                                  E1.M.get_dev_mem(false),
-                                  E2.M.get_dev_mem(false),
-                                  val,
-                                  E1.M.n_elem,
-                                  E2.M.n_elem,
-                                  A.get_n_rows());
-    }
+  // Creation of this Proxy will perform bounds checks.
+  coot_rt_t::fill(make_proxy(*this), val);
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::zeros()
+subview_elem2<eT, sve2_type>::zeros()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).fill(eT(0));
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::ones()
+subview_elem2<eT, sve2_type>::ones()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).fill(eT(1));
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
-void
-subview_elem2<eT,T1,T2>::operator+= (const eT val)
+bool
+subview_elem2<eT, sve2_type>::is_empty() const
   {
-  coot_extra_debug_sigprint();
-
-  inplace_op(twoway_kernel_id::equ_array_plus_scalar_sve2, val, (eT) 0);
+  return r.is_empty(*this);
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::operator-= (const eT val)
+subview_elem2<eT, sve2_type>::operator+= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::equ_array_minus_scalar_post_sve2, val, (eT) 0);
+  const eOp<subview_elem2<eT, sve2_type>, eop_scalar_plus> E(*this, val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::operator*= (const eT val)
+subview_elem2<eT, sve2_type>::operator-= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::equ_array_mul_scalar_sve2, val, (eT) 1);
+  const eOp<subview_elem2<eT, sve2_type>, eop_scalar_minus_post> E(*this, val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::operator/= (const eT val)
+subview_elem2<eT, sve2_type>::operator*= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::equ_array_div_scalar_post_sve2, val, (eT) 1);
+  const eOp<subview_elem2<eT, sve2_type>, eop_scalar_times> E(*this, val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
+  }
+
+
+
+template<typename eT, typename sve2_type>
+inline
+void
+subview_elem2<eT, sve2_type>::operator/= (const eT val)
+  {
+  coot_debug_sigprint();
+
+  const eOp<subview_elem2<eT, sve2_type>, eop_scalar_div_post> E(*this, val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
@@ -852,145 +215,253 @@ subview_elem2<eT,T1,T2>::operator/= (const eT val)
 
 
 
-template<typename eT, typename T1, typename T2>
-template<typename T3, typename T4>
+template<typename eT, typename sve2_type>
+template<typename sve2_type2>
 inline
 void
-subview_elem2<eT,T1,T2>::operator= (const subview_elem2<eT,T3,T4>& x)
+subview_elem2<eT, sve2_type>::inplace_eq(const subview_elem2<eT, sve2_type2>& x)
   {
-  coot_extra_debug_sigprint();
+  const Proxy<subview_elem2<eT, sve2_type>> P_out(*this);
+  const Proxy<subview_elem2<eT, sve2_type2>> P_in(x);
 
-  inplace_op(twoway_kernel_id::inplace_sve2_eq_sve2, x);
+  coot_assert_same_size(P_out.get_n_rows(), P_out.get_n_cols(), P_in.get_n_rows(), P_in.get_n_cols(), "Mat::elem()");
+
+  inexact_alias_wrapper<Mat<eT>, Proxy<subview_elem2<eT, sve2_type2>>> A(access::rw((*this).m), P_in);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P_in);
+    // special handling: disable copy after inexact_alias_wrapper deallocation and do it ourselves
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(P_out, P_in);
+    }
+  }
+
+
+
+template<typename eT, typename sve2_type>
+template<typename expr>
+inline
+void
+subview_elem2<eT, sve2_type>::inplace_eq(const Base<eT, expr>& x)
+  {
+  const Proxy<subview_elem2<eT, sve2_type>> P_out(*this);
+  const Proxy<expr> P_in(x.get_ref());
+
+  coot_assert_same_size(P_out.get_n_rows(), P_out.get_n_cols(), P_in.get_n_rows(), P_in.get_n_cols(), "Mat::elem()");
+
+  inexact_alias_wrapper<Mat<eT>, Proxy<expr>> A(access::rw((*this).m), P_in);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P_in);
+    // special handling: disable copy after inexact_alias_wrapper deallocation and do it ourselves
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(P_out, P_in);
+    }
+  }
+
+
+
+template<typename eT, typename sve2_type>
+template<typename eglue_type, typename sve2_type2>
+inline
+void
+subview_elem2<eT, sve2_type>::inplace_op(const subview_elem2<eT, sve2_type2>& x, const char* op_name)
+  {
+  const eGlue<subview_elem2<eT, sve2_type>, subview_elem2<eT, sve2_type2>, eglue_type> G(*this, x);
+  const Proxy<eGlue<subview_elem2<eT, sve2_type>, subview_elem2<eT, sve2_type2>, eglue_type>> P(G);
+
+  coot_assert_same_size(P.P1.get_n_rows(), P.P1.get_n_cols(), P.P2.get_n_rows(), P.P2.get_n_cols(), op_name);
+
+  inexact_alias_wrapper<Mat<eT>, Proxy<subview_elem2<eT, sve2_type2>>> A(access::rw((*this).m), P.P2);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    // special handling: disable copy after inexact_alias_wrapper deallocation and do it ourselves
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(P.P1, P);
+    }
+  }
+
+
+
+template<typename eT, typename sve2_type>
+template<typename eglue_type, typename expr>
+inline
+void
+subview_elem2<eT, sve2_type>::inplace_op(const Base<eT, expr>& x, const char* op_name)
+  {
+  const eGlue<subview_elem2<eT, sve2_type>, expr, eglue_type> G(*this, x.get_ref());
+  const Proxy<eGlue<subview_elem2<eT, sve2_type>, expr, eglue_type>> P(G);
+
+  coot_assert_same_size(P.P1.get_n_rows(), P.P1.get_n_cols(), P.P2.get_n_rows(), P.P2.get_n_cols(), op_name);
+
+  inexact_alias_wrapper<Mat<eT>, Proxy<expr>> A(access::rw((*this).m), P.P2);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    // special handling: disable copy after inexact_alias_wrapper deallocation and do it ourselves
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(P.P1, P);
+    }
+  }
+
+
+
+template<typename eT, typename sve2_type>
+template<typename sve2_type2>
+inline
+void
+subview_elem2<eT, sve2_type>::operator= (const subview_elem2<eT, sve2_type2>& x)
+  {
+  coot_debug_sigprint();
+
+  inplace_eq(x);
   }
 
 
 
 // ! work around compiler bugs
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::operator= (const subview_elem2<eT,T1,T2>& x)
+subview_elem2<eT, sve2_type>::operator= (const subview_elem2<eT, sve2_type>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve2_eq_sve2, x);
+  inplace_eq(x);
   }
 
 
 
-template<typename eT, typename T1, typename T2>
-template<typename T3, typename T4>
+template<typename eT, typename sve2_type>
+template<typename sve2_type2>
 inline
 void
-subview_elem2<eT,T1,T2>::operator+= (const subview_elem2<eT,T3,T4>& x)
+subview_elem2<eT, sve2_type>::operator+= (const subview_elem2<eT, sve2_type2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve2_plus_sve2, x);
+  inplace_op<eglue_plus>(x, "Mat::elem()::operator+=");
   }
 
 
 
-template<typename eT, typename T1, typename T2>
-template<typename T3, typename T4>
+template<typename eT, typename sve2_type>
+template<typename sve2_type2>
 inline
 void
-subview_elem2<eT,T1,T2>::operator-= (const subview_elem2<eT,T3,T4>& x)
+subview_elem2<eT, sve2_type>::operator-= (const subview_elem2<eT, sve2_type2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve2_minus_sve2, x);
+  inplace_op<eglue_minus>(x, "Mat::elem()::operator-=");
   }
 
 
 
-template<typename eT, typename T1, typename T2>
-template<typename T3, typename T4>
+template<typename eT, typename sve2_type>
+template<typename sve2_type2>
 inline
 void
-subview_elem2<eT,T1,T2>::operator%= (const subview_elem2<eT,T3,T4>& x)
+subview_elem2<eT, sve2_type>::operator%= (const subview_elem2<eT, sve2_type2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve2_mul_sve2, x);
+  inplace_op<eglue_schur>(x, "Mat::elem()::operator%=");
   }
 
 
 
-template<typename eT, typename T1, typename T2>
-template<typename T3, typename T4>
+template<typename eT, typename sve2_type>
+template<typename sve2_type2>
 inline
 void
-subview_elem2<eT,T1,T2>::operator/= (const subview_elem2<eT,T3,T4>& x)
+subview_elem2<eT, sve2_type>::operator/= (const subview_elem2<eT, sve2_type2>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve2_div_sve2, x);
+  inplace_op<eglue_div>(x, "Mat::elem()::operator/=");
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 template<typename expr>
 inline
 void
-subview_elem2<eT,T1,T2>::operator= (const Base<eT,expr>& x)
+subview_elem2<eT, sve2_type>::operator= (const Base<eT,expr>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve2_eq_array, x);
+  inplace_eq(x);
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 template<typename expr>
 inline
 void
-subview_elem2<eT,T1,T2>::operator+= (const Base<eT,expr>& x)
+subview_elem2<eT, sve2_type>::operator+= (const Base<eT,expr>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve2_plus_array, x);
+  inplace_op<eglue_plus>(x, "Mat::elem()::operator+=");
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 template<typename expr>
 inline
 void
-subview_elem2<eT,T1,T2>::operator-= (const Base<eT,expr>& x)
+subview_elem2<eT, sve2_type>::operator-= (const Base<eT,expr>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve2_minus_array, x);
+  inplace_op<eglue_minus>(x, "Mat::elem()::operator-=");
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 template<typename expr>
 inline
 void
-subview_elem2<eT,T1,T2>::operator%= (const Base<eT,expr>& x)
+subview_elem2<eT, sve2_type>::operator%= (const Base<eT,expr>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve2_mul_array, x);
+  inplace_op<eglue_schur>(x, "Mat::elem()::operator%=");
   }
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 template<typename expr>
 inline
 void
-subview_elem2<eT,T1,T2>::operator/= (const Base<eT,expr>& x)
+subview_elem2<eT, sve2_type>::operator/= (const Base<eT,expr>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::inplace_sve2_div_array, x);
+  inplace_op<eglue_div>(x, "Mat::elem()::operator/=");
   }
 
 
@@ -1000,93 +471,252 @@ subview_elem2<eT,T1,T2>::operator/= (const Base<eT,expr>& x)
 
 
 
-template<typename eT, typename T1, typename T2>
+template<typename eT, typename sve2_type>
 inline
 void
-subview_elem2<eT,T1,T2>::extract(Mat<eT>& actual_out, const subview_elem2<eT,T1,T2>& in)
+subview_elem2<eT, sve2_type>::extract(Mat<eT>& actual_out, const subview_elem2<eT, sve2_type>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  if (in.all_rows && in.all_cols)
+  const Proxy<subview_elem2<eT, sve2_type>> P(in);
+
+  if (P.is_alias(actual_out))
     {
-    // not a subview at all?
-    actual_out = in.m;
-    }
-  else if (in.all_cols)
-    {
-    // we are only using the row indices
-    const unwrap<T1> U(in.base_ri.get_ref());
-    const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
-
-    coot_debug_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::rows(): column indices must be a vector" );
-
-    // A bounds check is tedious but the only way that we can give the user an error.
-    coot_debug_check( E.M.max() >= in.m.n_rows, "Mat::rows(): index out of bounds" );
-
-    alias_wrapper<Mat<eT>, Mat<eT>, Mat<uword>> A(actual_out, const_cast<Mat<eT>&>(in.m), E.M);
-
-    A.use.set_size(E.M.n_elem, in.m.n_cols);
-
-    coot_rt_t::extract_subview_elem2(A.get_dev_mem(false),
-                                     in.m.get_dev_mem(false),
-                                     E.M.get_dev_mem(false),
-                                     dev_mem_t<uword>({{ nullptr, 0 }}), // no column indices
-                                     E.M.n_elem,
-                                     in.m.n_cols,
-                                     A.use.n_rows,
-                                     in.m.n_rows);
-    }
-  else if (in.all_rows)
-    {
-    // we are only using the column indices
-    const unwrap<T2> U(in.base_ci.get_ref());
-    const extract_subview<typename unwrap<T2>::stored_type> E(U.M);
-
-    coot_debug_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::cols(): row indices must be a vector" );
-
-    // A bounds check is tedious but the only way that we can give the user an error.
-    coot_debug_check( E.M.max() >= in.m.n_cols, "Mat::cols(): index out of bounds" );
-
-    alias_wrapper<Mat<eT>, Mat<eT>, Mat<uword>> A(actual_out, const_cast<Mat<eT>&>(in.m), E.M);
-
-    A.use.set_size(in.m.n_rows, E.M.n_elem);
-
-    coot_rt_t::extract_subview_elem2(A.get_dev_mem(false),
-                                     in.m.get_dev_mem(false),
-                                     dev_mem_t<uword>({{ nullptr, 0 }}), // no row indices
-                                     E.M.get_dev_mem(false),
-                                     in.m.n_rows,
-                                     E.M.n_elem,
-                                     A.use.n_rows,
-                                     in.m.n_rows);
+    Mat<eT> tmp;
+    tmp.set_size(P.get_n_rows(), P.get_n_cols());
+    coot_rt_t::copy(make_proxy(tmp), P);
+    actual_out.steal_mem(tmp);
     }
   else
     {
-    // we have to unwrap both sets of indices
-    const unwrap<T1> U1(in.base_ri.get_ref());
-    const extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-
-    const unwrap<T2> U2(in.base_ci.get_ref());
-    const extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
-
-    coot_debug_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
-    coot_debug_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
-
-    // A bounds check is tedious but the only way that we can give the user an error.
-    coot_debug_check( E1.M.max() >= in.m.n_rows, "Mat::elem(): row index out of bounds" );
-    coot_debug_check( E2.M.max() >= in.m.n_cols, "Mat::elem(): column index out of bounds" );
-
-    alias_wrapper<Mat<eT>, Mat<eT>, Mat<uword>, Mat<uword>> A(actual_out, const_cast<Mat<eT>&>(in.m), E1.M, E2.M);
-
-    A.use.set_size(E1.M.n_elem, E2.M.n_elem);
-
-    coot_rt_t::extract_subview_elem2(A.get_dev_mem(false),
-                                     in.m.get_dev_mem(false),
-                                     E1.M.get_dev_mem(false),
-                                     E2.M.get_dev_mem(false),
-                                     E1.M.n_elem,
-                                     E2.M.n_elem,
-                                     A.use.n_rows,
-                                     in.m.n_rows);
+    actual_out.set_size(P.get_n_rows(), P.get_n_cols());
+    coot_rt_t::copy(make_proxy(actual_out), P);
     }
+  }
+
+
+
+//
+// subview_elem2_both
+//
+
+
+
+template<typename eT, typename T1, typename T2>
+coot_inline
+subview_elem2_both<eT, T1, T2>::subview_elem2_both(const Base<uword, T1>& in_ri, const Base<uword, T2>& in_ci)
+  : base_ri(in_ri)
+  , base_ci(in_ci)
+  { }
+
+
+
+template<typename eT, typename T1, typename T2>
+inline
+void
+subview_elem2_both<eT, T1, T2>::randu(subview_elem2<eT, subview_elem2_both<eT, T1, T2>>& base)
+  {
+  // until we are able to index subviews in any arbitrary way in a generated kernel,
+  // we use a slow implementation where we generate all the random numbers and
+  // then insert them.
+  coot_debug_sigprint();
+
+  unwrap<T1> U1(base_ri.get_ref());
+  unwrap<T2> U2(base_ci.get_ref());
+
+  extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
+  extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
+
+  coot_conform_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
+  coot_conform_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
+
+  Mat<eT> tmp(E1.M.n_elem, E2.M.n_elem, fill::randu);
+  base = tmp;
+  }
+
+
+
+template<typename eT, typename T1, typename T2>
+inline
+void
+subview_elem2_both<eT, T1, T2>::randn(subview_elem2<eT, subview_elem2_both<eT, T1, T2>>& base)
+  {
+  coot_debug_sigprint();
+
+  // until we are able to index subviews in any arbitrary way in a generated kernel,
+  // we use a slow implementation where we generate all the random numbers and
+  // then insert them.
+  unwrap<T1> U1(base_ri.get_ref());
+  unwrap<T2> U2(base_ci.get_ref());
+
+  extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
+  extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
+
+  coot_conform_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
+  coot_conform_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
+
+  Mat<eT> tmp(E1.M.n_elem, E2.M.n_elem, fill::randn);
+  base = tmp;
+  }
+
+
+
+template<typename eT, typename T1, typename T2>
+inline
+bool
+subview_elem2_both<eT, T1, T2>::is_empty(const subview_elem2<eT, subview_elem2_both<eT, T1, T2>>& s) const
+  {
+  coot_debug_sigprint();
+
+  SizeProxy<T1> S1(base_ri.get_ref());
+  SizeProxy<T2> S2(base_ci.get_ref());
+  return (S1.get_n_elem() == 0) || (S2.get_n_elem() == 0);
+  }
+
+
+
+//
+// subview_elem2_all_cols
+//
+
+
+
+template<typename eT, typename T1>
+template<typename T2>
+coot_inline
+subview_elem2_all_cols<eT, T1>::subview_elem2_all_cols(const Base<uword, T1>& in_ri, const Base<uword, T2>& in_ci)
+  : base_ri(in_ri)
+  {
+  coot_ignore(in_ci);
+  }
+
+
+
+template<typename eT, typename T1>
+inline
+void
+subview_elem2_all_cols<eT, T1>::randu(subview_elem2<eT, subview_elem2_all_cols<eT, T1>>& base)
+  {
+  // until we are able to index subviews in any arbitrary way in a generated kernel,
+  // we use a slow implementation where we generate all the random numbers and
+  // then insert them.
+  coot_debug_sigprint();
+
+  unwrap<T1> U1(base_ri.get_ref());
+
+  extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
+
+  coot_conform_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
+
+  Mat<eT> tmp(E1.M.n_elem, base.m.n_cols, fill::randu);
+  base = tmp;
+  }
+
+
+
+template<typename eT, typename T1>
+inline
+void
+subview_elem2_all_cols<eT, T1>::randn(subview_elem2<eT, subview_elem2_all_cols<eT, T1>>& base)
+  {
+  coot_debug_sigprint();
+
+  // until we are able to index subviews in any arbitrary way in a generated kernel,
+  // we use a slow implementation where we generate all the random numbers and
+  // then insert them.
+  unwrap<T1> U1(base_ri.get_ref());
+
+  extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
+
+  coot_conform_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
+
+  Mat<eT> tmp(E1.M.n_elem, base.m.n_cols, fill::randn);
+  base = tmp;
+  }
+
+
+
+template<typename eT, typename T1>
+inline
+bool
+subview_elem2_all_cols<eT, T1>::is_empty(const subview_elem2<eT, subview_elem2_all_cols<eT, T1>>& s) const
+  {
+  coot_debug_sigprint();
+
+  SizeProxy<T1> S(base_ri.get_ref());
+  return (S.get_n_elem() == 0) || (s.m.n_cols == 0);
+  }
+
+
+
+//
+// subview_elem2_all_rows
+//
+
+
+
+template<typename eT, typename T2>
+template<typename T1>
+coot_inline
+subview_elem2_all_rows<eT, T2>::subview_elem2_all_rows(const Base<uword, T1>& in_ri, const Base<uword, T2>& in_ci)
+  : base_ci(in_ci)
+  {
+  coot_ignore(in_ri);
+  }
+
+
+
+template<typename eT, typename T2>
+inline
+void
+subview_elem2_all_rows<eT, T2>::randu(subview_elem2<eT, subview_elem2_all_rows<eT, T2>>& base)
+  {
+  // until we are able to index subviews in any arbitrary way in a generated kernel,
+  // we use a slow implementation where we generate all the random numbers and
+  // then insert them.
+  coot_debug_sigprint();
+
+  unwrap<T2> U2(base_ci.get_ref());
+
+  extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
+
+  coot_conform_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
+
+  Mat<eT> tmp(base.m.n_rows, E2.M.n_elem, fill::randu);
+  base = tmp;
+  }
+
+
+
+template<typename eT, typename T2>
+inline
+void
+subview_elem2_all_rows<eT, T2>::randn(subview_elem2<eT, subview_elem2_all_rows<eT, T2>>& base)
+  {
+  coot_debug_sigprint();
+
+  // until we are able to index subviews in any arbitrary way in a generated kernel,
+  // we use a slow implementation where we generate all the random numbers and
+  // then insert them.
+  unwrap<T2> U2(base_ci.get_ref());
+
+  extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
+
+  coot_conform_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
+
+  Mat<eT> tmp(base.m.n_rows, E2.M.n_elem, fill::randn);
+  base = tmp;
+  }
+
+
+
+template<typename eT, typename T2>
+inline
+bool
+subview_elem2_all_rows<eT, T2>::is_empty(const subview_elem2<eT, subview_elem2_all_rows<eT, T2>>& s) const
+  {
+  coot_debug_sigprint();
+
+  SizeProxy<T2> S(base_ci.get_ref());
+  return (s.m.n_rows == 0) || (S.get_n_elem() == 0);
   }

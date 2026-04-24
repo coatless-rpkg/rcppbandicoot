@@ -24,7 +24,7 @@ mtOpCube<out_eT, T1, mtop_type>::mtOpCube(const T1& in_m, const uword in_aux_uwo
   , aux_uword_a(in_aux_uword_a)
   , aux_uword_b(in_aux_uword_b)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -37,7 +37,7 @@ mtOpCube<out_eT, T1, mtop_type>::mtOpCube(const T1& in_m, const typename T1::ele
   , aux_uword_a(0)
   , aux_uword_b(0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -46,5 +46,5 @@ template<typename out_eT, typename T1, typename mtop_type>
 inline
 mtOpCube<out_eT, T1, mtop_type>::~mtOpCube()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }

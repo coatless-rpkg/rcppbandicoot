@@ -28,7 +28,7 @@ struct extract_subview
   explicit inline extract_subview(const T1& in)
     : M(in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   Mat<typename T1::elem_type> M;
@@ -42,7 +42,7 @@ struct extract_subview<Mat<eT>>
   explicit inline extract_subview(const Mat<eT>& in)
     : M(in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   const Mat<eT>& M;
@@ -56,7 +56,7 @@ struct extract_subcube
   explicit inline extract_subcube(const T1& in)
     : M(in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   Cube<typename T1::elem_type> M;
@@ -70,7 +70,7 @@ struct extract_subcube<Cube<eT>>
   explicit inline extract_subcube(const Cube<eT>& in)
     : M(in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   const Cube<eT>& M;
