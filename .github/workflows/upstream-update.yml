@@ -96,6 +96,12 @@ jobs:
           if [ -d "$BANDICOOT_DIR/include" ]; then
             echo "Found include directory at $BANDICOOT_DIR/include"
 
+            # Wipe existing bandicoot_bits/ so we don't mix old and new content.
+            # Previously the mv below nested kernels/ inside a pre-existing ks/,
+            # producing ks/kernels/ paths that exceeded CRAN's 100-byte limit
+            # and left stale kernel sources behind.
+            rm -rf inst/include/bandicoot_bits inst/include/bandicoot
+
             # Create destination directory if it doesn't exist
             mkdir -p inst/include
 

@@ -23,3 +23,8 @@ inline bool coot_isnan_long(const long x) { return false; }
 inline long coot_absdiff_long(const long x, const long y) { return abs(x - y); }
 
 inline long coot_conj_long(const long x) { return x; }
+
+inline long coot_plus_long(const long a, const long b)  { return a + b; }
+inline long coot_minus_long(const long a, const long b) { return a - b; }
+inline long coot_mul_long(const long a, const long b)   { return a * b; }
+inline long coot_div_long(const long a, const long b)   { return a / b; }

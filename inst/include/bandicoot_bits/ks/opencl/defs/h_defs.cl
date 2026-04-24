@@ -23,3 +23,8 @@ inline bool coot_isnan_half(const half x) { return isnan(x); }
 inline half coot_absdiff_half(const half x, const half y) { return fabs(x - y); }
 
 inline half coot_conj_half(const half x) { return x; }
+
+inline half coot_plus_half(const half a, const half b)  { return a + b; }
+inline half coot_minus_half(const half a, const half b) { return a - b; }
+inline half coot_mul_half(const half a, const half b)   { return a * b; }
+inline half coot_div_half(const half a, const half b)   { return a / b; }

@@ -23,3 +23,8 @@ inline bool coot_isnan_uint(const uint x) { return false; }
 inline uint coot_absdiff_uint(const uint x, const uint y) { return (x > y) ? (x - y) : (y - x); }
 
 inline uint coot_conj_uint(const uint x) { return x; }
+
+inline uint coot_plus_uint(const uint a, const uint b)  { return a + b; }
+inline uint coot_minus_uint(const uint a, const uint b) { return a - b; }
+inline uint coot_mul_uint(const uint a, const uint b)   { return a * b; }
+inline uint coot_div_uint(const uint a, const uint b)   { return a / b; }

@@ -22,5 +22,9 @@ inline bool coot_isnan_float(const float x) { return isnan(x); }
 
 inline float coot_absdiff_float(const float x, const float y) { return fabs(x - y); }
 
-inline    float coot_conj_float(const float x)       { return x; }
-//inline cx_float coot_conj_cx_float(const cx_float x) { return cx_float(x.x, -x.y); }
+inline float coot_conj_float(const float x)       { return x; }
+
+inline float coot_plus_float(const float a, const float b)  { return a + b; }
+inline float coot_minus_float(const float a, const float b) { return a - b; }
+inline float coot_mul_float(const float a, const float b)   { return a * b; }
+inline float coot_div_float(const float a, const float b)   { return a / b; }

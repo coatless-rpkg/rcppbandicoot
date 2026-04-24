@@ -89,11 +89,14 @@ jobs:
           
           # Install via msiexec
           $msi = Get-ChildItem ./extracted/*.msi | Select-Object -First 1
-          $proc = Start-Process "msiexec" "/i `"$msi`" /qn /l*! install.log" -NoNewWindow -PassThru
+          # Write the MSI log outside the repo so it doesn't end up in the
+          # package tarball (R CMD check flags it as a non-standard top-level file).
+          $logPath = "$env:RUNNER_TEMP\intel-opencl-install.log"
+          $proc = Start-Process "msiexec" "/i `"$msi`" /qn /l*! `"$logPath`"" -NoNewWindow -PassThru
           $proc.WaitForExit()
-          
+
           if ($proc.ExitCode -ne 0) {
-            Get-Content install.log
+            Get-Content $logPath
             exit $proc.ExitCode
           }
           
