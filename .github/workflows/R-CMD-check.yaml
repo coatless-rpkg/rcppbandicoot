@@ -30,6 +30,14 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Restore execute bit on shell scripts (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        # NTFS drops the git-stored +x bit on checkout, so R CMD build
+        # otherwise warns "did not have execute permissions: corrected"
+        # every run. chmod via MSYS bash lands in a form R's tar sees.
+        run: chmod +x configure cleanup
+
       - uses: r-lib/actions/setup-pandoc@v2
 
       - uses: r-lib/actions/setup-r@v2
