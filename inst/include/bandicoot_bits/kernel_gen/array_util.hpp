@@ -75,7 +75,7 @@ struct has_len_member
   };
 
 template<typename T>
-struct has_len_member<T, decltype(T::len, void())>
+struct has_len_member<T, decltype((void)T::len)>
   {
   static const bool value = true;
   };

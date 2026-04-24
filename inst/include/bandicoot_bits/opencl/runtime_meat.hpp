@@ -1702,8 +1702,8 @@ runtime_t::adapt_uword::adapt_uword(const uword val)
 inline
 runtime_t::adapt_uword::adapt_uword(const runtime_t::adapt_uword& other)
   : size(other.size)
-  , val32(other.val32)
   , val64(other.val64)
+  , val32(other.val32)
   {
   if (other.addr == &other.val32)
     {
@@ -1720,8 +1720,8 @@ runtime_t::adapt_uword::adapt_uword(const runtime_t::adapt_uword& other)
 inline
 runtime_t::adapt_uword::adapt_uword(runtime_t::adapt_uword&& other)
   : size(other.size)
-  , val32(other.val32)
   , val64(other.val64)
+  , val32(other.val32)
   {
   if (other.addr == &other.val32)
     {

@@ -6,14 +6,7 @@
 PKG_CPPFLAGS = -I../inst/include -DCOOT_TARGET_OPENCL_VERSION=@OPENCL_TARGET_VERSION@ -DCOOT_KERNEL_SOURCE_DIR=\"@BANDICOOT_KERNELS_DIR@\"
 
 ## Compiler flags from configure.win
-##
-## Silence two upstream bandicoot warning classes on MinGW/GCC 14:
-##   -Wno-reorder: field-init order mismatches in opencl/runtime_bones.hpp
-##                 (cosmetic; upstream issue, no correctness impact)
-##   -Wno-address: GCC 14's -Waddress false-positives against bandicoot's
-##                 compile-time string metaprogramming where `Class::len`
-##                 is a static const member, not a function call
-PKG_CXXFLAGS = @BANDICOOT_CXXFLAGS@ -Wno-reorder -Wno-address
+PKG_CXXFLAGS = @BANDICOOT_CXXFLAGS@
 
 ## Linker flags from configure.win
 PKG_LIBS = @OPENMP_CXXFLAGS@ @BANDICOOT_LIBS@
