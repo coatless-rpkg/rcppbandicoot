@@ -20,7 +20,7 @@ inline
 void
 coot_synchronise()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   get_rt().synchronise();
   }

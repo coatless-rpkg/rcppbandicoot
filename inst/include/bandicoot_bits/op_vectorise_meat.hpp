@@ -23,7 +23,7 @@ inline
 void
 op_vectorise_col::apply(Mat<out_eT>& out, const Op<T1,op_vectorise_col>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap<T1> U(in.m);
 
@@ -43,7 +43,7 @@ inline
 void
 op_vectorise_col::apply_direct(Mat<eT>& out, const Mat<eT>& in, const bool output_is_row)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(is_alias(out, in))
     {
@@ -68,11 +68,8 @@ op_vectorise_col::apply_direct(Mat<eT>& out, const Mat<eT>& in, const bool outpu
       out.set_size(1, in.n_elem);
       }
 
-    coot_rt_t::copy_mat(out.get_dev_mem(false), in.get_dev_mem(false),
-                        // logically, we treat `out` as the same size as the input
-                        in.n_rows, in.n_cols,
-                        0, 0, in.n_rows,
-                        0, 0, in.n_rows);
+    // logically treat both arguments as column vectors
+    coot_rt_t::copy(make_proxy_col(out), make_proxy_col(in));
     }
   }
 
@@ -83,7 +80,7 @@ inline
 void
 op_vectorise_col::apply_direct(Mat<eT>& out, const subview<eT>& in, const bool output_is_row)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(is_alias(out, in))
     {
@@ -102,11 +99,9 @@ op_vectorise_col::apply_direct(Mat<eT>& out, const subview<eT>& in, const bool o
       out.set_size(1, in.n_elem);
       }
 
-    coot_rt_t::copy_mat(out.get_dev_mem(false), in.m.get_dev_mem(false),
-                        // logically, we treat `out` as the same size as the input
-                        in.n_rows, in.n_cols,
-                        0, 0, in.n_rows,
-                        in.aux_row1, in.aux_col1, in.m.n_rows);
+    // Treat `out` as a matrix with the same size as `in`.
+    Mat<eT> out_alias(out.get_dev_mem(false), in.n_rows, in.n_cols);
+    coot_rt_t::copy(make_proxy(out_alias), make_proxy(in));
     }
   }
 
@@ -117,7 +112,7 @@ inline
 void
 op_vectorise_col::apply_direct(Mat<out_eT>& out, const Mat<in_eT>& in, const bool output_is_row)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (!output_is_row)
     {
@@ -128,11 +123,9 @@ op_vectorise_col::apply_direct(Mat<out_eT>& out, const Mat<in_eT>& in, const boo
     out.set_size(1, in.n_elem);
     }
 
-  coot_rt_t::copy_mat(out.get_dev_mem(false), in.get_dev_mem(false),
-                      // logically, we treat `out` as the same size as the input
-                      in.n_rows, in.n_cols,
-                      0, 0, in.n_rows,
-                      0, 0, in.n_rows);
+  // Treat `out` as a matrix with the same size as `in`.
+  Mat<out_eT> out_alias(out.get_dev_mem(false), in.n_rows, in.n_cols);
+  coot_rt_t::copy(make_proxy(out_alias), make_proxy(in));
   }
 
 
@@ -142,7 +135,7 @@ inline
 void
 op_vectorise_col::apply_direct(Mat<out_eT>& out, const subview<in_eT>& in, const bool output_is_row)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (!output_is_row)
     {
@@ -153,11 +146,9 @@ op_vectorise_col::apply_direct(Mat<out_eT>& out, const subview<in_eT>& in, const
     out.set_size(1, in.n_elem);
     }
 
-  coot_rt_t::copy_mat(out.get_dev_mem(false), in.m.get_dev_mem(false),
-                      // logically, we treat `out` as the same size as the input
-                      in.n_rows, in.n_cols,
-                      0, 0, in.n_rows,
-                      in.aux_row1, in.aux_col1, in.m.n_rows);
+  // Treat `out` as a matrix with the same size as `in`.
+  Mat<out_eT> out_alias(out.get_dev_mem(false), in.n_rows, in.n_cols);
+  coot_rt_t::copy(make_proxy(out_alias), make_proxy(in));
   }
 
 
@@ -191,7 +182,7 @@ inline
 void
 op_vectorise_all::apply(Mat<out_eT>& out, const Op<T1,op_vectorise_all>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   SizeProxy<T1> S(in.m);
 
@@ -260,7 +251,7 @@ inline
 void
 op_vectorise_row::apply(Mat<out_eT>& out, const Op<T1,op_vectorise_row>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   op_vectorise_row::apply_direct(out, in.m);
   }
@@ -272,7 +263,7 @@ inline
 void
 op_vectorise_row::apply_direct(Mat<typename T1::elem_type>& out, const T1& expr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Row-wise vectorisation is equivalent to a transpose followed by a vectorisation.
 
@@ -288,11 +279,9 @@ op_vectorise_row::apply_direct(Mat<typename T1::elem_type>& out, const T1& expr)
     // If `expr` is some type of matrix, then unwrap<T1> just stores the matrix itself.
     // That's not a temporary, and we can't steal its memory---we have to copy it.
     out.set_size(1, U.M.n_elem);
-    coot_rt_t::copy_mat(out.get_dev_mem(false), U.get_dev_mem(false),
-                        // logically, we treat `out` as the same size as the input
-                        U.M.n_rows, U.M.n_cols,
-                        0, 0, U.M.n_rows,
-                        U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+    // Create an alias of `out` that's the same size as the input.
+    Mat<typename T1::elem_type> out_alias(out.get_dev_mem(false), U.M.n_rows, U.M.n_cols);
+    coot_rt_t::copy(make_proxy(out_alias), make_proxy(U.M));
     }
   else
     {
@@ -310,7 +299,7 @@ inline
 void
 op_vectorise_row::apply_direct(Mat<out_eT>& out, const T1& expr, const typename enable_if<is_same_type<out_eT, typename T1::elem_type>::no>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   // Row-wise vectorisation is equivalent to a transpose followed by a vectorisation.
@@ -321,11 +310,8 @@ op_vectorise_row::apply_direct(Mat<out_eT>& out, const T1& expr, const typename 
 
   // A conversion operation is always necessary when the type is different.
   out.set_size(1, U.M.n_elem);
-  coot_rt_t::copy_mat(out.get_dev_mem(false), U.get_dev_mem(false),
-                      // logically, we treat `out` as the same size as the input
-                      U.M.n_rows, U.M.n_cols,
-                      0, 0, U.M.n_rows,
-                      U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+  Mat<out_eT> out_alias(out.get_dev_mem(false), U.M.n_rows, U.M.n_cols);
+  coot_rt_t::copy(make_proxy(out_alias), make_proxy(U.M));
   }
 
 
@@ -359,7 +345,7 @@ inline
 void
 op_vectorise_cube_col::apply(Mat<typename T1::elem_type>& out, const CubeToMatOp<T1, op_vectorise_cube_col>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const unwrap_cube<T1> U(in.m);
 
@@ -372,11 +358,9 @@ op_vectorise_cube_col::apply(Mat<typename T1::elem_type>& out, const CubeToMatOp
     {
     out.set_size(U.M.n_elem, 1);
 
-    coot_rt_t::copy_cube(out.get_dev_mem(false), U.get_dev_mem(false),
-                         // logically, we treat `out` as the same size as the input
-                         U.M.n_rows, U.M.n_cols, U.M.n_slices,
-                         0, 0, 0, U.M.n_rows, U.M.n_cols,
-                         U.get_row_offset(), U.get_col_offset(), U.get_slice_offset(), U.get_M_n_rows(), U.get_M_n_cols());
+    // Treat `out` as a cube with the same size as the input.
+    Cube<typename T1::elem_type> out_alias(out.get_dev_mem(false), U.M.n_rows, U.M.n_cols, U.M.n_slices);
+    coot_rt_t::copy(make_proxy(out_alias), make_proxy(U.M));
     }
   }
 

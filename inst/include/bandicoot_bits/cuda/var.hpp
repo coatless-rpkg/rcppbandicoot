@@ -36,7 +36,7 @@ var(dev_mem_t<eT> dest,
     const uword src_means_offset,
     const uword src_means_mem_incr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>((dim == 0) ? oneway_kernel_id::var_colwise : oneway_kernel_id::var_rowwise);
   const uword norm_correction = (norm_type == 0) ? 1 : 0;
@@ -79,7 +79,7 @@ inline
 eT
 var_vec(const dev_mem_t<eT> mem, const eT mean, const uword n_elem, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   CUfunction k = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::var);
   CUfunction k_small = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::var_small);
@@ -107,7 +107,7 @@ inline
 eT
 var_vec_subview(const dev_mem_t<eT> mem, const eT mean, const uword M_n_rows, const uword M_n_cols, const uword aux_row1, const uword aux_col1, const uword n_rows, const uword n_cols, const uword norm_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(M_n_cols);
 
   CUfunction k = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::submat_var);

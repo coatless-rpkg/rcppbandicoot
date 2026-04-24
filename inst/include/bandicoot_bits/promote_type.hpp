@@ -257,3 +257,17 @@ struct eT_promoter
   {
   typedef typename promote_type<typename T1::elem_type, typename T2::elem_type>::result eT;
   };
+
+
+
+// promote integral types to their appropriate floating point representation
+template<typename eT> struct promote_fp_type { typedef eT result; };
+
+template<> struct promote_fp_type<u8 > { typedef float  result; };
+template<> struct promote_fp_type<u16> { typedef float  result; };
+template<> struct promote_fp_type<u32> { typedef float  result; };
+template<> struct promote_fp_type<u64> { typedef double result; };
+template<> struct promote_fp_type<s8 > { typedef float  result; };
+template<> struct promote_fp_type<s16> { typedef float  result; };
+template<> struct promote_fp_type<s32> { typedef float  result; };
+template<> struct promote_fp_type<s64> { typedef double result; };

@@ -22,7 +22,7 @@ inline
 void
 find(dev_mem_t<uword>& out, uword& out_len, const dev_mem_t<eT> A, const uword n_elem, const uword k, const uword find_type)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If the vector is empty, don't do anything.
   if (n_elem == 0)
@@ -39,8 +39,10 @@ find(dev_mem_t<uword>& out, uword& out_len, const dev_mem_t<eT> A, const uword n
   const size_t pow2_num_threads = std::min(mtpb, next_pow2(num_threads));
 
   // First, allocate temporary memory for the prefix sum.
-  dev_mem_t<uword> counts_mem;
-  counts_mem.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<uword>(pow2_num_threads + 1);
+  dev_mem_t<uword>            counts_mem({{ NULL, 0 }});
+  runtime_t::mem_array<uword> counts_mem_array(pow2_num_threads + 1);
+
+  counts_mem.cuda_mem_ptr = counts_mem_array.memptr();
 
   CUfunction nnz_k = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::count_nonzeros);
 
@@ -129,6 +131,4 @@ find(dev_mem_t<uword>& out, uword& out_len, const dev_mem_t<eT> A, const uword n
 
     coot_check_cuda_error(result, "coot::cuda::find(): cuLaunchKernel() failed for find_last kernel");
     }
-
-  get_rt().cuda_rt.release_memory(counts_mem.cuda_mem_ptr);
   }

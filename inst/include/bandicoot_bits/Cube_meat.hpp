@@ -23,7 +23,7 @@ template<typename eT>
 inline
 Cube<eT>::~Cube()
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   coot_rt_t::synchronise();
 
@@ -48,7 +48,7 @@ Cube<eT>::Cube()
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
   }
 
 
@@ -66,7 +66,7 @@ Cube<eT>::Cube(const uword in_n_rows, const uword in_n_cols, const uword in_n_sl
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   init(in_n_rows, in_n_cols, in_n_slices);
 
@@ -87,7 +87,7 @@ Cube<eT>::Cube(const SizeCube& s)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   init(s.n_rows, s.n_cols, s.n_slices);
 
@@ -164,7 +164,7 @@ Cube<eT>::Cube(const uword in_n_rows, const uword in_n_cols, const uword in_n_sl
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
   coot_ignore(f);
 
   init(in_n_rows, in_n_cols, in_n_slices);
@@ -192,7 +192,7 @@ Cube<eT>::Cube(const SizeCube& s, const fill::fill_class<fill_type>& f)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
   coot_ignore(f);
 
   init(s.n_rows, s.n_cols, s.n_slices);
@@ -262,7 +262,7 @@ Cube<eT>::Cube(Cube<eT>&& in_cube)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   (*this).steal_mem(in_cube);
   }
@@ -274,7 +274,7 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(Cube<eT>&& in_cube)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).steal_mem(in_cube);
 
@@ -288,7 +288,7 @@ inline
 void
 Cube<eT>::cleanup()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if ((dev_mem.cl_mem_ptr.ptr != NULL) && (mem_state == 0) && (n_elem > 0))
     {
@@ -309,7 +309,7 @@ Cube<eT>::init(const uword new_n_rows, const uword new_n_cols, const uword new_n
   if( (n_rows == new_n_rows) && (n_cols == new_n_cols) && (n_slices == new_n_slices) ) { return; }
 
   // ensure that n_elem can hold the result of (n_rows * n_cols * n_slices)
-  coot_debug_check(
+  coot_conform_check(
     ( ( (new_n_rows > 0x0FFF) || (new_n_cols > 0x0FFF) || (new_n_slices > 0xFF) )
       ? ( (double(new_n_rows) * double(new_n_cols) * double(new_n_slices)) > double(Datum<uword>::max) )
       : false
@@ -322,7 +322,7 @@ Cube<eT>::init(const uword new_n_rows, const uword new_n_cols, const uword new_n
 
   if (old_n_elem == new_n_elem)
     {
-    coot_extra_debug_print("Cube::init(): reusing memory");
+    coot_debug_print("Cube::init(): reusing memory");
 
     delete_mat();
 
@@ -340,22 +340,22 @@ Cube<eT>::init(const uword new_n_rows, const uword new_n_cols, const uword new_n
 
   if (new_n_elem == 0)
     {
-    coot_extra_debug_print("Cube::init(): releasing memory");
+    coot_debug_print("Cube::init(): releasing memory");
     cleanup();
     }
   else if (new_n_elem < old_n_elem)
     {
-    coot_extra_debug_print("Cube::init(): reusing memory");
+    coot_debug_print("Cube::init(): reusing memory");
     }
   else
     {
     if (old_n_elem > 0)
       {
-      coot_extra_debug_print("Cube::init(): releasing memory");
+      coot_debug_print("Cube::init(): releasing memory");
       cleanup();
       }
 
-    coot_extra_debug_print("Cube::init(): acquiring memory");
+    coot_debug_print("Cube::init(): acquiring memory");
     dev_mem = get_rt().acquire_memory<eT>(new_n_elem);
     }
 
@@ -376,19 +376,27 @@ inline
 void
 Cube<eT>::delete_mat()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if((n_slices > 0) && (mat_ptrs != nullptr))
     {
-    for(uword uslice = 0; uslice < n_slices; ++uslice)
+    for(uword s=0; s < n_slices; ++s)
       {
-      if(mat_ptrs[uslice] != nullptr)  { delete access::rw(mat_ptrs[uslice]); }
+      raw_mat_ptr_type mat_ptr = raw_mat_ptr_type(mat_ptrs[s]);  // explicit cast to indicate load from std::atomic<Mat<eT>*>
+      
+      if(mat_ptr != nullptr)
+        {
+        coot_debug_print( coot_str::format("Cube::delete_mat(): destroying matrix %u") % s );
+        delete mat_ptr;
+        mat_ptrs[s] = nullptr;
+        }
       }
 
     if( n_slices > Cube_prealloc::mat_ptrs_size )
       {
+      coot_debug_print("Cube::delete_mat(): freeing mat_ptrs array");
       delete [] mat_ptrs;
-      access::rw(mat_ptrs) = nullptr;
+      mat_ptrs = nullptr;
       }
     }
   }
@@ -400,33 +408,112 @@ inline
 void
 Cube<eT>::create_mat()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  if(n_slices == 0)
+  if(n_slices == 0)  { mat_ptrs = nullptr; return; }
+  
+  if(mem_state <= 2)
     {
-    access::rw(mat_ptrs) = nullptr;
-    }
-  else
-    {
-    if(mem_state <= 2)
+    if(n_slices <= Cube_prealloc::mat_ptrs_size)
       {
-      if(n_slices <= Cube_prealloc::mat_ptrs_size)
-        {
-        access::rw(mat_ptrs) = const_cast< Mat<eT>** >(mat_ptrs_local);
-        }
-      else
-        {
-        access::rw(mat_ptrs) = new(std::nothrow) Mat<eT>*[n_slices];
-
-        coot_check_bad_alloc( (mat_ptrs == nullptr), "Cube::create_mat(): out of memory" );
-        }
+      coot_debug_print("Cube::create_mat(): using local memory for mat_ptrs array");
+      
+      mat_ptrs = mat_ptrs_local;
       }
-
-    for(uword uslice = 0; uslice < n_slices; ++uslice)
+    else
       {
-      mat_ptrs[uslice] = nullptr;
+      coot_debug_print("Cube::create_mat(): allocating mat_ptrs array");
+      
+      mat_ptrs = new(std::nothrow) atomic_mat_ptr_type[n_slices];
+      
+      coot_check_bad_alloc( (mat_ptrs == nullptr), "Cube::create_mat(): out of memory" );
       }
     }
+  
+  for(uword s=0; s < n_slices; ++s)  { mat_ptrs[s] = nullptr; }
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>*
+Cube<eT>::create_mat_ptr(const uword in_slice) const
+  {
+  coot_debug_sigprint();
+  
+  coot_debug_print( coot_str::format("Cube::create_mat_ptr(): creating matrix %u") % in_slice );
+  
+  const dev_mem_t<eT> ptr = (n_elem_slice > 0) ? slice_get_dev_mem(in_slice, false) : dev_mem_t<eT>({{ NULL, 0 }});
+  
+  Mat<eT>* mat_ptr = new(std::nothrow) Mat<eT>('j', ptr, n_rows, n_cols);
+  
+  return mat_ptr;
+  }
+
+
+
+template<typename eT>
+inline
+Mat<eT>*
+Cube<eT>::get_mat_ptr(const uword in_slice) const
+  {
+  coot_debug_sigprint();
+  
+  raw_mat_ptr_type mat_ptr = nullptr;
+  
+  #if defined(COOT_USE_OPENMP)
+    {
+    #pragma omp atomic read seq_cst
+    mat_ptr = mat_ptrs[in_slice];
+    }
+  #elif defined(COOT_USE_STD_MUTEX)
+    {
+    mat_ptr = mat_ptrs[in_slice].load();
+    }
+  #else
+    {
+    mat_ptr = mat_ptrs[in_slice];
+    }
+  #endif
+  
+  if(mat_ptr == nullptr)
+    {
+    #if defined(COOT_USE_OPENMP)
+      {
+      #pragma omp critical (coot_Cube_mat_ptrs)
+        {
+        #pragma omp atomic read seq_cst
+        mat_ptr = mat_ptrs[in_slice];
+        
+        if(mat_ptr == nullptr)  { mat_ptr = create_mat_ptr(in_slice); }
+        
+        #pragma omp atomic write seq_cst
+        mat_ptrs[in_slice] = mat_ptr;
+        }
+      }
+    #elif defined(COOT_USE_STD_MUTEX)
+      {
+      const std::lock_guard<std::mutex> lock(mat_mutex);
+      
+      mat_ptr = mat_ptrs[in_slice].load();
+      
+      if(mat_ptr == nullptr)  { mat_ptr = create_mat_ptr(in_slice); }
+      
+      mat_ptrs[in_slice].store(mat_ptr);
+      }
+    #else
+      {
+      mat_ptr = create_mat_ptr(in_slice);
+      
+      mat_ptrs[in_slice] = mat_ptr;
+      }
+    #endif
+    
+    coot_check_bad_alloc( (mat_ptr == nullptr), "Cube::get_mat_ptr(): out of memory" );
+    }
+  
+  return mat_ptr;
   }
 
 
@@ -438,11 +525,11 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   init(1, 1, 1);
 
-  coot_rt_t::fill(dev_mem, val, n_elem_slice, n_slices, 0, 0, n_elem_slice);
+  coot_rt_t::fill(make_proxy(*this), val);
 
   return *this;
   }
@@ -455,14 +542,9 @@ inline
 Cube<eT>&
 Cube<eT>::operator+=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
-                        dev_mem, dev_mem,
-                        val, (eT) 0,
-                        n_rows, n_cols, n_slices,
-                        0, 0, 0, n_rows, n_cols,
-                        0, 0, 0, n_rows, n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOpCube<Cube<eT>, eop_scalar_plus>(*this, val)));
 
   return *this;
   }
@@ -475,14 +557,9 @@ inline
 Cube<eT>&
 Cube<eT>::operator-=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_minus_scalar_post,
-                        dev_mem, dev_mem,
-                        val, (eT) 0,
-                        n_rows, n_cols, n_slices,
-                        0, 0, 0, n_rows, n_cols,
-                        0, 0, 0, n_rows, n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOpCube<Cube<eT>, eop_scalar_minus_post>(*this, val)));
 
   return *this;
   }
@@ -495,14 +572,9 @@ inline
 Cube<eT>&
 Cube<eT>::operator*=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
-                        dev_mem, dev_mem,
-                        val, (eT) 1,
-                        n_rows, n_cols, n_slices,
-                        0, 0, 0, n_rows, n_cols,
-                        0, 0, 0, n_rows, n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOpCube<Cube<eT>, eop_scalar_times>(*this, val)));
 
   return *this;
   }
@@ -515,14 +587,9 @@ inline
 Cube<eT>&
 Cube<eT>::operator/=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
-                        dev_mem, dev_mem,
-                        val, (eT) 1,
-                        n_rows, n_cols, n_slices,
-                        0, 0, 0, n_rows, n_cols,
-                        0, 0, 0, n_rows, n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOpCube<Cube<eT>, eop_scalar_div_post>(*this, val)));
 
   return *this;
   }
@@ -542,7 +609,7 @@ Cube<eT>::Cube(const Cube<eT>& x)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   (*this).operator=(x);
   }
@@ -555,16 +622,12 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(const Cube<eT>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(this != &x)
     {
     (*this).set_size(x.n_rows, x.n_cols, x.n_slices);
-
-    coot_rt_t::copy_mat(dev_mem, x.dev_mem,
-                        n_elem_slice, n_slices,
-                        0, 0, n_elem_slice,
-                        0, 0, x.n_elem_slice);
+    coot_rt_t::copy(make_proxy(*this), make_proxy(x));
     }
 
   return *this;
@@ -584,7 +647,7 @@ Cube<eT>::Cube(dev_mem_t<eT> aux_dev_mem, const uword in_n_rows, const uword in_
   , dev_mem(aux_dev_mem)
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   create_mat();
   }
@@ -603,12 +666,12 @@ Cube<eT>::Cube(cl_mem aux_dev_mem, const uword in_n_rows, const uword in_n_cols,
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   this->dev_mem.cl_mem_ptr.ptr = aux_dev_mem;
   this->dev_mem.cl_mem_ptr.offset = 0;
 
-  coot_debug_check( get_rt().backend != CL_BACKEND, "Cube(): cannot wrap OpenCL memory when not using OpenCL backend");
+  coot_check_runtime_error( get_rt().backend != CL_BACKEND, "Cube(): cannot wrap OpenCL memory when not using OpenCL backend");
 
   create_mat();
   }
@@ -627,11 +690,11 @@ Cube<eT>::Cube(typename cuda_type<eT>::type* aux_dev_mem, const uword in_n_rows,
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   this->dev_mem.cuda_mem_ptr = aux_dev_mem;
 
-  coot_debug_check( get_rt().backend != CUDA_BACKEND, "Cube(): cannot wrap CUDA memory when not using CUDA backend");
+  coot_check_runtime_error( get_rt().backend != CUDA_BACKEND, "Cube(): cannot wrap CUDA memory when not using CUDA backend");
   }
 
 
@@ -642,16 +705,12 @@ inline
 Cube<eT>&
 Cube<eT>::operator+=(const Cube<eT>& m)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_assert_same_size((*this), m, "element-wise addition");
 
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_plus_array,
-                     dev_mem, dev_mem, m.dev_mem,
-                     n_elem_slice, n_slices,
-                     0, 0, n_elem_slice,
-                     0, 0, n_elem_slice,
-                     0, 0, m.n_elem_slice);
+  const eGlueCube<Cube<eT>, Cube<eT>, eglue_plus> G(*this, m);
+  eglue_plus::apply(*this, G);
 
   return *this;
   }
@@ -664,16 +723,12 @@ inline
 Cube<eT>&
 Cube<eT>::operator-=(const Cube<eT>& m)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_assert_same_size(*this, m, "element-wise subtraction");
 
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_minus_array,
-                     dev_mem, dev_mem, m.dev_mem,
-                     n_elem_slice, n_slices,
-                     0, 0, n_elem_slice,
-                     0, 0, n_elem_slice,
-                     0, 0, m.n_elem_slice);
+  const eGlueCube<Cube<eT>, Cube<eT>, eglue_minus> G(*this, m);
+  eglue_minus::apply(*this, G);
 
   return *this;
   }
@@ -686,16 +741,12 @@ inline
 Cube<eT>&
 Cube<eT>::operator%=(const Cube<eT>& m)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_assert_same_size(*this, m, "element-wise multiplication");
 
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_mul_array,
-                     dev_mem, dev_mem, m.dev_mem,
-                     n_elem_slice, n_slices,
-                     0, 0, n_elem_slice,
-                     0, 0, n_elem_slice,
-                     0, 0, m.n_elem_slice);
+  const eGlueCube<Cube<eT>, Cube<eT>, eglue_schur> G(*this, m);
+  eglue_schur::apply(*this, G);
 
   return *this;
   }
@@ -708,16 +759,12 @@ inline
 Cube<eT>&
 Cube<eT>::operator/=(const Cube<eT>& m)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_assert_same_size(*this, m, "element-wise division");
 
-  coot_rt_t::eop_mat(threeway_kernel_id::equ_array_div_array,
-                     dev_mem, dev_mem, m.dev_mem,
-                     n_elem_slice, n_slices,
-                     0, 0, n_elem_slice,
-                     0, 0, n_elem_slice,
-                     0, 0, m.n_elem_slice);
+  const eGlueCube<Cube<eT>, Cube<eT>, eglue_div> G(*this, m);
+  eglue_div::apply(*this, G);
 
   return *this;
   }
@@ -762,7 +809,7 @@ Cube<eT>::Cube(const subview_cube<eT>& X)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   set_size(X.n_rows, X.n_cols, X.n_slices);
 
@@ -777,7 +824,7 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(const subview_cube<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const bool alias = is_alias(*this, X.m);
 
@@ -805,9 +852,12 @@ inline
 Cube<eT>&
 Cube<eT>::operator+=(const subview_cube<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  subview_cube<eT>::plus_inplace(*this, X);
+  coot_assert_same_size(*this, X, "element-wise addition");
+
+  const eGlueCube<Cube<eT>, subview_cube<eT>, eglue_plus> G(*this, X);
+  eglue_plus::apply(*this, G);
 
   return *this;
   }
@@ -820,9 +870,12 @@ inline
 Cube<eT>&
 Cube<eT>::operator-=(const subview_cube<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  subview_cube<eT>::minus_inplace(*this, X);
+  coot_assert_same_size(*this, X, "element-wise subtraction");
+
+  const eGlueCube<Cube<eT>, subview_cube<eT>, eglue_minus> G(*this, X);
+  eglue_minus::apply(*this, G);
 
   return *this;
   }
@@ -835,9 +888,12 @@ inline
 Cube<eT>&
 Cube<eT>::operator%=(const subview_cube<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  subview_cube<eT>::schur_inplace(*this, X);
+  coot_assert_same_size(*this, X, "element-wise multiplication");
+
+  const eGlueCube<Cube<eT>, subview_cube<eT>, eglue_schur> G(*this, X);
+  eglue_schur::apply(*this, G);
 
   return *this;
   }
@@ -850,9 +906,12 @@ inline
 Cube<eT>&
 Cube<eT>::operator/=(const subview_cube<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  subview_cube<eT>::div_inplace(*this, X);
+  coot_assert_same_size(*this, X, "element-wise division");
+
+  const eGlueCube<Cube<eT>, subview_cube<eT>, eglue_div> G(*this, X);
+  eglue_div::apply(*this, G);
 
   return *this;
   }
@@ -971,9 +1030,9 @@ coot_inline
 subview_cube<eT>
 Cube<eT>::row(const uword in_row)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds( (in_row >= n_rows), "Cube::row(): index out of bounds" );
+  coot_conform_check_bounds( (in_row >= n_rows), "Cube::row(): index out of bounds" );
 
   return (*this).rows(in_row, in_row);
   }
@@ -986,9 +1045,9 @@ coot_inline
 const subview_cube<eT>
 Cube<eT>::row(const uword in_row) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds( (in_row >= n_rows), "Cube::row(): index out of bounds" );
+  coot_conform_check_bounds( (in_row >= n_rows), "Cube::row(): index out of bounds" );
 
   return (*this).rows(in_row, in_row);
   }
@@ -1001,9 +1060,9 @@ coot_inline
 subview_cube<eT>
 Cube<eT>::col(const uword in_col)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds( (in_col >= n_cols), "Cube::col(): index out of bounds" );
+  coot_conform_check_bounds( (in_col >= n_cols), "Cube::col(): index out of bounds" );
 
   return (*this).cols(in_col, in_col);
   }
@@ -1016,9 +1075,9 @@ coot_inline
 const subview_cube<eT>
 Cube<eT>::col(const uword in_col) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds( (in_col >= n_cols), "Cube::col(): index out of bounds" );
+  coot_conform_check_bounds( (in_col >= n_cols), "Cube::col(): index out of bounds" );
 
   return (*this).cols(in_col, in_col);
   }
@@ -1031,18 +1090,11 @@ inline
 Mat<eT>&
 Cube<eT>::slice(const uword in_slice)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds( (in_slice >= n_slices), "Cube::slice(): index out of bounds" );
+  coot_conform_check_bounds( (in_slice >= n_slices), "Cube::slice(): index out of bounds" );
 
-  if(mat_ptrs[in_slice] == nullptr)
-    {
-    const dev_mem_t<eT> ptr = (n_elem_slice > 0) ? slice_get_dev_mem(in_slice, false) : dev_mem_t<eT>({{ NULL, 0 }});
-
-    mat_ptrs[in_slice] = new Mat<eT>('j', ptr, n_rows, n_cols);
-    }
-
-  return const_cast< Mat<eT>& >( *(mat_ptrs[in_slice]) );
+  return *(get_mat_ptr(in_slice));
   }
 
 
@@ -1053,18 +1105,11 @@ inline
 const Mat<eT>&
 Cube<eT>::slice(const uword in_slice) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds( (in_slice >= n_slices), "Cube::slice(): index out of bounds" );
+  coot_conform_check_bounds( (in_slice >= n_slices), "Cube::slice(): index out of bounds" );
 
-  if(mat_ptrs[in_slice] == nullptr)
-    {
-    const dev_mem_t<eT> ptr = (n_elem_slice > 0) ? slice_get_dev_mem(in_slice, false) : dev_mem_t<eT>({{ NULL, 0 }});
-
-    mat_ptrs[in_slice] = new Mat<eT>('j', ptr, n_rows, n_cols);
-    }
-
-  return *(mat_ptrs[in_slice]);
+  return *(get_mat_ptr(in_slice));
   }
 
 
@@ -1075,9 +1120,9 @@ coot_inline
 subview_cube<eT>
 Cube<eT>::rows(const uword in_row1, const uword in_row2)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_row1 > in_row2) || (in_row2 >= n_rows),
     "Cube::rows(): indices out of bounds or incorrectly used"
@@ -1096,9 +1141,9 @@ coot_inline
 const subview_cube<eT>
 Cube<eT>::rows(const uword in_row1, const uword in_row2) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_row1 > in_row2) || (in_row2 >= n_rows),
     "Cube::rows(): indices out of bounds or incorrectly used"
@@ -1117,9 +1162,9 @@ coot_inline
 subview_cube<eT>
 Cube<eT>::cols(const uword in_col1, const uword in_col2)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_col1 > in_col2) || (in_col2 >= n_cols),
     "Cube::cols(): indices out of bounds or incorrectly used"
@@ -1138,9 +1183,9 @@ coot_inline
 const subview_cube<eT>
 Cube<eT>::cols(const uword in_col1, const uword in_col2) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_col1 > in_col2) || (in_col2 >= n_cols),
     "Cube::cols(): indices out of bounds or incorrectly used"
@@ -1159,9 +1204,9 @@ coot_inline
 subview_cube<eT>
 Cube<eT>::slices(const uword in_slice1, const uword in_slice2)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_slice1 > in_slice2) || (in_slice2 >= n_slices),
     "Cube::slices(): indices out of bounds or incorrectly used"
@@ -1180,9 +1225,9 @@ coot_inline
 const subview_cube<eT>
 Cube<eT>::slices(const uword in_slice1, const uword in_slice2) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_slice1 > in_slice2) || (in_slice2 >= n_slices),
     "Cube::slices(): indices out of bounds or incorrectly used"
@@ -1201,9 +1246,9 @@ coot_inline
 subview_cube<eT>
 Cube<eT>::subcube(const uword in_row1, const uword in_col1, const uword in_slice1, const uword in_row2, const uword in_col2, const uword in_slice2)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_row1 >  in_row2) || (in_col1 >  in_col2) || (in_slice1 >  in_slice2) ||
     (in_row2 >= n_rows)  || (in_col2 >= n_cols)  || (in_slice2 >= n_slices),
@@ -1225,9 +1270,9 @@ coot_inline
 const subview_cube<eT>
 Cube<eT>::subcube(const uword in_row1, const uword in_col1, const uword in_slice1, const uword in_row2, const uword in_col2, const uword in_slice2) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_row1 >  in_row2) || (in_col1 >  in_col2) || (in_slice1 >  in_slice2) ||
     (in_row2 >= n_rows)  || (in_col2 >= n_cols)  || (in_slice2 >= n_slices),
@@ -1249,7 +1294,7 @@ inline
 subview_cube<eT>
 Cube<eT>::subcube(const uword in_row1, const uword in_col1, const uword in_slice1, const SizeCube& s)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword l_n_rows   = n_rows;
   const uword l_n_cols   = n_cols;
@@ -1259,7 +1304,7 @@ Cube<eT>::subcube(const uword in_row1, const uword in_col1, const uword in_slice
   const uword s_n_cols   = s.n_cols;
   const uword s_n_slices = s.n_slices;
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
        ( in_row1             >= l_n_rows) || ( in_col1             >= l_n_cols) || ( in_slice1               >= l_n_slices)
     || ((in_row1 + s_n_rows) >  l_n_rows) || ((in_col1 + s_n_cols) >  l_n_cols) || ((in_slice1 + s_n_slices) >  l_n_slices),
@@ -1277,7 +1322,7 @@ inline
 const subview_cube<eT>
 Cube<eT>::subcube(const uword in_row1, const uword in_col1, const uword in_slice1, const SizeCube& s) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword l_n_rows   = n_rows;
   const uword l_n_cols   = n_cols;
@@ -1287,7 +1332,7 @@ Cube<eT>::subcube(const uword in_row1, const uword in_col1, const uword in_slice
   const uword s_n_cols   = s.n_cols;
   const uword s_n_slices = s.n_slices;
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
        ( in_row1             >= l_n_rows) || ( in_col1             >= l_n_cols) || ( in_slice1               >= l_n_slices)
     || ((in_row1 + s_n_rows) >  l_n_rows) || ((in_col1 + s_n_cols) >  l_n_cols) || ((in_slice1 + s_n_slices) >  l_n_slices),
@@ -1305,7 +1350,7 @@ inline
 subview_cube<eT>
 Cube<eT>::subcube(const span& row_span, const span& col_span, const span& slice_span)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const bool row_all   = row_span.whole;
   const bool col_all   = col_span.whole;
@@ -1327,7 +1372,7 @@ Cube<eT>::subcube(const span& row_span, const span& col_span, const span& slice_
   const uword in_slice2        =                              slice_span.b;
   const uword subcube_n_slices = slice_all ? local_n_slices : in_slice2 - in_slice1 + 1;
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     ( row_all   ? false : ((in_row1   >  in_row2)   || (in_row2   >= local_n_rows))   )
     ||
@@ -1349,7 +1394,7 @@ inline
 const subview_cube<eT>
 Cube<eT>::subcube(const span& row_span, const span& col_span, const span& slice_span) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const bool row_all   = row_span.whole;
   const bool col_all   = col_span.whole;
@@ -1371,7 +1416,7 @@ Cube<eT>::subcube(const span& row_span, const span& col_span, const span& slice_
   const uword in_slice2        =                              slice_span.b;
   const uword subcube_n_slices = slice_all ? local_n_slices : in_slice2 - in_slice1 + 1;
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     ( row_all   ? false : ((in_row1   >  in_row2)   || (in_row2   >= local_n_rows))   )
     ||
@@ -1392,7 +1437,7 @@ inline
 subview_cube<eT>
 Cube<eT>::operator()(const span& row_span, const span& col_span, const span& slice_span)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return (*this).subcube(row_span, col_span, slice_span);
   }
@@ -1404,7 +1449,7 @@ inline
 const subview_cube<eT>
 Cube<eT>::operator()(const span& row_span, const span& col_span, const span& slice_span) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return (*this).subcube(row_span, col_span, slice_span);
   }
@@ -1416,7 +1461,7 @@ inline
 subview_cube<eT>
 Cube<eT>::operator()(const uword in_row1, const uword in_col1, const uword in_slice1, const SizeCube& s)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return (*this).subcube(in_row1, in_col1, in_slice1, s);
   }
@@ -1428,7 +1473,7 @@ inline
 const subview_cube<eT>
 Cube<eT>::operator()(const uword in_row1, const uword in_col1, const uword in_slice1, const SizeCube& s) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return (*this).subcube(in_row1, in_col1, in_slice1, s);
   }
@@ -1440,9 +1485,9 @@ coot_inline
 subview_cube<eT>
 Cube<eT>::tube(const uword in_row1, const uword in_col1)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     ((in_row1 >= n_rows) || (in_col1 >= n_cols)),
     "Cube::tube(): indices out of bounds"
@@ -1458,9 +1503,9 @@ coot_inline
 const subview_cube<eT>
 Cube<eT>::tube(const uword in_row1, const uword in_col1) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     ((in_row1 >= n_rows) || (in_col1 >= n_cols)),
     "Cube::tube(): indices out of bounds"
@@ -1476,9 +1521,9 @@ coot_inline
 subview_cube<eT>
 Cube<eT>::tube(const uword in_row1, const uword in_col1, const uword in_row2, const uword in_col2)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_row1 >  in_row2) || (in_col1 >  in_col2) ||
     (in_row2 >= n_rows)  || (in_col2 >= n_cols),
@@ -1498,9 +1543,9 @@ coot_inline
 const subview_cube<eT>
 Cube<eT>::tube(const uword in_row1, const uword in_col1, const uword in_row2, const uword in_col2) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_row1 >  in_row2) || (in_col1 >  in_col2) ||
     (in_row2 >= n_rows)  || (in_col2 >= n_cols),
@@ -1520,7 +1565,7 @@ coot_inline
 subview_cube<eT>
 Cube<eT>::tube(const uword in_row1, const uword in_col1, const SizeMat& s)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword l_n_rows = n_rows;
   const uword l_n_cols = n_cols;
@@ -1528,7 +1573,7 @@ Cube<eT>::tube(const uword in_row1, const uword in_col1, const SizeMat& s)
   const uword s_n_rows = s.n_rows;
   const uword s_n_cols = s.n_cols;
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     ((in_row1 >= l_n_rows) || (in_col1 >= l_n_cols) || ((in_row1 + s_n_rows) > l_n_rows) || ((in_col1 + s_n_cols) > l_n_cols)),
     "Cube::tube(): indices or size out of bounds"
@@ -1544,7 +1589,7 @@ coot_inline
 const subview_cube<eT>
 Cube<eT>::tube(const uword in_row1, const uword in_col1, const SizeMat& s) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword l_n_rows = n_rows;
   const uword l_n_cols = n_cols;
@@ -1552,7 +1597,7 @@ Cube<eT>::tube(const uword in_row1, const uword in_col1, const SizeMat& s) const
   const uword s_n_rows = s.n_rows;
   const uword s_n_cols = s.n_cols;
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     ((in_row1 >= l_n_rows) || (in_col1 >= l_n_cols) || ((in_row1 + s_n_rows) > l_n_rows) || ((in_col1 + s_n_cols) > l_n_cols)),
     "Cube::tube(): indices or size out of bounds"
@@ -1568,7 +1613,7 @@ inline
 subview_cube<eT>
 Cube<eT>::tube(const span& row_span, const span& col_span)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const bool row_all = row_span.whole;
   const bool col_all = col_span.whole;
@@ -1584,7 +1629,7 @@ Cube<eT>::tube(const span& row_span, const span& col_span)
   const uword in_col2        =                            col_span.b;
   const uword subcube_n_cols = col_all   ? local_n_cols : in_col2 - in_col1 + 1;
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     ( row_all ? false : ((in_row1 > in_row2) || (in_row2 >= local_n_rows)) )
     ||
@@ -1603,7 +1648,7 @@ inline
 const subview_cube<eT>
 Cube<eT>::tube(const span& row_span, const span& col_span) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const bool row_all = row_span.whole;
   const bool col_all = col_span.whole;
@@ -1619,7 +1664,7 @@ Cube<eT>::tube(const span& row_span, const span& col_span) const
   const uword in_col2        =                            col_span.b;
   const uword subcube_n_cols = col_all   ? local_n_cols : in_col2 - in_col1 + 1;
 
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     ( row_all ? false : ((in_row1 > in_row2) || (in_row2 >= local_n_rows)) )
     ||
@@ -1638,9 +1683,9 @@ inline
 subview_cube<eT>
 Cube<eT>::head_slices(const uword N)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds( (N > n_slices), "Cube::head_slices(): size out of bounds" );
+  coot_conform_check_bounds( (N > n_slices), "Cube::head_slices(): size out of bounds" );
 
   return subview_cube<eT>(*this, 0, 0, 0, n_rows, n_cols, N);
   }
@@ -1652,9 +1697,9 @@ inline
 const subview_cube<eT>
 Cube<eT>::head_slices(const uword N) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds( (N > n_slices), "Cube::head_slices(): size out of bounds" );
+  coot_conform_check_bounds( (N > n_slices), "Cube::head_slices(): size out of bounds" );
 
   return subview_cube<eT>(*this, 0, 0, 0, n_rows, n_cols, N);
   }
@@ -1666,9 +1711,9 @@ inline
 subview_cube<eT>
 Cube<eT>::tail_slices(const uword N)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds( (N > n_slices), "Cube::tail_slices(): size out of bounds" );
+  coot_conform_check_bounds( (N > n_slices), "Cube::tail_slices(): size out of bounds" );
 
   const uword start_slice = n_slices - N;
 
@@ -1682,9 +1727,9 @@ inline
 const subview_cube<eT>
 Cube<eT>::tail_slices(const uword N) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check_bounds( (N > n_slices), "Cube::tail_slices(): size out of bounds" );
+  coot_conform_check_bounds( (N > n_slices), "Cube::tail_slices(): size out of bounds" );
 
   const uword start_slice = n_slices - N;
 
@@ -1699,7 +1744,7 @@ coot_inline
 subview_elem1<eT,T1>
 Cube<eT>::elem(const Base<uword,T1>& a)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_elem1<eT,T1>(*this, a);
   }
@@ -1712,7 +1757,7 @@ coot_inline
 const subview_elem1<eT,T1>
 Cube<eT>::elem(const Base<uword,T1>& a) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_elem1<eT,T1>(*this, a);
   }
@@ -1725,7 +1770,7 @@ coot_inline
 subview_elem1<eT,T1>
 Cube<eT>::operator()(const Base<uword,T1>& a)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_elem1<eT,T1>(*this, a);
   }
@@ -1738,7 +1783,7 @@ coot_inline
 const subview_elem1<eT,T1>
 Cube<eT>::operator()(const Base<uword,T1>& a) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return subview_elem1<eT,T1>(*this, a);
   }
@@ -2531,7 +2576,7 @@ Cube<eT>::Cube(const OpCube<T1, op_type>& X)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
 
@@ -2547,7 +2592,7 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(const OpCube<T1, op_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
 
@@ -2565,13 +2610,24 @@ inline
 Cube<eT>&
 Cube<eT>::operator+=(const OpCube<T1, op_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, OpCube<T1, op_type>, eglue_plus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, OpCube<T1, op_type>, eglue_plus>> P(G);
 
-  return (*this).operator+=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator+=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -2583,13 +2639,24 @@ inline
 Cube<eT>&
 Cube<eT>::operator-=(const OpCube<T1, op_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, OpCube<T1, op_type>, eglue_minus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, OpCube<T1, op_type>, eglue_minus>> P(G);
 
-  return (*this).operator-=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator-=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -2601,13 +2668,24 @@ inline
 Cube<eT>&
 Cube<eT>::operator%=(const OpCube<T1, op_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, OpCube<T1, op_type>, eglue_schur> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, OpCube<T1, op_type>, eglue_schur>> P(G);
 
-  return (*this).operator%=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator%=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -2619,13 +2697,24 @@ inline
 Cube<eT>&
 Cube<eT>::operator/=(const OpCube<T1, op_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, OpCube<T1, op_type>, eglue_div> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, OpCube<T1, op_type>, eglue_div>> P(G);
 
-  return (*this).operator/=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator/=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -2644,11 +2733,9 @@ Cube<eT>::Cube(const eOpCube<T1, eop_type>& X)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
-
-  set_size(X.get_n_rows(), X.get_n_cols(), X.get_n_slices());
 
   eop_type::apply(*this, X);
   }
@@ -2662,11 +2749,9 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(const eOpCube<T1, eop_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
-
-  set_size(X.get_n_rows(), X.get_n_cols(), X.get_n_slices());
 
   eop_type::apply(*this, X);
 
@@ -2682,11 +2767,22 @@ inline
 Cube<eT>&
 Cube<eT>::operator+=(const eOpCube<T1, eop_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
 
-  eop_type::apply_inplace_plus(*this, X);
+  const eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_plus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_plus>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator+=");
+
+  const inexact_alias_wrapper<Cube<eT>, Proxy<eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_plus>>> A(*this, P);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -2700,11 +2796,22 @@ inline
 Cube<eT>&
 Cube<eT>::operator-=(const eOpCube<T1, eop_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
 
-  eop_type::apply_inplace_minus(*this, X);
+  const eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_minus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_minus>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator-=");
+
+  const inexact_alias_wrapper<Cube<eT>, Proxy<eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_minus>>> A(*this, P);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -2718,11 +2825,22 @@ inline
 Cube<eT>&
 Cube<eT>::operator%=(const eOpCube<T1, eop_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
 
-  eop_type::apply_inplace_schur(*this, X);
+  const eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_schur> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_schur>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator%=");
+
+  const inexact_alias_wrapper<Cube<eT>, Proxy<eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_schur>>> A(*this, P);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -2736,11 +2854,22 @@ inline
 Cube<eT>&
 Cube<eT>::operator/=(const eOpCube<T1, eop_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
 
-  eop_type::apply_inplace_div(*this, X);
+  const eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_div> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_div>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator/=");
+
+  const inexact_alias_wrapper<Cube<eT>, Proxy<eGlueCube<Cube<eT>, eOpCube<T1, eop_type>, eglue_div>>> A(*this, P);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -2760,7 +2889,7 @@ Cube<eT>::Cube(const mtOpCube<eT, T1, mtop_type>& X)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   mtop_type::apply(*this, X);
   }
@@ -2773,7 +2902,7 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(const mtOpCube<eT, T1, mtop_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   mtop_type::apply(*this, X);
 
@@ -2788,9 +2917,20 @@ inline
 Cube<eT>&
 Cube<eT>::operator+=(const mtOpCube<eT, T1, mtop_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  mtop_type::apply_inplace_plus(*this, X);
+  const eGlueCube<Cube<eT>, mtOpCube<eT, T1, mtop_type>, eglue_plus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, mtOpCube<eT, T1, mtop_type>, eglue_plus>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator+=");
+
+  const inexact_alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -2803,9 +2943,20 @@ inline
 Cube<eT>&
 Cube<eT>::operator-=(const mtOpCube<eT, T1, mtop_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  mtop_type::apply_inplace_minus(*this, X);
+  const eGlueCube<Cube<eT>, mtOpCube<eT, T1, mtop_type>, eglue_minus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, mtOpCube<eT, T1, mtop_type>, eglue_minus>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator-=");
+
+  const inexact_alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -2818,9 +2969,20 @@ inline
 Cube<eT>&
 Cube<eT>::operator%=(const mtOpCube<eT, T1, mtop_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  mtop_type::apply_inplace_schur(*this, X);
+  const eGlueCube<Cube<eT>, mtOpCube<eT, T1, mtop_type>, eglue_schur> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, mtOpCube<eT, T1, mtop_type>, eglue_schur>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator%=");
+
+  const inexact_alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -2833,9 +2995,20 @@ inline
 Cube<eT>&
 Cube<eT>::operator/=(const mtOpCube<eT, T1, mtop_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  mtop_type::apply_inplace_div(*this, X);
+  const eGlueCube<Cube<eT>, mtOpCube<eT, T1, mtop_type>, eglue_div> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, mtOpCube<eT, T1, mtop_type>, eglue_div>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator/=");
+
+  const inexact_alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -2856,7 +3029,7 @@ Cube<eT>::Cube(const GlueCube<T1, T2, glue_type>& X)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   this->operator=(X);
   }
@@ -2870,7 +3043,7 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(const GlueCube<T1, T2, glue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
@@ -2888,14 +3061,25 @@ inline
 Cube<eT>&
 Cube<eT>::operator+=(const GlueCube<T1, T2, glue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, GlueCube<T1, T2, glue_type>, eglue_plus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, GlueCube<T1, T2, glue_type>, eglue_plus>> P(G);
 
-  return (*this).operator+=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator+=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -2907,14 +3091,25 @@ inline
 Cube<eT>&
 Cube<eT>::operator-=(const GlueCube<T1, T2, glue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, GlueCube<T1, T2, glue_type>, eglue_minus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, GlueCube<T1, T2, glue_type>, eglue_minus>> P(G);
 
-  return (*this).operator-=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator-=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -2926,14 +3121,25 @@ inline
 Cube<eT>&
 Cube<eT>::operator%=(const GlueCube<T1, T2, glue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, GlueCube<T1, T2, glue_type>, eglue_schur> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, GlueCube<T1, T2, glue_type>, eglue_schur>> P(G);
 
-  return (*this).operator%=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator%=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -2945,14 +3151,25 @@ inline
 Cube<eT>&
 Cube<eT>::operator/=(const GlueCube<T1, T2, glue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, GlueCube<T1, T2, glue_type>, eglue_div> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, GlueCube<T1, T2, glue_type>, eglue_div>> P(G);
 
-  return (*this).operator/=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator/=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -2971,7 +3188,7 @@ Cube<eT>::Cube(const eGlueCube<T1, T2, eglue_type>& X)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   (*this).operator=(X);
   }
@@ -2985,15 +3202,10 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(const eGlueCube<T1, T2, eglue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
-
-  // eglue_core currently forcefully unwraps subcubes to cubes,
-  // so currently there can't be dangerous aliasing with the out matrix
-
-  set_size(X.get_n_rows(), X.get_n_cols(), X.get_n_slices());
 
   eglue_type::apply(*this, X);
 
@@ -3009,15 +3221,23 @@ inline
 Cube<eT>&
 Cube<eT>::operator+=(const eGlueCube<T1, T2, eglue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
 
-  // eglue_core currently forcefully unwraps subcubes to cubes,
-  // so currently there can't be dangerous aliasing with the out matrix
+  const eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_plus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_plus>> P(G);
 
-  eglue_type::apply_inplace_plus(*this, X);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator+=");
+
+  const inexact_alias_wrapper<Cube<eT>, Proxy<eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_plus>>> A(*this, P);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -3031,12 +3251,23 @@ inline
 Cube<eT>&
 Cube<eT>::operator-=(const eGlueCube<T1, T2, eglue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
 
-  eglue_type::apply_inplace_minus(*this, X);
+  const eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_minus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_minus>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator-=");
+
+  const inexact_alias_wrapper<Cube<eT>, Proxy<eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_minus>>> A(*this, P);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -3050,12 +3281,23 @@ inline
 Cube<eT>&
 Cube<eT>::operator%=(const eGlueCube<T1, T2, eglue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
 
-  eglue_type::apply_inplace_schur(*this, X);
+  const eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_schur> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_schur>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator%=");
+
+  const inexact_alias_wrapper<Cube<eT>, Proxy<eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_schur>>> A(*this, P);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -3069,12 +3311,23 @@ inline
 Cube<eT>&
 Cube<eT>::operator/=(const eGlueCube<T1, T2, eglue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_type_check(( is_same_type< eT, typename T1::elem_type >::no ));
   coot_type_check(( is_same_type< eT, typename T2::elem_type >::no ));
 
-  eglue_type::apply_inplace_div(*this, X);
+  const eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_div> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_div>> P(G);
+
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator/=");
+
+  const inexact_alias_wrapper<Cube<eT>, Proxy<eGlueCube<Cube<eT>, eGlueCube<T1, T2, eglue_type>, eglue_div>>> A(*this, P);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
 
   return *this;
   }
@@ -3094,7 +3347,7 @@ Cube<eT>::Cube(const mtGlueCube<eT, T1, T2, mtglue_type>& X)
   , dev_mem({{ NULL, 0 }})
   , mat_ptrs(nullptr)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   mtglue_type::apply(*this, X);
   }
@@ -3107,7 +3360,7 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(const mtGlueCube<eT, T1, T2, mtglue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   mtglue_type::apply(*this, X);
 
@@ -3122,11 +3375,22 @@ inline
 Cube<eT>&
 Cube<eT>::operator+=(const mtGlueCube<eT, T1, T2, mtglue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, mtGlueCube<eT, T1, T2, mtglue_type>, eglue_plus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, mtGlueCube<eT, T1, T2, mtglue_type>, eglue_plus>> P(G);
 
-  return (*this).operator+=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator+=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -3137,11 +3401,22 @@ inline
 Cube<eT>&
 Cube<eT>::operator-=(const mtGlueCube<eT, T1, T2, mtglue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, mtGlueCube<eT, T1, T2, mtglue_type>, eglue_minus> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, mtGlueCube<eT, T1, T2, mtglue_type>, eglue_minus>> P(G);
 
-  return (*this).operator-=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator-=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -3152,11 +3427,22 @@ inline
 Cube<eT>&
 Cube<eT>::operator%=(const mtGlueCube<eT, T1, T2, mtglue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, mtGlueCube<eT, T1, T2, mtglue_type>, eglue_schur> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, mtGlueCube<eT, T1, T2, mtglue_type>, eglue_schur>> P(G);
 
-  return (*this).operator%=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator%=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -3167,11 +3453,22 @@ inline
 Cube<eT>&
 Cube<eT>::operator/=(const mtGlueCube<eT, T1, T2, mtglue_type>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const Cube<eT> m(X);
+  const eGlueCube<Cube<eT>, mtGlueCube<eT, T1, T2, mtglue_type>, eglue_div> G(*this, X);
+  const Proxy<eGlueCube<Cube<eT>, mtGlueCube<eT, T1, T2, mtglue_type>, eglue_div>> P(G);
 
-  return (*this).operator/=(m);
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator/=");
+
+  const alias_wrapper<Cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    A.use.set_size(n_rows, n_cols, n_slices);
+    }
+
+  coot_rt_t::copy(make_proxy(A.use), P);
+
+  return *this;
   }
 
 
@@ -3182,7 +3479,7 @@ coot_inline
 MatValProxy<eT>
 Cube<eT>::operator() (const uword i)
   {
-  coot_debug_check_bounds( (i >= n_elem), "Cube::operator(): index out of bounds" );
+  coot_conform_check_bounds( (i >= n_elem), "Cube::operator(): index out of bounds" );
 
   return MatValProxy<eT>(*this, i);
   }
@@ -3195,7 +3492,7 @@ coot_inline
 eT
 Cube<eT>::operator() (const uword i) const
   {
-  coot_debug_check_bounds( (i >= n_elem), "Cube::operator(): index out of bounds" );
+  coot_conform_check_bounds( (i >= n_elem), "Cube::operator(): index out of bounds" );
 
   return MatValProxy<eT>::get_val(*this, i);
   }
@@ -3251,7 +3548,7 @@ coot_inline
 MatValProxy<eT>
 Cube<eT>::operator() (const uword in_row, const uword in_col, const uword in_slice)
   {
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_row >= n_rows) ||
     (in_col >= n_cols) ||
@@ -3271,7 +3568,7 @@ coot_inline
 eT
 Cube<eT>::operator() (const uword in_row, const uword in_col, const uword in_slice) const
   {
-  coot_debug_check_bounds
+  coot_conform_check_bounds
     (
     (in_row >= n_rows) ||
     (in_col >= n_cols) ||
@@ -3360,10 +3657,10 @@ inline
 bool
 Cube<eT>::is_finite() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // integral types cannot have non-finite values
-  if (is_non_integral<eT>::value)
+  if (is_real_or_cx<eT>::value)
     {
     return !coot_rt_t::any_vec(dev_mem, n_elem, (eT) 0, oneway_real_kernel_id::rel_any_nonfinite, oneway_real_kernel_id::rel_any_nonfinite_small);
     }
@@ -3380,10 +3677,10 @@ inline
 bool
 Cube<eT>::has_inf() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // integral types cannot have non-finite values
-  if (is_non_integral<eT>::value)
+  if (is_real_or_cx<eT>::value)
     {
     return coot_rt_t::any_vec(dev_mem, n_elem, (eT) 0, oneway_real_kernel_id::rel_any_inf, oneway_real_kernel_id::rel_any_inf_small);
     }
@@ -3400,10 +3697,10 @@ inline
 bool
 Cube<eT>::has_nan() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // integral types cannot have non-finite values
-  if (is_non_integral<eT>::value)
+  if (is_real_or_cx<eT>::value)
     {
     return coot_rt_t::any_vec(dev_mem, n_elem, (eT) 0, oneway_real_kernel_id::rel_any_nan, oneway_real_kernel_id::rel_any_nan_small);
     }
@@ -3532,7 +3829,7 @@ inline
 dev_mem_t<eT>
 Cube<eT>::get_dev_mem(const bool sync) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (sync) { get_rt().synchronise(); }
 
@@ -3568,7 +3865,7 @@ inline
 void
 Cube<eT>::copy_from_dev_mem(eT* dest_cpu_memptr, const uword N) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if( (n_elem == 0) || (N == 0) )  { return; }
 
@@ -3585,7 +3882,7 @@ inline
 void
 Cube<eT>::copy_into_dev_mem(const eT* src_cpu_memptr, const uword N)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if( (n_elem == 0) || (N == 0) )  { return; }
 
@@ -3607,7 +3904,7 @@ Cube<eT>::Cube(const arma::Cube<eT>& X)
   , mem_state(0)
   , dev_mem({{ NULL, 0 }})
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   (*this).operator=(X);
   }
@@ -3619,7 +3916,7 @@ inline
 Cube<eT>&
 Cube<eT>::operator=(const arma::Cube<eT>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   #if defined(COOT_HAVE_ARMA)
     {
@@ -3642,7 +3939,7 @@ template<typename eT>
 inline
 Cube<eT>::operator arma::Cube<eT> () const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   #if defined(COOT_HAVE_ARMA)
     {
@@ -3672,7 +3969,7 @@ inline
 void
 Cube<eT>::set_size(const uword new_n_rows, const uword new_n_cols, const uword new_n_slices)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   init(new_n_rows, new_n_cols, new_n_slices);
   }
@@ -3685,7 +3982,7 @@ inline
 void
 Cube<eT>::set_size(const SizeCube& s)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   init(s.n_rows, s.n_cols, s.n_slices);
   }
@@ -3749,7 +4046,7 @@ inline
 Cube<eT>&
 Cube<eT>::copy_size(const BaseCube<eT2, expr>& m)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   SizeProxyCube<expr> S(m.get_ref());
 
@@ -3765,13 +4062,10 @@ inline
 Cube<eT>&
 Cube<eT>::replace(const eT old_val, const eT new_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::replace(dev_mem, dev_mem,
-                     old_val, new_val,
-                     n_rows, n_cols, n_slices,
-                     0, 0, 0, n_rows, n_cols,
-                     0, 0, 0, n_rows, n_cols);
+  const eOpCube<Cube<eT>, eop_replace> E(*this, 'j', old_val, new_val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
 
   return *this;
   }
@@ -3797,14 +4091,12 @@ inline
 Cube<eT>&
 Cube<eT>::clamp(const eT min_val, const eT max_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (min_val > max_val), "Cube::clamp(): min_val must be less than max_val" );
+  coot_conform_check( (min_val > max_val), "Cube::clamp(): min_val must be less than max_val" );
 
-  coot_rt_t::clamp(dev_mem, dev_mem, min_val, max_val,
-                   n_elem_slice, n_slices,
-                   0, 0, n_elem_slice,
-                   0, 0, n_elem_slice);
+  const eOpCube<Cube<eT>, eop_clamp> E(*this, 'j', min_val, max_val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
 
   return *this;
   }
@@ -3817,9 +4109,9 @@ inline
 Cube<eT>&
 Cube<eT>::fill(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::fill(dev_mem, val, n_elem_slice, n_slices, 0, 0, n_elem_slice);
+  coot_rt_t::fill(make_proxy(*this), val);
 
   return *this;
   }
@@ -3831,7 +4123,7 @@ inline
 Cube<eT>&
 Cube<eT>::zeros()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).fill(eT(0));
 
@@ -3845,7 +4137,7 @@ inline
 Cube<eT>&
 Cube<eT>::zeros(const uword new_n_rows, const uword new_n_cols, const uword new_n_slices)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).set_size(new_n_rows, new_n_cols, new_n_slices);
   (*this).fill(eT(0));
@@ -3860,7 +4152,7 @@ inline
 Cube<eT>&
 Cube<eT>::zeros(const SizeCube& s)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).set_size(s);
   (*this).fill(eT(0));
@@ -3875,7 +4167,7 @@ inline
 Cube<eT>&
 Cube<eT>::ones()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).fill(eT(1));
 
@@ -3889,7 +4181,7 @@ inline
 Cube<eT>&
 Cube<eT>::ones(const uword new_n_rows, const uword new_n_cols, const uword new_n_slices)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).set_size(new_n_rows, new_n_cols, new_n_slices);
   (*this).fill(eT(1));
@@ -3904,7 +4196,7 @@ inline
 Cube<eT>&
 Cube<eT>::ones(const SizeCube& s)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   (*this).set_size(s);
   (*this).fill(eT(1));
@@ -3919,7 +4211,7 @@ inline
 Cube<eT>&
 Cube<eT>::randu()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_rng::fill_randu(dev_mem, n_elem);
 
@@ -3933,7 +4225,7 @@ inline
 Cube<eT>&
 Cube<eT>::randu(const uword new_n_rows, const uword new_n_cols, const uword new_n_slices)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   set_size(new_n_rows, new_n_cols, new_n_slices);
 
@@ -3947,7 +4239,7 @@ inline
 Cube<eT>&
 Cube<eT>::randu(const SizeCube& s)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   set_size(s);
 
@@ -3961,7 +4253,7 @@ inline
 Cube<eT>&
 Cube<eT>::randn()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_rng::fill_randn(dev_mem, n_elem);
 
@@ -3975,7 +4267,7 @@ inline
 Cube<eT>&
 Cube<eT>::randn(const uword new_n_rows, const uword new_n_cols, const uword new_n_slices)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   set_size(new_n_rows, new_n_cols, new_n_slices);
 
@@ -3989,7 +4281,7 @@ inline
 Cube<eT>&
 Cube<eT>::randn(const SizeCube& s)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   set_size(s);
 
@@ -4003,7 +4295,7 @@ inline
 void
 Cube<eT>::reset()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   init(0, 0, 0);
   }
@@ -4015,11 +4307,11 @@ inline
 eT
 Cube<eT>::min() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(n_elem == 0)
     {
-    coot_debug_check(true, "Cube::min(): object has no elements");
+    coot_conform_check(true, "Cube::min(): object has no elements");
 
     return Datum<eT>::nan;
     }
@@ -4034,11 +4326,11 @@ inline
 eT
 Cube<eT>::max() const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(n_elem == 0)
     {
-    coot_debug_check(true, "Cube::max(): object has no elements");
+    coot_conform_check(true, "Cube::max(): object has no elements");
 
     return Datum<eT>::nan;
     }
@@ -4505,7 +4797,7 @@ inline
 MatValProxy<eT>
 Cube<eT>::front()
   {
-  coot_debug_check( (n_elem == 0), "Cube::front(): cube is empty" );
+  coot_conform_check( (n_elem == 0), "Cube::front(): cube is empty" );
 
   return MatValProxy<eT>(*this, 0);
   }
@@ -4517,7 +4809,7 @@ inline
 eT
 Cube<eT>::front() const
   {
-  coot_debug_check( (n_elem == 0), "Cube::front(): cube is empty" );
+  coot_conform_check( (n_elem == 0), "Cube::front(): cube is empty" );
 
   return MatValProxy<eT>::get_val(*this, 0);
   }
@@ -4529,7 +4821,7 @@ inline
 MatValProxy<eT>
 Cube<eT>::back()
   {
-  coot_debug_check( (n_elem == 0), "Cube::back(): cube is empty" );
+  coot_conform_check( (n_elem == 0), "Cube::back(): cube is empty" );
 
   return MatValProxy<eT>(*this, n_elem - 1);
   }
@@ -4541,7 +4833,7 @@ inline
 eT
 Cube<eT>::back() const
   {
-  coot_debug_check( (n_elem == 0), "Cube::back(): cube is empty" );
+  coot_conform_check( (n_elem == 0), "Cube::back(): cube is empty" );
 
   return MatValProxy<eT>::get_val(*this, n_elem - 1);
   }
@@ -4624,7 +4916,7 @@ inline
 void
 Cube<eT>::steal_mem(Cube<eT>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(this == &x)  { return; }
 
@@ -4644,16 +4936,16 @@ Cube<eT>::steal_mem(Cube<eT>& x)
 
     if(x_n_slices > Cube_prealloc::mat_ptrs_size)
       {
-      access::rw(  mat_ptrs) = x.mat_ptrs;
-      access::rw(x.mat_ptrs) = nullptr;
+        mat_ptrs = x.mat_ptrs;
+      x.mat_ptrs = nullptr;
       }
     else
       {
-      access::rw(mat_ptrs) = const_cast< Mat<eT>** >(mat_ptrs_local);
+      mat_ptrs = mat_ptrs_local;
 
       for(uword i=0; i < x_n_slices; ++i)
         {
-          mat_ptrs[i] = x.mat_ptrs[i];
+          mat_ptrs[i] = raw_mat_ptr_type(x.mat_ptrs[i]);  // cast required by std::atomic
         x.mat_ptrs[i] = nullptr;
         }
       }

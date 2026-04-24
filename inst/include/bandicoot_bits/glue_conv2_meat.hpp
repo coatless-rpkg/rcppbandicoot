@@ -21,7 +21,7 @@ inline
 void
 glue_conv2::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_conv2>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // This implementation is a pretty simple im2col-based implementation.
 
@@ -41,16 +41,13 @@ inline
 void
 glue_conv2::apply_direct(Mat<out_eT>& out, const Mat<eT>& A_in, const Mat<eT>& B_in, const uword mode, const typename enable_if<is_same_type<out_eT, eT>::no>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   Mat<eT> tmp;
   apply_direct(tmp, A_in, B_in, mode);
   out.set_size(tmp.n_rows, tmp.n_cols);
-  coot_rt_t::copy_mat(out.get_dev_mem(false), tmp.get_dev_mem(false),
-                      tmp.n_rows, tmp.n_cols,
-                      0, 0, out.n_rows,
-                      0, 0, tmp.n_rows);
+  coot_rt_t::copy(make_proxy(out), make_proxy(tmp));
   }
 
 
@@ -60,7 +57,7 @@ inline
 void
 glue_conv2::apply_direct(Mat<eT>& out, const Mat<eT>& A_in, const Mat<eT>& B_in, const uword mode)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // We compute with A, the "constant" matrix, and K, the "kernel" that we rotate.
   // Armadillo selects the "kernel" based on maximum number of elements.
@@ -184,7 +181,7 @@ inline
 void
 glue_conv2::get_gemv_full_sizes(const Mat<eT>& A, const Mat<eT>& K, uword& buffer_n_rows, uword& buffer_n_cols, uword& out_n_rows, uword& out_n_cols, uword& buffer_top_padding, uword& buffer_bottom_padding, uword& buffer_row_offset, uword& buffer_col_offset)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   buffer_n_rows = K.n_rows * (A.n_cols + 2 * (K.n_cols - 1));
   buffer_n_cols = A.n_rows + K.n_rows - 1;
@@ -206,7 +203,7 @@ inline
 void
 glue_conv2::get_gemv_same_sizes(const Mat<eT>& A, const Mat<eT>& K, uword& buffer_n_rows, uword& buffer_n_cols, uword& out_n_rows, uword& out_n_cols, uword& buffer_top_padding, uword& buffer_bottom_padding, uword& buffer_row_offset, uword& buffer_col_offset)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // This is the same as create_gemv_full_buffer()---but here the output matrix is the size of A.
   // Thus, there is some padding, but not as much as the "full" strategy.
@@ -236,7 +233,7 @@ inline
 void
 glue_conv2::get_gemv_same_sizes_small(const Mat<eT>& A, const Mat<eT>& K, uword& buffer_n_rows, uword& buffer_n_cols, uword& out_n_rows, uword& out_n_cols, uword& buffer_top_padding, uword& buffer_bottom_padding, uword& buffer_row_offset, uword& buffer_col_offset)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // This is the same as create_gemv_same_buffer()---but here the output matrix is the size of K, not the size of A.
   // Note that K.n_rows < A.n_rows.
@@ -269,29 +266,14 @@ void
 glue_conv2::fill_gemv_buffer_top_bottom(Mat<eT>& buffer, const uword buffer_top_padding, const uword buffer_bottom_padding, const uword kernel_rows)
   {
   // The top and bottom rows of the buffer correspond to sections where K's columns do not fully overlap with A's columns.
-  // We zero these out with operations equivalent to the following:
-  //    buffer.rows(0, kernel_rows * buffer_top_padding - 1) = 0
-  //    buffer.rows(buffer.n_rows - kernel_rows * buffer_bottom_padding, buffer.n_rows - 1) = 0
   if (buffer_top_padding > 0)
     {
-    coot_rt_t::fill(buffer.get_dev_mem(false),
-                    (eT) 0,
-                    kernel_rows * buffer_top_padding,
-                    buffer.n_cols,
-                    0,
-                    0,
-                    buffer.n_rows);
+    buffer.rows(0, kernel_rows * buffer_top_padding - 1).zeros();
     }
 
   if (buffer_bottom_padding > 0)
     {
-    coot_rt_t::fill(buffer.get_dev_mem(false),
-                    (eT) 0,
-                    kernel_rows * buffer_bottom_padding,
-                    buffer.n_cols,
-                    buffer.n_rows - (kernel_rows * buffer_bottom_padding),
-                    0,
-                    buffer.n_rows);
+    buffer.rows(buffer.n_rows - kernel_rows * buffer_bottom_padding, buffer.n_rows - 1).zeros();
     }
   }
 
@@ -314,20 +296,14 @@ glue_conv2::fill_gemv_buffer_col(Mat<eT>& buffer, const uword i, const uword j, 
     // The way that we do this is a little bit clever, but treat buffer.col(j) as a matrix of size K.n_rows x A.n_cols (call it bufmat_j).
     // Note that for buffer.col(j) we ignore the top and bottom row zero padding.
     // Then, we can say:
-    //    bufmat_j.submat(0, 0, K.n_rows - i - 2, A.n_cols - 1) = 0
+    //    bufmat_j.submat(0, 0, K.n_rows - i - 2, A.n_cols - 1).fill(0)
     //    bufmat_j.submat(K.n_rows - i - 1, 0, K.n_rows, A.n_cols - 1) = A.submat(0, 0, i, A.n_cols - 1)
-    coot_rt_t::fill(buffer.get_dev_mem(false),
-                    (eT) 0,
-                    K.n_rows - i - 1,
-                    cols_to_copy,
-                    j * buffer.n_rows + K.n_rows * buffer_top_padding, // manual offset
-                    0,
-                    K.n_rows);
+    Proxy<subview<eT>> P1(buffer.get_dev_mem(false) + j * buffer.n_rows + K.n_rows * buffer_top_padding, 0, 0, K.n_rows - i - 1, cols_to_copy, K.n_rows);
+    coot_rt_t::fill(P1, (eT) 0);
 
-    coot_rt_t::copy_mat(buffer.get_dev_mem(false), A.get_dev_mem(false),
-                        i + 1, cols_to_copy,
-                        K.n_rows - i - 1 + ((j * buffer.n_rows) + K.n_rows * buffer_top_padding), 0, K.n_rows,
-                        0, A_col_offset, A.n_rows);
+    Proxy<subview<eT>> P2(buffer.get_dev_mem(false), K.n_rows - i - 1 + ((j * buffer.n_rows) + K.n_rows * buffer_top_padding), 0, i + 1, cols_to_copy, K.n_rows);
+    Proxy<subview<eT>> P3(A.get_dev_mem(false), 0, A_col_offset, (i + 1), cols_to_copy, A.n_rows);
+    coot_rt_t::copy(P2, P3);
     }
   else if (i < A.n_rows)
     {
@@ -338,10 +314,9 @@ glue_conv2::fill_gemv_buffer_col(Mat<eT>& buffer, const uword i, const uword j, 
     // Equivalent to:
     //    buffer.col(j) = vectorise(A.submat(A_row, 0, A_row + K.n_rows - 1, A.n_cols - 1))
     // Note that for buffer.col(j) we ignore the top and bottom row zero padding.
-    coot_rt_t::copy_mat(buffer.get_dev_mem(false), A.get_dev_mem(false),
-                        K.n_rows, cols_to_copy,
-                        j * buffer.n_rows + K.n_rows * buffer_top_padding, 0, K.n_rows,
-                        A_row, A_col_offset, A.n_rows);
+    Proxy<subview<eT>> P1(buffer.get_dev_mem(false), j * buffer.n_rows + K.n_rows * buffer_top_padding, 0, K.n_rows, cols_to_copy, K.n_rows);
+    Proxy<subview<eT>> P2(A.get_dev_mem(false), A_row, A_col_offset, K.n_rows, cols_to_copy, A.n_rows);
+    coot_rt_t::copy(P1, P2);
     }
   else if (i < A.n_rows + 2 * (K.n_rows - 1))
     {
@@ -354,17 +329,12 @@ glue_conv2::fill_gemv_buffer_col(Mat<eT>& buffer, const uword i, const uword j, 
     //    bufmat_j.submat(0, 0, K.n_rows - num_zero_rows - 1, A.n_cols - 1) = A.submat(i - K.n_rows - 1, 0, A.n_rows - 1, A.n_cols - 1)
     //    bufmat_j.submat(K.n_rows - num_zero_rows, 0, K.n_rows - 1, A.n_cols - 1) = 0
     // Note that for buffer.col(j) (or bufmat_j) we ignore the top and bottom zero padding.
-    coot_rt_t::copy_mat(buffer.get_dev_mem(false), A.get_dev_mem(false),
-                        K.n_rows - num_zero_rows, cols_to_copy,
-                        j * buffer.n_rows + K.n_rows * buffer_top_padding, 0, K.n_rows,
-                        i - (K.n_rows - 1), A_col_offset, A.n_rows);
-    coot_rt_t::fill(buffer.get_dev_mem(false),
-                    (eT) 0,
-                    num_zero_rows,
-                    cols_to_copy,
-                    /* manual offset */ (j * buffer.n_rows + K.n_rows * buffer_top_padding) + /* row offset */ (K.n_rows - num_zero_rows),
-                    0,
-                    K.n_rows);
+    Proxy<subview<eT>> P1(buffer.get_dev_mem(false) + j * buffer.n_rows + K.n_rows * buffer_top_padding, 0, 0, K.n_rows - num_zero_rows, cols_to_copy, K.n_rows);
+    Proxy<subview<eT>> P2(A.get_dev_mem(false), i - (K.n_rows - 1), A_col_offset, K.n_rows - num_zero_rows, cols_to_copy, A.n_rows);
+    coot_rt_t::copy(P1, P2);
+
+    Proxy<subview<eT>> P3(buffer.get_dev_mem(false) + j * buffer.n_rows + K.n_rows * buffer_top_padding + (K.n_rows - num_zero_rows), 0, 0, num_zero_rows, cols_to_copy, K.n_rows);
+    coot_rt_t::fill(P3, (eT) 0);
     }
   }
 

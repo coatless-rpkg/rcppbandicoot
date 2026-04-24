@@ -25,7 +25,7 @@ inline
 std::tuple<bool, std::string>
 solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uword n_rows, const uword n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (get_rt().cl_rt.is_valid() == false)
     {
@@ -36,7 +36,7 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
   magma_int_t info   = 0;
   magma_int_t status = 0; // NOTE: all paths through dgetrf and sgetrf just return status == info...
 
-  int* ipiv = cpu_memory::acquire<int>(n_rows);
+  cpu_memory::mem_array<int> ipiv(n_rows);
 
   if (is_float<eT>::value)
     {
@@ -45,7 +45,7 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
                               A.cl_mem_ptr.ptr,
                               A.cl_mem_ptr.offset,
                               n_rows,
-                              ipiv,
+                              ipiv.memptr(),
                               &info);
     }
   else if (is_double<eT>::value)
@@ -55,18 +55,16 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
                               A.cl_mem_ptr.ptr,
                               A.cl_mem_ptr.offset,
                               n_rows,
-                              ipiv,
+                              ipiv.memptr(),
                               &info);
     }
   else
     {
-    cpu_memory::release(ipiv);
     return std::make_tuple(false, "unknown data type, must be float or double");
     }
 
   if (status != MAGMA_SUCCESS)
     {
-    cpu_memory::release(ipiv);
     if (info < 0)
       {
       std::ostringstream oss;
@@ -91,7 +89,7 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
                               A.cl_mem_ptr.ptr,
                               A.cl_mem_ptr.offset,
                               n_rows,
-                              ipiv,
+                              ipiv.memptr(),
                               B.cl_mem_ptr.ptr,
                               B.cl_mem_ptr.offset,
                               n_rows,
@@ -105,7 +103,7 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
                               A.cl_mem_ptr.ptr,
                               A.cl_mem_ptr.offset,
                               n_rows,
-                              ipiv,
+                              ipiv.memptr(),
                               B.cl_mem_ptr.ptr,
                               B.cl_mem_ptr.offset,
                               n_rows,
@@ -118,7 +116,6 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
 
   if (status != MAGMA_SUCCESS)
     {
-    cpu_memory::release(ipiv);
     if (info < 0)
       {
       std::ostringstream oss;

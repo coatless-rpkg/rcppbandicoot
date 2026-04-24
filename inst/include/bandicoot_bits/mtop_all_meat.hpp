@@ -21,11 +21,11 @@ inline
 void
 mtop_all::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_all>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword dim = in.aux_uword_a;
 
-  coot_debug_check( (dim > 1), "all(): parameter 'dim' must be 0 or 1" );
+  coot_conform_check( (dim > 1), "all(): parameter 'dim' must be 0 or 1" );
 
   unwrap<T1> U(in.q);
 
@@ -56,11 +56,11 @@ inline
 void
 mtop_all::apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, mtop_all>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword dim = in.aux_uword_a;
 
-  coot_debug_check( (dim > 1), "all(): parameter 'dim' must be 0 or 1" );
+  coot_conform_check( (dim > 1), "all(): parameter 'dim' must be 0 or 1" );
 
   unwrap<T1> U(in.q.q);
 
@@ -92,14 +92,14 @@ mtop_all::apply(Mat<uword>& out,
                 const mtOp<uword, mtOp<uword, T1, mtop_type>, mtop_all>& in,
                 const typename enable_if<is_same_type<mtop_type, mtop_conv_to>::no>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   typedef typename T1::elem_type eT;
 
   const uword dim = in.aux_uword_a;
 
-  coot_debug_check( (dim > 1), "all(): parameter 'dim' must be 0 or 1" );
+  coot_conform_check( (dim > 1), "all(): parameter 'dim' must be 0 or 1" );
 
   // all( X != 0 ) --> all( X )
   const bool opt1 = (is_same_type<mtop_type, mtop_rel_noteq>::yes) && (in.q.aux == eT(0));
@@ -180,7 +180,7 @@ inline
 void
 mtop_all::apply_direct(Mat<uword>& out, const Mat<eT>& in, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (((void*) &out) == (void*) &in)
     {
@@ -210,7 +210,7 @@ inline
 void
 mtop_all::apply_direct(Mat<uword>& out, const subview<eT>& in, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Subviews must be extracted beforehand, and then we use the regular Mat implementation.
   Mat<eT> tmp(in);
@@ -224,7 +224,7 @@ inline
 bool
 mtop_all::all_vec(T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
   unwrap<T1> U(X);
@@ -243,7 +243,7 @@ inline
 bool
 mtop_all::all_vec(const mtOp<out_eT, T1, mtop_all>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Apply to inner operation.
   return all_vec(X.q);
@@ -256,7 +256,7 @@ inline
 bool
 mtop_all::all_vec(const mtOp<eT2, T1, mtop_conv_to>& op)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   unwrap<T1> U(op.q);
   if (U.M.n_elem == 0)
@@ -276,7 +276,7 @@ mtop_all::all_vec(const mtOp<uword, T1, mtop_type>& in,
                   const typename enable_if<is_same_type<mtop_type, mtop_all>::no>::result* junk1,
                   const typename enable_if<is_same_type<mtop_type, mtop_conv_to>::no>::result* junk2)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk1);
   coot_ignore(junk2);
 

@@ -17,10 +17,9 @@
 // Utility to free memory before returning.
 inline
 void
-svd_cleanup(char* device_buffer, char* host_buffer, int* dev_info)
+svd_cleanup(char* device_buffer, int* dev_info)
   {
   coot_wrapper(cudaFree)(device_buffer);
-  cpu_memory::release(host_buffer);
   coot_wrapper(cudaFree)(dev_info);
   }
 
@@ -76,7 +75,7 @@ svd(dev_mem_t<eT> U,
     const uword n_cols,
     const bool compute_u_vt)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (get_rt().cuda_rt.is_valid() == false)
     {
@@ -130,14 +129,14 @@ svd(dev_mem_t<eT> U,
     {
     return std::make_tuple(false, "couldn't cudaMalloc() device workspace: " + error_as_string(status2));
     }
-  char* host_buffer = cpu_memory::acquire<char>(host_buffer_size);
+  cpu_memory::mem_array<char> host_buffer(host_buffer_size);
 
   // This is an additional error code for cusolverDn; but it is an error code on the device...
   int* dev_info = NULL;
   status2 = coot_wrapper(cudaMalloc)((void**) &dev_info, sizeof(int));
   if (status2 != cudaSuccess)
     {
-    svd_cleanup(device_buffer, host_buffer, NULL);
+    svd_cleanup(device_buffer, NULL);
     return std::make_tuple(false, "couldn't cudaMalloc() status value: " + error_as_string(status2));
     }
 
@@ -161,12 +160,12 @@ svd(dev_mem_t<eT> U,
                                           cuda_data_type<eT>::type,
                                           (void*) device_buffer,
                                           device_buffer_size,
-                                          (void*) host_buffer,
+                                          (void*) host_buffer.memptr(),
                                           host_buffer_size,
                                           dev_info);
   if (status != CUSOLVER_STATUS_SUCCESS)
     {
-    svd_cleanup(device_buffer, host_buffer, dev_info);
+    svd_cleanup(device_buffer, dev_info);
     return std::make_tuple(false, "cusolverDnXgesvd() failed: " + error_as_string(status));
     }
 
@@ -176,7 +175,7 @@ svd(dev_mem_t<eT> U,
   status2 = coot_wrapper(cudaMemcpy)(&info, dev_info, sizeof(int), cudaMemcpyDeviceToHost);
 
   // We don't need any of the allocated memory now.
-  svd_cleanup(device_buffer, host_buffer, dev_info);
+  svd_cleanup(device_buffer, dev_info);
 
   if (status2 != cudaSuccess)
     {

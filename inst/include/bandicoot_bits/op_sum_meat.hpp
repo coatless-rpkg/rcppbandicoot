@@ -23,11 +23,11 @@ inline
 void
 op_sum::apply(Mat<out_eT>& out, const Op<T1, op_sum>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword dim = in.aux_uword_a;
 
-  coot_debug_check( (dim > 1), "sum(): parameter 'dim' must be 0 or 1" );
+  coot_conform_check( (dim > 1), "sum(): parameter 'dim' must be 0 or 1" );
 
   // We have to consider type conversion carefully here.  If out_eT != T1::elem_type, then
   // the original operation was mtOp<out_eT, Op<T1, op_sum>, mtop_conv_to>, and so we want to
@@ -67,7 +67,7 @@ inline
 void
 op_sum::apply_noalias(Mat<out_eT>& out, const Mat<in_eT>& A, const uword dim, const bool post_conv_apply)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(dim == 0)
     {
@@ -100,7 +100,7 @@ inline
 void
 op_sum::apply_noalias(Mat<out_eT>& out, const subview<in_eT>& sv, const uword dim, const bool post_conv_apply)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(dim == 0)
     {

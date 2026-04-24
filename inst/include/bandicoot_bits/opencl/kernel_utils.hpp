@@ -57,3 +57,48 @@ reduce_kernel_group_size(const cl_kernel& kernel, const uword n_elem, const char
   reduce_kernel_group_info(kernel, n_elem, name, total_num_threads, local_group_size);
   return local_group_size;
   }
+
+
+
+template<typename T1>
+inline
+typename
+enable_if2
+  <
+  (Proxy<T1>::num_dims == 1),
+  std::array<size_t, 1>
+  >::result
+get_work_size(const Proxy<T1>& x)
+  {
+  return { x.get_n_elem() };
+  }
+
+
+
+template<typename T1>
+inline
+typename
+enable_if2
+  <
+  (Proxy<T1>::num_dims == 2),
+  std::array<size_t, 2>
+  >::result
+get_work_size(const Proxy<T1>& x)
+  {
+  return { x.get_n_rows(), x.get_n_cols() };
+  }
+
+
+
+template<typename T1>
+inline
+typename
+enable_if2
+  <
+  (Proxy<T1>::num_dims == 3),
+  std::array<size_t, 3>
+  >::result
+get_work_size(const Proxy<T1>& x)
+  {
+  return { x.get_n_rows(), x.get_n_cols(), x.get_n_slices() };
+  }

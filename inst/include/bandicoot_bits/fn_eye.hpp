@@ -22,16 +22,16 @@ inline
 T
 eye(const uword n_rows, const uword n_cols, const typename coot_Mat_Col_Row_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   if (is_Col<T>::value)
     {
-    coot_debug_check( (n_cols != 1), "eye(): incompatible size" );
+    coot_conform_check( (n_cols != 1), "eye(): incompatible size" );
     }
   else if (is_Row<T>::value)
     {
-    coot_debug_check( (n_rows != 1), "eye(): incompatible size" );
+    coot_conform_check( (n_rows != 1), "eye(): incompatible size" );
     }
 
   T out(n_rows, n_cols);
@@ -47,7 +47,7 @@ inline
 T
 eye(const SizeMat& s, const typename coot_Mat_Col_Row_only<T>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return eye<T>(s.n_rows, s.n_cols);

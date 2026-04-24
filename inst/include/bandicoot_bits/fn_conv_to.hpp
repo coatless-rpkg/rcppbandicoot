@@ -116,7 +116,7 @@ struct conv_to_mat_helper
   >::result
   from(const T1& in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     return mtOp<out_eT, T1, mtop_conv_to>(in);
     }
@@ -134,83 +134,9 @@ struct conv_to_mat_helper
   >::result
   from(const T1& in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     return in;
-    }
-
-
-
-  // When we get an Op or a Glue, there's no hope of delaying the conversion.
-  // (Exception: when it's an op_htrans or op_htrans2.)
-  // Note that we always expect an Op or Glue to be able to output into a different type.
-  template<typename T1, typename op_type>
-  inline
-  static
-  typename enable_if2<
-      is_same_type<typename T1::elem_type, out_eT>::no && is_coot_type<T2>::value,
-      T2
-  >::result
-  from(const Op<T1, op_type>& in)
-    {
-    coot_extra_debug_sigprint();
-
-    T2 out; // must be Mat, Row, or Col
-    op_type::apply(out, in);
-
-    return out;
-    }
-
-
-
-  template<typename T1, typename T3, typename glue_type>
-  inline
-  static
-  typename enable_if2<
-      is_same_type<typename T1::elem_type, out_eT>::no && is_coot_type<T2>::value,
-      T2
-  >::result
-  from(const Glue<T1, T3, glue_type>& in)
-    {
-    coot_extra_debug_sigprint();
-
-    T2 out; // must be Mat, Row, or Col
-    glue_type::apply(out, in);
-
-    return out;
-    }
-
-
-
-  // TODO: use traits instead
-  template<typename T1>
-  inline
-  static
-  typename enable_if2<
-      is_same_type<typename T1::elem_type, out_eT>::no && is_coot_type<T2>::value,
-      mtOp<out_eT, Op<T1, op_htrans>, mtop_conv_to>
-  >::result
-  from(const Op<T1, op_htrans>& in)
-    {
-    coot_extra_debug_sigprint();
-
-    return mtOp<out_eT, Op<T1, op_htrans>, mtop_conv_to>(in);
-    }
-
-
-
-  template<typename T1>
-  inline
-  static
-  typename enable_if2<
-      is_same_type<typename T1::elem_type, out_eT>::no && is_coot_type<T2>::value,
-      mtOp<out_eT, Op<T1, op_htrans2>, mtop_conv_to>
-  >::result
-  from(const Op<T1, op_htrans2>& in)
-    {
-    coot_extra_debug_sigprint();
-
-    return mtOp<out_eT, Op<T1, op_htrans2>, mtop_conv_to>(in);
     }
 
 
@@ -225,7 +151,7 @@ struct conv_to_mat_helper
   >::result
   from(const arma::Base<eT, T1>& in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     return conv_to_arma_helper<T2>(in);
     }
@@ -239,7 +165,7 @@ struct conv_to_mat_helper
   T2
   from(const arma::SpBase<eT, T1>& in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     return arma::conv_to<T2>::from(in);
     }
@@ -256,7 +182,7 @@ struct conv_to_mat_helper
   >::result
   from(const T1& in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     typedef typename T1::elem_type eT;
 
@@ -289,7 +215,7 @@ struct conv_to_cube_helper
   >::result
   from(const BaseCube<typename T1::elem_type, T1>& in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     return mtOpCube<out_eT, T1, mtop_conv_to>(in.get_ref());
     }
@@ -307,7 +233,7 @@ struct conv_to_cube_helper
   >::result
   from(const T1& in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     return in;
     }
@@ -324,7 +250,7 @@ struct conv_to_cube_helper
   >::result
   from(const arma::BaseCube<eT, T1>& in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     return conv_to_arma_helper<T2>(in);
     }
@@ -341,7 +267,7 @@ struct conv_to_cube_helper
   >::result
   from(const BaseCube<typename T1::elem_type, T1>& in)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     typedef typename T1::elem_type eT;
 

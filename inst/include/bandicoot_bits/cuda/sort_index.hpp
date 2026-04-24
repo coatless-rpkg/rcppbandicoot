@@ -22,7 +22,7 @@ inline
 void
 sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const uword sort_type, const uword stable_sort)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // If the vector is empty, don't do anything.
   if (n_elem == 0)
@@ -37,10 +37,13 @@ sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const 
   const size_t pow2_num_threads = std::min(mtpb, next_pow2(num_threads));
 
   // First, allocate temporary memory we will use during computation.
-  dev_mem_t<eT> tmp_mem;
-  tmp_mem.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<eT>(n_elem);
-  dev_mem_t<uword> tmp_mem_index;
-  tmp_mem_index.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<uword>(n_elem);
+  dev_mem_t<eT>               tmp_mem({{ NULL, 0 }});
+  dev_mem_t<uword>            tmp_mem_index({{ NULL, 0 }});
+  runtime_t::mem_array<eT>    tmp_mem_array(n_elem);
+  runtime_t::mem_array<uword> tmp_mem_index_array(n_elem);
+
+  tmp_mem.cuda_mem_ptr       = tmp_mem_array.memptr();
+  tmp_mem_index.cuda_mem_ptr = tmp_mem_index_array.memptr();
 
   CUfunction kernel;
   if (stable_sort == 0 && sort_type == 0)
@@ -80,6 +83,4 @@ sort_index_vec(dev_mem_t<uword> out, dev_mem_t<eT> A, const uword n_elem, const 
   coot_check_cuda_error(result, "coot::cuda::sort_index_vec(): cuLaunchKernel() failed");
 
   get_rt().cuda_rt.synchronise();
-  get_rt().cuda_rt.release_memory(tmp_mem.cuda_mem_ptr);
-  get_rt().cuda_rt.release_memory(tmp_mem_index.cuda_mem_ptr);
   }

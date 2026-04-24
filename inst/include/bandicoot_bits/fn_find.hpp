@@ -29,7 +29,7 @@ enable_if2
   >::result
 find(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<uword, T1, mtop_find>(X);
   }
@@ -47,11 +47,11 @@ find
   const char* direction = "first"
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (direction != nullptr) ? direction[0] : char(0);
 
-  coot_debug_check
+  coot_conform_check
     (
     ( (sig != 'f') && (sig != 'F') && (sig != 'l') && (sig != 'L') ),
     "find(): direction must be \"first\" or \"last\""
@@ -75,7 +75,7 @@ enable_if2
   >::result
 find_finite(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<uword, T1, mtop_find_finite>(X);
   }
@@ -93,11 +93,11 @@ find_finite
   const char* direction = "first"
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (direction != nullptr) ? direction[0] : char(0);
 
-  coot_debug_check
+  coot_conform_check
     (
     ( (sig != 'f') && (sig != 'F') && (sig != 'l') && (sig != 'L') ),
     "find_finite(): direction must be \"first\" or \"last\""
@@ -121,7 +121,7 @@ enable_if2
   >::result
 find_nonfinite(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<uword, T1, mtop_find_nonfinite>(X);
   }
@@ -139,11 +139,11 @@ find_nonfinite
   const char* direction = "first"
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (direction != nullptr) ? direction[0] : char(0);
 
-  coot_debug_check
+  coot_conform_check
     (
     ( (sig != 'f') && (sig != 'F') && (sig != 'l') && (sig != 'L') ),
     "find_nonfinite(): direction must be \"first\" or \"last\""
@@ -167,7 +167,7 @@ enable_if2
   >::result
 find_nan(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<uword, T1, mtop_find_nan>(X);
   }
@@ -185,11 +185,11 @@ find_nan
   const char* direction = "first"
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const char sig = (direction != nullptr) ? direction[0] : char(0);
 
-  coot_debug_check
+  coot_conform_check
     (
     ( (sig != 'f') && (sig != 'F') && (sig != 'l') && (sig != 'L') ),
     "find_nan(): direction must be \"first\" or \"last\""

@@ -34,7 +34,7 @@ regspace
   const typename vec_type::pod_type end
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if( ((start < end) && (delta < eT(0))) || ((start > end) && (delta > eT(0))) || (delta == eT(0)) )  { return vec_type(); }
 
@@ -44,7 +44,7 @@ regspace
 
   const eT M = ((ascend) ? eT(end-start) : eT(start-end)) / eT(inc);
 
-  const uword N = uword(1) + ( (is_non_integral<eT>::value) ? uword(std::floor(double(M))) : uword(M) );
+  const uword N = uword(1) + ( (is_real_or_cx<eT>::value) ? uword(std::floor(double(M))) : uword(M) );
 
   vec_type x;
   x.set_size(N);
@@ -78,7 +78,7 @@ regspace
   const typename vec_type::pod_type end
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename vec_type::pod_type eT;
 
@@ -107,7 +107,7 @@ inline
 vec
 regspace(const double start, const double delta, const double end)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return regspace<vec>(start, delta, end);
   }
@@ -119,7 +119,7 @@ inline
 vec
 regspace(const double start, const double end)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return regspace<vec>(start, end);
   }

@@ -24,7 +24,7 @@ inline
 const Op<T1, op_htrans>
 trans(const Base<typename T1::elem_type,T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_htrans>(X.get_ref());
   }
@@ -37,7 +37,7 @@ inline
 const Op<T1, op_htrans>
 htrans(const Base<typename T1::elem_type,T1>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_htrans>(X.get_ref());
   }
@@ -57,7 +57,7 @@ enable_if2
   >::result
 trans(const Op<T1, op_diagmat>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return X;
   }
@@ -75,7 +75,7 @@ enable_if2
   >::result
 htrans(const Op<T1, op_diagmat>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return X;
   }

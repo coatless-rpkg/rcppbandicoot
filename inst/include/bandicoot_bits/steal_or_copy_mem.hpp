@@ -32,10 +32,7 @@ steal_or_copy_mem(Mat<out_eT>& out, const Mat<in_eT>& in, const typename enable_
   coot_ignore(junk);
 
   out.set_size(in.n_rows, in.n_cols);
-  coot_rt_t::copy_mat(out.get_dev_mem(false), in.get_dev_mem(false),
-                      out.n_rows, out.n_cols,
-                      0, 0, out.n_rows,
-                      0, 0, in.n_rows);
+  coot_rt_t::copy(make_proxy(out), make_proxy(in));
   }
 
 

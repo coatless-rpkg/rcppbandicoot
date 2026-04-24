@@ -21,7 +21,7 @@ inline
 void
 glue_conv::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_conv>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword mode = in.aux_uword;
 

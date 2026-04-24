@@ -33,7 +33,7 @@ mean(dev_mem_t<eT2> dest,
      const uword src_col_offset,
      const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Which kernel we need to use depends on whether we want to apply conversion before or after we compute the mean.
   CUfunction kernel;

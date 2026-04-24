@@ -25,7 +25,7 @@ inline
 std::tuple<bool, std::string>
 solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uword n_rows, const uword n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (get_rt().cuda_rt.is_valid() == false)
     {
@@ -95,7 +95,7 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
     return std::make_tuple(false, "couldn't cudaMalloc() GPU workspace memory");
     }
 
-  char* host_workspace = cpu_memory::acquire<char>(host_workspace_size);
+  cpu_memory::mem_array<char> host_workspace(host_workspace_size);
 
   status = coot_wrapper(cusolverDnXgetrf)(get_rt().cuda_rt.cusolver_handle,
                                           NULL,
@@ -108,12 +108,11 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
                                           data_type,
                                           gpu_workspace,
                                           gpu_workspace_size,
-                                          (void*) host_workspace,
+                                          (void*) host_workspace.memptr(),
                                           host_workspace_size,
                                           dev_info);
 
   coot_wrapper(cudaFree)(gpu_workspace);
-  cpu_memory::release(host_workspace);
 
   if (status != CUSOLVER_STATUS_SUCCESS)
     {

@@ -19,9 +19,9 @@ inline
 void
 reorder_cols(dev_mem_t<eT> out, const dev_mem_t<eT> mem, const uword n_rows, const dev_mem_t<uword> order, const uword out_n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::reorder_cols(): CUDA runtime not valid");
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::reorder_cols(): CUDA runtime not valid");
 
   // If the input is empty, don't do anything.
   if (out_n_cols == 0 || n_rows == 0)

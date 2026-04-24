@@ -21,7 +21,7 @@ inline
 void
 glue_cov::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_cov>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
 
@@ -35,7 +35,7 @@ glue_cov::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_cov>& in)
   const uword BB_n_rows = U2.get_n_rows();
   const uword BB_n_cols = U2.get_n_cols();
 
-  coot_debug_assert_mul_size(AA_n_cols, AA_n_rows, BB_n_rows, BB_n_cols, "cov()");
+  coot_conform_assert_mul_size(AA_n_cols, AA_n_rows, BB_n_rows, BB_n_cols, "cov()");
 
   if (U1.M.n_elem == 0 || U2.M.n_elem == 0)
     {

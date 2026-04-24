@@ -21,7 +21,7 @@ inline
 void
 glue_cor::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_cor>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
 
@@ -33,7 +33,7 @@ glue_cor::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_cor>& in)
   const uword BB_n_rows = U2.get_n_rows();
   const uword BB_n_cols = U2.get_n_cols();
 
-  coot_debug_assert_mul_size(AA_n_cols, AA_n_rows, BB_n_rows, BB_n_cols, "cov()");
+  coot_conform_assert_mul_size(AA_n_cols, AA_n_rows, BB_n_rows, BB_n_cols, "cov()");
 
   if (U1.M.n_elem == 0 || U2.M.n_elem == 0)
     {
@@ -62,14 +62,8 @@ glue_cor::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_cor>& in)
 
   Mat<eT> tmp_AA(AA_n_rows, AA_n_cols);
   Mat<eT> tmp_BB(BB_n_rows, BB_n_cols);
-  coot_rt_t::copy_mat(tmp_AA.get_dev_mem(false), U1.get_dev_mem(false),
-                      tmp_AA.n_rows, tmp_AA.n_cols,
-                      0, 0, tmp_AA.n_rows,
-                      U1.get_row_offset(), U1.get_col_offset(), U1.get_M_n_rows());
-  coot_rt_t::copy_mat(tmp_BB.get_dev_mem(false), U2.get_dev_mem(false),
-                      tmp_BB.n_rows, tmp_BB.n_cols,
-                      0, 0, tmp_BB.n_rows,
-                      U2.get_row_offset(), U2.get_col_offset(), U2.get_M_n_rows());
+  coot_rt_t::copy(make_proxy(tmp_AA), make_proxy(U1.M));
+  coot_rt_t::copy(make_proxy(tmp_BB), make_proxy(U2.M));
   for (uword i = 0; i < tmp_AA.n_rows; ++i)
     {
     tmp_AA.row(i) -= mean_vals_AA;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
 // Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
-// Copyright 2008-2023 Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2008-2026 Conrad Sanderson (https://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -135,6 +135,25 @@ coot_stop_runtime_error(const T1& x, const T2& y)
 
 
 
+// print a message to get_cerr_stream() and throw runtime_error exception
+template<typename T1, typename T2, typename T3>
+coot_cold
+coot_noinline
+static
+void
+coot_stop_runtime_error(const T1& x, const T2& y, const T3& z)
+  {
+  #if defined(COOT_PRINT_EXCEPTIONS)
+    {
+    get_cerr_stream() << "\nerror: " << x << ": " << y << "\n" << z << std::endl;
+    }
+  #endif
+
+  throw std::runtime_error( std::string(x) + std::string(": ") + std::string(y) + std::string("\n") + std::string(z) );
+  }
+
+
+
 //
 // coot_print
 
@@ -251,7 +270,7 @@ coot_thisprint(const void* this_ptr)
 
 
 //
-// coot_warn
+// coot_plain_warn
 
 
 // print a message to the warn stream
@@ -260,9 +279,9 @@ coot_cold
 coot_noinline
 static
 void
-coot_warn(const T1& x)
+coot_plain_warn(const T1& arg1)
   {
-  get_cerr_stream() << "\nwarning: " << x << '\n';
+  get_cerr_stream() << "\nwarning: " << arg1 << '\n';
   }
 
 
@@ -271,9 +290,9 @@ coot_cold
 coot_noinline
 static
 void
-coot_warn(const T1& x, const T2& y)
+coot_plain_warn(const T1& arg1, const T2& arg2)
   {
-  get_cerr_stream() << "\nwarning: " << x << y << '\n';
+  get_cerr_stream() << "\nwarning: " << arg1 << arg2 << '\n';
   }
 
 
@@ -282,58 +301,69 @@ coot_cold
 coot_noinline
 static
 void
-coot_warn(const T1& x, const T2& y, const T3& z)
+coot_plain_warn(const T1& arg1, const T2& arg2, const T3& arg3)
   {
-  get_cerr_stream() << "\nwarning: " << x << y << z << '\n';
+  get_cerr_stream() << "\nwarning: " << arg1 << arg2 << arg3 << '\n';
+  }
+
+
+template<typename T1, typename T2, typename T3, typename T4>
+coot_cold
+coot_noinline
+static
+void
+coot_plain_warn(const T1& arg1, const T2& arg2, const T3& arg3, const T3& arg4)
+  {
+  get_cerr_stream() << "\nwarning: " << arg1 << arg2 << arg3 << arg4 << '\n';
   }
 
 
 
 //
-// coot_warn_level
+// coot_warn
 
 
 template<typename T1>
 inline
 void
-coot_warn_level(const uword level, const T1& arg1)
+coot_warn(const uword level, const T1& arg1)
   {
   constexpr uword config_level = (sword(COOT_WARN_LEVEL) > 0) ? uword(COOT_WARN_LEVEL) : uword(0);
   
-  if((config_level > 0) && (level <= config_level))  { coot_warn(arg1); }
+  if((config_level > 0) && (level <= config_level))  { coot_plain_warn(arg1); }
   }
 
 
 template<typename T1, typename T2>
 inline
 void
-coot_warn_level(const uword level, const T1& arg1, const T2& arg2)
+coot_warn(const uword level, const T1& arg1, const T2& arg2)
   {
   constexpr uword config_level = (sword(COOT_WARN_LEVEL) > 0) ? uword(COOT_WARN_LEVEL) : uword(0);
   
-  if((config_level > 0) && (level <= config_level))  { coot_warn(arg1,arg2); }
+  if((config_level > 0) && (level <= config_level))  { coot_plain_warn(arg1,arg2); }
   }
 
 
 template<typename T1, typename T2, typename T3>
 inline
 void
-coot_warn_level(const uword level, const T1& arg1, const T2& arg2, const T3& arg3)
+coot_warn(const uword level, const T1& arg1, const T2& arg2, const T3& arg3)
   {
   constexpr uword config_level = (sword(COOT_WARN_LEVEL) > 0) ? uword(COOT_WARN_LEVEL) : uword(0);
   
-  if((config_level > 0) && (level <= config_level))  { coot_warn(arg1,arg2,arg3); }
+  if((config_level > 0) && (level <= config_level))  { coot_plain_warn(arg1,arg2,arg3); }
   }
 
 
 template<typename T1, typename T2, typename T3, typename T4>
 inline
 void
-coot_warn_level(const uword level, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4)
+coot_warn(const uword level, const T1& arg1, const T2& arg2, const T3& arg3, const T4& arg4)
   {
   constexpr uword config_level = (sword(COOT_WARN_LEVEL) > 0) ? uword(COOT_WARN_LEVEL) : uword(0);
   
-  if((config_level > 0) && (level <= config_level))  { coot_warn(arg1,arg2,arg3,arg4); }
+  if((config_level > 0) && (level <= config_level))  { coot_plain_warn(arg1,arg2,arg3,arg4); }
   }
 
 
@@ -519,6 +549,156 @@ coot_assert_same_size(const T1& A, const T2& B, const char* x,
 
 
 
+template<typename eT, typename T1>
+inline
+void
+coot_assert_cube_as_mat(const Mat<eT>& M, const T1& Q, const char* x, const bool check_compat_size)
+  {
+  const uword Q_n_rows   = Q.n_rows;
+  const uword Q_n_cols   = Q.n_cols;
+  const uword Q_n_slices = Q.n_slices;
+  
+  const uword M_vec_state = M.vec_state;
+  
+  if(M_vec_state == 0)
+    {
+    if( ( (Q_n_rows == 1) || (Q_n_cols == 1) || (Q_n_slices == 1) ) == false )
+      {
+      std::ostringstream tmp;
+        
+      tmp << x
+          << ": can't interpret cube with dimensions "
+          << Q_n_rows << 'x' << Q_n_cols << 'x' << Q_n_slices 
+          << " as a matrix; one of the dimensions must be 1";
+      
+      coot_stop_logic_error( tmp.str() );
+      }
+    }
+  else
+    {
+    if(Q_n_slices == 1)
+      {
+      if( (M_vec_state == 1) && (Q_n_cols != 1) )
+        {
+        std::ostringstream tmp;
+        
+        tmp << x
+            << ": can't interpret cube with dimensions "
+            << Q_n_rows << 'x' << Q_n_cols << 'x' << Q_n_slices
+            << " as a column vector";
+        
+        coot_stop_logic_error( tmp.str() );
+        }
+      
+      if( (M_vec_state == 2) && (Q_n_rows != 1) )
+        {
+        std::ostringstream tmp;
+        
+        tmp << x
+            << ": can't interpret cube with dimensions "
+            << Q_n_rows << 'x' << Q_n_cols << 'x' << Q_n_slices
+            << " as a row vector";
+        
+        coot_stop_logic_error( tmp.str() );
+        }
+      }
+    else
+      {
+      if( (Q_n_cols != 1) && (Q_n_rows != 1) )
+        {
+        std::ostringstream tmp;
+        
+        tmp << x
+            << ": can't interpret cube with dimensions "
+            << Q_n_rows << 'x' << Q_n_cols << 'x' << Q_n_slices
+            << " as a vector";
+        
+        coot_stop_logic_error( tmp.str() );
+        }
+      }
+    }
+  
+  
+  if(check_compat_size)
+    {
+    const uword M_n_rows = M.n_rows;
+    const uword M_n_cols = M.n_cols;
+    
+    if(M_vec_state == 0)
+      {
+      if(
+          (
+          ( (Q_n_rows == M_n_rows) && (Q_n_cols   == M_n_cols) )
+          ||
+          ( (Q_n_rows == M_n_rows) && (Q_n_slices == M_n_cols) )
+          ||
+          ( (Q_n_cols == M_n_rows) && (Q_n_slices == M_n_cols) )
+          )
+          == false
+        )
+        {
+        std::ostringstream tmp;
+        
+        tmp << x
+            << ": can't interpret cube with dimensions "
+            << Q_n_rows << 'x' << Q_n_cols << 'x' << Q_n_slices
+            << " as a matrix with dimensions "
+            << M_n_rows << 'x' << M_n_cols;
+        
+        coot_stop_logic_error( tmp.str() );
+        }
+      }
+    else
+      {
+      if(Q_n_slices == 1)
+        {
+        if( (M_vec_state == 1) && (Q_n_rows != M_n_rows) )
+          {
+          std::ostringstream tmp;
+          
+          tmp << x
+              << ": can't interpret cube with dimensions "
+              << Q_n_rows << 'x' << Q_n_cols << 'x' << Q_n_slices
+              << " as a column vector with dimensions "
+              << M_n_rows << 'x' << M_n_cols;
+          
+          coot_stop_logic_error( tmp.str() );
+          }
+        
+        if( (M_vec_state == 2) && (Q_n_cols != M_n_cols) )
+          {
+          std::ostringstream tmp;
+          
+          tmp << x
+              << ": can't interpret cube with dimensions "
+              << Q_n_rows << 'x' << Q_n_cols << 'x' << Q_n_slices
+              << " as a row vector with dimensions "
+              << M_n_rows << 'x' << M_n_cols;
+          
+          coot_stop_logic_error( tmp.str() );
+          }
+        }
+      else
+        {
+        if( ( (M_n_cols == Q_n_slices) || (M_n_rows == Q_n_slices) ) == false )
+          {
+          std::ostringstream tmp;
+          
+          tmp << x
+              << ": can't interpret cube with dimensions "
+              << Q_n_rows << 'x' << Q_n_cols << 'x' << Q_n_slices
+              << " as a vector with dimensions "
+              << M_n_rows << 'x' << M_n_cols;
+          
+          coot_stop_logic_error( tmp.str() );
+          }
+        }
+      }
+    }
+  }
+
+
+
 //
 // functions for checking whether two matrices have dimensions that are compatible with the matrix multiply operation
 
@@ -651,99 +831,79 @@ coot_assert_blas_size(const T1& A, const T2& B)
 // #define COOT_FILELINE  __FILE__ ": " COOT_STRING2(__LINE__)
 
 
-#if defined(COOT_NO_DEBUG)
-
-  #undef COOT_EXTRA_DEBUG
-
-  #define coot_debug_print                   true ? (void)0 : coot_print
-  #define coot_debug_warn                    true ? (void)0 : coot_warn
-  #define coot_debug_warn_level              true ? (void)0 : coot_warn_level
-  #define coot_debug_check                   true ? (void)0 : coot_check
-  #define coot_debug_check_bounds            true ? (void)0 : coot_check_bounds
-  #define coot_debug_set_error               true ? (void)0 : coot_set_error
-  #define coot_debug_assert_same_size        true ? (void)0 : coot_assert_same_size
-  #define coot_debug_assert_mul_size         true ? (void)0 : coot_assert_mul_size
-  #define coot_debug_assert_trans_mul_size   true ? (void)0 : coot_assert_trans_mul_size
-  #define coot_debug_assert_blas_size        true ? (void)0 : coot_assert_blas_size
-
+#if defined(COOT_CHECK_CONFORMANCE)
+  
+  #define coot_conform_check                  coot_check
+  #define coot_conform_check_bounds           coot_check_bounds
+  #define coot_conform_set_error              coot_set_error
+  #define coot_conform_assert_same_size       coot_assert_same_size
+  #define coot_conform_assert_mul_size        coot_assert_mul_size
+  #define coot_conform_assert_trans_mul_size  coot_assert_trans_mul_size
+  #define coot_conform_assert_cube_as_mat     coot_assert_cube_as_mat
+  #define coot_conform_assert_blas_size       coot_assert_blas_size
+  
 #else
-
-  #define coot_debug_print                 coot_print
-  #define coot_debug_warn                  coot_warn
-  #define coot_debug_warn_level            coot_warn_level
-  #define coot_debug_check                 coot_check
-  #define coot_debug_check_bounds          coot_check_bounds
-  #define coot_debug_set_error             coot_set_error
-  #define coot_debug_assert_same_size      coot_assert_same_size
-  #define coot_debug_assert_mul_size       coot_assert_mul_size
-  #define coot_debug_assert_trans_mul_size coot_assert_trans_mul_size
-  #define coot_debug_assert_blas_size      coot_assert_blas_size
-
+  
+  #define coot_conform_check                   true ? (void)0 : coot_check
+  #define coot_conform_check_bounds            true ? (void)0 : coot_check_bounds
+  #define coot_conform_set_error               true ? (void)0 : coot_set_error
+  #define coot_conform_assert_same_size        true ? (void)0 : coot_assert_same_size
+  #define coot_conform_assert_mul_size         true ? (void)0 : coot_assert_mul_size
+  #define coot_conform_assert_trans_mul_size   true ? (void)0 : coot_assert_trans_mul_size
+  #define coot_conform_assert_cube_as_mat      true ? (void)0 : coot_assert_cube_as_mat
+  #define coot_conform_assert_blas_size        true ? (void)0 : coot_assert_blas_size
+  
 #endif
 
 
 
-#if defined(COOT_EXTRA_DEBUG)
-
-  #define coot_extra_debug_sigprint       coot_sigprint(COOT_FNSIG); coot_bktprint
-  #define coot_extra_debug_sigprint_this  coot_sigprint(COOT_FNSIG); coot_thisprint
-  #define coot_extra_debug_print          coot_print
-  #define coot_extra_debug_warn           coot_warn
-
+#if defined(COOT_DEBUG)
+  
+  #define coot_debug_sigprint       coot_sigprint(COOT_FNSIG); coot_bktprint
+  #define coot_debug_sigprint_this  coot_sigprint(COOT_FNSIG); coot_thisprint
+  #define coot_debug_print          coot_print
+  
 #else
-
-  #define coot_extra_debug_sigprint        true ? (void)0 : coot_bktprint
-  #define coot_extra_debug_sigprint_this   true ? (void)0 : coot_thisprint
-  #define coot_extra_debug_print           true ? (void)0 : coot_print
-  #define coot_extra_debug_warn            true ? (void)0 : coot_warn
-
+  
+  #define coot_debug_sigprint       true ? (void)0 : coot_bktprint
+  #define coot_debug_sigprint_this  true ? (void)0 : coot_thisprint
+  #define coot_debug_print          true ? (void)0 : coot_print
+  
 #endif
 
 
 
-
-#if defined(COOT_EXTRA_DEBUG)
+#if defined(COOT_DEBUG)
 
   namespace junk
     {
-    class coot_first_extra_debug_message
+    struct coot_first_debug_message
       {
-      public:
-
       inline
-      coot_first_extra_debug_message()
+      coot_first_debug_message()
         {
-        union
-          {
-          unsigned short a;
-          unsigned char  b[sizeof(unsigned short)];
-          } endian_test;
-
-        endian_test.a = 1;
-
-        const bool        little_endian = (endian_test.b[0] == 1);
-        const std::string note          = COOT_VERSION_NOTE;
-
+        const std::string note = COOT_VERSION_NOTE;
+        
         std::ostream& out = get_cerr_stream();
-
+        
         out << "@ ---" << '\n';
         out << "@ Bandicoot " << coot_version::major << '.' << coot_version::minor << '.' << coot_version::patch;
         if(note.length() > 0)  { out << " (" << note << ')'; }
         out << '\n';
-        out << "@ coot_config::wrapper    = " << coot_config::wrapper  << '\n';
-        out << "@ coot_config::extra_code = " << coot_config::extra_code   << '\n';
+        out << "@ coot_config::wrapper          = " << coot_config::wrapper          << '\n';
+        out << "@ coot_config::good_comp        = " << coot_config::good_comp        << '\n';
+        out << "@ coot_config::optimise_powexpr = " << coot_config::optimise_powexpr << '\n';
+        out << "@ coot_config::extra_code       = " << coot_config::extra_code       << '\n';
         out << "@ sizeof(void*)    = " << sizeof(void*)    << '\n';
         out << "@ sizeof(int)      = " << sizeof(int)      << '\n';
         out << "@ sizeof(long)     = " << sizeof(long)     << '\n';
         out << "@ sizeof(uword)    = " << sizeof(uword)    << '\n';
         out << "@ sizeof(blas_int) = " << sizeof(blas_int) << '\n';
-        out << "@ little_endian    = " << little_endian    << '\n';
         out << "@ ---" << std::endl;
         }
-
       };
 
-    static coot_first_extra_debug_message coot_first_extra_debug_message_run;
+    static coot_first_debug_message coot_first_debug_message_run;
     }
 
 #endif

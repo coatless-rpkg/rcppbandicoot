@@ -30,7 +30,7 @@ pinv
   const Base<typename T1::elem_type, T1>& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_pinv>(X.get_ref(), typename T1::elem_type(0));
   }
@@ -51,18 +51,20 @@ pinv
   const char*                             method = nullptr
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
-
+  
+  coot_conform_check( ((tol >= eT(0)) == false), "pinv(): tolerance must be > 0" );
+  
   // We only support the standard method for now, but provide the option for compatibility with Armadillo.
   if (method != nullptr)
     {
     const char sig = method[0];
 
-    coot_debug_check( (sig == 'd'), "pinv(): \"dc\" (divide and conquer) method not supported by Bandicoot" );
+    coot_conform_check( (sig == 'd'), "pinv(): \"dc\" (divide and conquer) method not supported by Bandicoot" );
 
-    coot_debug_check( ((sig != 's') && (sig != 'd')), "pinv(): unknown method specified" );
+    coot_conform_check( ((sig != 's') && (sig != 'd')), "pinv(): unknown method specified" );
     }
 
   return Op<T1, op_pinv>(X.get_ref(), eT(tol));
@@ -85,15 +87,19 @@ pinv
   const char*                             method = nullptr
   )
   {
-  coot_extra_debug_sigprint();
-
+  coot_debug_sigprint();
+  
+  typedef typename T1::elem_type eT;
+  
+  coot_conform_check( ((tol >= eT(0)) == false), "pinv(): tolerance must be > 0" );
+  
   if (method != nullptr)
     {
     const char sig = method[0];
 
-    coot_debug_check( (sig == 'd'), "pinv(): \"dc\" (divide and conquer) method not supported by Bandicoot" );
+    coot_conform_check( (sig == 'd'), "pinv(): \"dc\" (divide and conquer) method not supported by Bandicoot" );
 
-    coot_debug_check( ((sig != 's') && (sig != 'd')), "pinv(): unknown method specified" );
+    coot_conform_check( ((sig != 's') && (sig != 'd')), "pinv(): unknown method specified" );
     }
 
   const std::tuple<bool, std::string> result = op_pinv::apply_direct(out, X.get_ref(), tol);
@@ -101,7 +107,7 @@ pinv
   if (std::get<0>(result) == false)
     {
     out.reset();
-    coot_debug_warn_level(3, "pinv(): " + std::get<1>(result));
+    coot_warn(3, "pinv(): " + std::get<1>(result));
     }
 
   return std::get<0>(result);

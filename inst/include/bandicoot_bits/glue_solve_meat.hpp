@@ -21,7 +21,7 @@ inline
 void
 glue_solve::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_solve>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const std::tuple<bool, std::string> result = apply(out, in.A, in.B, in.aux_uword);
   if (std::get<0>(result) == false)
@@ -38,7 +38,7 @@ inline
 std::tuple<bool, std::string>
 glue_solve::apply(Mat<out_eT>& out, const Base<eT, T1>& A_expr, const Base<eT, T2>& B_expr, const uword flags, const typename enable_if<!is_same_type<eT, out_eT>::value>::result* junk)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   Mat<eT> tmp_out;
@@ -47,10 +47,7 @@ glue_solve::apply(Mat<out_eT>& out, const Base<eT, T1>& A_expr, const Base<eT, T
     {
     // convert to output type
     out.set_size(tmp_out.n_rows, tmp_out.n_cols);
-    coot_rt_t::copy_mat(out.get_dev_mem(false), tmp_out.get_dev_mem(false),
-                        tmp_out.n_rows, tmp_out.n_cols,
-                        0, 0, out.n_rows,
-                        0, 0, tmp_out.n_rows);
+    coot_rt_t::copy(make_proxy(out), make_proxy(tmp_out));
     }
 
   return result;
@@ -63,7 +60,7 @@ inline
 std::tuple<bool, std::string>
 glue_solve::apply(Mat<eT>& out, const Base<eT, T1>& A_expr, const Base<eT, T2>& B_expr, const uword flags)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_ignore(flags);  // TODO: right now we only support LU-based decompositions, and so flags are ignored
 
@@ -76,7 +73,7 @@ glue_solve::apply(Mat<eT>& out, const Base<eT, T1>& A_expr, const Base<eT, T2>& 
     return std::make_tuple(true, "");
     }
 
-  coot_debug_check( A.n_rows != A.n_cols, "solve(): given matrix must be square sized" );
+  coot_conform_check( A.n_rows != A.n_cols, "solve(): given matrix must be square sized" );
 
   copy_alias<eT> A2(A, out);
   return coot_rt_t::solve_square_fast(A2.M.get_dev_mem(true), false, out.get_dev_mem(true), out.n_rows, out.n_cols);
@@ -89,7 +86,7 @@ inline
 std::tuple<bool, std::string>
 glue_solve::apply(Mat<eT>& out, const Base<eT, Op<T1, op_htrans>>& A_expr, const Base<eT, T2>& B_expr, const uword flags)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_ignore(flags);  // TODO: right now we only support LU-based decompositions, and so flags are ignored
 
@@ -102,7 +99,7 @@ glue_solve::apply(Mat<eT>& out, const Base<eT, Op<T1, op_htrans>>& A_expr, const
     return std::make_tuple(true, "");
     }
 
-  coot_debug_check( A.n_rows != A.n_cols, "solve(): given matrix must be square sized" );
+  coot_conform_check( A.n_rows != A.n_cols, "solve(): given matrix must be square sized" );
 
   copy_alias<eT> A2(A, out);
   return coot_rt_t::solve_square_fast(A2.M.get_dev_mem(true), true, out.get_dev_mem(true), out.n_rows, out.n_cols);
@@ -115,7 +112,7 @@ inline
 std::tuple<bool, std::string>
 glue_solve::apply(Mat<eT>& out, const Base<eT, Op<T1, op_htrans2>>& A_expr, const Base<eT, T2>& B_expr, const uword flags)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_ignore(flags);  // TODO: right now we only support LU-based decompositions, and so flags are ignored
 
@@ -128,19 +125,14 @@ glue_solve::apply(Mat<eT>& out, const Base<eT, Op<T1, op_htrans2>>& A_expr, cons
     return std::make_tuple(true, "");
     }
 
-  coot_debug_check( A.n_rows != A.n_cols, "solve(): given matrix must be square sized" );
+  coot_conform_check( A.n_rows != A.n_cols, "solve(): given matrix must be square sized" );
 
   copy_alias<eT> A2(A, out);
   const std::tuple<bool, std::string> result = coot_rt_t::solve_square_fast(A2.M.get_dev_mem(true), true, out.get_dev_mem(true), out.n_rows, out.n_cols);
   if (std::get<0>(result) == true)
     {
     // the result needs to be divided by the scalar
-    coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
-                          out.get_dev_mem(false), out.get_dev_mem(false),
-                          (eT) A_expr.get_ref().aux, (eT) 1,
-                          out.n_rows, out.n_cols, 1,
-                          0, 0, 0, out.n_rows, out.n_cols,
-                          0, 0, 0, out.n_rows, out.n_cols);
+    out /= (eT) A_expr.get_ref().aux_a;
     }
 
   return result;

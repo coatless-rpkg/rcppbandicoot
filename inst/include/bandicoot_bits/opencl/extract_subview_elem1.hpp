@@ -22,9 +22,9 @@ extract_subview_elem1(dev_mem_t<eT2> out_mem,
                       const dev_mem_t<uword> in_locs,
                       const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "opencl::extract_subview_elem1(): OpenCL runtime not valid");
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "opencl::extract_subview_elem1(): OpenCL runtime not valid");
 
   cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(twoway_kernel_id::extract_sve1);
 

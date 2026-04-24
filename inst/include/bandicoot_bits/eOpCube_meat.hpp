@@ -23,20 +23,21 @@ inline
 eOpCube<T1, eop_type>::eOpCube(const T1& in_m)
   : m(in_m)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
 
 template<typename T1, typename eop_type>
 inline
-eOpCube<T1, eop_type>::eOpCube(const T1& in_m, const typename T1::elem_type in_aux)
+eOpCube<T1, eop_type>::eOpCube(const T1& in_m, const typename T1::elem_type in_aux_a)
   : m(in_m)
-  , aux(in_aux)
+  , aux_a(in_aux_a)
+  , aux_b(typename T1::elem_type(0))
   , aux_uword_a(uword(0))
   , aux_uword_b(uword(0))
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -45,24 +46,41 @@ template<typename T1, typename eop_type>
 inline
 eOpCube<T1, eop_type>::eOpCube(const T1& in_m, const uword in_aux_uword_a, const uword in_aux_uword_b)
   : m(in_m)
-  , aux(typename T1::elem_type(0))
+  , aux_a(typename T1::elem_type(0))
+  , aux_b(typename T1::elem_type(0))
   , aux_uword_a(in_aux_uword_a)
   , aux_uword_b(in_aux_uword_b)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
 
 template<typename T1, typename eop_type>
 inline
-eOpCube<T1, eop_type>::eOpCube(const T1& in_m, const typename T1::elem_type in_aux, const uword in_aux_uword_a, const uword in_aux_uword_b)
+eOpCube<T1, eop_type>::eOpCube(const T1& in_m, const typename T1::elem_type in_aux_a, const uword in_aux_uword_a, const uword in_aux_uword_b)
   : m(in_m)
-  , aux(in_aux)
+  , aux_a(in_aux_a)
+  , aux_b(typename T1::elem_type(0))
   , aux_uword_a(in_aux_uword_a)
   , aux_uword_b(in_aux_uword_b)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
+  }
+
+
+
+template<typename T1, typename eop_type>
+inline
+eOpCube<T1, eop_type>::eOpCube(const T1& in_m, const char junk, const typename T1::elem_type in_aux_a, const typename T1::elem_type in_aux_b)
+  : m(in_m)
+  , aux_a(in_aux_a)
+  , aux_b(in_aux_b)
+  , aux_uword_a(uword(0))
+  , aux_uword_b(uword(0))
+  {
+  coot_debug_sigprint();
+  coot_ignore(junk);
   }
 
 
@@ -71,7 +89,7 @@ template<typename T1, typename eop_type>
 inline
 eOpCube<T1, eop_type>::~eOpCube()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 

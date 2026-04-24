@@ -33,7 +33,7 @@ typename
 enable_if2
   <
   (is_coot_type<T1>::value && is_coot_type<T2>::value),
-  const mtGlue<uword, T1, T2, mtglue_rel_lt>
+  const mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_lt>>
   >::result
 operator<
   (
@@ -41,9 +41,9 @@ operator<
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtGlue<uword, T1, T2, mtglue_rel_lt>( X, Y );
+  return mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_lt>>( X, Y );
   }
 
 
@@ -54,7 +54,7 @@ typename
 enable_if2
   <
   (is_coot_type<T1>::value && is_coot_type<T2>::value),
-  const mtGlue<uword, T1, T2, mtglue_rel_gt>
+  const mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_gt>>
   >::result
 operator>
   (
@@ -62,9 +62,9 @@ operator>
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtGlue<uword, T1, T2, mtglue_rel_gt>( X, Y );
+  return mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_gt>>( X, Y );
   }
 
 
@@ -75,7 +75,7 @@ typename
 enable_if2
   <
   (is_coot_type<T1>::value && is_coot_type<T2>::value),
-  const mtGlue<uword, T1, T2, mtglue_rel_lteq>
+  const mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_lteq>>
   >::result
 operator<=
   (
@@ -83,9 +83,9 @@ operator<=
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtGlue<uword, T1, T2, mtglue_rel_lteq>( X, Y );
+  return mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_lteq>>( X, Y );
   }
 
 
@@ -96,7 +96,7 @@ typename
 enable_if2
   <
   (is_coot_type<T1>::value && is_coot_type<T2>::value),
-  const mtGlue<uword, T1, T2, mtglue_rel_gteq>
+  const mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_gteq>>
   >::result
 operator>=
   (
@@ -104,9 +104,9 @@ operator>=
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtGlue<uword, T1, T2, mtglue_rel_gteq>( X, Y );
+  return mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_gteq>>( X, Y );
   }
 
 
@@ -117,7 +117,7 @@ typename
 enable_if2
   <
   (is_coot_type<T1>::value && is_coot_type<T2>::value),
-  const mtGlue<uword, T1, T2, mtglue_rel_eq>
+  const mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_eq>>
   >::result
 operator==
   (
@@ -125,9 +125,9 @@ operator==
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtGlue<uword, T1, T2, mtglue_rel_eq>( X, Y );
+  return mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_eq>>( X, Y );
   }
 
 
@@ -138,7 +138,7 @@ typename
 enable_if2
   <
   (is_coot_type<T1>::value && is_coot_type<T2>::value),
-  const mtGlue<uword, T1, T2, mtglue_rel_noteq>
+  const mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_noteq>>
   >::result
 operator!=
   (
@@ -146,9 +146,9 @@ operator!=
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtGlue<uword, T1, T2, mtglue_rel_noteq>( X, Y );
+  return mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_noteq>>( X, Y );
   }
 
 
@@ -159,7 +159,7 @@ typename
 enable_if2
   <
   (is_coot_type<T1>::value && is_coot_type<T2>::value),
-  const mtGlue<uword, T1, T2, mtglue_rel_and>
+  const mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_and>>
   >::result
 operator&&
   (
@@ -167,9 +167,9 @@ operator&&
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtGlue<uword, T1, T2, mtglue_rel_and>( X, Y );
+  return mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_and>>( X, Y );
   }
 
 
@@ -180,7 +180,7 @@ typename
 enable_if2
   <
   (is_coot_type<T1>::value && is_coot_type<T2>::value),
-  const mtGlue<uword, T1, T2, mtglue_rel_or>
+  const mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_or>>
   >::result
 operator||
   (
@@ -188,9 +188,9 @@ operator||
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtGlue<uword, T1, T2, mtglue_rel_or>( X, Y );
+  return mtGlue<uword, T1, T2, mtglue_rel_core<mtglue_rel_or>>( X, Y );
   }
 
 
@@ -201,7 +201,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_lt_pre>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_lt_pre>>
   >::result
 operator<
   (
@@ -209,9 +209,9 @@ operator<
   const T1& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_lt_pre>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_lt_pre>>(X, val);
   }
 
 
@@ -222,7 +222,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_lt_post>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_lt_post>>
   >::result
 operator<
   (
@@ -230,9 +230,9 @@ operator<
   const typename T1::elem_type val
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_lt_post>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_lt_post>>(X, val);
   }
 
 
@@ -243,7 +243,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_gt_pre>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_gt_pre>>
   >::result
 operator>
   (
@@ -251,9 +251,9 @@ operator>
   const T1& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_gt_pre>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_gt_pre>>(X, val);
   }
 
 
@@ -264,7 +264,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_gt_post>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_gt_post>>
   >::result
 operator>
   (
@@ -272,9 +272,9 @@ operator>
   const typename T1::elem_type val
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_gt_post>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_gt_post>>(X, val);
   }
 
 
@@ -285,7 +285,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_lteq_pre>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_lteq_pre>>
   >::result
 operator<=
   (
@@ -293,9 +293,9 @@ operator<=
   const T1& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_lteq_pre>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_lteq_pre>>(X, val);
   }
 
 
@@ -306,7 +306,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_lteq_post>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_lteq_post>>
   >::result
 operator<=
   (
@@ -314,9 +314,9 @@ operator<=
   const typename T1::elem_type val
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_lteq_post>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_lteq_post>>(X, val);
   }
 
 
@@ -327,7 +327,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_gteq_pre>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_gteq_pre>>
   >::result
 operator>=
   (
@@ -335,9 +335,9 @@ operator>=
   const T1& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_gteq_pre>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_gteq_pre>>(X, val);
   }
 
 
@@ -348,7 +348,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_gteq_post>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_gteq_post>>
   >::result
 operator>=
   (
@@ -356,9 +356,9 @@ operator>=
   const typename T1::elem_type val
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_gteq_post>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_gteq_post>>(X, val);
   }
 
 
@@ -369,7 +369,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_eq>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_eq>>
   >::result
 operator==
   (
@@ -377,9 +377,9 @@ operator==
   const typename T1::elem_type val
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_eq>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_eq>>(X, val);
   }
 
 
@@ -390,7 +390,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_eq>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_eq>>
   >::result
 operator==
   (
@@ -398,9 +398,9 @@ operator==
   const T1& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_eq>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_eq>>(X, val);
   }
 
 
@@ -411,7 +411,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_noteq>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_noteq>>
   >::result
 operator!=
   (
@@ -419,9 +419,9 @@ operator!=
   const typename T1::elem_type val
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_noteq>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_noteq>>(X, val);
   }
 
 
@@ -432,7 +432,7 @@ typename
 enable_if2
   <
   is_coot_type<T1>::value,
-  const mtOp<uword, T1, mtop_rel_noteq>
+  const mtOp<uword, T1, mtop_rel_core<mtop_rel_noteq>>
   >::result
 operator!=
   (
@@ -440,7 +440,7 @@ operator!=
   const T1& X
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return mtOp<uword, T1, mtop_rel_noteq>(X, val);
+  return mtOp<uword, T1, mtop_rel_core<mtop_rel_noteq>>(X, val);
   }

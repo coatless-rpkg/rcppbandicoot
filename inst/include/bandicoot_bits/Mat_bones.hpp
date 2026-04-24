@@ -36,13 +36,10 @@ class Mat : public Base< eT, Mat<eT> >
   static constexpr bool is_row = false;
   static constexpr bool is_xvec = false;
 
-
-  private:
-
-  coot_aligned dev_mem_t<eT> dev_mem;
+  // do not modify this unless you know what you are doing!
+  coot_aligned const dev_mem_t<eT> dev_mem;
 
 
-  public:
 
   inline ~Mat();
   inline  Mat();
@@ -109,6 +106,14 @@ class Mat : public Base< eT, Mat<eT> >
   inline Mat& operator%=(const subview<eT>& X);
   inline Mat& operator/=(const subview<eT>& X);
 
+  inline             Mat(const subview_cube<eT>& X);
+  inline Mat& operator= (const subview_cube<eT>& X);
+  inline Mat& operator+=(const subview_cube<eT>& X);
+  inline Mat& operator-=(const subview_cube<eT>& X);
+  inline Mat& operator*=(const subview_cube<eT>& X);
+  inline Mat& operator%=(const subview_cube<eT>& X);
+  inline Mat& operator/=(const subview_cube<eT>& X);
+  
   inline             Mat(const diagview<eT>& X);
   inline Mat& operator= (const diagview<eT>& X);
   inline Mat& operator+=(const diagview<eT>& X);
@@ -125,13 +130,13 @@ class Mat : public Base< eT, Mat<eT> >
   template<typename T1> inline Mat& operator%=(const subview_elem1<eT,T1>& X);
   template<typename T1> inline Mat& operator/=(const subview_elem1<eT,T1>& X);
 
-  template<typename T1, typename T2> inline             Mat(const subview_elem2<eT,T1,T2>& X);
-  template<typename T1, typename T2> inline Mat& operator= (const subview_elem2<eT,T1,T2>& X);
-  template<typename T1, typename T2> inline Mat& operator+=(const subview_elem2<eT,T1,T2>& X);
-  template<typename T1, typename T2> inline Mat& operator-=(const subview_elem2<eT,T1,T2>& X);
-  template<typename T1, typename T2> inline Mat& operator*=(const subview_elem2<eT,T1,T2>& X);
-  template<typename T1, typename T2> inline Mat& operator%=(const subview_elem2<eT,T1,T2>& X);
-  template<typename T1, typename T2> inline Mat& operator/=(const subview_elem2<eT,T1,T2>& X);
+  template<typename sve2_type> inline             Mat(const subview_elem2<eT,sve2_type>& X);
+  template<typename sve2_type> inline Mat& operator= (const subview_elem2<eT,sve2_type>& X);
+  template<typename sve2_type> inline Mat& operator+=(const subview_elem2<eT,sve2_type>& X);
+  template<typename sve2_type> inline Mat& operator-=(const subview_elem2<eT,sve2_type>& X);
+  template<typename sve2_type> inline Mat& operator*=(const subview_elem2<eT,sve2_type>& X);
+  template<typename sve2_type> inline Mat& operator%=(const subview_elem2<eT,sve2_type>& X);
+  template<typename sve2_type> inline Mat& operator/=(const subview_elem2<eT,sve2_type>& X);
 
   template<typename T1, typename eop_type> inline             Mat(const eOp<T1, eop_type>& X);
   template<typename T1, typename eop_type> inline Mat& operator= (const eOp<T1, eop_type>& X);
@@ -307,20 +312,20 @@ class Mat : public Base< eT, Mat<eT> >
   template<typename T1> coot_inline       subview_elem1<eT,T1> operator()(const Base<uword,T1>& a);
   template<typename T1> coot_inline const subview_elem1<eT,T1> operator()(const Base<uword,T1>& a) const;
 
-  template<typename T1, typename T2> coot_inline       subview_elem2<eT,T1,T2> elem(const Base<uword,T1>& ri, const Base<uword,T2>& ci);
-  template<typename T1, typename T2> coot_inline const subview_elem2<eT,T1,T2> elem(const Base<uword,T1>& ri, const Base<uword,T2>& ci) const;
+  template<typename T1, typename T2> coot_inline       subview_elem2<eT, subview_elem2_both<eT, T1, T2>> elem(const Base<uword,T1>& ri, const Base<uword,T2>& ci);
+  template<typename T1, typename T2> coot_inline const subview_elem2<eT, subview_elem2_both<eT, T1, T2>> elem(const Base<uword,T1>& ri, const Base<uword,T2>& ci) const;
 
-  template<typename T1, typename T2> coot_inline       subview_elem2<eT,T1,T2> submat(const Base<uword,T1>& ri, const Base<uword,T2>& ci);
-  template<typename T1, typename T2> coot_inline const subview_elem2<eT,T1,T2> submat(const Base<uword,T1>& ri, const Base<uword,T2>& ci) const;
+  template<typename T1, typename T2> coot_inline       subview_elem2<eT, subview_elem2_both<eT, T1, T2>> submat(const Base<uword,T1>& ri, const Base<uword,T2>& ci);
+  template<typename T1, typename T2> coot_inline const subview_elem2<eT, subview_elem2_both<eT, T1, T2>> submat(const Base<uword,T1>& ri, const Base<uword,T2>& ci) const;
 
-  template<typename T1, typename T2> coot_inline       subview_elem2<eT,T1,T2> operator()(const Base<uword,T1>& ri, const Base<uword,T2>& ci);
-  template<typename T1, typename T2> coot_inline const subview_elem2<eT,T1,T2> operator()(const Base<uword,T1>& ri, const Base<uword,T2>& ci) const;
+  template<typename T1, typename T2> coot_inline       subview_elem2<eT, subview_elem2_both<eT, T1, T2>> operator()(const Base<uword,T1>& ri, const Base<uword,T2>& ci);
+  template<typename T1, typename T2> coot_inline const subview_elem2<eT, subview_elem2_both<eT, T1, T2>> operator()(const Base<uword,T1>& ri, const Base<uword,T2>& ci) const;
 
-  template<typename T1> coot_inline       subview_elem2<eT,T1,T1> rows(const Base<uword,T1>& ri);
-  template<typename T1> coot_inline const subview_elem2<eT,T1,T1> rows(const Base<uword,T1>& ri) const;
+  template<typename T1> coot_inline       subview_elem2<eT, subview_elem2_all_cols<eT, T1>> rows(const Base<uword,T1>& ri);
+  template<typename T1> coot_inline const subview_elem2<eT, subview_elem2_all_cols<eT, T1>> rows(const Base<uword,T1>& ri) const;
 
-  template<typename T2> coot_inline       subview_elem2<eT,T2,T2> cols(const Base<uword,T2>& ci);
-  template<typename T2> coot_inline const subview_elem2<eT,T2,T2> cols(const Base<uword,T2>& ci) const;
+  template<typename T2> coot_inline       subview_elem2<eT, subview_elem2_all_rows<eT, T2>> cols(const Base<uword,T2>& ci);
+  template<typename T2> coot_inline const subview_elem2<eT, subview_elem2_all_rows<eT, T2>> cols(const Base<uword,T2>& ci) const;
 
   coot_inline       subview_each1<Mat<eT>, 0> each_col();
   coot_inline       subview_each1<Mat<eT>, 1> each_row();

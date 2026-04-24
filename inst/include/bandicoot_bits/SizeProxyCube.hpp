@@ -54,7 +54,7 @@ class SizeProxyCube< Cube<eT> >
   inline explicit SizeProxyCube(const Cube<eT>& A)
     : Q(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline uword get_n_rows() const       { return Q.n_rows; }
@@ -79,7 +79,7 @@ class SizeProxyCube< subview_cube<eT> >
   inline explicit SizeProxyCube(const subview_cube<eT>& A)
     : Q(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline uword get_n_rows() const       { return Q.n_rows; }
@@ -106,7 +106,7 @@ class SizeProxyCube< eOpCube<T1, eop_type> >
   inline explicit SizeProxyCube(const eOpCube<T1, eop_type>& A)
     : Q(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline uword get_n_rows() const       { return Q.get_n_rows(); }
@@ -133,7 +133,7 @@ class SizeProxyCube< eGlueCube<T1, T2, eglue_type> >
   inline explicit SizeProxyCube(const eGlueCube<T1, T2, eglue_type>& A)
     : Q(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline uword get_n_rows() const       { return Q.get_n_rows(); }
@@ -165,7 +165,7 @@ class SizeProxyCube< mtOpCube<out_eT, T1, mtop_type> >
     : S(A.q)
     , Q(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline uword get_n_rows() const { return mtop_type::compute_n_rows(Q, S.get_n_rows(), S.get_n_cols(), S.get_n_slices()); }
@@ -195,7 +195,7 @@ class SizeProxyCube< mtGlueCube<out_eT, T1, T2, mtglue_type> >
     : S(A.A)
     , Q(A)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
     }
 
   coot_inline uword get_n_rows() const       { return S.get_n_rows(); }

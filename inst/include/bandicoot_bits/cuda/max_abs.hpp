@@ -23,9 +23,9 @@ inline
 eT
 max_abs(dev_mem_t<eT> mem, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::max_abs(): cuda runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::max_abs(): cuda runtime not valid" );
 
   CUfunction k = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::max);
   CUfunction k_small = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::max_small);

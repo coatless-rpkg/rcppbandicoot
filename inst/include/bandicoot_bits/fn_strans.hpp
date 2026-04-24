@@ -28,7 +28,7 @@ strans
   const typename coot_cx_only<typename T1::elem_type>::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return Op<T1, op_strans>(X.get_ref());
@@ -47,7 +47,7 @@ strans
   const typename coot_not_cx<typename T1::elem_type>::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return Op<T1, op_htrans>(X.get_ref());
@@ -72,7 +72,7 @@ strans
   const typename coot_not_cx<typename T1::elem_type>::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return X;

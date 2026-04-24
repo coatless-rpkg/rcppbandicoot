@@ -22,9 +22,9 @@ inline
 eT
 prod(dev_mem_t<eT> mem, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::prod(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::prod(): OpenCL runtime not valid" );
 
   cl_kernel k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::prod);
   cl_kernel k_small = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::prod_small);

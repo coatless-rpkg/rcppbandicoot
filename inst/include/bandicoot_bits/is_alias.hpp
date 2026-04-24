@@ -87,6 +87,18 @@ struct alias_details< subview_cube<eT> >
 
 
 
+template<typename T1>
+struct alias_details< Proxy<T1> >
+  {
+  static coot_inline dev_mem_t<typename T1::elem_type> get_dev_mem(const Proxy<T1>& P) { return P.get_dev_mem(); }
+  static coot_inline uword                             get_offset(const Proxy<T1>& P)  { return 0; }
+  static coot_inline uword                             get_n_elem(const Proxy<T1>& P)  { return P.get_n_elem(); }
+  };
+
+
+
+// the second argument is allowed to be a type like subview_elem1,
+// subview_elem2, etc.
 template<typename T1, typename T2>
 inline
 bool
@@ -98,4 +110,42 @@ is_alias(const T1& A, const T2& B)
                       alias_details<T2>::get_dev_mem(B),
                       alias_details<T2>::get_offset(B),
                       alias_details<T2>::get_n_elem(B));
+  }
+
+
+
+template<typename T1, typename T2>
+inline
+bool
+is_alias(const T1& A, const subview_elem1<typename T2::elem_type, T2>& B)
+  {
+  return is_alias(A, B.m) || is_alias(A, B.a.get_ref());
+  }
+
+
+
+template<typename T1, typename eT, typename sve2_type>
+inline
+bool
+is_alias(const T1& A, const subview_elem2<eT, sve2_type>& B)
+  {
+  return is_alias(A, B.m) || B.r.is_any_alias(A);
+  }
+
+
+
+template<typename T1, typename T2>
+inline
+bool
+is_inexact_alias(const T1& A, const T2& B)
+  {
+  // First check to see if this is an exact alias---if so, then it is the same object.
+  if (alias_details<T1>::get_dev_mem(A) == alias_details<T2>::get_dev_mem(B) &&
+      alias_details<T1>::get_offset(A)  == alias_details<T2>::get_offset(B)  &&
+      alias_details<T1>::get_n_elem(A)  == alias_details<T2>::get_n_elem(B))
+    {
+    return false;
+    }
+
+  return is_alias(A, B);
   }

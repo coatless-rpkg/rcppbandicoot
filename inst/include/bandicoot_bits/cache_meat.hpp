@@ -37,7 +37,7 @@ open_cache(const std::string& unique_host_device_id,
     if (f.is_open() && f.good())
       return f;
 
-    coot_extra_debug_warn(std::string("could not open COOT_KERNEL_CACHE_DIR: ") + std::string(COOT_KERNEL_CACHE_DIR) + std::string(", moving on"));
+    coot_debug_print(std::string("could not open COOT_KERNEL_CACHE_DIR: ") + std::string(COOT_KERNEL_CACHE_DIR) + std::string(", moving on"));
     }
   #endif
 
@@ -48,7 +48,7 @@ open_cache(const std::string& unique_host_device_id,
     if (f.is_open() && f.good())
       return f;
 
-    coot_extra_debug_warn(std::string("could not open COOT_SYSTEM_KERNEL_CACHE_DIR: ") + std::string(COOT_SYSTEM_KERNEL_CACHE_DIR) + std::string(", moving on"));
+    coot_debug_print(std::string("could not open COOT_SYSTEM_KERNEL_CACHE_DIR: ") + std::string(COOT_SYSTEM_KERNEL_CACHE_DIR) + std::string(", moving on"));
     }
   #endif
 
@@ -72,7 +72,7 @@ open_cache(const std::string& unique_host_device_id,
   #else
     {
     // No implementation available!
-    coot_debug_warn("could not find home directory on this system to store kernel cache");
+    coot_warn(1, "could not find home directory on this system to store kernel cache");
     }
   #endif
 
@@ -99,7 +99,7 @@ try_open(std::fstream& f,
         {
         if (!try_recursive_mkdir(dirname))
           {
-          coot_extra_debug_warn(std::string("failed to create directory ") + dirname + std::string("' for kernel cache"));
+          coot_warn(3, std::string("failed to create directory ") + dirname + std::string("' for kernel cache"));
           return; // We failed to make the directory, so we can't open the stream.
           }
         else
@@ -113,7 +113,7 @@ try_open(std::fstream& f,
         }
       else
         {
-        coot_extra_debug_warn(std::string("error while opening kernel cache directory '") + dirname + std::string("': ")  + std::string(strerror(errno)));
+        coot_warn(3, std::string("error while opening kernel cache directory '") + dirname + std::string("': ")  + std::string(strerror(errno)));
         return; // No stream can be opened.
         }
       }
@@ -121,7 +121,7 @@ try_open(std::fstream& f,
     if (!(info.st_mode & S_IFDIR))
       {
       // The directory is not a directory, so we can't do anything.
-      coot_extra_debug_warn(std::string("cache directory '") + dirname + std::string("' is not a directory"));
+      coot_warn(3, std::string("cache directory '") + dirname + std::string("' is not a directory"));
       return;
       }
 
@@ -131,7 +131,7 @@ try_open(std::fstream& f,
                  : (std::fstream::binary | std::fstream::in));
     if (!f.is_open())
       {
-      coot_extra_debug_warn(std::string("opening kernel cache '") + dirname + filename + std::string("' failed: ") + std::string(strerror(errno)));
+      coot_warn(3, std::string("opening kernel cache '") + dirname + filename + std::string("' failed: ") + std::string(strerror(errno)));
       }
     }
   #endif
@@ -181,14 +181,14 @@ try_recursive_mkdir(const std::string& dirname)
 inline size_t has_cached_kernel(const std::string& unique_host_device_id,
                                 const std::string& kernel_name)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::fstream f = open_cache(unique_host_device_id, kernel_name, false);
 
   // If opening the file failed for any reason, reject.
   if (!f.is_open() || !f.good())
     {
-    coot_extra_debug_warn(std::string("failed to open kernel cache for device ") + unique_host_device_id + std::string(" and kernel ") + kernel_name);
+    coot_warn(3, std::string("failed to open kernel cache for device ") + unique_host_device_id + std::string(" and kernel ") + kernel_name);
     return 0;
     }
 
@@ -201,13 +201,13 @@ inline size_t has_cached_kernel(const std::string& unique_host_device_id,
     {
     std::ostringstream oss;
     oss << "kernel cache for kernel '" << kernel_name << "' was created by incorrect bandicoot version " << f_ver_major << "." << f_ver_minor << "." << f_ver_patch;
-    coot_extra_debug_warn(oss.str());
+    coot_warn(3, oss.str());
     return 0;
     }
 
   if (!f.good())
     {
-    coot_warn(std::string("error reading bandicoot version from kernel cache for kernel '") + kernel_name + std::string("': ") + std::string(strerror(errno)));
+    coot_warn(1, std::string("error reading bandicoot version from kernel cache for kernel '") + kernel_name + std::string("': ") + std::string(strerror(errno)));
     return 0;
     }
 
@@ -216,7 +216,7 @@ inline size_t has_cached_kernel(const std::string& unique_host_device_id,
   f.read((char*) &f_kernel_size, sizeof(size_t));
   if (!f.good())
     {
-    coot_warn(std::string("error reading kernel size from kernel cache for kernel '") + kernel_name + std::string("': ") + std::string(strerror(errno)));
+    coot_warn(1, std::string("error reading kernel size from kernel cache for kernel '") + kernel_name + std::string("': ") + std::string(strerror(errno)));
     return 0;
     }
 
@@ -232,7 +232,7 @@ inline bool read_cached_kernel(const std::string& unique_host_device_id,
                                const std::string& kernel_name,
                                unsigned char* buffer)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::fstream f = open_cache(unique_host_device_id, kernel_name, false);
 
@@ -248,7 +248,7 @@ inline bool read_cached_kernel(const std::string& unique_host_device_id,
   f.read((char*) &s, sizeof(size_t));
   if (!f.good())
     {
-    coot_warn(std::string("error reading from kernel cache: ") + std::string(strerror(errno)));
+    coot_warn(1, std::string("error reading from kernel cache: ") + std::string(strerror(errno)));
     return false;
     }
 
@@ -264,14 +264,14 @@ inline bool cache_kernel(const std::string& unique_host_device_id,
                          const unsigned char* buffer,
                          const size_t buf_len)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::fstream f = open_cache(unique_host_device_id, kernel_name, true);
 
   // If opening the file failed for some reason, fail.
   if (!f.is_open() || !f.good())
     {
-    coot_warn(std::string("failed to open kernel cache for writing for device ") + unique_host_device_id + std::string(" and kernel ") + kernel_name);
+    coot_warn(1, std::string("failed to open kernel cache for writing for device ") + unique_host_device_id + std::string(" and kernel ") + kernel_name);
     return false;
     }
 
@@ -288,7 +288,7 @@ inline bool cache_kernel(const std::string& unique_host_device_id,
   f.write((char*) buffer, buf_len);
   if (!f.good())
     {
-    coot_warn(std::string("error writing kernel cache: ") + std::string(strerror(errno)));
+    coot_warn(1, std::string("error writing kernel cache: ") + std::string(strerror(errno)));
     return false;
     }
 

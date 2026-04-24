@@ -19,7 +19,7 @@ inline
 eT
 vec_norm_1(dev_mem_t<eT> mem, const uword n_elem, const typename coot_real_only<eT>::result* junk = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_1);
@@ -46,9 +46,9 @@ inline
 float
 vec_norm_2(dev_mem_t<float> mem, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "cuda runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "cuda runtime not valid" );
 
   float result;
   cublasStatus_t status = coot_wrapper(cublasSnrm2)(get_rt().cuda_rt.cublas_handle, n_elem, mem.cuda_mem_ptr, 1, &result);
@@ -64,9 +64,9 @@ inline
 double
 vec_norm_2(dev_mem_t<double> mem, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "cuda runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "cuda runtime not valid" );
 
   double result;
   cublasStatus_t status = coot_wrapper(cublasDnrm2)(get_rt().cuda_rt.cublas_handle, n_elem, mem.cuda_mem_ptr, 1, &result);
@@ -83,10 +83,10 @@ inline
 eT
 vec_norm_2(dev_mem_t<eT> mem, const uword n_elem, const typename coot_real_only<eT>::result* junk = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "cuda runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "cuda runtime not valid" );
 
   // For floating-point types, we perform a power-k accumulation.
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_2);
@@ -144,10 +144,10 @@ inline
 eT
 vec_norm_k(dev_mem_t<eT> mem, const uword n_elem, const uword k, const typename coot_real_only<eT>::result* junk = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "cuda runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "cuda runtime not valid" );
 
   // For floating-point types, we perform a power-k accumulation.
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_real_kernel_id::vec_norm_k);
@@ -177,7 +177,7 @@ inline
 eT
 vec_norm_min(dev_mem_t<eT> mem, const uword n_elem, const typename coot_real_only<eT>::result* junk = 0)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   // For floating-point types, we perform a power-k accumulation.

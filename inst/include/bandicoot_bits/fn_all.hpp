@@ -26,7 +26,7 @@ typename enable_if2<
 >::result
 all(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtop_all::all_vec(X);
   }
@@ -42,7 +42,7 @@ typename enable_if2<
 >::result
 all(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<uword, T1, mtop_all>(X, 0, 0);
   }
@@ -59,7 +59,7 @@ enable_if2<
 >::result
 all(const T1& X, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<uword, T1, mtop_all>(X, dim, 0);
   }

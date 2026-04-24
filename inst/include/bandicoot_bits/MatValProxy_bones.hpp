@@ -25,7 +25,15 @@ class MatValProxy
   coot_aligned dev_mem_t<eT> dev_mem;
   coot_aligned uword         index;
 
+  friend class Proxy< MatValProxy<eT> >;
+  friend class Proxy< eOp<MatValProxy<eT>, eop_scalar_plus> >;
+  friend class Proxy< eOp<MatValProxy<eT>, eop_scalar_minus_post> >;
+  friend class Proxy< eOp<MatValProxy<eT>, eop_scalar_times> >;
+  friend class Proxy< eOp<MatValProxy<eT>, eop_scalar_div_post> >;
+
   public:
+
+  typedef eT elem_type;
 
   coot_inline MatValProxy(Mat<eT>& in_M, const uword in_index);
   coot_inline MatValProxy(Cube<eT>& in_M, const uword in_index);

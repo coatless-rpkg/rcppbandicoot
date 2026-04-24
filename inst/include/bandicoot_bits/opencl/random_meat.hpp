@@ -24,7 +24,7 @@ inline
 void
 init_xorwow_state(coot_cl_mem xorwow_state, const size_t num_rng_threads, const u64 seed)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Since the states are relatively small, and we only do the seeding once, we'll initialize the values on the CPU, then copy them over.
   // We ensure that all values are odd.
@@ -52,7 +52,7 @@ inline
 void
 init_philox_state(coot_cl_mem philox_state, const size_t num_rng_threads, const u64 seed)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Since the states are small, we seed on the CPU, and then transfer the memory.
   // For now we always initialize the counters to 0.  (TODO: should this be an option?)
@@ -80,7 +80,7 @@ inline
 void
 fill_randu(dev_mem_t<eT> dest, const uword n)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n == 0) { return; }
 
@@ -120,7 +120,7 @@ inline
 void
 fill_randn(dev_mem_t<eT> dest, const uword n, const double mu, const double sd)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n == 0) { return; }
 
@@ -165,7 +165,7 @@ inline
 void
 fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n == 0) { return; }
 

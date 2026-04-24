@@ -30,7 +30,7 @@ min
   const typename enable_if< resolves_to_vector<T1>::value == false >::result* junk2 = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk1);
   coot_ignore(junk2);
 
@@ -50,7 +50,7 @@ min
   const typename enable_if< resolves_to_vector<T1>::value == true >::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return Op<T1, op_min>(X, dim, 0);
@@ -69,7 +69,7 @@ min
   const typename enable_if< resolves_to_vector<T1>::value == true >::result* junk2 = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk1);
   coot_ignore(junk2);
 
@@ -87,8 +87,8 @@ min
   const Op<T1, op_min>& in
   )
   {
-  coot_extra_debug_sigprint();
-  coot_extra_debug_print("min(): two consecutive min() calls detected");
+  coot_debug_sigprint();
+  coot_debug_print("min(): two consecutive min() calls detected");
 
   return op_min::apply_direct(in.m);
   }
@@ -112,7 +112,7 @@ typename
 enable_if2
   <
   ( is_coot_type<T1>::value && is_coot_type<T2>::value && is_same_type<typename T1::elem_type, typename T2::elem_type>::value ),
-  Glue<T1, T2, glue_min>
+  eGlue<T1, T2, eglue_min>
   >::result
 min
   (
@@ -120,9 +120,9 @@ min
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return Glue<T1, T2, glue_min>(X, Y);
+  return eGlue<T1, T2, eglue_min>(X, Y);
   }
 
 
@@ -145,10 +145,10 @@ min
   (
   const T1& X,
   const uword dim = 0,
-  const typename enable_if< is_coot_cube_type<T1>::value  == true  >::result* junk = 0
+  const typename enable_if< is_coot_cube_type<T1>::value == true >::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return OpCube<T1, op_min>(X, dim, 0);
@@ -163,7 +163,7 @@ typename
 enable_if2
   <
   ( is_coot_cube_type<T1>::value && is_coot_cube_type<T2>::value && is_same_type<typename T1::elem_type, typename T2::elem_type>::value ),
-  GlueCube<T1, T2, glue_min>
+  eGlueCube<T1, T2, eglue_min>
   >::result
 min
   (
@@ -171,7 +171,7 @@ min
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return GlueCube<T1, T2, glue_min>(X, Y);
+  return eGlueCube<T1, T2, eglue_min>(X, Y);
   }

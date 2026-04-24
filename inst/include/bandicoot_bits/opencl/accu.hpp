@@ -22,9 +22,9 @@ inline
 eT
 accu(dev_mem_t<eT> mem, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::accu(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::accu(): OpenCL runtime not valid" );
 
   cl_kernel k = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::accu);
   cl_kernel k_small = get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::accu_small);
@@ -39,9 +39,9 @@ inline
 eT
 accu_subview(dev_mem_t<eT> mem, const uword m_n_rows, const uword aux_row1, const uword aux_col1, const uword n_rows, const uword n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::accu(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::accu(): OpenCL runtime not valid" );
 
   // TODO: implement specialised handling for two cases: (i) n_cols = 1, (ii) n_rows = 1
 

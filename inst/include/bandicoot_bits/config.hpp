@@ -33,7 +33,7 @@
 #if !defined(COOT_USE_OPENCL)
 #define COOT_USE_OPENCL
 //// Uncomment the above line if you have OpenCL available on your system.
-//// Bandicoot requires OpenCL to be available.
+//// When using the OpenCL backend, Bandicoot requires OpenCL to be available.
 //// For nontrivial operations it is also required to have either clBLAS or CLBlast available also.
 #endif
 
@@ -59,7 +59,7 @@
 #if !defined(COOT_USE_CUDA)
 #define COOT_USE_CUDA
 //// Uncomment the above line if you have CUDA available on your system.
-//// Bandicoot requires CUDA, CUDART, cuBLAS, cuRAND, cuSolver, and NVRTC.
+//// When using the CUDA backend, Bandicoot requires CUDA, CUDART, cuBLAS, cuRAND, cuSolver, and NVRTC to be available.
 #define COOT_CUDA_INCLUDE_PATH /usr/include/
 //// Set the above line to the include path used to include parts of the CUDA toolkit.
 //// These will be used by NVRTC to compile kernels on-the-fly.
@@ -125,19 +125,32 @@
 //// Note that COOT_USE_OPENMP is automatically enabled when a compiler supporting OpenMP 3.1 is detected.
 #endif
 
-// #define COOT_NO_DEBUG
-//// Uncomment the above line to disable all run-time checks. NOT RECOMMENDED.
-//// It is strongly recommended that run-time checks are enabled during development,
-//// as this greatly aids in finding mistakes in your code.
+#if !defined(COOT_USE_STD_MUTEX)
+  #define COOT_USE_STD_MUTEX
+//// Comment out the above line to disable use of std::mutex
+#endif
 
-// #define COOT_EXTRA_DEBUG
-//// Uncomment the above line if you want to see the function traces of how Bandicoot evaluates expressions.
+#if !defined(COOT_OPTIMISE_POWEXPR)
+  #define COOT_OPTIMISE_POWEXPR
+  //// Comment out the above line to disable optimised handling of pow()
+#endif
+
+#if !defined(COOT_CHECK_CONFORMANCE)
+  #define COOT_CHECK_CONFORMANCE
+  //// Comment out the above line to disable conformance checks for bounds and size.
+  //// This is NOT RECOMMENDED.
+  //// It is strongly recommended that conformance checks are enabled during development,
+  //// as this greatly aids in finding mistakes in your code.
+#endif
+
+// #define COOT_DEBUG
+//// Uncomment the above line to see the function traces of how Bandicoot evaluates expressions.
 //// This is mainly useful for debugging of the library.
 
 #if defined(COOT_EXTRA_DEBUG)
-  #undef  COOT_NO_DEBUG
-  #undef  COOT_WARN_LEVEL
-  #define COOT_WARN_LEVEL 3
+  // for compatibility with earlier versions of Bandicoot (<= 3.1.0)
+  #undef  COOT_DEBUG
+  #define COOT_DEBUG
 #endif
 
 #if !defined(COOT_COUT_STREAM)
@@ -186,6 +199,37 @@
 
 #if defined(COOT_DONT_USE_OPENMP)
   #undef COOT_USE_OPENMP
+#endif
+
+#if defined(COOT_DONT_USE_STD_MUTEX)
+  #undef COOT_USE_STD_MUTEX
+#endif
+
+#if defined(COOT_DONT_OPTIMISE_POWEXPR)
+  #undef COOT_OPTIMISE_POWEXPR
+#endif
+
+#if defined(COOT_NO_DEBUG)
+  #undef COOT_DEBUG
+  #undef COOT_EXTRA_DEBUG
+#endif
+
+#if defined(COOT_DEBUG)
+  #undef  COOT_DONT_CHECK_CONFORMANCE
+  
+  #undef  COOT_CHECK_CONFORMANCE
+  #define COOT_CHECK_CONFORMANCE
+  
+  #undef  COOT_WARN_LEVEL
+  #define COOT_WARN_LEVEL 3
+#endif
+
+#if defined(COOT_DONT_CHECK_CONFORMANCE)
+  #if defined(COOT_DONT_CHECK_CONFORMANCE) && (COOT_WARN_LEVEL >= 2)
+    #pragma message ("WARNING: conformance checks disabled")
+  #endif
+  
+  #undef COOT_CHECK_CONFORMANCE
 #endif
 
 #if defined(COOT_DONT_PRINT_EXCEPTIONS)

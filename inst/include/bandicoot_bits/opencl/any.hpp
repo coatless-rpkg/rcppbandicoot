@@ -20,9 +20,9 @@ inline
 bool
 any_vec(const dev_mem_t<eT1> mem, const uword n_elem, const eT2 val, const twoway_kernel_id::enum_id num, const twoway_kernel_id::enum_id num_small)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::any_vec(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::any_vec(): OpenCL runtime not valid" );
 
   cl_kernel k = get_rt().cl_rt.get_kernel<eT2, eT1>(num);
   cl_kernel k_small = get_rt().cl_rt.get_kernel<eT2, eT1>(num_small);
@@ -51,9 +51,9 @@ inline
 bool
 any_vec(const dev_mem_t<eT> mem, const uword n_elem, const eT val, const oneway_real_kernel_id::enum_id num, const oneway_real_kernel_id::enum_id num_small)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::any_vec(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::any_vec(): OpenCL runtime not valid" );
 
   cl_kernel k = get_rt().cl_rt.get_kernel<eT>(num);
   cl_kernel k_small = get_rt().cl_rt.get_kernel<eT>(num_small);
@@ -81,9 +81,9 @@ inline
 void
 any(dev_mem_t<uword> out_mem, const dev_mem_t<eT1> in_mem, const uword n_rows, const uword n_cols, const eT2 val, const twoway_kernel_id::enum_id num, const bool colwise)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::any(): OpenCL runtime not valid" );
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::any(): OpenCL runtime not valid" );
 
   runtime_t::cq_guard guard;
 

@@ -22,9 +22,9 @@ inline
 eT
 trace(dev_mem_t<eT> mem, const uword n_rows, const uword n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "coot::opencl::trace(): opencl runtime not valid");
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "coot::opencl::trace(): opencl runtime not valid");
 
   const uword diag_len = (std::min)(n_rows, n_cols);
 
@@ -50,7 +50,7 @@ trace(dev_mem_t<eT> mem, const uword n_rows, const uword n_cols)
 
   const size_t global_work_size[1] = { size_t(1) };
 
-  coot_extra_debug_print("clEnqueueNDRangeKernel()");
+  coot_debug_print("clEnqueueNDRangeKernel()");
   status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, 1, NULL, global_work_size, NULL, 0, NULL, NULL);
 
   coot_check_runtime_error( (status != 0), "coot::opencl::trace(): couldn't execute kernel" );

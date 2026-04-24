@@ -27,7 +27,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_square> >::result
 square(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_square>(A);
   }
@@ -40,7 +40,7 @@ inline
 const eOpCube<T1, eop_square>
 square(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_square>(A.get_ref());
   }
@@ -56,7 +56,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_sqrt> >::result
 sqrt(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_sqrt>(A);
   }
@@ -69,7 +69,7 @@ inline
 const eOpCube<T1, eop_sqrt>
 sqrt(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_sqrt>(A.get_ref());
   }
@@ -85,7 +85,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_exp> >::result
 exp(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_exp>(A);
   }
@@ -98,7 +98,7 @@ inline
 const eOpCube<T1, eop_exp>
 exp(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_exp>(A.get_ref());
   }
@@ -114,7 +114,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_exp2> >::result
 exp2(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_exp2>(A);
   }
@@ -128,7 +128,7 @@ inline
 const eOpCube<T1, eop_exp2>
 exp2(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_exp2>(A.get_ref());
   }
@@ -144,7 +144,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_exp10> >::result
 exp10(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_exp10>(A);
   }
@@ -157,7 +157,7 @@ inline
 const eOpCube<T1, eop_exp10>
 exp10(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_exp10>(A.get_ref());
   }
@@ -173,7 +173,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_trunc_exp> >::result
 trunc_exp(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_trunc_exp>(A);
   }
@@ -186,7 +186,7 @@ inline
 const eOpCube<T1, eop_trunc_exp>
 trunc_exp(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_trunc_exp>(A.get_ref());
   }
@@ -202,7 +202,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_log> >::result
 log(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_log>(A);
   }
@@ -215,7 +215,7 @@ inline
 const eOpCube<T1, eop_log>
 log(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_log>(A.get_ref());
   }
@@ -231,7 +231,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_log2> >::result
 log2(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_log2>(A);
   }
@@ -244,7 +244,7 @@ inline
 const eOpCube<T1, eop_log2>
 log2(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_log2>(A.get_ref());
   }
@@ -260,7 +260,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_log10> >::result
 log10(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_log10>(A);
   }
@@ -273,7 +273,7 @@ inline
 const eOpCube<T1, eop_log10>
 log10(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_log10>(A.get_ref());
   }
@@ -289,7 +289,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_trunc_log> >::result
 trunc_log(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_trunc_log>(A);
   }
@@ -302,7 +302,7 @@ inline
 const eOpCube<T1, eop_trunc_log>
 trunc_log(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_trunc_log>(A.get_ref());
   }
@@ -318,7 +318,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_cos> >::result
 cos(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_cos>(A);
   }
@@ -331,7 +331,7 @@ inline
 const eOpCube<T1, eop_cos>
 cos(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_cos>(A.get_ref());
   }
@@ -347,7 +347,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_sin> >::result
 sin(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_sin>(A);
   }
@@ -360,7 +360,7 @@ inline
 const eOpCube<T1, eop_sin>
 sin(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_sin>(A.get_ref());
   }
@@ -376,7 +376,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_tan> >::result
 tan(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_tan>(A);
   }
@@ -389,7 +389,7 @@ inline
 const eOpCube<T1, eop_tan>
 tan(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_tan>(A.get_ref());
   }
@@ -405,7 +405,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_acos> >::result
 acos(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_acos>(A);
   }
@@ -418,7 +418,7 @@ inline
 const eOpCube<T1, eop_acos>
 acos(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_acos>(A.get_ref());
   }
@@ -434,7 +434,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_asin> >::result
 asin(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_asin>(A);
   }
@@ -447,7 +447,7 @@ inline
 const eOpCube<T1, eop_asin>
 asin(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_asin>(A.get_ref());
   }
@@ -463,7 +463,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_atan> >::result
 atan(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_atan>(A);
   }
@@ -476,7 +476,7 @@ inline
 const eOpCube<T1, eop_atan>
 atan(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_atan>(A.get_ref());
   }
@@ -492,7 +492,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_cosh> >::result
 cosh(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_cosh>(A);
   }
@@ -505,7 +505,7 @@ inline
 const eOpCube<T1, eop_cosh>
 cosh(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_cosh>(A.get_ref());
   }
@@ -521,7 +521,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_sinh> >::result
 sinh(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_sinh>(A);
   }
@@ -534,7 +534,7 @@ inline
 const eOpCube<T1, eop_sinh>
 sinh(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_sinh>(A.get_ref());
   }
@@ -550,7 +550,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_tanh> >::result
 tanh(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_tanh>(A);
   }
@@ -563,7 +563,7 @@ inline
 const eOpCube<T1, eop_tanh>
 tanh(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_tanh>(A.get_ref());
   }
@@ -579,7 +579,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_acosh> >::result
 acosh(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_acosh>(A);
   }
@@ -592,7 +592,7 @@ inline
 const eOpCube<T1, eop_acosh>
 acosh(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_acosh>(A.get_ref());
   }
@@ -608,7 +608,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_asinh> >::result
 asinh(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_asinh>(A);
   }
@@ -621,7 +621,7 @@ inline
 const eOpCube<T1, eop_asinh>
 asinh(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_asinh>(A.get_ref());
   }
@@ -637,7 +637,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_atanh> >::result
 atanh(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_atanh>(A);
   }
@@ -650,7 +650,7 @@ inline
 const eOpCube<T1, eop_atanh>
 atanh(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_atanh>(A.get_ref());
   }
@@ -666,7 +666,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_sinc> >::result
 sinc(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_sinc>(A);
   }
@@ -679,7 +679,7 @@ inline
 const eOpCube<T1, eop_sinc>
 sinc(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_sinc>(A.get_ref());
   }
@@ -695,7 +695,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value && is_coot_type<T2>::value && is_real<typename T1::elem_type>::value && is_real<typename T2::elem_type>::value, const eGlue<T1, T2, eglue_atan2> >::result
 atan2(const T1& X, const T2& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eGlue<T1, T2, eglue_atan2>(X, Y);
   }
@@ -713,7 +713,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value && is_coot_type<T2>::value && is_real<typename T1::elem_type>::value && is_real<typename T2::elem_type>::value, const eGlue<T1, T2, eglue_hypot> >::result
 hypot(const T1& X, const T2& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eGlue<T1, T2, eglue_hypot>(X, Y);
   }
@@ -731,7 +731,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value && is_signed<typename T1::elem_type>::value, const eOp<T1, eop_abs> >::result
 abs(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_abs>(A);
   }
@@ -744,7 +744,7 @@ inline
 typename enable_if2< is_signed<typename T1::elem_type>::value, const eOpCube<T1, eop_abs> >::result
 abs(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_abs>(A.get_ref());
   }
@@ -758,7 +758,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value && !is_signed<typename T1::elem_type>::value, const T1&>::result
 abs(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return A;
   }
@@ -771,7 +771,7 @@ inline
 typename enable_if2< !is_signed<typename T1::elem_type>::value, const T1&>::result
 abs(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return A.get_ref();
   }
@@ -785,7 +785,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_abs>& >::result
 abs(const eOp<T1, eop_abs>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return A;
   }
@@ -798,7 +798,7 @@ inline
 typename enable_if2< is_coot_cube_type<T1>::value, const eOpCube<T1, eop_abs>& >::result
 abs(const eOpCube<T1, eop_abs>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return A;
   }
@@ -814,7 +814,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, eOp<T1, eop_pow> >::result
 pow(const T1& A, const typename T1::elem_type exponent)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_pow>(A, exponent);
   }
@@ -827,10 +827,44 @@ inline
 const eOpCube<T1, eop_pow>
 pow(const BaseCube<typename T1::elem_type, T1>& A, const typename T1::elem_type exponent)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_pow>(A.get_ref(), exponent);
   }
+
+
+
+// TODO: enable when adding support for complex numbers
+// 
+// // pow, specialised handling (non-complex exponent for complex matrices)
+// 
+// template<typename T1>
+// coot_warn_unused
+// inline
+// typename enable_if2< (is_coot_type<T1>::value && is_cx<typename T1::elem_type>::yes), const eOp<T1, eop_pow> >::result
+// pow(const T1& A, const typename T1::elem_type::value_type exponent)
+//   {
+//   coot_debug_sigprint();
+//   
+//   typedef typename T1::elem_type eT;
+//   
+//   return eOp<T1, eop_pow>(A, eT(exponent));
+//   }
+// 
+// 
+// 
+// template<typename T1>
+// coot_warn_unused
+// inline
+// const eOpCube<T1, eop_pow>
+// pow(const BaseCube<std::complex<typename T1::pod_type>,T1>& A, const typename T1::elem_type::value_type exponent)
+//   {
+//   coot_debug_sigprint();
+//   
+//   typedef std::complex<typename T1::pod_type> eT;
+//   
+//   return eOpCube<T1, eop_pow>(A.get_ref(), eT(exponent));
+//   }
 
 
 
@@ -844,7 +878,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, eOp<T1, eop_floor> >::result
 floor(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_floor>(A);
   }
@@ -857,7 +891,7 @@ inline
 const eOpCube<T1, eop_floor>
 floor(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_floor>(A.get_ref());
   }
@@ -873,7 +907,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, eOp<T1, eop_ceil> >::result
 ceil(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_ceil>(A);
   }
@@ -886,7 +920,7 @@ inline
 const eOpCube<T1, eop_ceil>
 ceil(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_ceil>(A.get_ref());
   }
@@ -902,7 +936,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, eOp<T1, eop_round> >::result
 round(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_round>(A);
   }
@@ -915,7 +949,7 @@ inline
 const eOpCube<T1, eop_round>
 round(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_round>(A.get_ref());
   }
@@ -931,7 +965,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, eOp<T1, eop_trunc> >::result
 trunc(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_trunc>(A);
   }
@@ -944,7 +978,7 @@ inline
 const eOpCube<T1, eop_trunc>
 trunc(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_trunc>(A.get_ref());
   }
@@ -960,7 +994,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, eOp<T1, eop_sign> >::result
 sign(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_sign>(A);
   }
@@ -973,7 +1007,7 @@ inline
 const eOpCube<T1, eop_sign>
 sign(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_sign>(A.get_ref());
   }
@@ -989,7 +1023,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, eOp<T1, eop_erf> >::result
 erf(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_erf>(A);
   }
@@ -1002,7 +1036,7 @@ inline
 const eOpCube<T1, eop_erf>
 erf(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_erf>(A.get_ref());
   }
@@ -1018,7 +1052,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, eOp<T1, eop_erfc> >::result
 erfc(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_erfc>(A);
   }
@@ -1031,7 +1065,7 @@ inline
 const eOpCube<T1, eop_erfc>
 erfc(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_erfc>(A.get_ref());
   }
@@ -1047,7 +1081,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value, eOp<T1, eop_lgamma> >::result
 lgamma(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_lgamma>(A);
   }
@@ -1060,7 +1094,7 @@ inline
 const eOpCube<T1, eop_lgamma>
 lgamma(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOpCube<T1, eop_lgamma>(A.get_ref());
   }
@@ -1076,7 +1110,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value && is_cx<typename T1::elem_type>::no, const T1& >::result
 real(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return A;
   }
@@ -1089,7 +1123,7 @@ inline
 typename enable_if2< is_cx<typename T1::elem_type>::no, const BaseCube<typename T1::elem_type, T1>& >::result
 real(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return A;
   }
@@ -1104,7 +1138,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value && is_cx<typename T1::elem_type>::yes, const mtOp<typename T1::pod_type, T1, mtop_real> >::result
 real(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<typename T1::pod_type, T1, mtop_real>(A);
   }
@@ -1119,7 +1153,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value && is_cx<typename T1::elem_type>::no, Mat<typename T1::pod_type>& >::result
 imag(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   SizeProxy<T1> sp(A);
 
@@ -1137,7 +1171,7 @@ inline
 typename enable_if2< is_cx<typename T1::elem_type>::no, Cube<typename T1::pod_type>& >::result
 imag(const BaseCube<typename T1::elem_type, T1>& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   SizeProxyCube<T1> sp(A);
 
@@ -1158,7 +1192,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value && is_cx<typename T1::elem_type>::yes, const mtOp<typename T1::pod_type, T1, mtop_imag> >::result
 imag(const T1& A)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<typename T1::pod_type, T1, mtop_imag>(A);
   }
@@ -1170,12 +1204,12 @@ imag(const T1& A)
 template<typename T1>
 coot_warn_unused
 inline
-typename enable_if2< is_coot_type<T1>::value, const Op<T1, op_replace> >::result
+typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_replace> >::result
 replace(const T1& X, typename T1::elem_type old_val, typename T1::elem_type new_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return Op<T1, op_replace>(X, 'j', old_val, new_val);
+  return eOp<T1, eop_replace>(X, 'j', old_val, new_val);
   }
 
 
@@ -1183,10 +1217,10 @@ replace(const T1& X, typename T1::elem_type old_val, typename T1::elem_type new_
 template<typename T1>
 coot_warn_unused
 inline
-const OpCube<T1, op_replace>
+const eOpCube<T1, eop_replace>
 replace(const BaseCube<typename T1::elem_type, T1>& X, typename T1::elem_type old_val, typename T1::elem_type new_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  return OpCube<T1, op_replace>(X, 'j', old_val, new_val);
+  return eOpCube<T1, eop_replace>(X.get_ref(), 'j', old_val, new_val);
   }

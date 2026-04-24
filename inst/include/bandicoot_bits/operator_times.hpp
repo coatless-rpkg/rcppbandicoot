@@ -25,7 +25,7 @@ typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_scalar_times> >:
 operator*
 (const T1& X, const typename T1::elem_type k)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_scalar_times>(X, k);
   }
@@ -39,7 +39,7 @@ typename enable_if2< is_coot_type<T1>::value, const eOp<T1, eop_scalar_times> >:
 operator*
 (const typename T1::elem_type k, const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return eOp<T1, eop_scalar_times>(X, k);  // NOTE: order is swapped
   }
@@ -53,7 +53,7 @@ const Op<T1, op_htrans2>
 operator*
 (const typename T1::elem_type k, const Op<T1, op_htrans>& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_htrans2>(X.m, k);
   }
@@ -67,7 +67,7 @@ const Op<T1, op_htrans2>
 operator*
 (const Op<T1, op_htrans>& X, const typename T1::elem_type k)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<T1, op_htrans2>(X.m, k);
   }
@@ -86,7 +86,7 @@ enable_if2
 operator*
 (const T1& X, const T2& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Glue<T1, T2, glue_times>(X, Y);
   }
@@ -108,7 +108,7 @@ operator*
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtGlue<typename promote_type<typename T1::elem_type, typename T2::elem_type>::result, T1, T2, mtglue_mixed_times>( X, Y );
   }
@@ -130,7 +130,7 @@ operator*
   const T2& Y
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Glue<T1, T2, glue_times_diag>(X, Y);
   }

@@ -30,9 +30,9 @@ min(dev_mem_t<eT2> dest,
     const uword src_col_offset,
     const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::min(): cuda runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::min(): cuda runtime not valid" );
 
   CUfunction kernel;
   if (dim == 0)
@@ -84,9 +84,9 @@ inline
 eT
 min_vec(dev_mem_t<eT> mem, const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::min_vec(): CUDA runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::min_vec(): CUDA runtime not valid" );
 
   CUfunction k = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::min);
   CUfunction k_small = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::min_small);
@@ -110,9 +110,9 @@ min_cube_col(dev_mem_t<eT2> dest,
              const uword n_slices,
              const bool post_conv_apply)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::min_cube_col(): CUDA runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::min_cube_col(): CUDA runtime not valid" );
 
   CUfunction kernel = get_rt().cuda_rt.get_kernel<eT2, eT1>(post_conv_apply ? twoway_kernel_id::min_cube_col_conv_post : twoway_kernel_id::min_cube_col_conv_pre);
 

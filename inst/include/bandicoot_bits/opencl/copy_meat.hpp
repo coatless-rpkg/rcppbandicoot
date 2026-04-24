@@ -30,7 +30,7 @@ copy_from_dev_mem(eT* dest,
                   const uword src_col_offset,
                   const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   runtime_t::cq_guard guard;
 
@@ -74,10 +74,11 @@ copy_from_dev_mem(eT* dest,
                   const uword src_col_offset,
                   const uword src_M_n_rows)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename cl_type<eT>::type ceT;
-  ceT* tmp_mem = cpu_memory::acquire<ceT>(n_rows * n_cols);
+  cpu_memory::mem_array<ceT> tmp_mem_array(n_rows * n_cols);
+  ceT* tmp_mem = tmp_mem_array.memptr();
 
   runtime_t::cq_guard guard;
 
@@ -108,8 +109,6 @@ copy_from_dev_mem(eT* dest,
       }
     }
 
-  cpu_memory::release(tmp_mem);
-
   coot_check_cl_error(status, "Mat::copy_from_dev_mem(): couldn't access device memory" );
 
   }
@@ -126,7 +125,7 @@ enable_if2
   >::result
 copy_into_dev_mem(dev_mem_t<eT> dest, const eT* src, const uword N)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   runtime_t::cq_guard guard;
 
@@ -149,10 +148,11 @@ enable_if2
   >::result
 copy_into_dev_mem(dev_mem_t<eT> dest, const eT* src, const uword N)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename cl_type<eT>::type ceT;
-  ceT* tmp_mem = cpu_memory::acquire<ceT>(N);
+  cpu_memory::mem_array<ceT> tmp_mem_array(N);
+  ceT* tmp_mem = tmp_mem_array.memptr();
 
   for (uword i = 0; i < N; ++i)
     {
@@ -164,141 +164,37 @@ copy_into_dev_mem(dev_mem_t<eT> dest, const eT* src, const uword N)
   // use a blocking call
   cl_int status = coot_wrapper(clEnqueueWriteBuffer)(get_rt().cl_rt.get_cq(), dest.cl_mem_ptr.ptr, CL_TRUE, dest.cl_mem_ptr.offset, sizeof(ceT) * N, tmp_mem, 0, NULL, NULL);
 
-  cpu_memory::release(tmp_mem);
-
   coot_check_cl_error(status, "Mat::write_dev_mem(): couldn't access device memory");
   }
 
 
 
-/**
- * Copy an array via OpenCL and cast the type of its elements.
- */
-template<typename eT2, typename eT1>
+template<typename T1, typename T2>
 inline
 void
-copy_mat(dev_mem_t<eT2> dest,
-         const dev_mem_t<eT1> src,
-         const uword n_rows,
-         const uword n_cols,
-         const uword dest_row_offset,
-         const uword dest_col_offset,
-         const uword dest_M_n_rows,
-         const uword src_row_offset,
-         const uword src_col_offset,
-         const uword src_M_n_rows)
+copy(const Proxy<T1>& out, const Proxy<T2>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  if (n_rows == 0 || n_cols == 0)
+  if (in.is_empty())
     {
     return;
     }
 
-  // Get kernel.
-  cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(twoway_kernel_id::convert_type);
+  // this should never happen since coot_rt_t casts T2 to the right dimensions
+  coot_static_check( Proxy<T1>::num_dims != Proxy<T2>::num_dims, "coot::cuda::copy(): objects must have the same number of dimensions" );
 
-  const uword dest_offset = dest.cl_mem_ptr.offset + dest_row_offset + dest_col_offset * dest_M_n_rows;
-  const uword  src_offset =  src.cl_mem_ptr.offset +  src_row_offset +  src_col_offset * src_M_n_rows;
+  cl_kernel kernel = get_rt().cl_rt.get_kernel<kernel_id::copy, Proxy<T1>, Proxy<T2>>();
 
-  runtime_t::cq_guard guard;
+  // We need to instantiate all arguments with the right type in order to run the kernel.
+  typename cl_args<Proxy<T1>, Proxy<T2>>::result args = to_cl_args(out, in);
 
-  runtime_t::adapt_uword cl_dest_offset(dest_offset);
-  runtime_t::adapt_uword cl_src_offset(src_offset);
-  runtime_t::adapt_uword cl_n_rows(n_rows);
-  runtime_t::adapt_uword cl_n_cols(n_cols);
-  runtime_t::adapt_uword cl_dest_M_n_rows(dest_M_n_rows);
-  runtime_t::adapt_uword cl_src_M_n_rows(src_M_n_rows);
+  // Now set all the arguments.
+  set_args(kernel, "coot::opencl::copy()", args);
 
-  cl_int status = 0;
+  std::array<size_t, Proxy<T1>::num_dims> work_size = get_work_size(out);
 
-  status |= coot_wrapper(clSetKernelArg)(kernel, 0, sizeof(cl_mem),        &(dest.cl_mem_ptr.ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 1, cl_dest_offset.size,   cl_dest_offset.addr      );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 2, sizeof(cl_mem),        &( src.cl_mem_ptr.ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 3, cl_src_offset.size,    cl_src_offset.addr       );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 4, cl_n_rows.size,        cl_n_rows.addr           );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 5, cl_n_cols.size,        cl_n_cols.addr           );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 6, cl_dest_M_n_rows.size, cl_dest_M_n_rows.addr    );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 7, cl_src_M_n_rows.size,  cl_src_M_n_rows.addr     );
+  const cl_int status = coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, Proxy<T1>::num_dims, NULL, work_size.data(), NULL, 0, NULL, NULL);
 
-  const size_t global_work_size[2] = { size_t(n_rows), size_t(n_cols) };
-
-  status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, 2, NULL, global_work_size, NULL, 0, NULL, NULL);
-
-  coot_check_cl_error(status, "coot::opencl::copy_mat(): couldn't copy buffer");
-  }
-
-
-
-template<typename eT2, typename eT1>
-inline
-void
-copy_cube(dev_mem_t<eT2> dest,
-          const dev_mem_t<eT1> src,
-          // logical size of cube
-          const uword n_rows,
-          const uword n_cols,
-          const uword n_slices,
-          // offsets for subviews
-          const uword dest_row_offset,
-          const uword dest_col_offset,
-          const uword dest_slice_offset,
-          const uword dest_M_n_rows,
-          const uword dest_M_n_cols,
-          const uword src_row_offset,
-          const uword src_col_offset,
-          const uword src_slice_offset,
-          const uword src_M_n_rows,
-          const uword src_M_n_cols)
-  {
-  coot_extra_debug_sigprint();
-
-  if (n_rows == 0 || n_cols == 0 || n_slices == 0)
-    {
-    return;
-    }
-
-  // Get kernel.
-  cl_kernel kernel = get_rt().cl_rt.get_kernel<eT2, eT1>(twoway_kernel_id::convert_type_cube);
-
-  const uword dest_offset = dest.cl_mem_ptr.offset + dest_row_offset + dest_col_offset * dest_M_n_rows + dest_slice_offset * dest_M_n_rows * dest_M_n_cols;
-  const uword  src_offset =  src.cl_mem_ptr.offset +  src_row_offset +  src_col_offset * src_M_n_rows  +  src_slice_offset * src_M_n_rows * src_M_n_cols;;
-
-  runtime_t::cq_guard guard;
-
-  runtime_t::adapt_uword cl_dest_offset(dest_offset);
-  runtime_t::adapt_uword cl_src_offset(src_offset);
-  runtime_t::adapt_uword cl_n_rows(n_rows);
-  runtime_t::adapt_uword cl_n_cols(n_cols);
-  runtime_t::adapt_uword cl_n_slices(n_slices);
-  runtime_t::adapt_uword cl_dest_M_n_rows(dest_M_n_rows);
-  runtime_t::adapt_uword cl_dest_M_n_cols(dest_M_n_cols);
-  runtime_t::adapt_uword cl_src_M_n_rows(src_M_n_rows);
-  runtime_t::adapt_uword cl_src_M_n_cols(src_M_n_cols);
-
-  cl_int status = 0;
-
-  status |= coot_wrapper(clSetKernelArg)(kernel,  0, sizeof(cl_mem),        &(dest.cl_mem_ptr.ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  1, cl_dest_offset.size,   cl_dest_offset.addr      );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  2, sizeof(cl_mem),        &( src.cl_mem_ptr.ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  3, cl_src_offset.size,    cl_src_offset.addr       );
-  // these two arguments are ignored
-  status |= coot_wrapper(clSetKernelArg)(kernel,  4, sizeof(cl_mem),        &( src.cl_mem_ptr.ptr)   );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  5, cl_src_offset.size,    cl_src_offset.addr       );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  6, cl_n_rows.size,        cl_n_rows.addr           );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  7, cl_n_cols.size,        cl_n_cols.addr           );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  8, cl_n_slices.size,      cl_n_slices.addr         );
-  status |= coot_wrapper(clSetKernelArg)(kernel,  9, cl_dest_M_n_rows.size, cl_dest_M_n_rows.addr    );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 10, cl_dest_M_n_cols.size, cl_dest_M_n_cols.addr    );
-  // these two arguments are ignored
-  status |= coot_wrapper(clSetKernelArg)(kernel, 11, cl_src_M_n_rows.size,  cl_src_M_n_rows.addr     );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 12, cl_src_M_n_cols.size,  cl_src_M_n_cols.addr     );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 13, cl_src_M_n_rows.size,  cl_src_M_n_rows.addr     );
-  status |= coot_wrapper(clSetKernelArg)(kernel, 14, cl_src_M_n_cols.size,  cl_src_M_n_cols.addr     );
-
-  const size_t global_work_size[3] = { size_t(n_rows), size_t(n_cols), size_t(n_slices) };
-
-  status |= coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), kernel, 3, NULL, global_work_size, NULL, 0, NULL, NULL);
-
-  coot_check_cl_error(status, "coot::opencl::copy_cube(): couldn't copy buffer");
+  coot_check_cl_error(status, "coot::opencl::copy(): couldn't execute kernel");
   }

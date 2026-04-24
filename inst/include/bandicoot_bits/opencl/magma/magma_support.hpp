@@ -53,16 +53,10 @@
 // Forward declaration required for some functionality.
 namespace opencl
   {
-  template<typename eT>
+  template<typename T1>
   inline
   void
-  fill(dev_mem_t<eT> dest,
-       const eT val,
-       const uword n_rows,
-       const uword n_cols,
-       const uword row_offset,
-       const uword col_offset,
-       const uword M_n_rows);
+  fill(const Proxy<T1>& dest, const typename T1::elem_type val);
   }
 
 
@@ -1049,8 +1043,9 @@ magma_dgemm
       {
       // paranoia: CLBlast doesn't seem to like it when C is not initialized to 0
       dev_mem_t<double> dC_mem;
-      dC_mem.cl_mem_ptr = coot_cl_mem({ dC, 0 });
-      opencl::fill(dC_mem, 0.0, m, n, dC_offset, 0, lddc);
+      dC_mem.cl_mem_ptr = coot_cl_mem({ dC, dC_offset });
+      Proxy<subview<double>> P(dC_mem, 0, 0, m, n, lddc);
+      opencl::fill(P, 0.0);
       }
 
     CLBlastStatusCode err = coot_wrapper(CLBlastDgemm)(
@@ -1112,8 +1107,9 @@ magma_sgemm(
       {
       // paranoia: CLBlast doesn't seem to like it when C is not initialized to 0
       dev_mem_t<float> dC_mem;
-      dC_mem.cl_mem_ptr = coot_cl_mem({ dC, 0 });
-      opencl::fill(dC_mem, 0.0f, m, n, dC_offset, 0, lddc);
+      dC_mem.cl_mem_ptr = coot_cl_mem({ dC, dC_offset });
+      Proxy<subview<float>> P(dC_mem, 0, 0, m, n, lddc);
+      opencl::fill(P, 0.0f);
       }
 
     CLBlastStatusCode err = coot_wrapper(CLBlastSgemm)(
@@ -1177,8 +1173,9 @@ magma_dgemv
       {
       // Paranoia: CLBlast doesn't seem to like it when y is not initialized to 0
       dev_mem_t<double> dy_mem;
-      dy_mem.cl_mem_ptr = coot_cl_mem({ dy, 0 });
-      opencl::fill(dy_mem, 0.0, 1, (trans == MagmaNoTrans) ? m : n, dy_offset, 0, incy);
+      dy_mem.cl_mem_ptr = coot_cl_mem({ dy, dy_offset });
+      Proxy<subview<double>> P(dy_mem, 0, 0, 1, (trans == MagmaNoTrans) ? m : n, incy);
+      opencl::fill(P, 0.0);
       }
 
     CLBlastStatusCode err = coot_wrapper(CLBlastDgemv)(
@@ -1235,8 +1232,9 @@ magma_sgemv
     if (beta == 0.0)
       {
       dev_mem_t<float> dy_mem;
-      dy_mem.cl_mem_ptr = coot_cl_mem({ dy, 0 });
-      opencl::fill(dy_mem, 0.0f, 1, (trans == MagmaNoTrans) ? m : n, dy_offset, 0, incy);
+      dy_mem.cl_mem_ptr = coot_cl_mem({ dy, dy_offset });
+      Proxy<subview<float>> P(dy_mem, 0, 0, 1, (trans == MagmaNoTrans) ? m : n, incy);
+      opencl::fill(P, 0.0f);
       }
 
     CLBlastStatusCode err = coot_wrapper(CLBlastSgemv)(
@@ -2145,8 +2143,12 @@ magma_isamax(magma_int_t n, magmaFloat_const_ptr dx, size_t dx_offset, magma_int
     }
 
   // need to initialize one GPU unsigned int to store the result...
+  // TODO: refactor to allocate via runtime_t::mem_array
   coot_cl_mem out = get_rt().cl_rt.acquire_memory<unsigned int>(1);
-
+  
+  // runtime_t::mem_array<unsigned int> out_array(1);
+  // coot_cl_mem out = out_array.memptr();
+  
   #if defined(COOT_USE_CLBLAST)
     {
     CLBlastStatusCode status = coot_wrapper(CLBlastiSamax)(n, out.ptr, 0, dx, dx_offset, incx, &queue, get_g_event() );
@@ -2154,7 +2156,12 @@ magma_isamax(magma_int_t n, magmaFloat_const_ptr dx, size_t dx_offset, magma_int
     }
   #elif defined(COOT_USE_CLBLAS)
     {
+    // TODO: refactor to allocate via runtime_t::mem_array
     coot_cl_mem dwork = get_rt().cl_rt.acquire_memory<float>(2 * n);
+    
+    // runtime_t::mem_array<float> dwork_array(2 * n);
+    // coot_cl_mem dwork = dwork_array.memptr();
+    
     cl_int status = coot_wrapper(clblasiSamax)(n, out.ptr, 0, dx, dx_offset, incx, dwork.ptr, 1, &queue, 0, NULL, get_g_event() );
     opencl::coot_check_clblas_error(status, "coot::opencl::magma_isamax(): call to clblasiSamax() failed");
     get_rt().cl_rt.release_memory(dwork);
@@ -2186,8 +2193,12 @@ magma_idamax(magma_int_t n, magmaDouble_const_ptr dx, size_t dx_offset, magma_in
     }
 
   // need to initialize one GPU unsigned int to store the result...
+  // TODO: refactor to allocate via runtime_t::mem_array
   coot_cl_mem out = get_rt().cl_rt.acquire_memory<unsigned int>(1);
-
+  
+  // runtime_t::mem_array<unsigned int> out_array(1);
+  // coot_cl_mem out = out_array.memptr();
+  
   #if defined(COOT_USE_CLBLAST)
     {
     CLBlastStatusCode status = coot_wrapper(CLBlastiDamax)(n, out.ptr, 0, dx, dx_offset, incx, &queue, get_g_event() );
@@ -2195,7 +2206,12 @@ magma_idamax(magma_int_t n, magmaDouble_const_ptr dx, size_t dx_offset, magma_in
     }
   #elif defined(COOT_USE_CLBLAS)
     {
+    // TODO: refactor to allocate via runtime_t::mem_array
     coot_cl_mem dwork = get_rt().cl_rt.acquire_memory<double>(2 * n);
+    
+    // runtime_t::mem_array<double> dwork_array(2 * n);
+    // coot_cl_mem dwork = dwork_array.memptr();
+    
     cl_int status = coot_wrapper(clblasiDamax)(n, out.ptr, 0, dx, dx_offset, incx, dwork.ptr, 1, &queue, 0, NULL, get_g_event() );
     opencl::coot_check_clblas_error(status, "coot::opencl::magma_isamax(): call to clblasiSamax() failed");
     get_rt().cl_rt.release_memory(dwork);

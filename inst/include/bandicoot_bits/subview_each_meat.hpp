@@ -23,7 +23,7 @@ inline
 subview_each_common<parent, mode>::subview_each_common(const parent& in_P)
   : P(in_P)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -114,7 +114,7 @@ template<typename parent, unsigned int mode>
 inline
 subview_each1<parent, mode>::~subview_each1()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -124,7 +124,7 @@ inline
 subview_each1<parent, mode>::subview_each1(const parent& in_P)
   : subview_each_common<parent, mode>::subview_each_common(in_P)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -177,7 +177,7 @@ inline
 void
 subview_each1<parent, mode>::operator=(const Base<eT, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   inplace_op(twoway_kernel_id::broadcast_set, in);
   }
@@ -191,7 +191,7 @@ inline
 void
 subview_each1<parent, mode>::operator+=(const Base<eT, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   inplace_op(twoway_kernel_id::broadcast_plus, in);
   }
@@ -204,7 +204,7 @@ inline
 void
 subview_each1<parent, mode>::operator-=(const Base<eT, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   inplace_op(twoway_kernel_id::broadcast_minus_post, in);
   }
@@ -217,7 +217,7 @@ inline
 void
 subview_each1<parent, mode>::operator%=(const Base<eT, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   inplace_op(twoway_kernel_id::broadcast_schur, in);
   }
@@ -230,7 +230,7 @@ inline
 void
 subview_each1<parent, mode>::operator/=(const Base<eT, T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   inplace_op(twoway_kernel_id::broadcast_div_post, in);
   }
@@ -247,7 +247,7 @@ template<typename parent, unsigned int mode, typename TB>
 inline
 subview_each2<parent, mode, TB>::~subview_each2()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -258,7 +258,7 @@ subview_each2<parent, mode, TB>::subview_each2(const parent& in_P, const Base<uw
   : subview_each_common<parent, mode>::subview_each_common(in_P)
   , base_indices(in_indices)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   }
 
 
@@ -331,7 +331,7 @@ inline
 void
 subview_each2<parent, mode, TB>::operator=(const Base<eT,T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   inplace_op(twoway_kernel_id::broadcast_subset_set, in);
   }
@@ -344,7 +344,7 @@ inline
 void
 subview_each2<parent, mode, TB>::operator+=(const Base<eT,T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   inplace_op(twoway_kernel_id::broadcast_subset_plus, in);
   }
@@ -357,7 +357,7 @@ inline
 void
 subview_each2<parent, mode, TB>::operator-=(const Base<eT,T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   inplace_op(twoway_kernel_id::broadcast_subset_minus_post, in);
   }
@@ -370,7 +370,7 @@ inline
 void
 subview_each2<parent, mode, TB>::operator%=(const Base<eT,T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   inplace_op(twoway_kernel_id::broadcast_subset_schur, in);
   }
@@ -383,7 +383,7 @@ inline
 void
 subview_each2<parent, mode, TB>::operator/=(const Base<eT,T1>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   inplace_op(twoway_kernel_id::broadcast_subset_div_post, in);
   }
@@ -441,7 +441,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each1_aux::operator_plus(const subview_each1<parent, mode>& X, const Base<typename parent::elem_type, T2>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_plus, X, Y);
   }
@@ -453,7 +453,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each1_aux::operator_minus(const subview_each1<parent, mode>& X, const Base<typename parent::elem_type, T2>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_minus_post, X, Y);
   }
@@ -465,7 +465,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each1_aux::operator_minus(const Base<typename parent::elem_type, T1>& X, const subview_each1<parent, mode>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_minus_pre, Y, X);
   }
@@ -477,7 +477,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each1_aux::operator_schur(const subview_each1<parent, mode>& X, const Base<typename parent::elem_type, T2>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_schur, X, Y);
   }
@@ -489,7 +489,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each1_aux::operator_div(const subview_each1<parent, mode>& X, const Base<typename parent::elem_type, T2>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_div_post, X, Y);
   }
@@ -501,7 +501,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each1_aux::operator_div(const Base<typename parent::elem_type, T1>& X, const subview_each1<parent, mode>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_div_pre, Y, X);
   }
@@ -554,7 +554,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each2_aux::operator_plus(const subview_each2<parent, mode, TB>& X, const Base<typename parent::elem_type, T2>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_subset_plus, X, Y);
   }
@@ -566,7 +566,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each2_aux::operator_minus(const subview_each2<parent, mode, TB>& X, const Base<typename parent::elem_type, T2>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_subset_minus_post, X, Y);
   }
@@ -578,7 +578,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each2_aux::operator_minus(const Base<typename parent::elem_type, T1>& X, const subview_each2<parent, mode, TB>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_subset_minus_pre, Y, X);
   }
@@ -590,7 +590,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each2_aux::operator_schur(const subview_each2<parent, mode, TB>& X, const Base<typename parent::elem_type, T2>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_subset_schur, X, Y);
   }
@@ -602,7 +602,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each2_aux::operator_div(const subview_each2<parent, mode, TB>& X, const Base<typename parent::elem_type, T2>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_subset_div_post, X, Y);
   }
@@ -614,7 +614,7 @@ inline
 Mat<typename parent::elem_type>
 subview_each2_aux::operator_div(const Base<typename parent::elem_type, T1>& X, const subview_each2<parent, mode, TB>& Y)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return call_op(twoway_kernel_id::broadcast_subset_div_pre, Y, X);
   }

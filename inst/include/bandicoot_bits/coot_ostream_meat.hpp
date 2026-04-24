@@ -83,22 +83,22 @@ coot_ostream::modify_stream(std::ostream& o, const eT* data, const uword n_elem)
       ( val >= eT(+100) )
       ||
       //( (is_signed<eT>::value) && (val <= eT(-100)) ) ||
-      //( (is_non_integral<eT>::value) && (val > eT(0)) && (val <= eT(+1e-4)) ) ||
-      //( (is_non_integral<eT>::value) && (is_signed<eT>::value) && (val < eT(0)) && (val >= eT(-1e-4)) )
+      //( (is_real<eT>::value) && (val > eT(0)) && (val <= eT(+1e-4)) ) ||
+      //( (is_real<eT>::value) && (is_signed<eT>::value) && (val < eT(0)) && (val >= eT(-1e-4)) )
         (
         cond_rel< is_signed<eT>::value >::leq(val, eT(-100))
         )
       ||
         (
-        cond_rel< is_non_integral<eT>::value >::gt(val,  eT(0))
+        cond_rel< is_real<eT>::value >::gt(val,  eT(0))
         &&
-        cond_rel< is_non_integral<eT>::value >::leq(val, eT(+1e-4))
+        cond_rel< is_real<eT>::value >::leq(val, eT(+1e-4))
         )
       ||
         (
-        cond_rel< is_non_integral<eT>::value && is_signed<eT>::value >::lt(val, eT(0))
+        cond_rel< is_real<eT>::value && is_signed<eT>::value >::lt(val, eT(0))
         &&
-        cond_rel< is_non_integral<eT>::value && is_signed<eT>::value >::geq(val, eT(-1e-4))
+        cond_rel< is_real<eT>::value && is_signed<eT>::value >::geq(val, eT(-1e-4))
         )
       )
       {
@@ -152,6 +152,36 @@ coot_ostream::modify_stream(std::ostream& o, const eT* data, const uword n_elem)
 
   return cell_width;
   }
+
+
+
+// TODO: enable when adding support for complex numbers
+// 
+// // "better than nothing" settings for complex numbers
+// template<typename T>
+// inline
+// std::streamsize
+// coot_ostream::modify_stream(std::ostream& o, const std::complex<T>* data, const uword n_elem)
+//   {
+//   coot_ignore(data);
+//   coot_ignore(n_elem);
+//   
+//   o.unsetf(ios::showbase);
+//   o.unsetf(ios::uppercase);
+//   o.fill(' ');
+//   
+//   o.setf(ios::scientific);
+//   o.setf(ios::showpos);
+//   o.setf(ios::right);
+//   o.unsetf(ios::fixed);
+//   
+//   std::streamsize cell_width;
+//   
+//   o.precision(3);
+//   cell_width = 2 + 2*(1 + 3 + o.precision() + 5) + 1;
+//   
+//   return cell_width;
+//   }
 
 
 
@@ -288,7 +318,7 @@ inline
 void
 coot_ostream::print(std::ostream& o, const Mat<eT>& m, const bool modify)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const coot_ostream_state stream_state(o);
 
@@ -300,10 +330,10 @@ coot_ostream::print(std::ostream& o, const Mat<eT>& m, const bool modify)
     if(m_n_cols > 0)
       {
       // Transfer the matrix to temporary CPU memory for printing.
-      eT* tmp_mem = cpu_memory::acquire<eT>(m.n_elem);
-      coot_rt_t::copy_from_dev_mem(tmp_mem, m.get_dev_mem(true), m.n_elem, 1, 0, 0, m.n_elem);
+      cpu_memory::mem_array<eT> tmp_mem(m.n_elem);
+      coot_rt_t::copy_from_dev_mem(tmp_mem.memptr(), m.get_dev_mem(true), m.n_elem, 1, 0, 0, m.n_elem);
 
-      const std::streamsize cell_width = modify ? coot_ostream::modify_stream(o, tmp_mem, m.n_elem) : o.width();
+      const std::streamsize cell_width = modify ? coot_ostream::modify_stream(o, tmp_mem.memptr(), m.n_elem) : o.width();
 
       if(cell_width > 0)
         {
@@ -337,8 +367,6 @@ coot_ostream::print(std::ostream& o, const Mat<eT>& m, const bool modify)
           o << '\n';
           }
         }
-
-      cpu_memory::release(tmp_mem);
       }
     }
   else
@@ -366,7 +394,7 @@ inline
 void
 coot_ostream::print(std::ostream& o, const subview<eT>& m, const bool modify)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const coot_ostream_state stream_state(o);
 
@@ -378,10 +406,10 @@ coot_ostream::print(std::ostream& o, const subview<eT>& m, const bool modify)
     if(m_n_cols > 0)
       {
       // Transfer the matrix to temporary CPU memory for printing.
-      eT* tmp_mem = cpu_memory::acquire<eT>(m.n_elem);
-      coot_rt_t::copy_from_dev_mem(tmp_mem, m.m.get_dev_mem(true), m.n_rows, m.n_cols, m.aux_row1, m.aux_col1, m.m.n_rows);
+      cpu_memory::mem_array<eT> tmp_mem(m.n_elem);
+      coot_rt_t::copy_from_dev_mem(tmp_mem.memptr(), m.m.get_dev_mem(true), m.n_rows, m.n_cols, m.aux_row1, m.aux_col1, m.m.n_rows);
 
-      const std::streamsize cell_width = modify ? coot_ostream::modify_stream(o, tmp_mem, m.n_elem) : o.width();
+      const std::streamsize cell_width = modify ? coot_ostream::modify_stream(o, tmp_mem.memptr(), m.n_elem) : o.width();
 
       if(cell_width > 0)
         {
@@ -415,8 +443,6 @@ coot_ostream::print(std::ostream& o, const subview<eT>& m, const bool modify)
           o << '\n';
           }
         }
-
-      cpu_memory::release(tmp_mem);
       }
     }
   else
@@ -444,7 +470,7 @@ inline
 void
 coot_ostream::print(std::ostream& o, const Cube<eT>& x, const bool modify)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const coot_ostream_state stream_state(o);
 
@@ -483,7 +509,7 @@ inline
 void
 coot_ostream::print(std::ostream& o, const SizeMat& S)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const coot_ostream_state stream_state(o);
 
@@ -505,7 +531,7 @@ inline
 void
 coot_ostream::print(std::ostream& o, const SizeCube& S)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const coot_ostream_state stream_state(o);
 

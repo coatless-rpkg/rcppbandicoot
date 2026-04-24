@@ -56,7 +56,7 @@ svd(dev_mem_t<float> U,
     const uword n_cols,
     const bool compute_u_vt)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (get_rt().cl_rt.is_valid() == false)
     {
@@ -88,12 +88,12 @@ svd(dev_mem_t<float> U,
   // Now, allocate space for the workspace.
   size_t U_size = compute_u_vt ? n_rows * n_rows : 0;
   size_t VT_size = compute_u_vt ? n_cols * n_cols : 0;
-  float* cpu_mem = cpu_memory::acquire<float>((n_rows * n_cols) + // A
-                                              U_size + // U
-                                              std::min(n_rows, n_cols) + // s
-                                              VT_size + // VT
-                                              lwork);
-  float* cpu_A = cpu_mem;
+  cpu_memory::mem_array<float> cpu_mem((n_rows * n_cols) + // A
+                                       U_size + // U
+                                       std::min(n_rows, n_cols) + // s
+                                       VT_size + // VT
+                                       lwork);
+  float* cpu_A = cpu_mem.memptr();
   float* cpu_U = cpu_A + n_rows * n_cols;
   float* cpu_s = cpu_U + U_size;
   float* cpu_VT = cpu_s + std::min(n_rows, n_cols);
@@ -118,7 +118,6 @@ svd(dev_mem_t<float> U,
                &info);
   if (info != 0)
     {
-    cpu_memory::release(cpu_mem);
     return std::make_tuple(false, "magma_sgesvd() call failed with error " + magma::error_as_string(info));
     }
 
@@ -131,7 +130,6 @@ svd(dev_mem_t<float> U,
     }
   copy_into_dev_mem(S, cpu_s, std::min(n_rows, n_cols));
 
-  cpu_memory::release(cpu_mem);
   return std::make_tuple(true, "");
   }
 
@@ -147,7 +145,7 @@ svd(dev_mem_t<double> U,
     const uword n_cols,
     const bool compute_u_vt)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (get_rt().cl_rt.is_valid() == false)
     {
@@ -179,12 +177,12 @@ svd(dev_mem_t<double> U,
   // Now, allocate space for the workspace.
   size_t U_size = compute_u_vt ? n_rows * n_rows : 0;
   size_t VT_size = compute_u_vt ? n_cols * n_cols : 0;
-  double* cpu_mem = cpu_memory::acquire<double>((n_rows * n_cols) + // A
-                                                U_size + // U
-                                                std::min(n_rows, n_cols) + // s
-                                                VT_size + // VT
-                                                lwork);
-  double* cpu_A = cpu_mem;
+  cpu_memory::mem_array<double> cpu_mem((n_rows * n_cols) + // A
+                                        U_size + // U
+                                        std::min(n_rows, n_cols) + // s
+                                        VT_size + // VT
+                                        lwork);
+  double* cpu_A = cpu_mem.memptr();
   double* cpu_U = cpu_A + n_rows * n_cols;
   double* cpu_s = cpu_U + U_size;
   double* cpu_VT = cpu_s + std::min(n_rows, n_cols);
@@ -209,7 +207,6 @@ svd(dev_mem_t<double> U,
                &info);
   if (info != 0)
     {
-    cpu_memory::release(cpu_mem);
     return std::make_tuple(false, "magma_dgesvd() call failed with error " + magma::error_as_string(info));
     }
 
@@ -222,6 +219,5 @@ svd(dev_mem_t<double> U,
     }
   copy_into_dev_mem(S, cpu_s, std::min(n_rows, n_cols));
 
-  cpu_memory::release(cpu_mem);
   return std::make_tuple(true, "");
   }

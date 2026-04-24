@@ -39,7 +39,7 @@ mul_diag
   const uword B_M_n_rows
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename cuda_type<eT>::type ceT;
 
@@ -82,7 +82,7 @@ mul_diag
     // diagmat(A) * B'
     kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::mul_rowwise_trans);
 
-    coot_debug_check( mem_overlaps(C_mem, 0, C_n_rows * C_n_cols, B_mem, 0, C_n_rows * C_n_cols), "coot::cuda::mul_diag(): incorrect call, alias and transpose not allowed" );
+    coot_conform_check( mem_overlaps(C_mem, 0, C_n_rows * C_n_cols, B_mem, 0, C_n_rows * C_n_cols), "coot::cuda::mul_diag(): incorrect call, alias and transpose not allowed" );
 
     diag_arg_ptr = A_mem.cuda_mem_ptr + A_row_offset + A_col_offset * A_M_n_rows;
     mat_arg_ptr  = B_mem.cuda_mem_ptr + B_row_offset + B_col_offset * B_M_n_rows;
@@ -97,7 +97,7 @@ mul_diag
     // A' * diagmat(B)
     kernel = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::mul_colwise_trans);
 
-    coot_debug_check( mem_overlaps(C_mem, 0, C_n_rows * C_n_cols, A_mem, 0, C_n_rows * C_n_cols), "coot::cuda::mul_diag(): incorrect call, alias and transpose not allowed" );
+    coot_conform_check( mem_overlaps(C_mem, 0, C_n_rows * C_n_cols, A_mem, 0, C_n_rows * C_n_cols), "coot::cuda::mul_diag(): incorrect call, alias and transpose not allowed" );
 
     diag_arg_ptr = B_mem.cuda_mem_ptr + B_row_offset + B_col_offset * B_M_n_rows;
     mat_arg_ptr  = A_mem.cuda_mem_ptr + A_row_offset + A_col_offset * A_M_n_rows;

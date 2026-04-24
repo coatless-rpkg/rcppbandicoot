@@ -1,6 +1,6 @@
 Package: RcppBandicoot
 Title: 'Rcpp' Integration for the `Bandicoot` Header-Only C++ GPU Accelerated Linear Algebra Library
-Version: 0.1.11.1.9000
+Version: 4.0.0.1
 Authors@R: c(person("James Joseph", "Balamuta", email = "balamut2@illinois.edu", 
                     role = c("aut", "cre", "cph"), 
                     comment = c(ORCID = "0000-0003-2826-8458")),

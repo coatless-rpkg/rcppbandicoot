@@ -22,7 +22,7 @@ shuffle(dev_mem_t<eT> out, const uword out_row_offset, const uword out_col_offse
         const dev_mem_t<eT> in, const uword in_row_offset, const uword in_col_offset, const uword in_M_n_rows,
         const uword n_rows, const uword n_cols, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   runtime_t::cq_guard guard;
 
@@ -36,7 +36,9 @@ shuffle(dev_mem_t<eT> out, const uword out_row_offset, const uword out_col_offse
   else if (n_sort_elem == 1)
     {
     // Shortcut: there is nothing to sort, since there is only one element.
-    copy_mat(out, in, n_rows, n_cols, out_row_offset, out_col_offset, out_M_n_rows, in_row_offset, in_col_offset, in_M_n_rows);
+    const Proxy<subview<eT>> P_out(out, out_row_offset, out_col_offset, n_rows, n_cols, out_M_n_rows);
+    const Proxy<subview<eT>> P_in(in, in_row_offset, in_col_offset, n_rows, n_cols, in_M_n_rows);
+    copy(P_out, P_in);
     return;
     }
 
@@ -55,7 +57,8 @@ shuffle(dev_mem_t<eT> out, const uword out_row_offset, const uword out_col_offse
 
   // The variable philox algorithm also needs some random keys.
   dev_mem_t<uword> philox_keys;
-  philox_keys.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(24);
+  runtime_t::mem_array<uword> philox_keys_array(24);
+  philox_keys.cl_mem_ptr = philox_keys_array.memptr();
   fill_randu<uword>(philox_keys, 24);
 
   // Note that all vectors are treated as column vectors and passed with dim == 0 by convention.
@@ -77,8 +80,6 @@ shuffle(dev_mem_t<eT> out, const uword out_row_offset, const uword out_col_offse
     {
     shuffle_large(out, out_offset, out_incr, out_elem_stride, in, in_offset, in_incr, in_elem_stride, n_sort_elem, elems_per_elem, n_sort_elem_pow2, num_bits, local_group_size, philox_keys);
     }
-
-  get_rt().cl_rt.release_memory(philox_keys.cl_mem_ptr);
   }
 
 
@@ -91,7 +92,7 @@ shuffle_small(      dev_mem_t<eT> out, const uword out_offset, const uword out_i
               const uword n_elem, const uword elems_per_elem,
               const uword n_elem_pow2, const uword num_bits, const dev_mem_t<uword> philox_keys)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   runtime_t::adapt_uword cl_out_offset(out.cl_mem_ptr.offset + out_offset);
   runtime_t::adapt_uword cl_out_incr(out_incr);
@@ -137,7 +138,7 @@ shuffle_large(      dev_mem_t<eT> out, const uword out_offset, const uword out_i
               const uword n_elem, const uword elems_per_elem,
               const uword n_elem_pow2, const uword num_bits, const size_t local_group_size, const dev_mem_t<uword> philox_keys)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   runtime_t::adapt_uword cl_out_offset(out.cl_mem_ptr.offset + out_offset);
   runtime_t::adapt_uword cl_out_incr(out_incr);
@@ -155,7 +156,8 @@ shuffle_large(      dev_mem_t<eT> out, const uword out_offset, const uword out_i
   // First, compute the locations where everything will map to.
   const uword aux_size = total_num_threads / local_group_size; // remember total_num_threads and local_group_size are both powers of 2
   dev_mem_t<uword> out_block_mem;
-  out_block_mem.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(aux_size);
+  runtime_t::mem_array<uword> out_block_mem_array(aux_size);
+  out_block_mem.cl_mem_ptr = out_block_mem_array.memptr();
 
   cl_int status = 0;
   cl_kernel k1 = get_rt().cl_rt.get_kernel(zeroway_kernel_id::shuffle_large_compute_locs);
@@ -196,6 +198,4 @@ shuffle_large(      dev_mem_t<eT> out, const uword out_offset, const uword out_i
 
   status = coot_wrapper(clEnqueueNDRangeKernel)(get_rt().cl_rt.get_cq(), k2, 1, NULL, &total_num_threads, &local_group_size, 0, NULL, NULL);
   coot_check_cl_error(status, "coot::opencl::shuffle(): shuffle kernel failed");
-
-  get_rt().cl_rt.release_memory(out_block_mem.cl_mem_ptr);
   }

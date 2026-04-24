@@ -21,13 +21,13 @@ inline
 void
 op_normalise_vec::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_normalise_vec>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
 
   const uword p = in.aux_uword_a;
 
-  coot_debug_check( (p == 0), "normalise(): parameter 'p' must be greater than zero" );
+  coot_conform_check( (p == 0), "normalise(): parameter 'p' must be greater than zero" );
 
   const unwrap<T1> U(in.m);
 
@@ -61,13 +61,13 @@ inline
 void
 op_normalise_vec::apply(Mat<eT>& out, const Op<mtOp<eT, T1, mtop_conv_to>, op_normalise_vec>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   typedef typename T1::elem_type eT2;
 
   const uword p = in.aux_uword_a;
 
-  coot_debug_check( (p == 0), "normalise(): parameter 'p' must be greater than zero" );
+  coot_conform_check( (p == 0), "normalise(): parameter 'p' must be greater than zero" );
 
   const unwrap<T1> U(in.m.q);
 
@@ -79,20 +79,14 @@ op_normalise_vec::apply(Mat<eT>& out, const Op<mtOp<eT, T1, mtop_conv_to>, op_no
   if (norm_val_b == eT2(1))
     {
     // Shortcut: if the norm is 1, it's already normalized.
-    coot_rt_t::copy_mat(out.get_dev_mem(false), U.get_dev_mem(false),
-                        out.n_rows, out.n_cols,
-                        0, 0, out.n_rows,
-                        U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+    coot_rt_t::copy(make_proxy(out), make_proxy(U.M));
     }
   else
     {
     // Note that normalisation happens *after* conversion.
-    coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
-                          out.get_dev_mem(false), U.get_dev_mem(false),
-                          eT2(1), eT(norm_val_b),
-                          out.n_rows, out.n_cols, 1,
-                          0, 0, 0, out.n_rows, out.n_cols,
-                          U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), out.n_cols /* ignored */);
+    // TODO: once generated mtOps are available this can be simplified
+    coot_rt_t::copy(make_proxy(out), make_proxy(U.M));
+    coot_rt_t::copy(make_proxy(out), make_proxy(eOp<Mat<eT>, eop_scalar_div_post>(out, norm_val_b)));
     }
   }
 
@@ -129,13 +123,13 @@ inline
 void
 op_normalise_mat::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_normalise_mat>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const uword p   = in.aux_uword_a;
   const uword dim = in.aux_uword_b;
 
-  coot_debug_check( (p   == 0), "normalise(): parameter 'p' must be greater than zero" );
-  coot_debug_check( (dim >  1), "normalise(): parameter 'dim' must be 0 or 1"          );
+  coot_conform_check( (p   == 0), "normalise(): parameter 'p' must be greater than zero" );
+  coot_conform_check( (dim >  1), "normalise(): parameter 'dim' must be 0 or 1"          );
 
   const unwrap<T1> U(in.m);
   const extract_subview<typename unwrap<T1>::stored_type> S(U.M);
@@ -157,7 +151,7 @@ inline
 void
 op_normalise_mat::apply_alias(Mat<eT>& A, const uword p, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (A.n_elem == 0)
     {
@@ -203,7 +197,7 @@ inline
 void
 op_normalise_mat::apply_direct(Mat<eT>& out, const Mat<eT>& A, const uword p, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   out.set_size(A.n_rows, A.n_cols);
 

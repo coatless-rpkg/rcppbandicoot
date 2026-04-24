@@ -22,7 +22,7 @@ template<typename eT>
 inline
 subview_cube<eT>::~subview_cube()
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
   }
 
 
@@ -49,7 +49,7 @@ subview_cube<eT>::subview_cube
   , n_slices    (in_n_slices)
   , n_elem      (n_elem_slice * in_n_slices)
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
   }
 
 
@@ -67,7 +67,7 @@ subview_cube<eT>::subview_cube(const subview_cube<eT>& in)
   , n_slices    (in.n_slices    )
   , n_elem      (in.n_elem      )
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
   }
 
 
@@ -85,7 +85,7 @@ subview_cube<eT>::subview_cube(subview_cube<eT>&& in)
   , n_slices    (in.n_slices    )
   , n_elem      (in.n_elem      )
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   // for paranoia
 
@@ -105,7 +105,7 @@ template<typename eT>
 inline
 subview_cube<eT>::operator arma::Cube<eT> () const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   #if defined(COOT_HAVE_ARMA)
     {
@@ -134,7 +134,7 @@ inline
 void
 subview_cube<eT>::operator=(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n_elem == 1)
     {
@@ -144,7 +144,7 @@ subview_cube<eT>::operator=(const eT val)
     }
   else
     {
-    coot_debug_assert_same_size(n_rows, n_cols, n_slices, 1, 1, 1, "subview_cube::operator=");
+    coot_conform_assert_same_size(n_rows, n_cols, n_slices, 1, 1, 1, "subview_cube::operator=");
     }
   }
 
@@ -155,14 +155,9 @@ inline
 void
 subview_cube<eT>::operator+= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
-                        m.dev_mem, m.dev_mem,
-                        (eT) val, (eT) 0,
-                        n_rows, n_cols, n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOpCube<subview_cube<eT>, eop_scalar_plus>(*this, val)));
   }
 
 
@@ -172,14 +167,9 @@ inline
 void
 subview_cube<eT>::operator-= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_minus_scalar_post,
-                        m.dev_mem, m.dev_mem,
-                        (eT) val, (eT) 0,
-                        n_rows, n_cols, n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOpCube<subview_cube<eT>, eop_scalar_minus_post>(*this, val)));
   }
 
 
@@ -189,14 +179,9 @@ inline
 void
 subview_cube<eT>::operator*= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_mul_scalar,
-                        m.dev_mem, m.dev_mem,
-                        (eT) val, (eT) 1,
-                        n_rows, n_cols, n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOpCube<subview_cube<eT>, eop_scalar_times>(*this, val)));
   }
 
 
@@ -206,14 +191,9 @@ inline
 void
 subview_cube<eT>::operator/= (const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_scalar(twoway_kernel_id::equ_array_div_scalar_post,
-                        m.dev_mem, m.dev_mem,
-                        (eT) val, (eT) 1,
-                        n_rows, n_cols, n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(eOpCube<subview_cube<eT>, eop_scalar_div_post>(*this, val)));
   }
 
 
@@ -224,14 +204,12 @@ inline
 void
 subview_cube<eT>::operator=(const BaseCube<eT, T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  no_conv_unwrap_cube<T1> U(x.get_ref());
+  const Proxy<T1> P(x.get_ref());
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.get_n_rows(), P.get_n_cols(), P.get_n_slices(), "Cube::operator=");
 
-  coot_rt_t::copy_cube(m.dev_mem, U.get_dev_mem(false),
-                       n_rows, n_cols, n_slices,
-                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                       U.get_row_offset(), U.get_col_offset(), U.get_slice_offset(), U.get_M_n_rows(), U.get_M_n_cols());
+  coot_rt_t::copy(make_proxy(*this), P);
   }
 
 
@@ -242,16 +220,24 @@ inline
 void
 subview_cube<eT>::operator+=(const BaseCube<eT, T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  no_conv_unwrap_cube<T1> U(x.get_ref());
+  const eGlueCube<subview_cube<eT>, T1, eglue_plus> G(*this, x.get_ref());
+  const Proxy<eGlueCube<subview_cube<eT>, T1, eglue_plus>> P(G);
 
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
-                      m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                      n_rows, n_cols, n_slices,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      U.get_row_offset(), U.get_col_offset(), U.get_slice_offset(), U.get_M_n_rows(), U.get_M_n_cols());
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.P2.get_n_rows(), P.P2.get_n_cols(), P.P2.get_n_slices(), "Cube::operator+=");
+
+  inexact_alias_wrapper<subview_cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(P.P1, P);
+    }
   }
 
 
@@ -262,16 +248,24 @@ inline
 void
 subview_cube<eT>::operator-=(const BaseCube<eT, T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  no_conv_unwrap_cube<T1> U(x.get_ref());
+  const eGlueCube<subview_cube<eT>, T1, eglue_minus> G(*this, x.get_ref());
+  const Proxy<eGlueCube<subview_cube<eT>, T1, eglue_minus>> P(G);
 
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
-                      m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                      n_rows, n_cols, n_slices,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      U.get_row_offset(), U.get_col_offset(), U.get_slice_offset(), U.get_M_n_rows(), U.get_M_n_cols());
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.P2.get_n_rows(), P.P2.get_n_cols(), P.P2.get_n_slices(), "Cube::operator-=");
+
+  inexact_alias_wrapper<subview_cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(P.P1, P);
+    }
   }
 
 
@@ -282,16 +276,24 @@ inline
 void
 subview_cube<eT>::operator%=(const BaseCube<eT, T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  no_conv_unwrap_cube<T1> U(x.get_ref());
+  const eGlueCube<subview_cube<eT>, T1, eglue_schur> G(*this, x.get_ref());
+  const Proxy<eGlueCube<subview_cube<eT>, T1, eglue_schur>> P(G);
 
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
-                      m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                      n_rows, n_cols, n_slices,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      U.get_row_offset(), U.get_col_offset(), U.get_slice_offset(), U.get_M_n_rows(), U.get_M_n_cols());
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.P2.get_n_rows(), P.P2.get_n_cols(), P.P2.get_n_slices(), "Cube::operator%=");
+
+  inexact_alias_wrapper<subview_cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(P.P1, P);
+    }
   }
 
 
@@ -302,16 +304,24 @@ inline
 void
 subview_cube<eT>::operator/=(const BaseCube<eT, T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  no_conv_unwrap_cube<T1> U(x.get_ref());
+  const eGlueCube<subview_cube<eT>, T1, eglue_div> G(*this, x.get_ref());
+  const Proxy<eGlueCube<subview_cube<eT>, T1, eglue_div>> P(G);
 
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
-                      m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                      n_rows, n_cols, n_slices,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      U.get_row_offset(), U.get_col_offset(), U.get_slice_offset(), U.get_M_n_rows(), U.get_M_n_cols());
+  coot_assert_same_size(n_rows, n_cols, n_slices, P.P2.get_n_rows(), P.P2.get_n_cols(), P.P2.get_n_slices(), "Cube::operator/=");
+
+  inexact_alias_wrapper<subview_cube<eT>, decltype(P.P2)> A(*this, P.P2);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(P.P1, P);
+    }
   }
 
 
@@ -321,12 +331,10 @@ inline
 void
 subview_cube<eT>::operator=(const subview_cube<eT>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::copy_cube(m.dev_mem, x.m.dev_mem,
-                       n_rows, n_cols, n_slices,
-                       aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                       x.aux_row1, x.aux_col1, x.aux_slice1, x.m.n_rows, x.m.n_cols);
+  coot_assert_same_size(n_rows, n_cols, n_slices, x.n_rows, x.n_cols, x.n_slices, "Cube::operator=");
+  coot_rt_t::copy(make_proxy(*this), make_proxy(x));
   }
 
 
@@ -336,14 +344,22 @@ inline
 void
 subview_cube<eT>::operator+=(const subview_cube<eT>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
-                      m.dev_mem, m.dev_mem, x.m.dev_mem,
-                      n_rows, n_cols, n_slices,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      x.aux_row1, x.aux_col1, x.aux_slice1, x.m.n_rows, x.m.n_cols);
+  coot_assert_same_size(n_rows, n_cols, n_slices, x.n_rows, x.n_cols, x.n_slices, "Cube::operator+=");
+
+  const eGlueCube<subview_cube<eT>, subview_cube<eT>, eglue_plus> G(*this, x);
+  inexact_alias_wrapper<subview_cube<eT>, subview_cube<eT>> A(*this, x);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), make_proxy(G));
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), make_proxy(G));
+    }
   }
 
 
@@ -353,14 +369,22 @@ inline
 void
 subview_cube<eT>::operator-=(const subview_cube<eT>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
-                      m.dev_mem, m.dev_mem, x.m.dev_mem,
-                      n_rows, n_cols, n_slices,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      x.aux_row1, x.aux_col1, x.aux_slice1, x.m.n_rows, x.m.n_cols);
+  coot_assert_same_size(n_rows, n_cols, n_slices, x.n_rows, x.n_cols, x.n_slices, "Cube::operator-=");
+
+  const eGlueCube<subview_cube<eT>, subview_cube<eT>, eglue_minus> G(*this, x);
+  inexact_alias_wrapper<subview_cube<eT>, subview_cube<eT>> A(*this, x);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), make_proxy(G));
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), make_proxy(G));
+    }
   }
 
 
@@ -370,14 +394,22 @@ inline
 void
 subview_cube<eT>::operator%=(const subview_cube<eT>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
-                      m.dev_mem, m.dev_mem, x.m.dev_mem,
-                      n_rows, n_cols, n_slices,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      x.aux_row1, x.aux_col1, x.aux_slice1, x.m.n_rows, x.m.n_cols);
+  coot_assert_same_size(n_rows, n_cols, n_slices, x.n_rows, x.n_cols, x.n_slices, "Cube::operator%=");
+
+  const eGlueCube<subview_cube<eT>, subview_cube<eT>, eglue_schur> G(*this, x);
+  inexact_alias_wrapper<subview_cube<eT>, subview_cube<eT>> A(*this, x);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), make_proxy(G));
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), make_proxy(G));
+    }
   }
 
 
@@ -387,14 +419,22 @@ inline
 void
 subview_cube<eT>::operator/=(const subview_cube<eT>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
-                      m.dev_mem, m.dev_mem, x.m.dev_mem,
-                      n_rows, n_cols, n_slices,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                      x.aux_row1, x.aux_col1, x.aux_slice1, x.m.n_rows, x.m.n_cols);
+  coot_assert_same_size(n_rows, n_cols, n_slices, x.n_rows, x.n_cols, x.n_slices, "Cube::operator/=");
+
+  const eGlueCube<subview_cube<eT>, subview_cube<eT>, eglue_div> G(*this, x);
+  inexact_alias_wrapper<subview_cube<eT>, subview_cube<eT>> A(*this, x);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), make_proxy(G));
+    A.using_aux = false;
+    *this = A.aux;
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(*this), make_proxy(G));
+    }
   }
 
 
@@ -405,7 +445,7 @@ inline
 void
 subview_cube<eT>::operator=(const Base<eT, T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   no_conv_unwrap<T1> U(x.get_ref());
 
@@ -428,41 +468,53 @@ subview_cube<eT>::operator=(const Base<eT, T1>& x)
                             aux_row1 + aux_col1 * m.n_rows + aux_slice1 * m.n_rows * m.n_cols, 0, m.slice_elem);
     }
   else
+  if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) ||
+      (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) ||
+      (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
+    {
+    // interpret the matrix as a cube with one dimension as 1
+    coot_rt_t::copy(make_proxy_mat(*this, x.n_rows, x.n_cols), make_proxy(U.M));
+    }
+  else
+    {
+    coot_stop_logic_error( coot_incompat_size_string(*this, x, "copy into subcube") );
+    }
+  }
+
+
+
+template<typename eT>
+inline
+bool
+subview_cube<eT>::is_valid_mat_to_cube(const Mat<eT>& x) const
+  {
+  const uword t_n_rows   = this->n_rows;
+  const uword t_n_cols   = this->n_cols;
+  const uword t_n_slices = this->n_slices;
+
+  const uword x_n_rows   = x.n_rows;
+  const uword x_n_cols   = x.n_cols;
+
   if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) )
     {
     // interpret the matrix as a cube with one slice
-    coot_rt_t::eop_cube(twoway_kernel_id::convert_type_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), x_n_rows * x_n_cols);
+    return true;
     }
   else
   if( (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) )
     {
     // interpret the matrix as a rows x 1 x slices tube
-    coot_rt_t::eop_cube(twoway_kernel_id::convert_type_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        U.get_row_offset(), 0, U.get_col_offset(), U.get_M_n_rows(), 1);
+    return true;
     }
   else
   if( (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
     {
-    // intepret the matrix as a 1 x cols x slices tube
-    coot_rt_t::eop_cube(twoway_kernel_id::convert_type_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        0, U.get_row_offset(), U.get_col_offset(), 1, U.get_M_n_rows());
+    // interpret the matrix as a 1 x cols x slices tube
+    return true;
     }
   else
     {
-    coot_stop_logic_error( coot_incompat_size_string(*this, x, "copy into subcube") );
+    return false;
     }
   }
 
@@ -474,8 +526,9 @@ inline
 void
 subview_cube<eT>::operator+=(const Base<eT, T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
+  // TODO: clean this up to avoid the no_conv_unwrap and create a Proxy only once
   no_conv_unwrap<T1> U(x.get_ref());
 
   // if this subview can be interpreted as an object with the same dimensions as x, we can use it
@@ -497,37 +550,9 @@ subview_cube<eT>::operator+=(const Base<eT, T1>& x)
                             aux_row1 + aux_col1 * m.n_rows + aux_slice1 * m.n_rows * m.n_cols, 0, m.slice_elem);
     }
   else
-  if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) )
+  if( is_valid_mat_to_cube(U.M) )
     {
-    // interpret the matrix as a cube with one slice
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), x_n_rows * x_n_cols);
-    }
-  else
-  if( (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) )
-    {
-    // interpret the matrix as a rows x 1 x slices tube
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        U.get_row_offset(), 0, U.get_col_offset(), U.get_M_n_rows(), 1);
-    }
-  else
-  if( (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
-    {
-    // intepret the matrix as a 1 x cols x slices tube
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        0, U.get_row_offset(), U.get_col_offset(), 1, U.get_M_n_rows());
+    (*this).operator+=(Cube<eT>(U.M.dev_mem, t_n_rows, t_n_cols, t_n_slices));
     }
   else
     {
@@ -543,7 +568,7 @@ inline
 void
 subview_cube<eT>::operator-=(const Base<eT, T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   no_conv_unwrap<T1> U(x.get_ref());
 
@@ -566,37 +591,9 @@ subview_cube<eT>::operator-=(const Base<eT, T1>& x)
                             aux_row1 + aux_col1 * m.n_rows + aux_slice1 * m.n_rows * m.n_cols, 0, m.slice_elem);
     }
   else
-  if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) )
+  if( is_valid_mat_to_cube(U.M) )
     {
-    // interpret the matrix as a cube with one slice
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), x_n_rows * x_n_cols);
-    }
-  else
-  if( (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) )
-    {
-    // interpret the matrix as a rows x 1 x slices tube
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        U.get_row_offset(), 0, U.get_col_offset(), U.get_M_n_rows(), 1);
-    }
-  else
-  if( (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
-    {
-    // intepret the matrix as a 1 x cols x slices tube
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        0, U.get_row_offset(), U.get_col_offset(), 1, U.get_M_n_rows());
+    (*this).operator-=(Cube<eT>(U.M.dev_mem, t_n_rows, t_n_cols, t_n_slices));
     }
   else
     {
@@ -612,7 +609,7 @@ inline
 void
 subview_cube<eT>::operator%=(const Base<eT, T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   no_conv_unwrap<T1> U(x.get_ref());
 
@@ -635,37 +632,9 @@ subview_cube<eT>::operator%=(const Base<eT, T1>& x)
                             aux_row1 + aux_col1 * m.n_rows + aux_slice1 * m.n_rows * m.n_cols, 0, m.slice_elem);
     }
   else
-  if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) )
+  if( is_valid_mat_to_cube(U.M) )
     {
-    // interpret the matrix as a cube with one slice
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), x_n_rows * x_n_cols);
-    }
-  else
-  if( (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) )
-    {
-    // interpret the matrix as a rows x 1 x slices tube
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        U.get_row_offset(), 0, U.get_col_offset(), U.get_M_n_rows(), 1);
-    }
-  else
-  if( (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
-    {
-    // intepret the matrix as a 1 x cols x slices tube
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        0, U.get_row_offset(), U.get_col_offset(), 1, U.get_M_n_rows());
+    (*this).operator%=(Cube<eT>(U.M.dev_mem, t_n_rows, t_n_cols, t_n_slices));
     }
   else
     {
@@ -681,7 +650,7 @@ inline
 void
 subview_cube<eT>::operator/=(const Base<eT, T1>& x)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   no_conv_unwrap<T1> U(x.get_ref());
 
@@ -704,37 +673,9 @@ subview_cube<eT>::operator/=(const Base<eT, T1>& x)
                             aux_row1 + aux_col1 * m.n_rows + aux_slice1 * m.n_rows * m.n_cols, 0, m.slice_elem);
     }
   else
-  if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) )
+  if( is_valid_mat_to_cube(U.M) )
     {
-    // interpret the matrix as a cube with one slice
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        U.get_row_offset(), U.get_col_offset(), 0, U.get_M_n_rows(), x_n_rows * x_n_cols);
-    }
-  else
-  if( (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) )
-    {
-    // interpret the matrix as a rows x 1 x slices tube
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        U.get_row_offset(), 0, U.get_col_offset(), U.get_M_n_rows(), 1);
-    }
-  else
-  if( (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
-    {
-    // intepret the matrix as a 1 x cols x slices tube
-    coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
-                        m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                        t_n_rows, t_n_cols, t_n_slices,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        aux_row1, aux_col1, aux_slice1, m.n_rows, m.n_cols,
-                        0, U.get_row_offset(), U.get_col_offset(), 1, U.get_M_n_rows());
+    (*this).operator/=(Cube<eT>(U.M.dev_mem, t_n_rows, t_n_cols, t_n_slices));
     }
   else
     {
@@ -749,95 +690,10 @@ inline
 void
 subview_cube<eT>::extract(Cube<eT>& out, const subview_cube<eT>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // extract the subview into `out`
-  coot_rt_t::eop_cube(twoway_kernel_id::convert_type_cube,
-                      out.get_dev_mem(false), out.get_dev_mem(false), in.m.get_dev_mem(false),
-                      out.n_rows, out.n_cols, out.n_slices,
-                      0, 0, 0, out.n_rows, out.n_cols,
-                      0, 0, 0, out.n_rows, out.n_cols,
-                      in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-  }
-
-
-
-template<typename eT>
-inline
-void
-subview_cube<eT>::plus_inplace(Cube<eT>& out, const subview_cube<eT>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  coot_debug_assert_same_size(out, in, "addition");
-
-  // add the subview to `out`
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
-                      out.get_dev_mem(false), out.get_dev_mem(false), in.m.get_dev_mem(false),
-                      out.n_rows, out.n_cols, out.n_slices,
-                      0, 0, 0, out.n_rows, out.n_cols,
-                      0, 0, 0, out.n_rows, out.n_cols,
-                      in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-  }
-
-
-
-template<typename eT>
-inline
-void
-subview_cube<eT>::minus_inplace(Cube<eT>& out, const subview_cube<eT>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  coot_debug_assert_same_size(out, in, "subtraction");
-
-  // subtract the subview from `out`
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
-                      out.get_dev_mem(false), out.get_dev_mem(false), in.m.get_dev_mem(false),
-                      out.n_rows, out.n_cols, out.n_slices,
-                      0, 0, 0, out.n_rows, out.n_cols,
-                      0, 0, 0, out.n_rows, out.n_cols,
-                      in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-  }
-
-
-
-template<typename eT>
-inline
-void
-subview_cube<eT>::schur_inplace(Cube<eT>& out, const subview_cube<eT>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  coot_debug_assert_same_size(out, in, "element-wise multiplication");
-
-  // add the subview to `out`
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
-                      out.get_dev_mem(false), out.get_dev_mem(false), in.m.get_dev_mem(false),
-                      out.n_rows, out.n_cols, out.n_slices,
-                      0, 0, 0, out.n_rows, out.n_cols,
-                      0, 0, 0, out.n_rows, out.n_cols,
-                      in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-  }
-
-
-
-template<typename eT>
-inline
-void
-subview_cube<eT>::div_inplace(Cube<eT>& out, const subview_cube<eT>& in)
-  {
-  coot_extra_debug_sigprint();
-
-  coot_debug_assert_same_size(out, in, "division");
-
-  // add the subview to `out`
-  coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
-                      out.get_dev_mem(false), out.get_dev_mem(false), in.m.get_dev_mem(false),
-                      out.n_rows, out.n_cols, out.n_slices,
-                      0, 0, 0, out.n_rows, out.n_cols,
-                      0, 0, 0, out.n_rows, out.n_cols,
-                      in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
+  coot_rt_t::copy(make_proxy(out), make_proxy(in));
   }
 
 
@@ -847,9 +703,9 @@ inline
 void
 subview_cube<eT>::extract(Mat<eT>& out, const subview_cube<eT>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_assert_cube_as_mat(out, in, "copy into matrix", false);
+  coot_conform_assert_cube_as_mat(out, in, "copy into matrix", false);
 
   const uword in_n_rows   = in.n_rows;
   const uword in_n_cols   = in.n_cols;
@@ -857,50 +713,33 @@ subview_cube<eT>::extract(Mat<eT>& out, const subview_cube<eT>& in)
 
   const uword out_vec_state = out.vec_state;
 
-  if(in_n_slices == 1)
+  // set the output matrix to the correct size
+  // (logic borrowed from Armadillo)
+  if (in_n_slices == 1)
     {
     out.set_size(in_n_rows, in_n_cols);
-
-    coot_rt_t::copy_mat(out.get_dev_mem(false), in.get_dev_mem(false),
-                        in_n_rows, in_n_cols,
-                        0, 0, out.n_rows,
-                        in.aux_row1, in.aux_col1, in.m.n_rows);
     }
   else
     {
     if (out_vec_state == 0)
       {
-      // out is a matrix
       if (in_n_cols == 1)
         {
         out.set_size(in_n_rows, in_n_slices);
-
-        coot_rt_t::copy_cube(out.get_dev_mem(false), in.get_dev_mem(false),
-                             in_n_rows, in_n_cols, in_n_slices,
-                             0, 0, 0, out.n_rows, 1,
-                             in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
         }
       else if (in_n_rows == 1)
         {
         out.set_size(in_n_cols, in_n_slices);
-
-        coot_rt_t::copy_cube(out.get_dev_mem(false), in.get_dev_mem(false),
-                             in_n_rows, in_n_cols, in_n_slices,
-                             0, 0, 0, 1, out.n_rows,
-                             in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
         }
       }
     else
       {
-      // out is a vector
       out.set_size(in_n_slices);
-
-      coot_rt_t::copy_cube(out.get_dev_mem(false), in.get_dev_mem(false),
-                           1, 1, in_n_slices,
-                           0, 0, 0, 1, 1,
-                           in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
       }
     }
+
+  // vectorise both objects and then copy is easy
+  coot_rt_t::copy(make_proxy_col(out), make_proxy_col(in));
   }
 
 
@@ -910,57 +749,19 @@ inline
 void
 subview_cube<eT>::plus_inplace(Mat<eT>& out, const subview_cube<eT>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_assert_cube_as_mat(out, in, "addition", true);
+  coot_conform_assert_cube_as_mat(out, in, "addition", true);
 
   const uword in_n_rows   = in.n_rows;
   const uword in_n_cols   = in.n_cols;
   const uword in_n_slices = in.n_slices;
 
-  const uword out_vec_state = out.vec_state;
-
-  if(in_n_slices == 1)
-    {
-    coot_rt_t::eop_mat(threeway_kernel_id::equ_array_plus_array,
-                       out.get_dev_mem(false), out.get_dev_mem(false), in.get_dev_mem(false),
-                       in_n_rows, in_n_cols,
-                       0, 0, out.n_rows,
-                       0, 0, out.n_rows,
-                       in.aux_row1, in.aux_col1, in.m.n_rows);
-    }
-  else
-    {
-    if (out_vec_state == 0)
-      {
-      // out is a matrix
-      if (in_n_cols == 1)
-        {
-        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
-                            out.get_dev_mem(false), in.get_dev_mem(false),
-                            in_n_rows, in_n_cols, in_n_slices,
-                            0, 0, 0, out.n_rows, 1,
-                            in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-        }
-      else if (in_n_rows == 1)
-        {
-        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
-                            out.get_dev_mem(false), in.get_dev_mem(false),
-                            in_n_rows, in_n_cols, in_n_slices,
-                            0, 0, 0, 1, out.n_rows,
-                            in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-        }
-      }
-    else
-      {
-      // out is a vector
-      coot_rt_t::eop_cube(threeway_kernel_id::equ_array_plus_array_cube,
-                          out.get_dev_mem(false), in.get_dev_mem(false),
-                          1, 1, in_n_slices,
-                          0, 0, 0, 1, 1,
-                          in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-      }
-    }
+  // if we made it to here, the matrix can always be treated as a cube of size in_n_rows x in_n_cols x in_n_slices
+  // (at least one of those dimensions will be 1);
+  // so, create an alias and perform the operation
+  Cube<eT> out_alias(out.dev_mem, in_n_rows, in_n_cols, in_n_slices);
+  out_alias += in;
   }
 
 
@@ -970,57 +771,19 @@ inline
 void
 subview_cube<eT>::minus_inplace(Mat<eT>& out, const subview_cube<eT>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_assert_cube_as_mat(out, in, "subtraction", true);
+  coot_conform_assert_cube_as_mat(out, in, "subtraction", true);
 
   const uword in_n_rows   = in.n_rows;
   const uword in_n_cols   = in.n_cols;
   const uword in_n_slices = in.n_slices;
 
-  const uword out_vec_state = out.vec_state;
-
-  if(in_n_slices == 1)
-    {
-    coot_rt_t::eop_mat(threeway_kernel_id::equ_array_minus_array,
-                       out.get_dev_mem(false), out.get_dev_mem(false), in.get_dev_mem(false),
-                       in_n_rows, in_n_cols,
-                       0, 0, out.n_rows,
-                       0, 0, out.n_rows,
-                       in.aux_row1, in.aux_col1, in.m.n_rows);
-    }
-  else
-    {
-    if (out_vec_state == 0)
-      {
-      // out is a matrix
-      if (in_n_cols == 1)
-        {
-        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
-                            out.get_dev_mem(false), in.get_dev_mem(false),
-                            in_n_rows, in_n_cols, in_n_slices,
-                            0, 0, 0, out.n_rows, 1,
-                            in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-        }
-      else if (in_n_rows == 1)
-        {
-        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
-                            out.get_dev_mem(false), in.get_dev_mem(false),
-                            in_n_rows, in_n_cols, in_n_slices,
-                            0, 0, 0, 1, out.n_rows,
-                            in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-        }
-      }
-    else
-      {
-      // out is a vector
-      coot_rt_t::eop_cube(threeway_kernel_id::equ_array_minus_array_cube,
-                          out.get_dev_mem(false), in.get_dev_mem(false),
-                          1, 1, in_n_slices,
-                          0, 0, 0, 1, 1,
-                          in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-      }
-    }
+  // if we made it to here, the matrix can always be treated as a cube of size in_n_rows x in_n_cols x in_n_slices
+  // (at least one of those dimensions will be 1);
+  // so, create an alias and perform the operation
+  Cube<eT> out_alias(out.dev_mem, in_n_rows, in_n_cols, in_n_slices);
+  out_alias -= in;
   }
 
 
@@ -1030,57 +793,19 @@ inline
 void
 subview_cube<eT>::schur_inplace(Mat<eT>& out, const subview_cube<eT>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_assert_cube_as_mat(out, in, "element-wise multiplication", true);
+  coot_conform_assert_cube_as_mat(out, in, "element-wise multiplication", true);
 
   const uword in_n_rows   = in.n_rows;
   const uword in_n_cols   = in.n_cols;
   const uword in_n_slices = in.n_slices;
 
-  const uword out_vec_state = out.vec_state;
-
-  if(in_n_slices == 1)
-    {
-    coot_rt_t::eop_mat(threeway_kernel_id::equ_array_mul_array,
-                       out.get_dev_mem(false), out.get_dev_mem(false), in.get_dev_mem(false),
-                       in_n_rows, in_n_cols,
-                       0, 0, out.n_rows,
-                       0, 0, out.n_rows,
-                       in.aux_row1, in.aux_col1, in.m.n_rows);
-    }
-  else
-    {
-    if (out_vec_state == 0)
-      {
-      // out is a matrix
-      if (in_n_cols == 1)
-        {
-        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
-                            out.get_dev_mem(false), in.get_dev_mem(false),
-                            in_n_rows, in_n_cols, in_n_slices,
-                            0, 0, 0, out.n_rows, 1,
-                            in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-        }
-      else if (in_n_rows == 1)
-        {
-        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
-                            out.get_dev_mem(false), in.get_dev_mem(false),
-                            in_n_rows, in_n_cols, in_n_slices,
-                            0, 0, 0, 1, out.n_rows,
-                            in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-        }
-      }
-    else
-      {
-      // out is a vector
-      coot_rt_t::eop_cube(threeway_kernel_id::equ_array_mul_array_cube,
-                          out.get_dev_mem(false), in.get_dev_mem(false),
-                          1, 1, in_n_slices,
-                          0, 0, 0, 1, 1,
-                          in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-      }
-    }
+  // if we made it to here, the matrix can always be treated as a cube of size in_n_rows x in_n_cols x in_n_slices
+  // (at least one of those dimensions will be 1);
+  // so, create an alias and perform the operation
+  Cube<eT> out_alias(out.dev_mem, in_n_rows, in_n_cols, in_n_slices);
+  out_alias %= in;
   }
 
 
@@ -1090,57 +815,19 @@ inline
 void
 subview_cube<eT>::div_inplace(Mat<eT>& out, const subview_cube<eT>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_assert_cube_as_mat(out, in, "division", true);
+  coot_conform_assert_cube_as_mat(out, in, "division", true);
 
   const uword in_n_rows   = in.n_rows;
   const uword in_n_cols   = in.n_cols;
   const uword in_n_slices = in.n_slices;
 
-  const uword out_vec_state = out.vec_state;
-
-  if(in_n_slices == 1)
-    {
-    coot_rt_t::eop_mat(threeway_kernel_id::equ_array_div_array,
-                       out.get_dev_mem(false), out.get_dev_mem(false), in.get_dev_mem(false),
-                       in_n_rows, in_n_cols,
-                       0, 0, out.n_rows,
-                       0, 0, out.n_rows,
-                       in.aux_row1, in.aux_col1, in.m.n_rows);
-    }
-  else
-    {
-    if (out_vec_state == 0)
-      {
-      // out is a matrix
-      if (in_n_cols == 1)
-        {
-        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
-                            out.get_dev_mem(false), in.get_dev_mem(false),
-                            in_n_rows, in_n_cols, in_n_slices,
-                            0, 0, 0, out.n_rows, 1,
-                            in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-        }
-      else if (in_n_rows == 1)
-        {
-        coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
-                            out.get_dev_mem(false), in.get_dev_mem(false),
-                            in_n_rows, in_n_cols, in_n_slices,
-                            0, 0, 0, 1, out.n_rows,
-                            in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-        }
-      }
-    else
-      {
-      // out is a vector
-      coot_rt_t::eop_cube(threeway_kernel_id::equ_array_div_array_cube,
-                          out.get_dev_mem(false), in.get_dev_mem(false),
-                          1, 1, in_n_slices,
-                          0, 0, 0, 1, 1,
-                          in.aux_row1, in.aux_col1, in.aux_slice1, in.m.n_rows, in.m.n_cols);
-      }
-    }
+  // if we made it to here, the matrix can always be treated as a cube of size in_n_rows x in_n_cols x in_n_slices
+  // (at least one of those dimensions will be 1);
+  // so, create an alias and perform the operation
+  Cube<eT> out_alias(out.dev_mem, in_n_rows, in_n_cols, in_n_slices);
+  out_alias /= in;
   }
 
 
@@ -1150,19 +837,12 @@ inline
 void
 subview_cube<eT>::clamp(const eT min_val, const eT max_val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (min_val > max_val), "clamp(): min_val must be less than max_val" );
+  coot_conform_check( (min_val > max_val), "clamp(): min_val must be less than max_val" );
 
-  // iterate over slices individually (this is not the best possible approach!)
-  for (uword s = 0; s < n_slices; ++s)
-    {
-    coot_rt_t::clamp(m.dev_mem, m.dev_mem,
-                     min_val, max_val,
-                     n_rows, n_cols,
-                     (aux_slice1 + s) * m.n_elem_slice + aux_row1, aux_col1, m.n_rows,
-                     (aux_slice1 + s) * m.n_elem_slice + aux_row1, aux_col1, m.n_rows);
-    }
+  const eOpCube<subview_cube<eT>, eop_clamp> E(*this, 'j', min_val, max_val);
+  coot_rt_t::copy(make_proxy(*this), make_proxy(E));
   }
 
 
@@ -1172,16 +852,9 @@ inline
 void
 subview_cube<eT>::fill(const eT val)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  // iterate over slices individually (this is not the best possible approach!)
-  for (uword s = 0; s < n_slices; ++s)
-    {
-    coot_rt_t::fill(m.dev_mem,
-                    val,
-                    n_rows, n_cols,
-                    (aux_slice1 + s) * m.n_elem_slice + aux_row1, aux_col1, m.n_rows);
-    }
+  coot_rt_t::fill(make_proxy(*this), val);
   }
 
 
@@ -1191,7 +864,7 @@ inline
 void
 subview_cube<eT>::zeros()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   fill(eT(0));
   }
@@ -1203,9 +876,19 @@ inline
 void
 subview_cube<eT>::ones()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   fill(eT(1));
+  }
+
+
+
+template<typename eT>
+inline
+bool
+subview_cube<eT>::is_empty() const
+  {
+  return (n_elem == 0);
   }
 
 
@@ -1253,7 +936,7 @@ inline
 MatValProxy<eT>
 subview_cube<eT>::operator()(const uword i)
   {
-  coot_debug_check( (i >= n_elem), "subview_cube::operator(): index out of bounds" );
+  coot_conform_check_bounds( (i >= n_elem), "subview_cube::operator(): index out of bounds" );
 
   const uword in_slice = i / n_elem_slice;
   const uword offset   = in_slice * n_elem_slice;
@@ -1274,7 +957,7 @@ inline
 eT
 subview_cube<eT>::operator()(const uword i) const
   {
-  coot_debug_check( (i >= n_elem), "subview_cube::operator(): index out of bounds" );
+  coot_conform_check_bounds( (i >= n_elem), "subview_cube::operator(): index out of bounds" );
 
   const uword in_slice = i / n_elem_slice;
   const uword offset   = in_slice * n_elem_slice;
@@ -1295,7 +978,7 @@ coot_inline
 MatValProxy<eT>
 subview_cube<eT>::operator()(const uword in_row, const uword in_col, const uword in_slice)
   {
-  coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols) || (in_slice >= n_slices)), "subview_cube::operator(): index out of bounds" );
+  coot_conform_check_bounds( ((in_row >= n_rows) || (in_col >= n_cols) || (in_slice >= n_slices)), "subview_cube::operator(): index out of bounds" );
 
   const uword index = (in_slice + aux_slice1)*m.n_elem_slice + (in_col + aux_col1)*m.n_rows + aux_row1 + in_row;
 
@@ -1309,7 +992,7 @@ coot_inline
 eT
 subview_cube<eT>::operator()(const uword in_row, const uword in_col, const uword in_slice) const
   {
-  coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols) || (in_slice >= n_slices)), "subview_cube::operator(): index out of bounds" );
+  coot_conform_check_bounds( ((in_row >= n_rows) || (in_col >= n_cols) || (in_slice >= n_slices)), "subview_cube::operator(): index out of bounds" );
 
   const uword index = (in_slice + aux_slice1)*m.n_elem_slice + (in_col + aux_col1)*m.n_rows + aux_row1 + in_row;
 
@@ -1323,7 +1006,7 @@ coot_inline
 MatValProxy<eT>
 subview_cube<eT>::at(const uword in_row, const uword in_col, const uword in_slice)
   {
-  coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols) || (in_slice >= n_slices)), "subview_cube::operator(): index out of bounds" );
+  coot_conform_check_bounds( ((in_row >= n_rows) || (in_col >= n_cols) || (in_slice >= n_slices)), "subview_cube::operator(): index out of bounds" );
 
   const uword index = (in_slice + aux_slice1)*m.n_elem_slice + (in_col + aux_col1)*m.n_rows + aux_row1 + in_row;
 
@@ -1337,7 +1020,7 @@ coot_inline
 eT
 subview_cube<eT>::at(const uword in_row, const uword in_col, const uword in_slice) const
   {
-  coot_debug_check( ((in_row >= n_rows) || (in_col >= n_cols) || (in_slice >= n_slices)), "subview_cube::operator(): index out of bounds" );
+  coot_conform_check_bounds( ((in_row >= n_rows) || (in_col >= n_cols) || (in_slice >= n_slices)), "subview_cube::operator(): index out of bounds" );
 
   const uword index = (in_slice + aux_slice1)*m.n_elem_slice + (in_col + aux_col1)*m.n_rows + aux_row1 + in_row;
 
@@ -1351,7 +1034,7 @@ inline
 eT
 subview_cube<eT>::front() const
   {
-  coot_debug_check( (n_elem == 0), "subview_cube::front(): matrix is empty" );
+  coot_conform_check( (n_elem == 0), "subview_cube::front(): matrix is empty" );
 
   return m.at(aux_row1, aux_col1, aux_slice1);
   }
@@ -1363,7 +1046,7 @@ inline
 eT
 subview_cube<eT>::back() const
   {
-  coot_debug_check( (n_elem == 0), "subview:_cube:back(): matrix is empty" );
+  coot_conform_check( (n_elem == 0), "subview:_cube:back(): matrix is empty" );
 
   return m.at(aux_row1 + n_rows - 1, aux_col1 + n_cols - 1, aux_slice1 + n_slices - 1);
   }

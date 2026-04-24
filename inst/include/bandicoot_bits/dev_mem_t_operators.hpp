@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// 
+//
 // Copyright 2024 Ryan Curtin (https://www.ratml.org)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -78,8 +78,30 @@ inline
 bool
 operator==(const dev_mem_t<eT>& a, const dev_mem_t<eT>& b)
   {
-  // Regardless of backend we can just do a full equality check here (since the offset will be 0 for CUDA devices).
+  #if defined(COOT_USE_VULKAN)
+  if (get_rt().backend == VULKAN_BACKEND)
+    {
+    return (a.vk_mem_ptr.buffer == b.vk_mem_ptr.buffer) &&
+           (a.vk_mem_ptr.memory == b.vk_mem_ptr.memory) &&
+           (a.vk_mem_ptr.offset == b.vk_mem_ptr.offset);
+    }
+  #endif
   return (a.cl_mem_ptr == b.cl_mem_ptr);
+  }
+
+
+
+template<typename eT1, typename eT2>
+inline
+typename
+enable_if2
+  <
+  is_same_type<eT1, eT2>::no,
+  bool
+  >::result
+operator==(const dev_mem_t<eT1>& a, const dev_mem_t<eT2>& b)
+  {
+  return false;
   }
 
 
@@ -89,7 +111,22 @@ inline
 bool
 operator!=(const dev_mem_t<eT>& a, const dev_mem_t<eT>& b)
   {
-  return (a.cl_mem_ptr != b.cl_mem_ptr);
+  return !(a == b);
+  }
+
+
+
+template<typename eT1, typename eT2>
+inline
+typename
+enable_if2
+  <
+  is_same_type<eT1, eT2>::no,
+  bool
+  >::result
+operator!=(const dev_mem_t<eT1>& a, const dev_mem_t<eT2>& b)
+  {
+  return true;
   }
 
 
@@ -107,6 +144,11 @@ operator+(const dev_mem_t<eT>& a, const size_t b)
   else if (get_rt().backend == CUDA_BACKEND)
     {
     result.cuda_mem_ptr = a.cuda_mem_ptr + b;
+    }
+  else if (get_rt().backend == VULKAN_BACKEND)
+    {
+    result.vk_mem_ptr = a.vk_mem_ptr;
+    result.vk_mem_ptr.offset += b;
     }
 
   return result;
@@ -128,6 +170,11 @@ operator-(const dev_mem_t<eT>& a, const size_t b)
     {
     result.cuda_mem_ptr = a.cuda_mem_ptr - b;
     }
+  else if (get_rt().backend == VULKAN_BACKEND)
+    {
+    result.vk_mem_ptr = a.vk_mem_ptr;
+    result.vk_mem_ptr.offset = (b > a.vk_mem_ptr.offset) ? 0 : a.vk_mem_ptr.offset - b;
+    }
 
   return result;
   }
@@ -147,6 +194,10 @@ operator+=(dev_mem_t<eT>& a, const size_t b)
     {
     a.cuda_mem_ptr += b;
     }
+  else if (get_rt().backend == VULKAN_BACKEND)
+    {
+    a.vk_mem_ptr.offset += b;
+    }
 
   return a;
   }
@@ -165,6 +216,10 @@ operator-=(dev_mem_t<eT>& a, const size_t b)
   else if (get_rt().backend == CUDA_BACKEND)
     {
     a.cuda_mem_ptr -= b;
+    }
+  else if (get_rt().backend == VULKAN_BACKEND)
+    {
+    a.vk_mem_ptr.offset = (b > a.vk_mem_ptr.offset) ? 0 : a.vk_mem_ptr.offset - b;
     }
 
   return a;

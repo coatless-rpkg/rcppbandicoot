@@ -20,9 +20,9 @@ inline
 bool
 all_vec(const dev_mem_t<eT1> mem, const uword n_elem, const eT2 val, const twoway_kernel_id::enum_id num, const twoway_kernel_id::enum_id num_small)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::all_vec(): CUDA runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::all_vec(): CUDA runtime not valid" );
 
   CUfunction k = get_rt().cuda_rt.get_kernel<eT2, eT1>(num);
   CUfunction k_small = get_rt().cuda_rt.get_kernel<eT2, eT1>(num_small);
@@ -49,9 +49,9 @@ inline
 void
 all(dev_mem_t<uword> out_mem, const dev_mem_t<eT1> in_mem, const uword n_rows, const uword n_cols, const eT2 val, const twoway_kernel_id::enum_id num, const bool colwise)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::all(): CUDA runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::all(): CUDA runtime not valid" );
 
   CUfunction k = get_rt().cuda_rt.get_kernel<eT2, eT1>(num);
 

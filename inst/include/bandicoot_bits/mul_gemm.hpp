@@ -29,7 +29,7 @@ class gemm
   void
   apply( Mat<eT>& C, const Mat<eT>& A, const Mat<eT>& B, const eT alpha = eT(1), const eT beta = eT(0) )
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     const eT local_alpha = (use_alpha) ? alpha : eT(1);
     const eT local_beta  = (use_beta)  ? beta  : eT(0);
@@ -53,7 +53,7 @@ class gemm
   void
   apply( Mat<eT>& C, const subview<eT>& A, const Mat<eT>& B, const eT alpha = eT(1), const eT beta = eT(0) )
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     const eT local_alpha = (use_alpha) ? alpha : eT(1);
     const eT local_beta  = (use_beta)  ? beta  : eT(0);
@@ -77,7 +77,7 @@ class gemm
   void
   apply( Mat<eT>& C, const Mat<eT>& A, const subview<eT>& B, const eT alpha = eT(1), const eT beta = eT(0) )
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     const eT local_alpha = (use_alpha) ? alpha : eT(1);
     const eT local_beta  = (use_beta)  ? beta  : eT(0);
@@ -101,7 +101,7 @@ class gemm
   void
   apply( Mat<eT>& C, const subview<eT>& A, const subview<eT>& B, const eT alpha = eT(1), const eT beta = eT(0) )
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     const eT local_alpha = (use_alpha) ? alpha : eT(1);
     const eT local_beta  = (use_beta)  ? beta  : eT(0);

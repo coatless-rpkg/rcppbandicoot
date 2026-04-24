@@ -42,7 +42,7 @@ struct gemm
         const uword B_col_offset,
         const uword B_M_n_rows)
     {
-    coot_extra_debug_sigprint();
+    coot_debug_sigprint();
 
     #ifdef COOT_USE_CUDA // should we also have a COOT_USE_CUBLAS?  I don't think it's needed
 

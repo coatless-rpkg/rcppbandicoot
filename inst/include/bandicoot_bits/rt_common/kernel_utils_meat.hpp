@@ -31,7 +31,7 @@ inline
 std::string
 get_kernel_name(const oneway_kernel_id::enum_id num)
   {
-  return type_prefix<eT>() + "_" + oneway_kernel_id::get_names()[num];
+  return rt_type_prefix<eT>() + "_" + oneway_kernel_id::get_names()[num];
   }
 
 
@@ -41,7 +41,7 @@ inline
 std::string
 get_kernel_name(const oneway_real_kernel_id::enum_id num)
   {
-  return type_prefix<eT>() + "_" + oneway_real_kernel_id::get_names()[num];
+  return rt_type_prefix<eT>() + "_" + oneway_real_kernel_id::get_names()[num];
   }
 
 
@@ -51,7 +51,7 @@ inline
 std::string
 get_kernel_name(const oneway_integral_kernel_id::enum_id num)
   {
-  return type_prefix<eT>() + "_" + oneway_integral_kernel_id::get_names()[num];
+  return rt_type_prefix<eT>() + "_" + oneway_integral_kernel_id::get_names()[num];
   }
 
 
@@ -61,15 +61,5 @@ inline
 std::string
 get_kernel_name(const twoway_kernel_id::enum_id num)
   {
-  return type_prefix<eT2>() + "_" + type_prefix<eT1>() + "_" + twoway_kernel_id::get_names()[num];
-  }
-
-
-
-template<typename eT1, typename eT2, typename eT3>
-inline
-std::string
-get_kernel_name(const threeway_kernel_id::enum_id num)
-  {
-  return type_prefix<eT3>() + "_" + type_prefix<eT2>() + "_" + type_prefix<eT1>() + "_" + threeway_kernel_id::get_names()[num];
+  return rt_type_prefix<eT2>() + "_" + rt_type_prefix<eT1>() + "_" + twoway_kernel_id::get_names()[num];
   }

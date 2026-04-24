@@ -22,7 +22,7 @@ inline
 void
 fill_randu(dev_mem_t<eT> dest, const uword n)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n == 0) { return; }
 
@@ -30,26 +30,39 @@ fill_randu(dev_mem_t<eT> dest, const uword n)
   // We'll generate numbers using a floating-point type of the same width, then pass over it to truncate and cast back to the right type.
   if (is_same_type<eT, u32>::yes || is_same_type<eT, s32>::yes)
     {
-    dev_mem_t<float> reinterpreted_mem;
+    dev_mem_t<float> reinterpreted_mem({{ NULL, 0 }});
     reinterpreted_mem.cuda_mem_ptr = (float*) dest.cuda_mem_ptr;
     fill_randu(reinterpreted_mem, n);
-    copy_mat(dest, reinterpreted_mem, n, 1, 0, 0, n, 0, 0, n);
+
+    // TODO: when randu is replaced with a generated Proxy kernel this can be fixed
+    const Col<eT> dest_alias(dest, n);
+    const Col<float> src_alias(reinterpreted_mem, n);
+    copy(make_proxy(dest_alias), make_proxy(src_alias));
     }
   else if (is_same_type<eT, u64>::yes || is_same_type<eT, s64>::yes)
     {
-    dev_mem_t<double> reinterpreted_mem;
+    dev_mem_t<double> reinterpreted_mem({{ NULL, 0 }});
     reinterpreted_mem.cuda_mem_ptr = (double*) dest.cuda_mem_ptr;
     fill_randu(reinterpreted_mem, n);
-    copy_mat(dest, reinterpreted_mem, n, 1, 0, 0, n, 0, 0, n);
+
+    // TODO: when randu is replaced with a generated Proxy kernel this can be fixed
+    const Col<eT> dest_alias(dest, n);
+    const Col<double> src_alias(reinterpreted_mem, n);
+    copy(make_proxy(dest_alias), make_proxy(src_alias));
     }
   else if (!is_real<eT>::value || is_same_type<eT, fp16>::yes)
     {
     // Unfortunately allocating a temporary matrix is our best strategy here.
-    dev_mem_t<float> tmp_mem;
-    tmp_mem.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<float>(n);
+    dev_mem_t<float>            tmp_mem({{ NULL, 0 }});
+    runtime_t::mem_array<float> tmp_mem_array(n);
+
+    tmp_mem.cuda_mem_ptr = tmp_mem_array.memptr();
     fill_randu(tmp_mem, n);
-    copy_mat(dest, tmp_mem, n, 1, 0, 0, n, 0, 0, n);
-    get_rt().cuda_rt.release_memory(tmp_mem.cuda_mem_ptr);
+
+    // TODO: when randu is replaced with a generated Proxy kernel this can be fixed
+    const Col<eT> dest_alias(dest, n);
+    const Col<float> src_alias(tmp_mem, n);
+    copy(make_proxy(dest_alias), make_proxy(src_alias));
     }
   else
     {
@@ -66,7 +79,7 @@ inline
 void
 fill_randu(dev_mem_t<float> dest, const uword n)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n == 0) { return; }
 
@@ -81,7 +94,7 @@ inline
 void
 fill_randu(dev_mem_t<double> dest, const uword n)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n == 0) { return; }
 
@@ -96,7 +109,7 @@ inline
 void
 fill_randn(dev_mem_t<eT> dest, const uword n, const double mu, const double sd)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n == 0) { return; }
 
@@ -104,26 +117,39 @@ fill_randn(dev_mem_t<eT> dest, const uword n, const double mu, const double sd)
   // We'll generate numbers using a floating-point type of the same width, then pass over it to truncate and cast back to the right type.
   if (is_same_type<eT, u32>::yes || is_same_type<eT, s32>::yes)
     {
-    dev_mem_t<float> reinterpreted_mem;
+    dev_mem_t<float> reinterpreted_mem({{ NULL, 0 }});
     reinterpreted_mem.cuda_mem_ptr = (float*) dest.cuda_mem_ptr;
     fill_randn(reinterpreted_mem, n, mu, sd);
-    copy_mat(dest, reinterpreted_mem, n, 1, 0, 0, n, 0, 0, n);
+
+    // TODO: when randn is replaced with a generated Proxy kernel this can be fixed
+    const Col<eT> dest_alias(dest, n);
+    const Col<float> src_alias(reinterpreted_mem, n);
+    copy(make_proxy(dest_alias), make_proxy(src_alias));
     }
   else if (is_same_type<eT, u64>::yes || is_same_type<eT, s64>::yes)
     {
-    dev_mem_t<double> reinterpreted_mem;
+    dev_mem_t<double> reinterpreted_mem({{ NULL, 0 }});
     reinterpreted_mem.cuda_mem_ptr = (double*) dest.cuda_mem_ptr;
     fill_randn(reinterpreted_mem, n, mu, sd);
-    copy_mat(dest, reinterpreted_mem, n, 1, 0, 0, n, 0, 0, n);
+
+    // TODO: when randn is replaced with a generated Proxy kernel this can be fixed
+    const Col<eT> dest_alias(dest, n);
+    const Col<double> src_alias(reinterpreted_mem, n);
+    copy(make_proxy(dest_alias), make_proxy(src_alias));
     }
   else if (!is_real<eT>::value || is_same_type<eT, fp16>::yes)
     {
     // Unfortunately allocating a temporary matrix is our best strategy here.
-    dev_mem_t<float> tmp_mem;
-    tmp_mem.cuda_mem_ptr = get_rt().cuda_rt.acquire_memory<float>(n);
+    dev_mem_t<float>            tmp_mem({{ NULL, 0 }});
+    runtime_t::mem_array<float> tmp_mem_array(n);
+
+    tmp_mem.cuda_mem_ptr = tmp_mem_array.memptr();
     fill_randn(tmp_mem, n, mu, sd);
-    copy_mat(dest, tmp_mem, n, 1, 0, 0, n, 0, 0, n);
-    get_rt().cuda_rt.release_memory(tmp_mem.cuda_mem_ptr);
+
+    // TODO: when randn is replaced with a generated Proxy kernel this can be fixed
+    const Col<eT> dest_alias(dest, n);
+    const Col<float> src_alias(tmp_mem, n);
+    copy(make_proxy(dest_alias), make_proxy(src_alias));
     }
   else
     {
@@ -140,7 +166,7 @@ inline
 void
 fill_randn(dev_mem_t<float> dest, const uword n, const double mu, const double sd)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n == 0) { return; }
 
@@ -155,7 +181,7 @@ inline
 void
 fill_randn(dev_mem_t<double> dest, const uword n, const double mu, const double sd)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (n == 0) { return; }
 
@@ -171,7 +197,7 @@ inline
 void
 fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const typename enable_if<is_same_type<typename promote_type<typename uint_type<eT>::result, u32>::result, u32>::yes>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   if (n == 0) { return; }
@@ -181,14 +207,14 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const 
   //
   // This overload uses curandGenerate(), which makes 32-bit unsigned integers.
 
-  dev_mem_t<u32> u32_dest;
+  dev_mem_t<u32> u32_dest({{ NULL, 0 }});
   u32_dest.cuda_mem_ptr = (u32*) dest.cuda_mem_ptr;
 
   curandStatus_t result = coot_wrapper(curandGenerate)(get_rt().cuda_rt.xorwow_rand, u32_dest.cuda_mem_ptr, n / (sizeof(u32) / sizeof(eT)));
   coot_check_curand_error(result, "coot::cuda::fill_randi(): curandGenerate() failed");
 
   typedef typename uint_type<eT>::result ueT;
-  dev_mem_t<ueT> ueT_dest;
+  dev_mem_t<ueT> ueT_dest({{ NULL, 0 }});
   ueT_dest.cuda_mem_ptr = (ueT*) dest.cuda_mem_ptr;
 
   // 32-bit types may have a smaller effective range.  (But not if they are floating point.)
@@ -198,30 +224,25 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const 
   // [0, ueT_MAX] --> [0, range] (only needed if range != ueT_MAX)
   if (range != Datum<ueT>::max)
     {
-    eop_scalar(twoway_kernel_id::equ_array_mod_scalar,
-               ueT_dest, ueT_dest,
-               (ueT) (range + 1), (ueT) (range + 1),
-               n, 1, 1,
-               0, 0, 0, n, 1,
-               0, 0, 0, n, 1);
+    Mat<ueT> ueT_dest_alias(ueT_dest, n, 1);
+    eop_modulo::apply(ueT_dest_alias, eOp<Mat<ueT>, eop_modulo>(ueT_dest_alias, (ueT) (range + 1)));
     }
 
   // Now cast it to the correct type, if needed.
   if (is_same_type<eT, ueT>::no)
     {
-    copy_mat(dest, ueT_dest, n, 1, 0, 0, n, 0, 0, n);
+    // TODO: when randi uses Proxy arguments, this can be cleaned up
+    const Col<eT> dest_alias(dest, n);
+    const Col<ueT> src_alias(ueT_dest, n);
+    copy(make_proxy(dest_alias), make_proxy(src_alias));
     }
 
   // [0, range] --> [lo, hi]
   // We do this after the casting, in case eT is a signed type and lo < 0.
   if (lo != 0)
     {
-    eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
-               dest, dest,
-               (eT) lo, (eT) 0,
-               n, 1, 1,
-               0, 0, 0, n, 1,
-               0, 0, 0, n, 1);
+    Mat<eT> dest_alias(dest, n, 1);
+    dest_alias += (eT) lo;
     }
   }
 
@@ -233,7 +254,7 @@ inline
 void
 fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const typename enable_if<is_same_type<typename uint_type<eT>::result, u64>::yes>::result* junk = nullptr)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   if (n == 0) { return; }
@@ -241,7 +262,7 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const 
   // Strategy: generate completely random bits in [0, u64_MAX]; modulo down to [0, range]; add lo to finally get [lo, hi];
   // then make sure the return type is correct.
 
-  dev_mem_t<u64> u64_dest;
+  dev_mem_t<u64> u64_dest({{ NULL, 0 }});
   u64_dest.cuda_mem_ptr = (u64*) dest.cuda_mem_ptr;
 
   const u64 range = (hi - lo);
@@ -252,29 +273,24 @@ fill_randi(dev_mem_t<eT> dest, const uword n, const int lo, const int hi, const 
   // [0, u64_MAX] --> [0, range] (only needed if range != u64_MAX)
   if (range != Datum<u64>::max)
     {
-    eop_scalar(twoway_kernel_id::equ_array_mod_scalar,
-               u64_dest, u64_dest,
-               (u64) range + 1, (u64) range + 1,
-               n, 1, 1,
-               0, 0, 0, n, 1,
-               0, 0, 0, n, 1);
+    Mat<u64> u64_dest_alias(u64_dest, n, 1);
+    eop_modulo::apply(u64_dest_alias, eOp<Mat<u64>, eop_modulo>(u64_dest_alias, (u64) (range + 1)));
     }
 
   // Now cast it to the correct type, if needed.
   if (is_same_type<eT, u64>::no)
     {
-    copy_mat(dest, u64_dest, n, 1, 0, 0, n, 0, 0, n);
+    // TODO: when randi uses Proxy arguments, this can be cleaned up
+    const Col<eT> dest_alias(dest, n);
+    const Col<u64> src_alias(u64_dest, n);
+    copy(make_proxy(dest_alias), make_proxy(src_alias));
     }
 
   // [0, range] --> [lo, hi]
   // We do this after the casting, in case eT is a signed type and lo < 0.
   if (lo != 0)
     {
-    eop_scalar(twoway_kernel_id::equ_array_plus_scalar,
-               dest, dest,
-               (eT) lo, (eT) 0,
-               n, 1, 1,
-               0, 0, 0, n, 1,
-               0, 0, 0, n, 1);
+    Mat<eT> dest_alias(dest, n, 1);
+    dest_alias += (eT) lo;
     }
   }

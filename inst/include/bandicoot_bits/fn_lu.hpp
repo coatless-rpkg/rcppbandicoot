@@ -28,10 +28,10 @@ lu
   const typename coot_real_only<typename T1::elem_type>::result* junk = nullptr
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
-  coot_debug_check( (&L) == (&U), "lu(): L and U are the same object" );
+  coot_conform_check( (&L) == (&U), "lu(): L and U are the same object" );
 
   SizeProxy<T1> S(X.get_ref());
 
@@ -75,7 +75,7 @@ lu
                                                              in_n_cols);
   if (!std::get<0>(result))
     {
-    coot_debug_warn_level(3, "lu(): " + std::get<1>(result));
+    coot_warn(3, "lu(): " + std::get<1>(result));
     }
 
   return std::get<0>(result);
@@ -95,10 +95,10 @@ lu
   const typename coot_real_only<typename T1::elem_type>::result* junk = nullptr
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
-  coot_debug_check( (&L) == (&U), "lu(): L and U are the same object" );
+  coot_conform_check( (&L) == (&U), "lu(): L and U are the same object" );
 
   SizeProxy<T1> S(X.get_ref());
 
@@ -144,7 +144,7 @@ lu
                                                              in_n_cols);
   if (!std::get<0>(result))
     {
-    coot_debug_warn_level(3, "lu(): " + std::get<1>(result));
+    coot_warn(3, "lu(): " + std::get<1>(result));
     }
 
   return std::get<0>(result);

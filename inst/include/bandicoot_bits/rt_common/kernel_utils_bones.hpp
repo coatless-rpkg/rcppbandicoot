@@ -22,4 +22,3 @@ template<typename eT>                              std::string get_kernel_name(c
 template<typename eT>                              std::string get_kernel_name(const oneway_real_kernel_id::enum_id num);
 template<typename eT>                              std::string get_kernel_name(const oneway_integral_kernel_id::enum_id num);
 template<typename eT1, typename eT2>               std::string get_kernel_name(const twoway_kernel_id::enum_id num);
-template<typename eT1, typename eT2, typename eT3> std::string get_kernel_name(const threeway_kernel_id::enum_id num);

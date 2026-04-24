@@ -22,7 +22,7 @@ inline
 typename enable_if2< is_coot_type<T1>::value && resolves_to_vector<T1>::value == true, uword>::result
 index_max(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtop_index_max::apply_direct(X);
   }
@@ -35,7 +35,7 @@ coot_inline
 typename enable_if2< is_coot_type<T1>::value && resolves_to_vector<T1>::value == false, const mtOp<uword, T1, mtop_index_max> >::result
 index_max(const T1& X)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<uword, T1, mtop_index_max>(X, 0, 0);
   }
@@ -48,7 +48,7 @@ coot_inline
 typename enable_if2< is_coot_type<T1>::value, const mtOp<uword, T1, mtop_index_max> >::result
 index_max(const T1& X, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOp<uword, T1, mtop_index_max>(X, dim, 0);
   }
@@ -84,7 +84,7 @@ coot_inline
 typename enable_if2< is_coot_cube_type<T1>::value, const mtOpCube<uword, T1, mtop_index_max> >::result
 index_max(const T1& X, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return mtOpCube<uword, T1, mtop_index_max>(X, dim, 0);
   }

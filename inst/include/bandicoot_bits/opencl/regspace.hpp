@@ -20,9 +20,9 @@ inline
 void
 regspace(dev_mem_t<eT> mem, const uword mem_incr, const eT start, const eT delta, const eT end, const uword num, const bool desc)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cl_rt.is_valid() == false), "opencl::regspace(): OpenCL runtime not valid");
+  coot_check_runtime_error( (get_rt().cl_rt.is_valid() == false), "opencl::regspace(): OpenCL runtime not valid");
 
   cl_kernel kernel = desc ? get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::regspace_desc) 
                           : get_rt().cl_rt.get_kernel<eT>(oneway_kernel_id::linspace);

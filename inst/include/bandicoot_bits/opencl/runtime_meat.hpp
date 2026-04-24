@@ -17,7 +17,7 @@
 inline
 runtime_t::~runtime_t()
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   internal_cleanup();
 
@@ -29,7 +29,7 @@ runtime_t::~runtime_t()
 inline
 runtime_t::runtime_t()
   {
-  coot_extra_debug_sigprint_this(this);
+  coot_debug_sigprint_this(this);
 
   valid   = false;
   plt_id  = NULL;
@@ -44,7 +44,7 @@ inline
 bool
 runtime_t::init(const bool manual_selection, const uword wanted_platform, const uword wanted_device, const bool print_info)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   internal_cleanup();
   valid = false;
@@ -52,22 +52,22 @@ runtime_t::init(const bool manual_selection, const uword wanted_platform, const 
   bool status = false;
 
   status = search_devices(plt_id, dev_id, manual_selection, wanted_platform, wanted_device, print_info);
-  if(status == false)  { coot_debug_warn("coot::cl_rt.init(): couldn't find a suitable device"); return false; }
+  if(status == false)  { coot_warn(1, "coot::cl_rt.init(): couldn't find a suitable device"); return false; }
 
   interrogate_device(dev_info, plt_id, dev_id, print_info);
 
-  if(dev_info.opencl_ver < 120)  { coot_debug_warn("coot::cl_rt.init(): selected device has OpenCL version < 1.2"); return false; }
+  if(dev_info.opencl_ver < 120)  { coot_warn(1, "coot::cl_rt.init(): selected device has OpenCL version < 1.2"); return false; }
 
   status = setup_queue(ctxt, cq, plt_id, dev_id);
-  if(status == false)  { coot_debug_warn("coot::cl_rt.init(): couldn't setup queue"); return false; }
+  if(status == false)  { coot_warn(1, "coot::cl_rt.init(): couldn't setup queue"); return false; }
 
   // setup clBLAS
   #if defined(COOT_USE_CLBLAS)
-  coot_extra_debug_warn("coot::cl_rt.init(): begin clBLAS setup");
+  coot_debug_print("coot::cl_rt.init(): begin clBLAS setup");
   cl_int clblas_status = coot_wrapper(clblasSetup)();
-  coot_extra_debug_warn("coot::cl_rt.init(): finished clBLAS setup");
+  coot_debug_print("coot::cl_rt.init(): finished clBLAS setup");
 
-  if(clblas_status != CL_SUCCESS)  { coot_debug_warn("coot::cl_rt.init(): couldn't setup clBLAS"); return false; }
+  if(clblas_status != CL_SUCCESS)  { coot_warn(1, "coot::cl_rt.init(): couldn't setup clBLAS"); return false; }
   #endif
 
   if(status == false)
@@ -98,6 +98,7 @@ runtime_t::init(const bool manual_selection, const uword wanted_platform, const 
   // Initialize the preamble we will use when compiling kernels.
   const bool need_subgroup_extension = (dev_info.opencl_ver < 210) && has_subgroups();
   src_preamble = kernel_src::init_src_preamble(has_float64(), has_float16(), has_sizet64(), has_subgroups(), get_subgroup_size(), must_synchronise_subgroups(), need_subgroup_extension);
+  src_prelims = kernel_src::init_src_prelims();
 
   // Now set up the XORWOW RNGs for float and double.
   // For type eT, we must store 6 * sizeof(eT) * num_rng_threads for each RNG,
@@ -133,9 +134,9 @@ inline
 void
 runtime_t::lock()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_extra_debug_print("coot::cl_rt: calling mutex.lock()");
+  coot_debug_print("coot::cl_rt: calling mutex.lock()");
   mutex.lock();
   }
 
@@ -146,9 +147,9 @@ inline
 void
 runtime_t::unlock()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_extra_debug_print("coot::cl_rt: calling mutex.unlock()");
+  coot_debug_print("coot::cl_rt: calling mutex.unlock()");
   mutex.unlock();
   }
 
@@ -158,7 +159,7 @@ inline
 void
 runtime_t::internal_cleanup()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(cq != NULL)  { coot_wrapper(clFinish)(cq); }
 
@@ -184,7 +185,7 @@ inline
 bool
 runtime_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, const bool manual_selection, const uword wanted_platform, const uword wanted_device, const bool print_info) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // first, get a list of platforms and the devices on each platform
 
@@ -195,7 +196,7 @@ runtime_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, 
 
   if((status != CL_SUCCESS) || (n_platforms == 0))
     {
-    coot_debug_warn("coot::cl_rt.init(): no OpenCL platforms available");
+    coot_warn(1, "coot::cl_rt.init(): no OpenCL platforms available");
     return false;
     }
 
@@ -205,7 +206,7 @@ runtime_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, 
 
   if(status != CL_SUCCESS)
     {
-    coot_debug_warn("coot::cl_rt.init(): couldn't get info on OpenCL platforms");
+    coot_warn(1, "coot::cl_rt.init(): couldn't get info on OpenCL platforms");
     return false;
     }
 
@@ -276,7 +277,7 @@ runtime_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, 
     {
     if(wanted_platform >= platform_ids.size())
       {
-      coot_debug_warn("coot::cl_rt.init(): invalid platform number");
+      coot_warn(1, "coot::cl_rt.init(): invalid platform number");
       return false;
       }
 
@@ -284,7 +285,7 @@ runtime_t::search_devices(cl_platform_id& out_plt_id, cl_device_id& out_dev_id, 
 
     if(wanted_device >= local_device_ids.size())
       {
-      coot_debug_warn("coot::cl_rt.init(): invalid device number");
+      coot_warn(1, "coot::cl_rt.init(): invalid device number");
       return false;
       }
 
@@ -351,7 +352,7 @@ inline
 bool
 runtime_t::interrogate_device(runtime_dev_info& out_info, cl_platform_id in_plt_id, cl_device_id in_dev_id, const bool print_info) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   cl_char dev_name1[1024]; // TODO: use dynamic memory allocation (podarray or std::vector)
   cl_char dev_name2[1024];
@@ -554,7 +555,7 @@ runtime_t::interrogate_device(runtime_dev_info& out_info, cl_platform_id in_plt_
 
   if(status != CL_SUCCESS)
     {
-    coot_debug_warn(coot_cl_error::as_string(status));
+    coot_warn(1, coot_cl_error::as_string(status));
     }
 
   if(tmp_dev_mem != NULL)  { coot_wrapper(clReleaseMemObject   )(tmp_dev_mem); }
@@ -671,7 +672,7 @@ inline
 bool
 runtime_t::setup_queue(cl_context& out_context, cl_command_queue& out_queue, cl_platform_id in_plat_id, cl_device_id in_dev_id) const
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   cl_context_properties prop[3] = { CL_CONTEXT_PLATFORM, cl_context_properties(in_plat_id), 0 };
 
@@ -681,7 +682,7 @@ runtime_t::setup_queue(cl_context& out_context, cl_command_queue& out_queue, cl_
 
   if((status != CL_SUCCESS) || (out_context == NULL))
     {
-    coot_debug_warn(coot_cl_error::as_string(status));
+    coot_warn(1, coot_cl_error::as_string(status));
     return false;
     }
 
@@ -693,7 +694,7 @@ runtime_t::setup_queue(cl_context& out_context, cl_command_queue& out_queue, cl_
 
   if((status != CL_SUCCESS) || (out_queue == NULL))
     {
-    coot_debug_warn(coot_cl_error::as_string(status));
+    coot_warn(1, coot_cl_error::as_string(status));
     return false;
     }
 
@@ -706,7 +707,7 @@ inline
 bool
 runtime_t::load_cached_kernel(const std::string& kernel_name, cl_kernel& kernel)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   const size_t kernel_size = cache::has_cached_kernel(unique_host_device_id, kernel_name);
   if (kernel_size == 0)
@@ -720,7 +721,7 @@ runtime_t::load_cached_kernel(const std::string& kernel_name, cl_kernel& kernel)
   bool status = cache::read_cached_kernel(unique_host_device_id, kernel_name, kernel_buffer);
   if (status == false)
     {
-    coot_debug_warn("coot::opencl::load_cached_kernel(): could not load kernel '" + kernel_name + "' for unique host device id '" + unique_host_device_id + "'");
+    coot_warn(1, "coot::opencl::load_cached_kernel(): could not load kernel '" + kernel_name + "' for unique host device id '" + unique_host_device_id + "'");
     delete[] kernel_buffer;
     return false;
     }
@@ -730,13 +731,13 @@ runtime_t::load_cached_kernel(const std::string& kernel_name, cl_kernel& kernel)
   prog_holder.prog = coot_wrapper(clCreateProgramWithBinary)(ctxt, 1, &dev_id, &kernel_size, (const unsigned char**) &kernel_buffer, &binary_status, &errcode_ret);
   if (errcode_ret != CL_SUCCESS)
     {
-    coot_debug_warn(coot_cl_error::as_string(errcode_ret));
+    coot_warn(1, coot_cl_error::as_string(errcode_ret));
     delete[] kernel_buffer;
     return false;
     }
   else if (binary_status != CL_SUCCESS)
     {
-    coot_debug_warn(coot_cl_error::as_string(binary_status));
+    coot_warn(1, coot_cl_error::as_string(binary_status));
     delete[] kernel_buffer;
     return false;
     }
@@ -752,7 +753,7 @@ runtime_t::load_cached_kernel(const std::string& kernel_name, cl_kernel& kernel)
   kernel = coot_wrapper(clCreateKernel)(prog_holder.prog, kernel_name.c_str(), &errcode_ret);
   if(kernel == NULL)
     {
-    coot_debug_warn("coot::opencl::load_cached_kernel(): couldn't create kernel '" + kernel_name + "': " + coot_cl_error::as_string(errcode_ret));
+    coot_warn(1, "coot::opencl::load_cached_kernel(): couldn't create kernel '" + kernel_name + "': " + coot_cl_error::as_string(errcode_ret));
     return false;
     }
 
@@ -765,9 +766,10 @@ inline
 void
 runtime_t::compile_kernel(const std::string& kernel_name,
                           const std::string& source,
-                          cl_kernel& kernel)
+                          cl_kernel& kernel,
+                          const std::string& extra_options)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // Gather the sources we need to compile.
   runtime_t::program_wrapper prog_holder;  // program_wrapper will automatically call clReleaseProgram() when it goes out of scope
@@ -790,19 +792,41 @@ runtime_t::compile_kernel(const std::string& kernel_name,
     coot_stop_runtime_error("coot::opencl::compile_kernel(): returned program from clCreateProgramWithSource() for kernel '" + kernel_name + "' was NULL");
     }
 
+  #if defined(COOT_DEBUG_PRINT_KERNELS)
+  get_cout_stream() << "opencl::compile_kernel(): compiling kernel " << kernel_name << " with the following options: " << std::endl;
+  get_cout_stream() << std::endl;
+  get_cout_stream() << "  " << build_options << " " << extra_options << std::endl;
+  get_cout_stream() << std::endl;
+  get_cout_stream() << "Kernel source:" << std::endl;
+  get_cout_stream() << std::endl;
+  get_cout_stream() << source;
+  #endif
+
   // Now actually have to build the program first.
-  status = coot_wrapper(clBuildProgram)(prog_holder.prog, 0, NULL, build_options.c_str(), NULL, NULL);
+  if (extra_options.size() > 0)
+    {
+    std::string all_options = build_options + " " + extra_options;
+    status = coot_wrapper(clBuildProgram)(prog_holder.prog, 0, NULL, all_options.c_str(), NULL, NULL);
+    }
+  else
+    {
+    status = coot_wrapper(clBuildProgram)(prog_holder.prog, 0, NULL, build_options.c_str(), NULL, NULL);
+    }
 
   if(status != CL_SUCCESS)
     {
     size_t len = 0;
 
     // Get the length of the error log and then allocate enough space for it.
-    coot_wrapper(clGetProgramBuildInfo)(prog_holder.prog, dev_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &len);
+    status = coot_wrapper(clGetProgramBuildInfo)(prog_holder.prog, dev_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &len);
+    coot_check_cl_error(status, "coot::opencl::compile_kernel(): clGetProgramBuildInfo() size call failed");
     char* buffer = new char[len];
 
-    coot_wrapper(clGetProgramBuildInfo)(prog_holder.prog, dev_id, CL_PROGRAM_BUILD_LOG, len, buffer, NULL);
-    coot_stop_runtime_error("coot::cl_rt.compile_kernel(): couldn't compile kernel '" + kernel_name + "'; output from clGetProgramBuildInfo():", buffer);
+    status = coot_wrapper(clGetProgramBuildInfo)(prog_holder.prog, dev_id, CL_PROGRAM_BUILD_LOG, len, buffer, NULL);
+    coot_check_cl_error(status, "coot::opencl::compile_kernel(): clGetProgramBuildInfo() log copy failed");
+    coot_stop_runtime_error("coot::opencl::compile_kernel(): couldn't compile kernel '" + kernel_name + "'; output from clGetProgramBuildInfo():", buffer,
+        "This is likely an internal Bandicoot bug.  Please recompile with -DCOOT_DEBUG_PRINT_KERNELS, re-run, "
+        "and submit the entire output and source code as a bug report at https://gitlab.com/bandicoot-lib/bandicoot-code/-/issues.");
     }
 
   kernel = coot_wrapper(clCreateKernel)(prog_holder.prog, kernel_name.c_str(), &status);
@@ -813,12 +837,12 @@ runtime_t::compile_kernel(const std::string& kernel_name,
   status = coot_wrapper(clGetProgramInfo)(prog_holder.prog, CL_PROGRAM_BINARY_SIZES, sizeof(size_t), &binary_size, NULL);
   if (status != CL_SUCCESS)
     {
-    coot_debug_warn("coot::opencl::compile_kernel(): clGetProgramInfo() call to get binary size of kernel '" + kernel_name + "'failed: " + coot_cl_error::as_string(status));
+    coot_warn(1, "coot::opencl::compile_kernel(): clGetProgramInfo() call to get binary size of kernel '" + kernel_name + "'failed: " + coot_cl_error::as_string(status));
     return; // Don't keep trying to cache... but we did build the kernel.
     }
   else if (binary_size == 0)
     {
-    coot_debug_warn("coot::opencl::compile_kernel(): reported binary size for kernel '" + kernel_name + "' is 0; not caching");
+    coot_warn(1, "coot::opencl::compile_kernel(): reported binary size for kernel '" + kernel_name + "' is 0; not caching");
     return;
     }
 
@@ -827,14 +851,14 @@ runtime_t::compile_kernel(const std::string& kernel_name,
   status = coot_wrapper(clGetProgramInfo)(prog_holder.prog, CL_PROGRAM_BINARIES, sizeof(size_t), &buffer, NULL);
   if (status != CL_SUCCESS)
     {
-    coot_debug_warn("coot::opencl::compile_kernel(): clGetProgramInfo() call to get binaries for kernel '" + kernel_name + "' failed with " + coot_cl_error::as_string(status));
+    coot_warn(1, "coot::opencl::compile_kernel(): clGetProgramInfo() call to get binaries for kernel '" + kernel_name + "' failed with " + coot_cl_error::as_string(status));
     return;
     }
 
   bool success = cache::cache_kernel(unique_host_device_id, kernel_name, buffer, binary_size);
   if (success == false)
     {
-    coot_debug_warn("coot::opencl::compile_kernel(): could not cache compiled OpenCL kernel " + kernel_name);
+    coot_warn(1, "coot::opencl::compile_kernel(): could not cache compiled OpenCL kernel " + kernel_name);
     }
 
   delete[] buffer;
@@ -946,13 +970,13 @@ inline
 coot_cl_mem
 runtime_t::acquire_memory(const uword n_elem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   coot_check_runtime_error( (valid == false), "coot::cl_rt.acquire_memory(): runtime not valid" );
 
   if(n_elem == 0)  { return coot_cl_mem{ NULL, 0 }; }
 
-  coot_debug_check
+  coot_conform_check
    (
    ( size_t(n_elem) > (Datum<size_t>::max / sizeof(eT)) ),
    "coot::cl_rt.acquire_memory(): requested size is too large"
@@ -974,9 +998,9 @@ inline
 void
 runtime_t::release_memory(coot_cl_mem dev_mem)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (valid == false), "coot::cl_rt not valid" );
+  coot_check_runtime_error( (valid == false), "coot::cl_rt not valid" );
 
   if(dev_mem.ptr)  { coot_wrapper(clReleaseMemObject)(dev_mem.ptr); }
   }
@@ -996,9 +1020,9 @@ inline
 cl_device_id
 runtime_t::get_device()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (valid == false), "coot::cl_rt not valid" );
+  coot_check_runtime_error( (valid == false), "coot::cl_rt not valid" );
 
   return dev_id;
   }
@@ -1009,9 +1033,9 @@ inline
 cl_context
 runtime_t::get_context()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (valid == false), "coot::cl_rt not valid" );
+  coot_check_runtime_error( (valid == false), "coot::cl_rt not valid" );
 
   return ctxt;
   }
@@ -1022,9 +1046,9 @@ inline
 cl_command_queue
 runtime_t::get_cq()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (valid == false), "coot::cl_rt not valid" );
+  coot_check_runtime_error( (valid == false), "coot::cl_rt not valid" );
 
   return cq;
   }
@@ -1035,9 +1059,9 @@ inline
 bool
 runtime_t::create_extra_cq(cl_command_queue& out_queue)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (valid == false), "coot::cl_rt not valid" );
+  coot_check_runtime_error( (valid == false), "coot::cl_rt not valid" );
 
   cl_int status = 0;
 
@@ -1045,7 +1069,7 @@ runtime_t::create_extra_cq(cl_command_queue& out_queue)
 
   if((status != CL_SUCCESS) || (out_queue == NULL))
     {
-    coot_debug_warn(coot_cl_error::as_string(status));
+    coot_warn(1, coot_cl_error::as_string(status));
     return false;
     }
 
@@ -1058,9 +1082,9 @@ inline
 void
 runtime_t::delete_extra_cq(cl_command_queue& in_queue)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (valid == false), "coot::cl_rt not valid" );
+  coot_check_runtime_error( (valid == false), "coot::cl_rt not valid" );
 
   if(in_queue != NULL)
     {
@@ -1072,14 +1096,49 @@ runtime_t::delete_extra_cq(cl_command_queue& in_queue)
 
 
 
+template<kernel_id::enum_id num, typename... ProxyTypes>
+inline
+std::tuple<std::string, std::string>
+runtime_t::generate_kernel()
+  {
+  coot_debug_sigprint();
+
+  // Assemble the list of definitions necessary for the kernel.  This is a one-argument kernel so we just need:
+  //  - COOT_KERNEL_NAME
+  //  - COOT_OBJECT0
+  //  - COOT_OBJECT0_BOUNDS_CHECK2
+  //  - COOT_OBJECT0_AT
+  //
+  // Note that array::data() is not constexpr until C++17 so we have to take the address of the first character.
+  // OpenCL wants all arguments as one space-delimited string, so we will have to collapse what we get from kernel_macros().
+  std::vector<std::string> def_args = kernel_gen::generator<CL_BACKEND, num, typename ProxyTypes::held_type...>::kernel_macros();
+  std::string macros;
+  for (const std::string& d : def_args)
+    {
+    if (macros.size() > 0)
+      {
+      macros += " ";
+      }
+
+    macros += d;
+    }
+
+  const std::string kernel_sources = kernel_gen::generator<CL_BACKEND, num, typename ProxyTypes::held_type...>::kernel_source();
+
+  return std::make_tuple(macros, src_preamble + kernel_sources);
+  }
+
+
+
 inline
 std::string
 runtime_t::generate_kernel(const zeroway_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
+      src_prelims +
       kernel_src::get_zeroway_source(num);
 
   return source;
@@ -1092,10 +1151,11 @@ inline
 std::string
 runtime_t::generate_kernel(const oneway_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
+      src_prelims +
       kernel_src::get_oneway_defines<eT>() +
       kernel_src::get_oneway_source(num);
 
@@ -1109,10 +1169,11 @@ inline
 std::string
 runtime_t::generate_kernel(const oneway_real_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
+      src_prelims +
       kernel_src::get_oneway_defines<eT>() +
       kernel_src::get_oneway_real_source(num);
 
@@ -1126,10 +1187,11 @@ inline
 std::string
 runtime_t::generate_kernel(const oneway_integral_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
+      src_prelims +
       kernel_src::get_oneway_defines<eT>() +
       kernel_src::get_oneway_integral_source(num);
 
@@ -1143,29 +1205,13 @@ inline
 std::string
 runtime_t::generate_kernel(const twoway_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
+      src_prelims +
       kernel_src::get_twoway_defines<eT2, eT1>() +
       kernel_src::get_twoway_source(num);
-
-  return source;
-  }
-
-
-
-template<typename eT1, typename eT2, typename eT3>
-inline
-std::string
-runtime_t::generate_kernel(const threeway_kernel_id::enum_id num)
-  {
-  coot_extra_debug_sigprint();
-
-  std::string source =
-      src_preamble +
-      kernel_src::get_threeway_defines<eT3, eT2, eT1>() +
-      kernel_src::get_threeway_source(num);
 
   return source;
   }
@@ -1177,15 +1223,39 @@ inline
 std::string
 runtime_t::generate_kernel(const magma_real_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
+      src_prelims +
       kernel_src::get_magma_defines() +
       kernel_src::get_oneway_defines<eT>() +
       kernel_src::get_magma_real_source(num);
 
   return source;
+  }
+
+
+
+template<kernel_id::enum_id num, typename... ProxyTypes>
+inline
+cl_kernel
+runtime_t::get_kernel()
+  {
+  const std::tuple<bool, cl_kernel&> t = get_kernel<num, ProxyTypes...>(gen_kernels);
+  if (std::get<0>(t) == true)
+    {
+    const std::string name = std::string(&(kernel_gen::full_name<num, typename ProxyTypes::held_type...>::str()[0]));
+
+    if (!load_cached_kernel(name, std::get<1>(t)))
+      {
+      // Generate and compile the kernel.
+      const std::tuple<std::string, std::string> sources = generate_kernel<num, ProxyTypes...>();
+      compile_kernel(kernel_gen::full_name<num, typename ProxyTypes::held_type...>::str().data, std::get<1>(sources), std::get<1>(t), std::get<0>(sources));
+      }
+    }
+
+  return std::get<1>(t);
   }
 
 
@@ -1304,29 +1374,6 @@ runtime_t::get_kernel(const twoway_kernel_id::enum_id num)
 
 
 
-template<typename eT1, typename eT2, typename eT3>
-inline
-const cl_kernel&
-runtime_t::get_kernel(const threeway_kernel_id::enum_id num)
-  {
-  const std::tuple<bool, cl_kernel&> t = get_kernel<eT1, eT2, eT3>(threeway_kernels, num);
-  if (std::get<0>(t) == true)
-    {
-    const std::string name = rt_common::get_kernel_name<eT1, eT2, eT3>(num);
-
-    if (!load_cached_kernel(name, std::get<1>(t)))
-      {
-      // We will have to compile the kernel on the spot.
-      const std::string source = generate_kernel<eT1, eT2, eT3>(num);
-      compile_kernel(name, source, std::get<1>(t));
-      }
-    }
-
-  return std::get<1>(t);
-  }
-
-
-
 template<typename eT>
 inline
 const cl_kernel&
@@ -1335,7 +1382,7 @@ runtime_t::get_kernel(const magma_real_kernel_id::enum_id num)
   const std::tuple<bool, cl_kernel&> t = get_kernel<eT>(magma_real_kernels, num);
   if (std::get<0>(t) == true)
     {
-    const std::string name = type_prefix<eT>() + "_" + magma_real_kernel_id::get_names()[num];
+    const std::string name = rt_type_prefix<eT>() + "_" + magma_real_kernel_id::get_names()[num];
 
     if (!load_cached_kernel(name, std::get<1>(t)))
       {
@@ -1355,7 +1402,7 @@ inline
 std::tuple<bool, cl_kernel&>
 runtime_t::get_kernel(rt_common::kernels_t<HeldType>& k, const EnumType num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(is_same_type<eT1, u8>::yes)         { return get_kernel<eTs...>(k.u8_kernels, num);  }
   else if(is_same_type<eT1,  s8>::yes)   { return get_kernel<eTs...>(k.s8_kernels, num);  }
@@ -1367,16 +1414,23 @@ runtime_t::get_kernel(rt_common::kernels_t<HeldType>& k, const EnumType num)
   else if(is_same_type<eT1, s64>::yes)   { return get_kernel<eTs...>(k.s64_kernels, num); }
   else if(is_same_type<eT1, fp16>::yes)
     {
-    coot_debug_check( has_float16() == false, "coot::cl_rt.get_kernel(): device does not support float16 (fp16) kernels; use a different element type (such as float)" );
+    coot_check_runtime_error( has_float16() == false, "coot::cl_rt.get_kernel(): device does not support float16 (fp16) kernels; use a different element type (such as float)" );
 
     return get_kernel<eTs...>(k.h_kernels, num);
     }
   else if(is_same_type<eT1, float>::yes) { return get_kernel<eTs...>(k.f_kernels, num);   }
   else if(is_same_type<eT1, double>::yes)
     {
-    coot_debug_check( has_float64() == false, "coot::cl_rt.get_kernel(): device does not support float64 (double) kernels; use a different element type (such as float)" );
+    coot_check_runtime_error( has_float64() == false, "coot::cl_rt.get_kernel(): device does not support float64 (double) kernels; use a different element type (such as float)" );
 
     return get_kernel<eTs...>(k.d_kernels, num);
+    }
+  else if(is_same_type<eT1, cx_float>::yes) { return get_kernel<eTs...>(k.c_kernels, num);   }
+  else if(is_same_type<eT1, cx_double>::yes)
+    {
+    coot_check_runtime_error( has_float64() == false, "coot::cl_rt.get_kernel(): device does not support float64 (cx_double) kernels; use a different element type (such as float)" );
+
+    return get_kernel<eTs...>(k.z_kernels, num);
     }
   else if(is_same_type<eT1, uword>::yes)
     {
@@ -1419,12 +1473,34 @@ runtime_t::get_kernel(rt_common::kernels_t<HeldType>& k, const EnumType num)
 
 
 
+template<kernel_id::enum_id num, typename... ProxyTypes>
+inline
+std::tuple<bool, cl_kernel&>
+runtime_t::get_kernel(std::unordered_map<std::string, cl_kernel>& k)
+  {
+  coot_debug_sigprint();
+
+  const std::string name = std::string(&(kernel_gen::full_name<num, typename ProxyTypes::held_type...>::str()[0]));
+
+  if (k.count(name) == 0)
+    {
+    k[name] = cl_kernel();
+    return std::forward_as_tuple(true, k[name]);
+    }
+  else
+    {
+    return std::forward_as_tuple(false, k[name]);
+    }
+  }
+
+
+
 template<typename EnumType>
 inline
 std::tuple<bool, cl_kernel&>
 runtime_t::get_kernel(std::unordered_map<EnumType, cl_kernel>& k, const EnumType num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(k.count(num) == 0)
     {
@@ -1524,7 +1600,7 @@ inline
 void
 runtime_t::set_rng_seed(const u64 seed)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // reset RNG memory with correct seed
   init_xorwow_state<u32>(xorwow32_state, num_rng_threads, seed);
@@ -1540,7 +1616,7 @@ runtime_t::set_rng_seed(const u64 seed)
 inline
 runtime_t::program_wrapper::program_wrapper()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   prog = NULL;
   }
@@ -1550,7 +1626,7 @@ runtime_t::program_wrapper::program_wrapper()
 inline
 runtime_t::program_wrapper::~program_wrapper()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(prog != NULL)  { coot_wrapper(clReleaseProgram)(prog); }
   }
@@ -1566,16 +1642,16 @@ runtime_t::program_wrapper::~program_wrapper()
 inline
 runtime_t::cq_guard::cq_guard()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   get_rt().cl_rt.lock();
 
   if(get_rt().cl_rt.is_valid())
     {
-    coot_extra_debug_print("coot::cl_rt: calling clFinish()");
+    coot_debug_print("coot::cl_rt: calling clFinish()");
     coot_wrapper(clFinish)(get_rt().cl_rt.get_cq());  // force synchronisation
 
-    //coot_extra_debug_print("calling clFlush()");
+    //coot_debug_print("calling clFlush()");
     //clFlush(get_rt().cl_rt.get_cq());  // submit all enqueued commands
     }
   }
@@ -1585,11 +1661,11 @@ runtime_t::cq_guard::cq_guard()
 inline
 runtime_t::cq_guard::~cq_guard()
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if(get_rt().cl_rt.is_valid())
     {
-    coot_extra_debug_print("coot::cl_rt: calling clFlush()");
+    coot_debug_print("coot::cl_rt: calling clFlush()");
     coot_wrapper(clFlush)(get_rt().cl_rt.get_cq());  // submit all enqueued commands
     }
 
@@ -1619,4 +1695,137 @@ runtime_t::adapt_uword::adapt_uword(const uword val)
 
     coot_check_runtime_error( ((sizeof(uword) >= 8) && (val > 0xffffffffU)), "adapt_uword: given value doesn't fit into unsigned 32 bit integer" );
     }
+  }
+
+
+
+inline
+runtime_t::adapt_uword::adapt_uword(const runtime_t::adapt_uword& other)
+  : size(other.size)
+  , val32(other.val32)
+  , val64(other.val64)
+  {
+  if (other.addr == &other.val32)
+    {
+    addr = (void*) &val32;
+    }
+  else
+    {
+    addr = (void*) &val64;
+    }
+  }
+
+
+
+inline
+runtime_t::adapt_uword::adapt_uword(runtime_t::adapt_uword&& other)
+  : size(other.size)
+  , val32(other.val32)
+  , val64(other.val64)
+  {
+  if (other.addr == &other.val32)
+    {
+    addr = (void*) &val32;
+    other.val32 = 0;
+    }
+  else
+    {
+    addr = (void*) &val64;
+    other.val64 = 0;
+    }
+  }
+
+
+
+inline
+runtime_t::adapt_uword&
+runtime_t::adapt_uword::operator=(const runtime_t::adapt_uword& other)
+  {
+  if (this != &other)
+    {
+    size = other.size;
+    val32 = other.val32;
+    val64 = other.val64;
+
+    if (other.addr == &other.val32)
+      {
+      addr = (void*) &val32;
+      }
+    else
+      {
+      addr = (void*) &val64;
+      }
+    }
+
+  return *this;
+  }
+
+
+
+inline
+runtime_t::adapt_uword&
+runtime_t::adapt_uword::operator=(runtime_t::adapt_uword&& other)
+  {
+  if (this != &other)
+    {
+    size = other.size;
+    val32 = other.val32;
+    val64 = other.val64;
+
+    if (other.addr == &other.val32)
+      {
+      addr = (void*) &val32;
+      other.val32 = 0;
+      }
+    else
+      {
+      addr = (void*) &val64;
+      other.val64 = 0;
+      }
+    }
+
+  return *this;
+  }
+
+
+
+template<typename eT>
+inline
+runtime_t::mem_array<eT>::mem_array(const uword n_elem) : chunk(get_rt().cl_rt.acquire_memory<eT>(n_elem))  { }
+
+
+
+template<typename eT>
+inline
+runtime_t::mem_array<eT>::~mem_array()
+  {
+  if(chunk.ptr != nullptr)  { get_rt().cl_rt.release_memory(chunk); }
+  }
+
+
+
+template<typename eT>
+inline
+runtime_t::mem_array<eT>::mem_array(mem_array&& other) noexcept
+  : chunk(other.chunk)
+  {
+  other.chunk = coot_cl_mem{};
+  }
+
+
+
+template<typename eT>
+inline
+runtime_t::mem_array<eT>&
+runtime_t::mem_array<eT>::operator=(mem_array&& other) noexcept
+  {
+  if(this != &other)
+    {
+    if(chunk.ptr != nullptr)  { get_rt().cl_rt.release_memory(chunk); }
+
+    chunk       = other.chunk;
+    other.chunk = coot_cl_mem{};
+    }
+  
+  return *this;
   }

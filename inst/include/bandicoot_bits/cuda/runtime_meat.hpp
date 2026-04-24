@@ -1,4 +1,4 @@
-// Copyright 2019 Ryan Curtin (http://www.ratml.org/)
+// Copyright 2019-2026 Ryan Curtin (http://www.ratml.org/)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,9 +25,9 @@ inline
 bool
 runtime_t::init(const bool /* manual_selection */, const uword wanted_platform, const uword wanted_device, const bool /* print_info */)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (wanted_platform != 0), "coot::cuda_rt.init(): wanted_platform must be 0 for the CUDA backend" );
+  coot_check_runtime_error( (wanted_platform != 0), "coot::cuda_rt.init(): wanted_platform must be 0 for the CUDA backend" );
 
   valid = false;
 
@@ -40,7 +40,7 @@ runtime_t::init(const bool /* manual_selection */, const uword wanted_platform, 
 
   // Ensure that the desired device is within the range of devices we have.
   // TODO: better error message?
-  coot_debug_check( ((int) wanted_device >= device_count), "coot::cuda_rt.init(): invalid wanted_device" );
+  coot_check_runtime_error( ((int) wanted_device >= device_count), "coot::cuda_rt.init(): invalid wanted_device" );
 
   result = coot_wrapper(cuDeviceGet)(&cuDevice, wanted_device);
   coot_check_cuda_error(result, "coot::cuda_rt.init(): cuDeviceGet() failed");
@@ -137,6 +137,8 @@ runtime_t::init(const bool /* manual_selection */, const uword wanted_platform, 
     nvrtc_opts.push_back(std::string("-I") + dir);
     }
 
+  nvrtc_defs = kernel_src::get_defs(has_fp16);
+
   generate_unique_host_device_id();
 
   src_preamble = kernel_src::init_src_preamble(has_fp16);
@@ -179,7 +181,7 @@ inline
 bool
 runtime_t::load_cached_kernel(const std::string& kernel_name, CUfunction& function)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   // First check the cache to see if we've already built this kernel before.
   const size_t kernel_size = cache::has_cached_kernel(unique_host_device_id, kernel_name);
@@ -194,7 +196,7 @@ runtime_t::load_cached_kernel(const std::string& kernel_name, CUfunction& functi
   bool status = cache::read_cached_kernel(unique_host_device_id, kernel_name, (unsigned char*) kernel_buffer);
   if (status == false)
     {
-    coot_debug_warn("coot::cuda::load_cached_kernel(): could not load kernel '" + kernel_name + "' for unique host device id '" + unique_host_device_id + "'");
+    coot_warn(1, "coot::cuda::load_cached_kernel(): could not load kernel '" + kernel_name + "' for unique host device id '" + unique_host_device_id + "'");
     delete[] kernel_buffer;
     return false;
     }
@@ -233,11 +235,40 @@ runtime_t::~runtime_t()
 
 
 
+template<kernel_id::enum_id num, typename... ProxyTypes>
+inline
+std::tuple<std::vector<std::string>, std::string>
+runtime_t::generate_kernel()
+  {
+  coot_debug_sigprint();
+
+  // Assemble the list of definitions necessary for the kernel.  This is a one-argument kernel so we just need:
+  //  - COOT_KERNEL_NAME
+  //  - COOT_OBJECT0
+  //  - COOT_OBJECT0_BOUNDS_CHECK2
+  //  - COOT_OBJECT0_AT
+  //
+  // For reduction kernels, we also need:
+  //  - COOT_INIT_OP
+  //  - COOT_INNER_OP
+  //  - COOT_FINAL_OP
+  //
+  // Note that array::data() is not constexpr until C++17 so we have to take the address of the first character
+  std::vector<std::string> def_args = kernel_gen::generator<CUDA_BACKEND, num, typename ProxyTypes::held_type...>::kernel_macros();
+
+  // We need to include and concatenate any sources for types used in the expressions.
+  const std::string kernel_sources = kernel_gen::generator<CUDA_BACKEND, num, typename ProxyTypes::held_type...>::kernel_source();
+
+  return std::make_tuple(def_args, kernel_sources);
+  }
+
+
+
 inline
 std::string
 runtime_t::generate_kernel(const zeroway_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
@@ -254,7 +285,7 @@ inline
 std::string
 runtime_t::generate_kernel(const oneway_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
@@ -271,7 +302,7 @@ inline
 std::string
 runtime_t::generate_kernel(const oneway_real_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
@@ -288,7 +319,7 @@ inline
 std::string
 runtime_t::generate_kernel(const oneway_integral_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
@@ -305,7 +336,7 @@ inline
 std::string
 runtime_t::generate_kernel(const twoway_kernel_id::enum_id num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   std::string source =
       src_preamble +
@@ -317,28 +348,12 @@ runtime_t::generate_kernel(const twoway_kernel_id::enum_id num)
 
 
 
-template<typename eT1, typename eT2, typename eT3>
-inline
-std::string
-runtime_t::generate_kernel(const threeway_kernel_id::enum_id num)
-  {
-  coot_extra_debug_sigprint();
-
-  std::string source =
-      src_preamble +
-      kernel_src::get_threeway_defines<eT3, eT2, eT1>() +
-      kernel_src::get_threeway_source(num);
-
-  return source;
-  }
-
-
-
 inline
 void
 runtime_t::compile_kernel(const std::string& kernel_name,
                           const std::string& source,
-                          CUfunction& function)
+                          CUfunction& function,
+                          const std::vector<std::string>& def_args)
   {
   // The kernel's not in the cache, so we'll use NVRTC to compile it.
   nvrtcProgram prog;
@@ -351,11 +366,42 @@ runtime_t::compile_kernel(const std::string& kernel_name,
       NULL);               // name of each header
   coot_check_nvrtc_error(result, "coot::cuda::compile_kernel(): nvrtcCreateProgram() failed while compiling " + kernel_name);
 
-  std::vector<const char*> nvrtc_opts_use(nvrtc_opts.size(), NULL);
+  size_t num_opts = nvrtc_opts.size();
+  if (def_args.size() > 0)
+    {
+    num_opts += def_args.size() + nvrtc_defs.size();
+    }
+
+  std::vector<const char*> nvrtc_opts_use(num_opts, NULL);
   for (size_t i = 0; i < nvrtc_opts.size(); ++i)
     {
     nvrtc_opts_use[i] = nvrtc_opts[i].c_str();
     }
+  if (def_args.size() > 0)
+    {
+    for (size_t i = 0; i < nvrtc_defs.size(); ++i)
+      {
+      nvrtc_opts_use[i + nvrtc_opts.size()] = nvrtc_defs[i].c_str();
+      }
+
+    for (size_t i = 0; i < def_args.size(); ++i)
+      {
+      nvrtc_opts_use[i + nvrtc_opts.size() + nvrtc_defs.size()] = def_args[i].c_str();
+      }
+    }
+
+  #if defined(COOT_DEBUG_PRINT_KERNELS)
+  get_cout_stream() << "cuda::compile_kernel(): compiling kernel " << kernel_name << " with the following options:" << std::endl;
+  get_cout_stream() << std::endl;
+  for (size_t i = 0; i < nvrtc_opts_use.size(); ++i)
+    {
+    get_cout_stream() << " - " << nvrtc_opts_use[i] << std::endl;
+    }
+  get_cout_stream() << std::endl;
+  get_cout_stream() << "Kernel source:" << std::endl;
+  get_cout_stream() << std::endl;
+  get_cout_stream() << source;
+  #endif
 
   result = coot_wrapper(nvrtcCompileProgram)(prog,                   // CUDA runtime compilation program
                                              nvrtc_opts_use.size(),  // number of compile options
@@ -373,7 +419,9 @@ runtime_t::compile_kernel(const std::string& kernel_name,
     result = coot_wrapper(nvrtcGetProgramLog)(prog, log);
     coot_check_nvrtc_error(result, "coot::cuda::compile_kernel(): nvrtcGetProgramLog() failed while compiling " + kernel_name);
 
-    coot_stop_runtime_error("coot::cuda::compile_kernel(): compilation of " + kernel_name + " kernel failed", std::string(log));
+    coot_stop_runtime_error("coot::cuda::compile_kernel(): compilation of " + kernel_name + " kernel failed", std::string(log),
+        "This is likely an internal Bandicoot bug.  Please recompile with -DCOOT_DEBUG_PRINT_KERNELS, re-run, "
+        "and submit the entire output and source code as a bug report at https://gitlab.com/bandicoot-lib/bandicoot-code/-/issues.");
     }
 
   // Obtain CUBIN or PTX from the program.
@@ -415,11 +463,33 @@ runtime_t::compile_kernel(const std::string& kernel_name,
   const bool cache_result = cache::cache_kernel(unique_host_device_id, kernel_name, (unsigned char*) code, code_size);
   if (cache_result == false)
     {
-    coot_debug_warn("coot::cuda::compile_kernel(): could not cache compiled CUDA kernel " + kernel_name);
+    coot_warn(1, "coot::cuda::compile_kernel(): could not cache compiled CUDA kernel " + kernel_name);
     // This is not fatal, so we can proceed.
     }
 
   delete[] code;
+  }
+
+
+
+template<kernel_id::enum_id num, typename... ProxyTypes>
+inline
+CUfunction
+runtime_t::get_kernel()
+  {
+  const std::tuple<bool, CUfunction&> t = get_kernel<num, ProxyTypes...>(gen_kernels);
+  if (std::get<0>(t) == true)
+    {
+    const std::string name = std::string(&(kernel_gen::full_name<num, typename ProxyTypes::held_type...>::str()[0]));
+    if (!load_cached_kernel(name, std::get<1>(t)))
+      {
+      // Generate and compile the kernel on the spot.
+      const std::tuple<std::vector<std::string>, std::string> sources = generate_kernel<num, ProxyTypes...>();
+      compile_kernel(kernel_gen::full_name<num, typename ProxyTypes::held_type...>::str().data, std::get<1>(sources), std::get<1>(t), std::get<0>(sources));
+      }
+    }
+
+  return std::get<1>(t);
   }
 
 
@@ -538,48 +608,27 @@ runtime_t::get_kernel(const twoway_kernel_id::enum_id num)
 
 
 
-template<typename eT1, typename eT2, typename eT3>
-inline
-const CUfunction&
-runtime_t::get_kernel(const threeway_kernel_id::enum_id num)
-  {
-  const std::tuple<bool, CUfunction&> t = get_kernel<eT1, eT2, eT3>(threeway_kernels, num);
-  if (std::get<0>(t) == true)
-    {
-    const std::string name = rt_common::get_kernel_name<eT1, eT2, eT3>(num);
-
-    if (!load_cached_kernel(name, std::get<1>(t)))
-      {
-      // We will have to compile the kernel on the spot.
-      const std::string source = generate_kernel<eT1, eT2, eT3>(num);
-      compile_kernel(name, source, std::get<1>(t));
-      }
-    }
-
-  return std::get<1>(t);
-  }
-
-
-
 template<typename eT1, typename... eTs, typename HeldType, typename EnumType>
 inline
 std::tuple<bool, CUfunction&>
 runtime_t::get_kernel(rt_common::kernels_t<HeldType>& k, const EnumType num)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-       if(is_same_type<eT1,u8    >::yes)  { return get_kernel<eTs...>(  k.u8_kernels, num); }
-  else if(is_same_type<eT1,s8    >::yes)  { return get_kernel<eTs...>(  k.s8_kernels, num); }
-  else if(is_same_type<eT1,u16   >::yes)  { return get_kernel<eTs...>( k.u16_kernels, num); }
-  else if(is_same_type<eT1,s16   >::yes)  { return get_kernel<eTs...>( k.s16_kernels, num); }
-  else if(is_same_type<eT1,u32   >::yes)  { return get_kernel<eTs...>( k.u32_kernels, num); }
-  else if(is_same_type<eT1,s32   >::yes)  { return get_kernel<eTs...>( k.s32_kernels, num); }
-  else if(is_same_type<eT1,u64   >::yes)  { return get_kernel<eTs...>( k.u64_kernels, num); }
-  else if(is_same_type<eT1,s64   >::yes)  { return get_kernel<eTs...>( k.s64_kernels, num); }
-  else if(is_same_type<eT1,fp16  >::yes)  { return get_kernel<eTs...>(   k.h_kernels, num); }
-  else if(is_same_type<eT1,float >::yes)  { return get_kernel<eTs...>(   k.f_kernels, num); }
-  else if(is_same_type<eT1,double>::yes)  { return get_kernel<eTs...>(   k.d_kernels, num); }
-  else if(is_same_type<eT1,uword >::yes)
+       if(is_same_type<eT1,u8       >::yes)  { return get_kernel<eTs...>(  k.u8_kernels, num); }
+  else if(is_same_type<eT1,s8       >::yes)  { return get_kernel<eTs...>(  k.s8_kernels, num); }
+  else if(is_same_type<eT1,u16      >::yes)  { return get_kernel<eTs...>( k.u16_kernels, num); }
+  else if(is_same_type<eT1,s16      >::yes)  { return get_kernel<eTs...>( k.s16_kernels, num); }
+  else if(is_same_type<eT1,u32      >::yes)  { return get_kernel<eTs...>( k.u32_kernels, num); }
+  else if(is_same_type<eT1,s32      >::yes)  { return get_kernel<eTs...>( k.s32_kernels, num); }
+  else if(is_same_type<eT1,u64      >::yes)  { return get_kernel<eTs...>( k.u64_kernels, num); }
+  else if(is_same_type<eT1,s64      >::yes)  { return get_kernel<eTs...>( k.s64_kernels, num); }
+  else if(is_same_type<eT1,fp16     >::yes)  { return get_kernel<eTs...>(   k.h_kernels, num); }
+  else if(is_same_type<eT1,float    >::yes)  { return get_kernel<eTs...>(   k.f_kernels, num); }
+  else if(is_same_type<eT1,double   >::yes)  { return get_kernel<eTs...>(   k.d_kernels, num); }
+  else if(is_same_type<eT1,cx_float >::yes)  { return get_kernel<eTs...>(   k.c_kernels, num); }
+  else if(is_same_type<eT1,cx_double>::yes)  { return get_kernel<eTs...>(   k.z_kernels, num); }
+  else if(is_same_type<eT1,uword    >::yes)
     {
     // this can happen if uword != u32 or u64
     if (sizeof(uword) == sizeof(u32))
@@ -614,7 +663,29 @@ runtime_t::get_kernel(rt_common::kernels_t<HeldType>& k, const EnumType num)
     }
   else
     {
-    coot_debug_check(true, "unsupported element type" );
+    coot_check_runtime_error(true, "unsupported element type" );
+    }
+  }
+
+
+
+template<kernel_id::enum_id num, typename... ProxyTypes>
+inline
+std::tuple<bool, CUfunction&>
+runtime_t::get_kernel(std::unordered_map<std::string, CUfunction>& kernels)
+  {
+  coot_debug_sigprint();
+
+  const std::string name = std::string(&(kernel_gen::full_name<num, typename ProxyTypes::held_type...>::str()[0]));
+
+  if (kernels.count(name) == 0)
+    {
+    kernels[name] = CUfunction();
+    return std::forward_as_tuple(true, kernels[name]);
+    }
+  else
+    {
+    return std::forward_as_tuple(false, kernels[name]);
     }
   }
 
@@ -683,7 +754,7 @@ inline
 void
 runtime_t::set_rng_seed(const u64 seed)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   curandStatus_t status = coot_wrapper(curandSetPseudoRandomGeneratorSeed)(xorwow_rand, seed);
   coot_check_curand_error(status, "cuda::set_rng_seed(): curandSetPseudoRandomGeneratorSeed() failed");
@@ -707,6 +778,50 @@ runtime_t::is_supported_type() const
     {
     return true;
     }
+  }
+
+
+
+template<typename eT>
+inline
+runtime_t::mem_array<eT>::mem_array(const uword n_elem) : chunk(get_rt().cuda_rt.acquire_memory<eT>(n_elem))  { }
+
+
+
+template<typename eT>
+inline
+runtime_t::mem_array<eT>::~mem_array()
+  {
+  if(chunk != nullptr)  { get_rt().cuda_rt.release_memory(chunk); }
+  }
+
+
+
+template<typename eT>
+inline
+runtime_t::mem_array<eT>::mem_array(mem_array&& other) noexcept
+  : chunk(other.chunk)
+  {
+  other.chunk = nullptr;
+  }
+
+
+
+template<typename eT>
+inline
+runtime_t::mem_array<eT>&
+runtime_t::mem_array<eT>::operator=(mem_array&& other) noexcept
+  {
+  if (this != &other)
+    {
+    if (chunk != nullptr)
+      {
+      get_rt().cuda_rt.release_memory(chunk);
+      }
+    chunk       = other.chunk;
+    other.chunk = nullptr;
+    }
+  return *this;
   }
 
 

@@ -21,7 +21,7 @@ inline
 void
 mtop_find::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_find>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (in.is_computed)
     {

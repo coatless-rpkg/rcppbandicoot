@@ -110,6 +110,12 @@ class runtime_t
 
   // TODO: add function to return info about device as a string
 
+  template<kernel_id::enum_id num, typename... ProxyTypes>
+  inline std::tuple<std::string, std::string> generate_kernel();
+
+  template<kernel_id::enum_id num, typename... ProxyTypes>
+  inline cl_kernel get_kernel();
+
   inline const cl_kernel& get_kernel(const zeroway_kernel_id::enum_id num);
 
   template<typename eT1>
@@ -123,9 +129,6 @@ class runtime_t
 
   template<typename eT2, typename eT1>
   inline const cl_kernel& get_kernel(const twoway_kernel_id::enum_id num);
-
-  template<typename eT3, typename eT2, typename eT1>
-  inline const cl_kernel& get_kernel(const threeway_kernel_id::enum_id num);
 
   template<typename eT>
   inline const cl_kernel& get_kernel(const magma_real_kernel_id::enum_id num);
@@ -141,6 +144,9 @@ class runtime_t
   class program_wrapper;
   class cq_guard;
   class adapt_uword;
+
+  template<typename eT>
+  class mem_array;
 
   friend class cq_guard;  // explicitly allows cq_guard to call lock() and unlock()
 
@@ -160,14 +166,15 @@ class runtime_t
   coot_aligned std::string      build_options;
   coot_aligned std::string      unique_host_device_id;
   coot_aligned std::string      src_preamble;
+  coot_aligned std::string      src_prelims;
 
-  coot_aligned std::unordered_map<zeroway_kernel_id::enum_id, cl_kernel>                                                                    zeroway_kernels;
-  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_kernel_id::enum_id, cl_kernel>>                                               oneway_kernels;
-  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_real_kernel_id::enum_id, cl_kernel>>                                          oneway_real_kernels;
-  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_integral_kernel_id::enum_id, cl_kernel>>                                      oneway_integral_kernels;
-  coot_aligned rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<twoway_kernel_id::enum_id, cl_kernel>>>                         twoway_kernels;
-  coot_aligned rt_common::kernels_t<rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<threeway_kernel_id::enum_id, cl_kernel>>>> threeway_kernels;
-  coot_aligned rt_common::kernels_t<std::unordered_map<magma_real_kernel_id::enum_id, cl_kernel>>                                           magma_real_kernels;
+  coot_aligned std::unordered_map<std::string, cl_kernel>                                                           gen_kernels;
+  coot_aligned std::unordered_map<zeroway_kernel_id::enum_id, cl_kernel>                                            zeroway_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_kernel_id::enum_id, cl_kernel>>                       oneway_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_real_kernel_id::enum_id, cl_kernel>>                  oneway_real_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<oneway_integral_kernel_id::enum_id, cl_kernel>>              oneway_integral_kernels;
+  coot_aligned rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<twoway_kernel_id::enum_id, cl_kernel>>> twoway_kernels;
+  coot_aligned rt_common::kernels_t<std::unordered_map<magma_real_kernel_id::enum_id, cl_kernel>>                   magma_real_kernels;
 
   // Internally-held RNG state.
   coot_aligned coot_cl_mem   xorwow32_state;
@@ -204,9 +211,6 @@ class runtime_t
   template<typename eT1, typename eT2>
   inline std::string generate_kernel(const twoway_kernel_id::enum_id num);
 
-  template<typename eT1, typename eT2, typename eT3>
-  inline std::string generate_kernel(const threeway_kernel_id::enum_id num);
-
   template<typename eT>
   inline std::string generate_kernel(const magma_real_kernel_id::enum_id num);
 
@@ -215,12 +219,18 @@ class runtime_t
 
   inline void compile_kernel(const std::string& kernel_name,
                              const std::string& source,
-                             cl_kernel& kernel);
+                             cl_kernel& kernel,
+                             const std::string& extra_options = "");
 
   template<typename eT1, typename... eTs, typename HeldType, typename EnumType>
   inline
   std::tuple<bool, cl_kernel&>
   get_kernel(rt_common::kernels_t<HeldType>& k, const EnumType num);
+
+  template<kernel_id::enum_id num, typename... ProxyTypes>
+  inline
+  std::tuple<bool, cl_kernel&>
+  get_kernel(std::unordered_map<std::string, cl_kernel>& k);
 
   template<typename EnumType>
   inline
@@ -267,4 +277,33 @@ class runtime_t::adapt_uword
   coot_aligned u32    val32;
 
   inline adapt_uword(const uword val = 0); // default value needed for allocating several at once
+
+  inline adapt_uword(const adapt_uword& other);
+  inline adapt_uword(adapt_uword&& other);
+
+  inline adapt_uword& operator=(const adapt_uword& other);
+  inline adapt_uword& operator=(adapt_uword&& other);
+  };
+
+
+// RAII wrapper for automatic deallocation of OpenCL memory when it goes out of scope
+template<typename eT>
+class runtime_t::mem_array
+  {
+  public:
+
+  inline ~mem_array();
+  inline  mem_array(const uword n_elem);
+
+             mem_array(const mem_array&) = delete;
+  mem_array& operator=(const mem_array&) = delete;
+
+  inline            mem_array(mem_array&& other) noexcept;
+  inline mem_array& operator=(mem_array&& other) noexcept;
+
+  coot_cl_mem& memptr()  { return chunk; }
+
+  private:
+
+  coot_cl_mem chunk;
   };

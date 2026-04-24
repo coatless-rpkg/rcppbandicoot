@@ -22,7 +22,7 @@ inline
 const Op<T1, op_symmat>
 symmatu(const Base<typename T1::elem_type, T1>& X, const bool do_conj = true)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(do_conj);
 
   return Op<T1, op_symmat>(X.get_ref(), 0, 0);
@@ -36,7 +36,7 @@ inline
 const Op<T1, op_symmat>
 symmatl(const Base<typename T1::elem_type, T1>& X, const bool do_conj = true)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(do_conj);
 
   return Op<T1, op_symmat>(X.get_ref(), 1, 0);

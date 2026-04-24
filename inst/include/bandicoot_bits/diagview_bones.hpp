@@ -42,12 +42,7 @@ class diagview : public Base< eT, diagview<eT> >
   static constexpr uword n_cols = 1;
 
 
-  protected:
-
   coot_inline diagview(const Mat<eT>& in_m, const uword in_row_offset, const uword in_col_offset, const uword len);
-
-
-  public:
 
   inline ~diagview();
   inline  diagview() = delete;
@@ -66,6 +61,9 @@ class diagview : public Base< eT, diagview<eT> >
   inline void operator= (const subview<eT>& x);
 
   template<typename T1> inline void operator= (const Base<eT,T1>& x);
+
+  template<typename eglue_type, typename T1> inline void inplace_op(const Base<eT, T1>& x);
+
   template<typename T1> inline void operator+=(const Base<eT,T1>& x);
   template<typename T1> inline void operator-=(const Base<eT,T1>& x);
   template<typename T1> inline void operator%=(const Base<eT,T1>& x);
@@ -88,7 +86,7 @@ class diagview : public Base< eT, diagview<eT> >
   coot_warn_unused inline eT               operator()(const uword in_n_row, const uword in_n_col) const;
 
 
-  /* inline void replace(const eT old_val, const eT new_val); */
+  inline void replace(const eT old_val, const eT new_val);
 
   /* inline void clean(const pod_type threshold); */
 
@@ -99,6 +97,8 @@ class diagview : public Base< eT, diagview<eT> >
   inline void ones();
   inline void randu();
   inline void randn();
+
+  coot_warn_unused inline bool is_empty() const;
 
   inline static void extract(Mat<eT>& out, const diagview& in);
 

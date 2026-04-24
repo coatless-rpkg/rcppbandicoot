@@ -22,7 +22,7 @@ inline
 std::tuple<bool, std::string>
 lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_mem_t<eT> P, const uword n_rows, const uword n_cols)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   if (get_rt().cl_rt.is_valid() == false)
     {
@@ -36,7 +36,8 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
   magma_int_t status = 0; // NOTE: all paths through dgetrf and sgetrf just return status == info...
 
   const uword ipiv_size = (std::min)(n_rows, n_cols);
-  int* ipiv = cpu_memory::acquire<int>(ipiv_size);
+  cpu_memory::mem_array<int> ipiv_array(ipiv_size);
+  int* ipiv = ipiv_array.memptr();
 
   if(is_float<eT>::value)
     {
@@ -48,13 +49,11 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
     }
   else
     {
-    cpu_memory::release(ipiv);
     return std::make_tuple(false, "unknown data type, must be float or double");
     }
 
   if (status != MAGMA_SUCCESS)
     {
-    cpu_memory::release(ipiv);
     if (info < 0)
       {
       std::ostringstream oss;
@@ -70,7 +69,8 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
     }
 
   // First the pivoting needs to be "unwound" into a way where we can make P.
-  uword* ipiv2 = cpu_memory::acquire<uword>(n_rows);
+  cpu_memory::mem_array<uword> ipiv2_array(n_rows);
+  uword* ipiv2 = ipiv2_array.memptr();
   for (uword i = 0; i < n_rows; ++i)
     {
     ipiv2[i] = i;
@@ -87,10 +87,9 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
     }
 
   dev_mem_t<uword> ipiv_gpu;
-  ipiv_gpu.cl_mem_ptr = get_rt().cl_rt.acquire_memory<uword>(n_rows);
+  runtime_t::mem_array<uword> ipiv_gpu_array(n_rows);
+  ipiv_gpu.cl_mem_ptr = ipiv_gpu_array.memptr();
   copy_into_dev_mem(ipiv_gpu, ipiv2, n_rows);
-  cpu_memory::release(ipiv);
-  cpu_memory::release(ipiv2);
 
   // Now extract the lower triangular part (excluding diagonal).  This is done with a custom kernel.
   cl_int status2 = 0;
@@ -121,7 +120,6 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
 
   if (status2 != CL_SUCCESS)
     {
-    get_rt().cl_rt.release_memory(ipiv_gpu.cl_mem_ptr);
     return std::make_tuple(false, "failed to set arguments for kernel " + (pivoting ? std::string("lu_extract_l") : std::string("lu_extract_pivoted_l")));
     }
 
@@ -132,7 +130,6 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
 
   if (status2 != CL_SUCCESS)
     {
-    get_rt().cl_rt.release_memory(ipiv_gpu.cl_mem_ptr);
     return std::make_tuple(false, "failed to run kernel " + (pivoting ? std::string("lu_extract_l") : std::string("lu_extract_pivoted_l")));
     }
 
@@ -150,7 +147,6 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
 
     if (status2 != CL_SUCCESS)
       {
-      get_rt().cl_rt.release_memory(ipiv_gpu.cl_mem_ptr);
       return std::make_tuple(false, "failed to set arguments for kernel lu_extract_p");
       }
 
@@ -161,13 +157,11 @@ lu(dev_mem_t<eT> L, dev_mem_t<eT> U, dev_mem_t<eT> in, const bool pivoting, dev_
 
     if (status2 != CL_SUCCESS)
       {
-      get_rt().cl_rt.release_memory(ipiv_gpu.cl_mem_ptr);
       return std::make_tuple(false, "failed to run kernel lu_extract_p");
       }
     }
 
   get_rt().cl_rt.synchronise();
-  get_rt().cl_rt.release_memory(ipiv_gpu.cl_mem_ptr);
 
   return std::make_tuple(true, "");
   }

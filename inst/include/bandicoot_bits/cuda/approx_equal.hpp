@@ -34,9 +34,9 @@ approx_equal(const dev_mem_t<eT> A,
              const eT abs_tol,
              const eT rel_tol)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::approx_equal(): CUDA runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::approx_equal(): CUDA runtime not valid" );
 
   // We will do a two-array reduce into a u32 array; from there, we can use any().
   CUfunction k = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::approx_equal);
@@ -144,9 +144,9 @@ approx_equal_cube(const dev_mem_t<eT> A,
                   const eT abs_tol,
                   const eT rel_tol)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  coot_debug_check( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::approx_equal_cube(): CUDA runtime not valid" );
+  coot_check_runtime_error( (get_rt().cuda_rt.is_valid() == false), "coot::cuda::approx_equal_cube(): CUDA runtime not valid" );
 
   // We will do a two-array reduce into a u32 array; from there, we can use any().
   CUfunction k = get_rt().cuda_rt.get_kernel<eT>(oneway_kernel_id::approx_equal_cube);

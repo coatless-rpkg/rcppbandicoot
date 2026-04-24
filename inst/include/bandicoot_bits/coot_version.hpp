@@ -16,10 +16,10 @@
 // ------------------------------------------------------------------------
 
 
-#define COOT_VERSION_MAJOR 3
-#define COOT_VERSION_MINOR 1
+#define COOT_VERSION_MAJOR 4
+#define COOT_VERSION_MINOR 0
 #define COOT_VERSION_PATCH 0
-#define COOT_VERSION_NAME  "This Coffee Is Poorly Roasted"
+#define COOT_VERSION_NAME  "Bandwidth Glutton"
 // kept for reverse compatibility because older versions called it "NOTE"...
 #define COOT_VERSION_NOTE COOT_VERSION_NAME
 

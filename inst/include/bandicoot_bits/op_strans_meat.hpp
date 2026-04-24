@@ -23,26 +23,47 @@ inline
 void
 op_strans::apply(Mat<out_eT>& out, const Op<T1, op_strans>& in)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
-  const unwrap<T1> U(in.m);
+  // We can just directly use a proxy copy, although we need to avoid aliasing.
+  Proxy<Op<T1, op_strans>> P_in(in);
+  alias_wrapper<Mat<out_eT>, Proxy<Op<T1, op_strans>>> A(out, P_in);
+  A.use.set_size(P_in.get_n_rows(), P_in.get_n_cols());
 
-  alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type> W(out, U.M);
-  W.use.set_size(U.M.n_cols, U.M.n_rows);
+  coot_rt_t::copy(make_proxy(A.use), make_proxy_mat(P_in));
+  }
 
-  if (U.M.n_cols == 1 || U.M.n_rows == 1)
+
+
+template<typename eT>
+inline
+void
+op_strans::apply(Mat<eT>& out, const Op<Mat<eT>, op_strans>& in, const typename coot_real_only<eT>::type* junk1, const typename coot_blas_type_only<eT>::type* junk2)
+  {
+  coot_debug_sigprint();
+  coot_ignore(junk1);
+  coot_ignore(junk2);
+
+  alias_wrapper<Mat<eT>, Mat<eT>> A(out, in.m);
+
+  // Special case: if the output is the same as the input, we can just reset the size and no copy is needed.
+  if (A.using_aux && (in.m.n_rows == 1 || in.m.n_cols == 1))
     {
-    // Simply copying the data is sufficient.
-    coot_rt_t::copy_mat(W.get_dev_mem(false), U.get_dev_mem(false),
-                        // logically treat both as vectors
-                        W.use.n_elem, 1,
-                        0, 0, W.use.n_elem,
-                        0, 0, U.M.n_elem);
+    out.set_size(out.n_cols, out.n_rows);
+    return;
+    }
+
+  A.use.set_size(in.m.n_cols, in.m.n_rows);
+  if (get_rt().backend == CUDA_BACKEND)
+    {
+    // In this case, we can call the optimized cuBLAS routines for transpose.
+    // For a more general T1, though, it makes more sense to unwrap it into a larger kernel.
+    coot_rt_t::trans<false>(A.use.get_dev_mem(false), in.m.get_dev_mem(false), in.m.n_rows, in.m.n_cols);
     }
   else
     {
-    // TODO: subview arguments
-    coot_rt_t::strans(W.get_dev_mem(false), U.get_dev_mem(false), U.M.n_rows, U.M.n_cols);
+    // Use the proxy copy implementation.
+    coot_rt_t::copy(make_proxy(A.use), make_proxy(in));
     }
   }
 

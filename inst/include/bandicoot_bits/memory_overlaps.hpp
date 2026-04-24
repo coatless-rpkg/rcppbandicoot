@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// 
+//
 // Copyright 2024 Ryan Curtin (https://www.ratml.org)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -63,6 +63,21 @@ mem_overlaps(const dev_mem_t<eT1>& a,
     const eT2* b_end = ((eT2*) b.cuda_mem_ptr) + b_offset + b_n_elem - 1;
 
     return ((void*) a_start <= (void*) b_end) && ((void*) a_end >= (void*) b_start);
+    }
+  else if (get_rt().backend == VULKAN_BACKEND)
+    {
+    if (a.vk_mem_ptr.memory != b.vk_mem_ptr.memory)
+      {
+      return false;
+      }
+
+    // If it is the same memory, check if the range overlaps.
+    const size_t a_start = a.vk_mem_ptr.offset + a_offset;
+    const size_t a_end = a.vk_mem_ptr.offset + a_offset + a_n_elem - 1;
+    const size_t b_start = b.vk_mem_ptr.offset + b_offset;
+    const size_t b_end = b.vk_mem_ptr.offset + b_offset + b_n_elem - 1;
+
+    return (a_start <= b_end) && (a_end >= b_start);
     }
 
   return false; // fix compilation warning

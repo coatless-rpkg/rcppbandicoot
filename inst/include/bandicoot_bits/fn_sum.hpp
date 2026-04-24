@@ -30,7 +30,7 @@ sum
   const typename enable_if< resolves_to_vector<T1>::value == false >::result* junk2 = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk1);
   coot_ignore(junk2);
 
@@ -50,7 +50,7 @@ sum
   const typename enable_if< resolves_to_vector<T1>::value == true >::result* junk = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk);
 
   return Op<T1, op_sum>(X, dim, 0);
@@ -69,7 +69,7 @@ sum
   const typename enable_if< resolves_to_vector<T1>::value == true >::result* junk2 = 0
   )
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
   coot_ignore(junk1);
   coot_ignore(junk2);
 
@@ -84,8 +84,8 @@ inline
 typename T1::elem_type
 sum(const Op<T1, op_sum>& in)
   {
-  coot_extra_debug_sigprint();
-  coot_extra_debug_print("sum(): two consecutive sum() calls detected");
+  coot_debug_sigprint();
+  coot_debug_print("sum(): two consecutive sum() calls detected");
 
   return accu(in.m);
   }
@@ -98,7 +98,7 @@ inline
 const Op<Op<T1, op_sum>, op_sum>
 sum(const Op<T1, op_sum>& in, const uword dim)
   {
-  coot_extra_debug_sigprint();
+  coot_debug_sigprint();
 
   return Op<Op<T1, op_sum>, op_sum>(in, dim, 0);
   }
