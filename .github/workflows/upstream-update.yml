@@ -34,10 +34,17 @@ jobs:
       - name: Fetch latest release from GitLab
         id: get-version
         run: |
-          # Fetch latest release from GitLab API
-          RESPONSE=$(curl -s "$GITLAB_API_URL/projects/$(echo $GITLAB_PROJECT_ID | sed 's/\//%2F/g')/releases" \
-            -H "PRIVATE-TOKEN: ${{ secrets.GITLAB_API_TOKEN }}")
-            
+          # bandicoot-lib/bandicoot-code is public; no auth needed.
+          RESPONSE=$(curl -s "$GITLAB_API_URL/projects/$(echo $GITLAB_PROJECT_ID | sed 's/\//%2F/g')/releases")
+
+          # Fail loudly if the response isn't the expected non-empty array
+          # (e.g. an API error object) instead of letting jq emit a cryptic error.
+          if ! echo "$RESPONSE" | jq -e 'type == "array" and length > 0' >/dev/null; then
+            echo "Unexpected GitLab API response (expected non-empty array of releases):"
+            echo "$RESPONSE"
+            exit 1
+          fi
+
           # Extract the latest version and download URL
           LATEST_VERSION=$(echo $RESPONSE | jq -r '.[0].tag_name')
           DOWNLOAD_URL=$(echo $RESPONSE | jq -r '.[0].assets.sources[0].url')
