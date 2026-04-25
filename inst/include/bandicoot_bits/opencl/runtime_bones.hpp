@@ -271,10 +271,10 @@ class runtime_t::adapt_uword
   {
   public:
 
-  coot_aligned size_t size  = 0;
-  coot_aligned void*  addr  = nullptr;
-  coot_aligned u64    val64 = 0;
-  coot_aligned u32    val32 = 0;
+  coot_aligned size_t size;
+  coot_aligned void*  addr;
+  coot_aligned u64    val64;
+  coot_aligned u32    val32;
 
   inline adapt_uword(const uword val = 0); // default value needed for allocating several at once
 

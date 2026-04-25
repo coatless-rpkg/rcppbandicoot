@@ -1680,6 +1680,10 @@ runtime_t::cq_guard::~cq_guard()
 
 inline
 runtime_t::adapt_uword::adapt_uword(const uword val)
+  : size(0)
+  , addr(nullptr)
+  , val64(0)
+  , val32(0)
   {
   if((sizeof(uword) >= 8) && get_rt().cl_rt.has_sizet64())
     {
