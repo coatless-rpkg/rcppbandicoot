@@ -49,26 +49,10 @@ else
     is_apple_compiler="no"
 fi
 
-## =============================================================================
-## C++14 Standard Check (Required by Bandicoot)
-## =============================================================================
-## Note: C++14 is specified in SystemRequirements in DESCRIPTION
-## R's build system will automatically use the appropriate C++ standard
-## We use C++14 here for configure tests to ensure dependency compatibility
-
-AC_MSG_CHECKING([whether C++14 is supported])
-CXX14=$(${R_HOME}/bin/R CMD config CXX14)
-CXX14FLAGS=$(${R_HOME}/bin/R CMD config CXX14FLAGS)
-CXX14STD=$(${R_HOME}/bin/R CMD config CXX14STD)
-
-if test "x${CXX14}" = x; then
-  AC_MSG_ERROR([C++14 support is required but not available. Please use a compiler that supports C++14.])
-fi
-AC_MSG_RESULT([yes])
-
-## Use C++14 for configure tests (to ensure dependency compatibility)
-CXX="${CXX14} ${CXX14STD}"
-CXXFLAGS="${CXX14FLAGS} ${CXXFLAGS}"
+## R 4.5 made `R CMD config CXX14` (and CXX14FLAGS / CXX14STD) defunct;
+## R now exposes a single CXX whose default is already at C++17 or later
+## across supported platforms, which exceeds bandicoot's needs. Trust
+## that default and use the CXX/CXXFLAGS already set by AC_PROG_CXX above.
 
 ## Default flags
 BANDICOOT_CXXFLAGS=""
@@ -397,7 +381,7 @@ BANDICOOT_KERNELS_DIR=$(${R_HOME}/bin/Rscript -e 'cat(paste(head(.libPaths(),1),
 AC_MSG_NOTICE([])
 AC_MSG_NOTICE([GPU Backend Configuration Summary:])
 AC_MSG_NOTICE([  Platform:      ${RSysinfoName}])
-AC_MSG_NOTICE([  C++ Standard:  C++14 or later])
+AC_MSG_NOTICE([  C++ Standard:  R default (C++17 or later on R >= 4.5)])
 AC_MSG_NOTICE([  OpenCL:        ${HAVE_OPENCL}])
 if test "x${HAVE_OPENCL}" = x1; then
   AC_MSG_NOTICE([  CLBlast:       ${HAVE_CLBLAST}])
