@@ -24,19 +24,21 @@ __device__ inline bool  coot_isinf(const short)       { return false; }
 __device__ inline bool  coot_isfinite(const short)    { return true; }
 
 // Conversion functions for u16 elements.
-__device__ inline short coot_to_short(const  uchar& x) { return (short) x; }
-__device__ inline short coot_to_short(const   char& x) { return (short) x; }
-__device__ inline short coot_to_short(const ushort& x) { return (short) x; }
-__device__ inline short coot_to_short(const  short& x) { return (short) x; }
-__device__ inline short coot_to_short(const   uint& x) { return (short) x; }
-__device__ inline short coot_to_short(const    int& x) { return (short) x; }
-__device__ inline short coot_to_short(const size_t& x) { return (short) x; }
-__device__ inline short coot_to_short(const   long& x) { return (short) x; }
+__device__ inline short coot_to_short(const     uchar& x) { return (short) x; }
+__device__ inline short coot_to_short(const      char& x) { return (short) x; }
+__device__ inline short coot_to_short(const    ushort& x) { return (short) x; }
+__device__ inline short coot_to_short(const     short& x) { return (short) x; }
+__device__ inline short coot_to_short(const      uint& x) { return (short) x; }
+__device__ inline short coot_to_short(const       int& x) { return (short) x; }
+__device__ inline short coot_to_short(const    size_t& x) { return (short) x; }
+__device__ inline short coot_to_short(const      long& x) { return (short) x; }
 #if defined(COOT_HAVE_FP16)
-__device__ inline short coot_to_short(const __half& x) { return (short) x; }
+__device__ inline short coot_to_short(const    __half& x) { return (short) x; }
 #endif
-__device__ inline short coot_to_short(const  float& x) { return (short) x; }
-__device__ inline short coot_to_short(const double& x) { return (short) x; }
+__device__ inline short coot_to_short(const     float& x) { return (short) x; }
+__device__ inline short coot_to_short(const    double& x) { return (short) x; }
+__device__ inline short coot_to_short(const  cx_float& x) { return (short) x.x; }
+__device__ inline short coot_to_short(const cx_double& x) { return (short) x.x; }
 
 // Utility mathematical functions.
 __device__ inline short coot_absdiff(const short x, const short y) { return abs(x - y); }

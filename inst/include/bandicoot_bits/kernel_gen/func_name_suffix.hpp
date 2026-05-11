@@ -22,6 +22,5 @@
 template<typename eT, coot_backend_t backend>
 struct func_name_suffix
   {
-  static inline constexpr size_t len() { return 0; }
-  static inline constexpr char_array<1> str() { return char_array<1>{ "" }; }
+  static inline constexpr auto& str() { return ""; }
   };

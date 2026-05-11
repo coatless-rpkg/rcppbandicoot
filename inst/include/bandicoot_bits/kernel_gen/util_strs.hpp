@@ -45,17 +45,22 @@ struct paren_x             { static inline constexpr auto& str() { return "(x)";
 struct semicolon_close     { static inline constexpr auto& str() { return "; }\n"; } };
 struct underscore          { static inline constexpr auto& str() { return "_";     } };
 struct equals              { static inline constexpr auto& str() { return "=";     } };
+struct zero_str            { static inline constexpr auto& str() { return "0";     } };
+struct one_str             { static inline constexpr auto& str() { return "1";     } };
+struct neg_one_str         { static inline constexpr auto& str() { return "-1";    } };
+struct x_str               { static inline constexpr auto& str() { return "x";     } };
 
 
 
 // auxiliary names used in multiple contexts
 
 
-struct coot_object_prefix  { static inline constexpr auto& str() { return "COOT_OBJECT_";            } };
-struct coot_name_arg       { static inline constexpr auto& str() { return "(name)=";                 } };
-struct uword_arg_prefix    { static inline constexpr auto& str() { return "UWORD COOT_CONCAT(name,"; } };
-struct et_arg_name         { static inline constexpr auto& str() { return " COOT_CONCAT(name,";      } };
-struct coot_concat_name    { static inline constexpr auto& str() { return "COOT_CONCAT(name,";       } };
+struct coot_object_prefix    { static inline constexpr auto& str() { return "COOT_OBJECT_";            } };
+struct coot_name_arg         { static inline constexpr auto& str() { return "(name)=";                 } };
+struct uword_arg_prefix      { static inline constexpr auto& str() { return "UWORD COOT_CONCAT(name,"; } };
+struct et_arg_name           { static inline constexpr auto& str() { return " COOT_CONCAT(name,";      } };
+struct coot_concat_name      { static inline constexpr auto& str() { return "COOT_CONCAT(name,";       } };
+struct conv_elem_type_prefix { static inline constexpr auto& str() { return "coot_to_";                } };
 
 
 

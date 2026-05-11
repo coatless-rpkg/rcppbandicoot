@@ -22,6 +22,25 @@ inline bool coot_is_signed_ulong()          { return false; }
 inline bool coot_isnan_ulong(const ulong x) { return false; }
 inline bool coot_isinf_ulong(const ulong x) { return false; }
 
+// Conversion operators.
+inline ulong coot_to_ulong_uchar(const         uchar x) { return (ulong) x;   }
+inline ulong coot_to_ulong_ushort(const       ushort x) { return (ulong) x;   }
+inline ulong coot_to_ulong_uint(const           uint x) { return (ulong) x;   }
+inline ulong coot_to_ulong_ulong(const         ulong x) { return x;           }
+inline ulong coot_to_ulong_char(const           char x) { return (ulong) x;   }
+inline ulong coot_to_ulong_short(const         short x) { return (ulong) x;   }
+inline ulong coot_to_ulong_int(const             int x) { return (ulong) x;   }
+inline ulong coot_to_ulong_long(const           long x) { return (ulong) x;   }
+#ifdef COOT_HAVE_FP16
+inline ulong coot_to_ulong_half(const           half x) { return (ulong) x;   }
+#endif
+inline ulong coot_to_ulong_float(const         float x) { return (ulong) x;   }
+inline ulong coot_to_ulong_cx_float(const   cx_float x) { return (ulong) x.x; }
+#ifdef COOT_HAVE_FP64
+inline ulong coot_to_ulong_double(const       double x) { return (ulong) x;   }
+inline ulong coot_to_ulong_cx_double(const cx_double x) { return (ulong) x.x; }
+#endif
+
 inline ulong coot_absdiff_ulong(const ulong x, const ulong y) { return (x > y) ? (x - y) : (y - x); }
 inline ulong coot_conj_ulong(const ulong x) { return x; }
 inline ulong coot_abs_ulong(const ulong x) { return x; }

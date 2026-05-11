@@ -27,6 +27,12 @@ template<size_t i> using eop_empty_arg_names = eop_arg_names<i>;
 
 
 
+// This is used for functions that have a different implementation for complex types.
+template<typename eT, typename func_body, typename cx_func_body> struct eop_cx_func_body                                           : public func_body    { };
+template<typename  T, typename func_body, typename cx_func_body> struct eop_cx_func_body<std::complex<T>, func_body, cx_func_body> : public cx_func_body { };
+
+
+
 
 template<typename eop_type>
 class eop_core
@@ -59,13 +65,24 @@ class eop_neg               : public eop_core<eop_neg>
   // no extra arguments needed for the kernel
   const static size_t num_args = 0;
 
-  // inline eT coot_neg(const eT x) { return -x; }
-  struct prefix    { static inline constexpr auto& str() { return "n";        } };
-  struct func_name { static inline constexpr auto& str() { return "coot_neg"; } };
-  struct func_body { static inline constexpr auto& str() { return "-x";       } };
+  // inline eT coot_neg_func(const eT x) { return -x; }
+  struct prefix          { static inline constexpr auto& str() { return "n";             } };
+  struct func_name       { static inline constexpr auto& str() { return "coot_neg_func"; } }; // coot_neg_func so we don't collide with coot_neg for complex types
+  struct func_body       { static inline constexpr auto& str() { return "-x";            } };
+  struct func_name_inner { static inline constexpr auto& str() { return "coot_neg";      } };
 
   template<typename eT, coot_backend_t backend>
-  struct aux_functions : public kernel_gen::eop_inline_function< eT, backend, func_name, num_args, eop_empty_arg_names, func_body > { };
+  using cx_func_body = kernel_gen::concat_str
+    <
+    func_name_inner,
+    kernel_gen::func_name_suffix<eT, backend>,
+    kernel_gen::open_paren,
+    kernel_gen::x_str,
+    kernel_gen::close_paren
+    >;
+
+  template<typename eT, coot_backend_t backend>
+  struct aux_functions : public kernel_gen::eop_inline_function< eT, backend, func_name, num_args, eop_empty_arg_names, eop_cx_func_body<eT, func_body, cx_func_body<eT, backend> > > { };
   };
 
 
@@ -101,12 +118,21 @@ class eop_scalar_minus_pre  : public eop_core<eop_scalar_minus_pre>
   template<size_t i> using arg_names = eop_arg_names<i, kernel_gen::eop_scalar_arg_name>;
 
   // inline eT coot_minus_pre(const eT x, const eT a) { return a - x; }
-  struct prefix    { static inline constexpr auto& str() { return "mP";             } };
-  struct func_name { static inline constexpr auto& str() { return "coot_minus_pre"; } };
-  struct func_body { static inline constexpr auto& str() { return "a - x";          } };
+  struct prefix           { static inline constexpr auto& str() { return "mP";             } };
+  struct func_name        { static inline constexpr auto& str() { return "coot_minus_pre"; } };
+  struct func_body_inner1 { static inline constexpr auto& str() { return "coot_minus";     } };
+  struct func_body_inner2 { static inline constexpr auto& str() { return "(a, x)";         } };
 
   template<typename eT, coot_backend_t backend>
-  struct aux_functions : public kernel_gen::eop_inline_function< eT, backend, func_name, num_args, arg_names, func_body > { };
+  using func_body = kernel_gen::concat_str
+    <
+    func_body_inner1,
+    kernel_gen::func_name_suffix<eT, backend>,
+    func_body_inner2
+    >;
+
+  template<typename eT, coot_backend_t backend>
+  struct aux_functions : public kernel_gen::eop_inline_function< eT, backend, func_name, num_args, arg_names, func_body<eT, backend> > { };
   };
 
 
@@ -159,12 +185,21 @@ class eop_scalar_div_pre    : public eop_core<eop_scalar_div_pre>
   template<size_t i> using arg_names = eop_arg_names<i, kernel_gen::eop_scalar_arg_name>;
 
   // inline eT coot_div_pre(const eT x, const eT a) { return x / a; }
-  struct prefix    { static inline constexpr auto& str() { return "dP";           } };
-  struct func_name { static inline constexpr auto& str() { return "coot_div_pre"; } };
-  struct func_body { static inline constexpr auto& str() { return "a / x";        } };
+  struct prefix           { static inline constexpr auto& str() { return "dP";           } };
+  struct func_name        { static inline constexpr auto& str() { return "coot_div_pre"; } };
+  struct func_body_inner1 { static inline constexpr auto& str() { return "coot_div";     } };
+  struct func_body_inner2 { static inline constexpr auto& str() { return "(a, x)";       } };
 
   template<typename eT, coot_backend_t backend>
-  struct aux_functions : public kernel_gen::eop_inline_function< eT, backend, func_name, num_args, arg_names, func_body > { };
+  using func_body = kernel_gen::concat_str
+    <
+    func_body_inner1,
+    kernel_gen::func_name_suffix<eT, backend>,
+    func_body_inner2
+    >;
+
+  template<typename eT, coot_backend_t backend>
+  struct aux_functions : public kernel_gen::eop_inline_function< eT, backend, func_name, num_args, arg_names, func_body<eT, backend> > { };
   };
 
 
@@ -209,13 +244,13 @@ template<typename eT, typename fp_eT, typename fp_func_name, coot_backend_t back
 struct eop_fp_cast_func_body_helper : public kernel_gen::concat_str
   <
   // cast back from FP type
-  typename kernel_gen::conv_elem_type_str<eT, backend>,
+  typename kernel_gen::conv_elem_type_str<eT, fp_eT, backend>,
   kernel_gen::open_paren,
   // call the function on the FP representation
   fp_func_name,
   kernel_gen::open_paren,
   // cast to FP type
-  typename kernel_gen::conv_elem_type_str<fp_eT, backend>,
+  typename kernel_gen::conv_elem_type_str<fp_eT, eT, backend>,
   kernel_gen::paren_x, // (x)
   kernel_gen::double_close_paren
   > { };
@@ -321,7 +356,7 @@ class eop_log10             : public eop_core<eop_log10>
 struct eop_trunc_log_func_inner1 { static inline constexpr auto& str() { return "(x <= ";                      } };
 struct eop_trunc_log_func_inner2 { static inline constexpr auto& str() { return "(0)) ? log(coot_type_minpos"; } };
 struct eop_trunc_log_func_inner3 { static inline constexpr auto& str() { return "(0))) : (coot_isinf";         } };
-struct eop_trunc_log_func_inner4 { static inline constexpr auto& str() { return "(x)) ? log(coot_type_max";    } };
+struct eop_trunc_log_func_inner4 { static inline constexpr auto& str() { return "x) ? log(coot_type_max";      } };
 struct eop_trunc_log_func_inner5 { static inline constexpr auto& str() { return "(0))) : log(x))";             } };
 
 template<bool is_fp, typename eT, coot_backend_t backend>
@@ -329,19 +364,18 @@ struct eop_trunc_log_func : public kernel_gen::concat_str
   <
   // (x <= 0) ? log(coot_type_minpos(eT(0))) : (coot_isinf(x) ? log(coot_type_max(fp_eT(0))) : log(x))
   eop_trunc_log_func_inner1,
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, int, backend>,
   eop_trunc_log_func_inner2,
   kernel_gen::func_name_suffix<eT, backend>,
   kernel_gen::open_paren,
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, int, backend>,
   eop_trunc_log_func_inner3,
   kernel_gen::func_name_suffix<eT, backend>,
   kernel_gen::open_paren,
-  kernel_gen::conv_elem_type_str<eT, backend>,
   eop_trunc_log_func_inner4,
   kernel_gen::func_name_suffix<eT, backend>,
   kernel_gen::open_paren,
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, int, backend>,
   eop_trunc_log_func_inner5
   > { };
 
@@ -353,15 +387,15 @@ template<typename eT, coot_backend_t backend>
 struct eop_trunc_log_func<false, eT, backend> : public kernel_gen::concat_str
   <
   // eT((double(x) <= 0) ? eT(log(DBL_MIN)) : (coot_isinf(double(x)) ? log(DBL_MAX) : log(double(x))))
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, double, backend>,
   kernel_gen::open_paren,
-  kernel_gen::conv_elem_type_str<double, backend>,
+  kernel_gen::conv_elem_type_str<double, eT, backend>,
   eop_trunc_log_func_inner6,
   kernel_gen::func_name_suffix<double, backend>,
   kernel_gen::open_paren,
-  kernel_gen::conv_elem_type_str<double, backend>,
+  kernel_gen::conv_elem_type_str<double, eT, backend>,
   eop_trunc_log_func_inner7,
-  kernel_gen::conv_elem_type_str<double, backend>,
+  kernel_gen::conv_elem_type_str<double, eT, backend>,
   eop_trunc_log_func_inner8
   > { };
 
@@ -465,11 +499,11 @@ struct eop_trunc_exp_func : public kernel_gen::concat_str
   eop_trunc_exp_func_inner1,
   kernel_gen::func_name_suffix<eT, backend>,
   kernel_gen::open_paren,
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, int, backend>,
   eop_trunc_exp_func_inner2,
   kernel_gen::func_name_suffix<eT, backend>,
   kernel_gen::open_paren,
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, int, backend>,
   eop_trunc_exp_func_inner3
   > { };
 
@@ -480,11 +514,11 @@ template<typename eT, coot_backend_t backend>
 struct eop_trunc_exp_func<false, eT, backend> : public kernel_gen::concat_str
   <
   // eT((double(x) >= log(DBL_MAX)) ? DBL_MAX : exp(double(x)))
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, double, backend>,
   kernel_gen::double_open_paren,
-  kernel_gen::conv_elem_type_str<double, backend>,
+  kernel_gen::conv_elem_type_str<double, eT, backend>,
   eop_trunc_exp_func_inner4,
-  kernel_gen::conv_elem_type_str<double, backend>,
+  kernel_gen::conv_elem_type_str<double, eT, backend>,
   eop_trunc_exp_func_inner5
   > { };
 
@@ -781,9 +815,9 @@ template<typename eT, coot_backend_t backend, bool is_fp>
 struct eop_sinc_func_body_inner : public kernel_gen::concat_str
   <
   eop_sinc_func_body_inner1,
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, int, backend>,
   eop_sinc_func_body_inner2,
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, int, backend>,
   eop_sinc_func_body_inner3
   > { };
 
@@ -797,15 +831,15 @@ template<typename eT, coot_backend_t backend>
 struct eop_sinc_func_body_inner<eT, backend, false> : public kernel_gen::concat_str
   <
   eop_sinc_func_body_inner1,
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, int, backend>,
   eop_sinc_func_body_inner2,
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, int, backend>,
   eop_sinc_func_body_inner4,
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, double, backend>,
   eop_sinc_func_body_inner5,
-  kernel_gen::conv_elem_type_str<double, backend>,
+  kernel_gen::conv_elem_type_str<double, eT, backend>,
   eop_sinc_func_body_inner6,
-  kernel_gen::conv_elem_type_str<double, backend>,
+  kernel_gen::conv_elem_type_str<double, eT, backend>,
   eop_sinc_func_body_inner7
   > { };
 
@@ -867,25 +901,26 @@ class eop_abs               : public eop_core<eop_abs>
 
 
 
-struct eop_pow_func_body_inner1 { static inline constexpr auto& str() { return "pow(x, "; } };
-struct eop_pow_func_body_inner2 { static inline constexpr auto& str() { return "(a))";    } };
-
 template<typename eT, typename fp_eT, coot_backend_t backend, bool is_fp>
-struct eop_pow_func_body_inner : public kernel_gen::concat_str
-  <
-  eop_pow_func_body_inner1,
-  kernel_gen::conv_elem_type_str<eT, backend>,
-  eop_pow_func_body_inner2
-  > { };
+struct eop_pow_func_body_inner
+  {
+  static inline constexpr auto& str() { return "pow(x, a)"; }
+  };
+
+struct eop_pow_func_body_inner1 { static inline constexpr auto& str() { return "pow(";  } };
+struct eop_pow_func_body_inner2 { static inline constexpr auto& str() { return "(x), "; } };
+struct eop_pow_func_body_inner3 { static inline constexpr auto& str() { return "(a))";  } };
 
 template<typename eT, typename fp_eT, coot_backend_t backend>
 struct eop_pow_func_body_inner<eT, fp_eT, backend, false> : public kernel_gen::concat_str
   <
-  kernel_gen::conv_elem_type_str<eT, backend>,
+  kernel_gen::conv_elem_type_str<eT, fp_eT, backend>,
   kernel_gen::open_paren,
   eop_pow_func_body_inner1,
-  kernel_gen::conv_elem_type_str<fp_eT, backend>,
+  kernel_gen::conv_elem_type_str<fp_eT, eT, backend>,
   eop_pow_func_body_inner2,
+  kernel_gen::conv_elem_type_str<fp_eT, eT, backend>,
+  eop_pow_func_body_inner3,
   kernel_gen::close_paren
   > { };
 
@@ -1033,15 +1068,15 @@ class eop_sign              : public eop_core<eop_sign>
   struct func_body : public kernel_gen::concat_str
     <
     func_body1,
-    kernel_gen::conv_elem_type_str<eT, backend>,
+    kernel_gen::conv_elem_type_str<eT, int, backend>,
     func_body2,
-    kernel_gen::conv_elem_type_str<eT, backend>,
+    kernel_gen::conv_elem_type_str<eT, int, backend>,
     func_body3,
-    kernel_gen::conv_elem_type_str<eT, backend>,
+    kernel_gen::conv_elem_type_str<eT, int, backend>,
     func_body2,
-    kernel_gen::conv_elem_type_str<eT, backend>,
+    kernel_gen::conv_elem_type_str<eT, int, backend>,
     func_body4,
-    kernel_gen::conv_elem_type_str<eT, backend>,
+    kernel_gen::conv_elem_type_str<eT, int, backend>,
     func_body5
     > { };
 

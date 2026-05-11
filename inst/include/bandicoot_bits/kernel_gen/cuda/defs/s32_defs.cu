@@ -24,19 +24,21 @@ __device__ inline bool coot_isinf(const int)       { return false; }
 __device__ inline bool coot_isfinite(const int)    { return true; }
 
 // Conversion functions for s32 elements.
-__device__ inline int coot_to_int(const  uchar& x) { return (int) x; }
-__device__ inline int coot_to_int(const   char& x) { return (int) x; }
-__device__ inline int coot_to_int(const ushort& x) { return (int) x; }
-__device__ inline int coot_to_int(const  short& x) { return (int) x; }
-__device__ inline int coot_to_int(const   uint& x) { return (int) x; }
-__device__ inline int coot_to_int(const    int& x) { return (int) x; }
-__device__ inline int coot_to_int(const size_t& x) { return (int) x; }
-__device__ inline int coot_to_int(const   long& x) { return (int) x; }
+__device__ inline int coot_to_int(const     uchar& x) { return (int) x; }
+__device__ inline int coot_to_int(const      char& x) { return (int) x; }
+__device__ inline int coot_to_int(const    ushort& x) { return (int) x; }
+__device__ inline int coot_to_int(const     short& x) { return (int) x; }
+__device__ inline int coot_to_int(const      uint& x) { return (int) x; }
+__device__ inline int coot_to_int(const       int& x) { return (int) x; }
+__device__ inline int coot_to_int(const    size_t& x) { return (int) x; }
+__device__ inline int coot_to_int(const      long& x) { return (int) x; }
 #if defined(COOT_HAVE_FP16)
-__device__ inline int coot_to_int(const __half& x) { return (int) x; }
+__device__ inline int coot_to_int(const    __half& x) { return (int) x; }
 #endif
-__device__ inline int coot_to_int(const  float& x) { return (int) x; }
-__device__ inline int coot_to_int(const double& x) { return (int) x; }
+__device__ inline int coot_to_int(const     float& x) { return (int) x; }
+__device__ inline int coot_to_int(const    double& x) { return (int) x; }
+__device__ inline int coot_to_int(const  cx_float& x) { return (int) x.x; }
+__device__ inline int coot_to_int(const cx_double& x) { return (int) x.x; }
 
 // Utility mathematical functions.
 __device__ inline int coot_absdiff(const int x, const int y) { return abs(x - y); }

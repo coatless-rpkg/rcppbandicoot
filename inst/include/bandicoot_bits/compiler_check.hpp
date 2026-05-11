@@ -16,15 +16,10 @@
 // ------------------------------------------------------------------------
 
 
-#undef COOT_HAVE_CXX11
 #undef COOT_HAVE_CXX14
 #undef COOT_HAVE_CXX17
 #undef COOT_HAVE_CXX20
 #undef COOT_HAVE_CXX23
-
-#if (__cplusplus >= 201103L)
-  #define COOT_HAVE_CXX11
-#endif
 
 #if (__cplusplus >= 201402L)
   #define COOT_HAVE_CXX14
@@ -47,9 +42,6 @@
 #if defined(_MSVC_LANG)
   
   #if (_MSVC_LANG >= 201402L)
-    #undef  COOT_HAVE_CXX11
-    #define COOT_HAVE_CXX11
-    
     #undef  COOT_HAVE_CXX14
     #define COOT_HAVE_CXX14
   #endif
@@ -72,8 +64,8 @@
 #endif
 
 
-#if !defined(COOT_HAVE_CXX11)
-  #error "*** C++11 compiler required; enable C++11 mode in your compiler"
+#if !defined(COOT_HAVE_CXX14)
+  #error "*** C++14 compiler required; enable C++14 mode in your compiler"
 #endif
 
 

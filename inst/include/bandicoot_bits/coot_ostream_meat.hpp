@@ -155,33 +155,31 @@ coot_ostream::modify_stream(std::ostream& o, const eT* data, const uword n_elem)
 
 
 
-// TODO: enable when adding support for complex numbers
-// 
 // // "better than nothing" settings for complex numbers
-// template<typename T>
-// inline
-// std::streamsize
-// coot_ostream::modify_stream(std::ostream& o, const std::complex<T>* data, const uword n_elem)
-//   {
-//   coot_ignore(data);
-//   coot_ignore(n_elem);
-//   
-//   o.unsetf(ios::showbase);
-//   o.unsetf(ios::uppercase);
-//   o.fill(' ');
-//   
-//   o.setf(ios::scientific);
-//   o.setf(ios::showpos);
-//   o.setf(ios::right);
-//   o.unsetf(ios::fixed);
-//   
-//   std::streamsize cell_width;
-//   
-//   o.precision(3);
-//   cell_width = 2 + 2*(1 + 3 + o.precision() + 5) + 1;
-//   
-//   return cell_width;
-//   }
+template<typename T>
+inline
+std::streamsize
+coot_ostream::modify_stream(std::ostream& o, const std::complex<T>* data, const uword n_elem)
+  {
+  coot_ignore(data);
+  coot_ignore(n_elem);
+
+  o.unsetf(ios::showbase);
+  o.unsetf(ios::uppercase);
+  o.fill(' ');
+
+  o.setf(ios::scientific);
+  o.setf(ios::showpos);
+  o.setf(ios::right);
+  o.unsetf(ios::fixed);
+
+  std::streamsize cell_width;
+
+  o.precision(3);
+  cell_width = 2 + 2*(1 + 3 + o.precision() + 5) + 1;
+
+  return cell_width;
+  }
 
 
 
@@ -266,6 +264,25 @@ coot_ostream::print_elem(std::ostream& o, const eT& x, const bool modify)
 
 
 
+template<typename T>
+inline
+void
+coot_ostream::print_elem(std::ostream& o, const std::complex<T>& x, const bool modify)
+  {
+  constexpr T T_zero = T(0);
+
+  if( (x.real() == T_zero) && (x.imag() == T_zero) && (modify) )
+    {
+    o << "(0,0)";
+    }
+  else
+    {
+    coot_ostream::raw_print_elem(o, x);
+    }
+  }
+
+
+
 template<typename eT>
 inline
 typename enable_if2<
@@ -308,6 +325,67 @@ coot_ostream::raw_print_elem(std::ostream& o, const eT& x)
   typedef typename promote_type<eT, float>::result promoted_eT;
 
   coot_ostream::raw_print_elem(o, promoted_eT(x));
+  }
+
+
+
+template<typename T>
+inline
+typename enable_if2<
+    !is_fp16<T>::value,
+    void
+>::result
+coot_ostream::raw_print_elem(std::ostream& o, const std::complex<T>& x)
+  {
+  std::ostringstream ss;
+  ss.flags(o.flags());
+  //ss.imbue(o.getloc());
+  ss.precision(o.precision());
+
+  ss << '(';
+
+  const T a = x.real();
+
+  if(coot_isfinite(a))
+    {
+    ss << a;
+    }
+  else
+    {
+    ss << ( coot_isinf(a) ? ((a <= T(0)) ? "-inf" : "+inf") : "nan" );
+    }
+
+  ss << ',';
+
+  const T b = x.imag();
+
+  if(coot_isfinite(b))
+    {
+    ss << b;
+    }
+  else
+    {
+    ss << ( coot_isinf(b) ? ((b <= T(0)) ? "-inf" : "+inf") : "nan" );
+    }
+
+  ss << ')';
+
+  o << ss.str();
+  }
+
+
+
+template<typename T>
+inline
+typename enable_if2<
+    is_fp16<T>::value,
+    void
+>::result
+coot_ostream::raw_print_elem(std::ostream& o, const std::complex<T>& x)
+  {
+  typedef typename promote_type<T, float>::result promoted_eT;
+
+  coot_ostream::raw_print_elem(o, std::complex<promoted_eT>(x));
   }
 
 

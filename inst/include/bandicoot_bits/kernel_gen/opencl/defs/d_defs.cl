@@ -22,6 +22,23 @@ inline bool coot_is_signed_double()           { return true; }
 inline bool coot_isnan_double(const double x) { return isnan(x); }
 inline bool coot_isinf_double(const double x) { return isinf(x); }
 
+// Conversion operators.
+inline double coot_to_double_uchar(const         uchar x) { return (double) x;   }
+inline double coot_to_double_ushort(const       ushort x) { return (double) x;   }
+inline double coot_to_double_uint(const           uint x) { return (double) x;   }
+inline double coot_to_double_ulong(const         ulong x) { return (double) x;   }
+inline double coot_to_double_char(const           char x) { return (double) x;   }
+inline double coot_to_double_short(const         short x) { return (double) x;   }
+inline double coot_to_double_int(const             int x) { return (double) x;   }
+inline double coot_to_double_long(const           long x) { return (double) x;   }
+#ifdef COOT_HAVE_FP16
+inline double coot_to_double_half(const           half x) { return (double) x;   }
+#endif
+inline double coot_to_double_float(const         float x) { return (double) x;   }
+inline double coot_to_double_cx_float(const   cx_float x) { return (double) x.x; }
+inline double coot_to_double_double(const       double x) { return x;            }
+inline double coot_to_double_cx_double(const cx_double x) { return x.x;          }
+
 inline double coot_absdiff_double(const double x, const double y) { return fabs(x - y); }
 inline double coot_conj_double(const double x) { return x; }
 inline double coot_abs_double(const double x) { return fabs(x); }

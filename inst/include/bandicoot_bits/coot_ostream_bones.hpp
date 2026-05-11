@@ -42,14 +42,19 @@ class coot_ostream
   public:
 
   template<typename eT> inline static std::streamsize modify_stream(std::ostream& o, const eT*              data, const uword n_elem);
-//template<typename  T> inline static std::streamsize modify_stream(std::ostream& o, const std::complex<T>* data, const uword n_elem);  // TODO: enable when adding support for complex numbers
+  template<typename  T> inline static std::streamsize modify_stream(std::ostream& o, const std::complex<T>* data, const uword n_elem);
 
   template<typename eT> inline static typename enable_if2<!is_fp16<eT>::value, void>::result print_elem_zero(std::ostream& o, const bool modify);
   template<typename eT> inline static typename enable_if2< is_fp16<eT>::value, void>::result print_elem_zero(std::ostream& o, const bool modify);
 
-  template<typename eT> inline static void                                                   print_elem(std::ostream& o, const eT& x, const bool modify);
+  template<typename eT> inline static void                                                   print_elem(std::ostream& o,              const eT& x, const bool modify);
+  template<typename  T> inline static void                                                   print_elem(std::ostream& o, const std::complex<T>& x, const bool modify);
+
   template<typename eT> inline static typename enable_if2<!is_fp16<eT>::value, void>::result raw_print_elem(std::ostream& o, const eT& x);
   template<typename eT> inline static typename enable_if2< is_fp16<eT>::value, void>::result raw_print_elem(std::ostream& o, const eT& x);
+
+  template<typename  T> inline static typename enable_if2<!is_fp16< T>::value, void>::result raw_print_elem(std::ostream& o, const std::complex<T>& x);
+  template<typename  T> inline static typename enable_if2< is_fp16< T>::value, void>::result raw_print_elem(std::ostream& o, const std::complex<T>& x);
 
   template<typename eT> coot_cold inline static void print(std::ostream& o, const     Mat<eT>& m, const bool modify);
   template<typename eT> coot_cold inline static void print(std::ostream& o, const subview<eT>& m, const bool modify);

@@ -24,6 +24,19 @@ __device__ inline bool      coot_isinf(const cx_double x)     { return isinf(x.x
 __device__ inline bool      coot_isfinite(const cx_double x)  { return isfinite(x.x) && isfinite(x.y); }
 
 // Conversion functions for cx_double elements.
+__device__ inline cx_double coot_to_cx_double(const     uchar& x) { return make_cuDoubleComplex((double) x, (double) 0); }
+__device__ inline cx_double coot_to_cx_double(const      char& x) { return make_cuDoubleComplex((double) x, (double) 0); }
+__device__ inline cx_double coot_to_cx_double(const    ushort& x) { return make_cuDoubleComplex((double) x, (double) 0); }
+__device__ inline cx_double coot_to_cx_double(const     short& x) { return make_cuDoubleComplex((double) x, (double) 0); }
+__device__ inline cx_double coot_to_cx_double(const      uint& x) { return make_cuDoubleComplex((double) x, (double) 0); }
+__device__ inline cx_double coot_to_cx_double(const       int& x) { return make_cuDoubleComplex((double) x, (double) 0); }
+__device__ inline cx_double coot_to_cx_double(const    size_t& x) { return make_cuDoubleComplex((double) x, (double) 0); }
+__device__ inline cx_double coot_to_cx_double(const      long& x) { return make_cuDoubleComplex((double) x, (double) 0); }
+#if defined(COOT_HAVE_FP16)
+__device__ inline cx_double coot_to_cx_double(const    __half& x) { return make_cuDoubleComplex((double) __half2float(x), (double) 0); }
+#endif
+__device__ inline cx_double coot_to_cx_double(const     float& x) { return make_cuDoubleComplex((double) x, (double) 0); }
+__device__ inline cx_double coot_to_cx_double(const    double& x) { return make_cuDoubleComplex((double) x, (double) 0); }
 __device__ inline cx_double coot_to_cx_double(const cx_float&  x) { return make_cuDoubleComplex((double) x.x, (double) x.y); }
 __device__ inline cx_double coot_to_cx_double(const cx_double& x) { return x; }
 
@@ -39,5 +52,6 @@ __device__ inline cx_double coot_plus(const cx_double x, const cx_double y)  { r
 __device__ inline cx_double coot_minus(const cx_double x, const cx_double y) { return cuCsub(x, y); }
 __device__ inline cx_double coot_times(const cx_double x, const cx_double y) { return cuCmul(x, y); }
 __device__ inline cx_double coot_div(const cx_double x, const cx_double y)   { return cuCdiv(x, y); }
+__device__ inline cx_double coot_neg(const cx_double x)                      { return make_cuDoubleComplex(-x.x, -x.y); }
 
 )"

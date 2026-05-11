@@ -18,6 +18,23 @@ bool coot_isnan(const double x)                     { return isnan(x); }
 bool coot_isinf(const double x)                     { return isinf(x); }
 bool coot_isfinite(const double x)                  { return !isnan(x) && !isinf(x); }
 
+// Conversion functions for double elements.
+double coot_to_double(const      bool x) { return double(x);   }
+// double coot_to_double(const     uchar x) { return double(x);   }
+// double coot_to_double(const      char x) { return double(x);   }
+// double coot_to_double(const    ushort x) { return double(x);   }
+// double coot_to_double(const     short x) { return double(x);   }
+double coot_to_double(const      uint x) { return double(x);   }
+double coot_to_double(const       int x) { return double(x);   }
+double coot_to_double(const  uint64_t x) { return double(x);   }
+// double coot_to_double(const      long x) { return double(x);   }
+// double coot_to_double(const    __half x) { return double(x);   }
+double coot_to_double(const     float x) { return double(x);   }
+double coot_to_double(const    double x) { return x;           }
+// double coot_to_double(const  cx_float x) { return double(x.x); }
+// double coot_to_double(const cx_double x) { return x.x;         }
+
+
 double coot_absdiff(const double x, const double y) { return abs(x - y); }
 double coot_min(const double x, const double y)     { return min(x, y); }
 double coot_max(const double x, const double y)     { return max(x, y); }

@@ -18,6 +18,24 @@ bool coot_isnan(const float x)                   { return isnan(x); }
 bool coot_isinf(const float x)                   { return isinf(x); }
 bool coot_isfinite(const float x)                { return !isnan(x) && !isinf(x); }
 
+// Conversion functions for float elements.
+float coot_to_float(const      bool x) { return float(x); }
+// float coot_to_float(const     uchar x) { return float(x); }
+// float coot_to_float(const      char x) { return float(x); }
+// float coot_to_float(const    ushort x) { return float(x); }
+// float coot_to_float(const     short x) { return float(x); }
+float coot_to_float(const      uint x) { return float(x); }
+float coot_to_float(const       int x) { return float(x); }
+float coot_to_float(const  uint64_t x) { return float(x); }
+// float coot_to_float(const      long x) { return float(x); }
+// #if defined(COOT_HAVE_FP16)
+// float coot_to_float(const    __half x) { return float(x); }
+// #endif
+float coot_to_float(const     float x) { return x;        }
+float coot_to_float(const    double x) { return float(x); }
+// float coot_to_float(const  cx_float x) { return x.x;        }
+// float coot_to_float(const cx_double x) { return float(x.x); }
+
 float coot_absdiff(const float x, const float y) { return abs(x - y); }
 float coot_min(const float x, const float y)     { return min(x, y); }
 float coot_max(const float x, const float y)     { return max(x, y); }
