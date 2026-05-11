@@ -28,7 +28,7 @@ void
   // We expect that if it's in bounds for object 0, that it will be in bounds for object 1.
   if (COOT_OBJECT_0_BOUNDS_CHECK(out, row, col, slice))
     {
-    COOT_OBJECT_0_AT(out, row, col, slice) = COOT_TO_ET0(COOT_OBJECT_1_AT(in, row, col, slice));
+    COOT_OBJECT_0_AT(out, row, col, slice) = COOT_TO_ET0_FROM_ET1(COOT_OBJECT_1_AT(in, row, col, slice));
     }
   }
 

@@ -22,6 +22,25 @@ inline bool coot_is_signed_uint()         { return false; }
 inline bool coot_isnan_uint(const uint x) { return false; }
 inline bool coot_isinf_uint(const uint x) { return false; }
 
+// Conversion operators.
+inline uint coot_to_uint_uchar(const         uchar x) { return (uint) x;   }
+inline uint coot_to_uint_ushort(const       ushort x) { return (uint) x;   }
+inline uint coot_to_uint_uint(const           uint x) { return x;   }
+inline uint coot_to_uint_ulong(const         ulong x) { return (uint) x;   }
+inline uint coot_to_uint_char(const           char x) { return (uint) x;   }
+inline uint coot_to_uint_short(const         short x) { return (uint) x;   }
+inline uint coot_to_uint_int(const             int x) { return (uint) x;   }
+inline uint coot_to_uint_long(const           long x) { return (uint) x;   }
+#ifdef COOT_HAVE_FP16
+inline uint coot_to_uint_half(const           half x) { return (uint) x;   }
+#endif
+inline uint coot_to_uint_float(const         float x) { return (uint) x;   }
+inline uint coot_to_uint_cx_float(const   cx_float x) { return (uint) x.x; }
+#ifdef COOT_HAVE_FP64
+inline uint coot_to_uint_double(const       double x) { return (uint) x;   }
+inline uint coot_to_uint_cx_double(const cx_double x) { return (uint) x.x; }
+#endif
+
 inline uint coot_absdiff_uint(const uint x, const uint y) { return (x > y) ? (x - y) : (y - x); }
 inline uint coot_conj_uint(const uint x) { return x; }
 inline uint coot_abs_uint(const uint x) { return x; }

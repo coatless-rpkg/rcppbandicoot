@@ -24,23 +24,25 @@ __device__ inline bool coot_isinf(const long)       { return false; }
 __device__ inline bool coot_isfinite(const long)    { return true; }
 
 // Conversion functions for s64 elements.
-__device__ inline long coot_to_long(const  uchar& x) { return (long) x; }
-__device__ inline long coot_to_long(const   char& x) { return (long) x; }
-__device__ inline long coot_to_long(const ushort& x) { return (long) x; }
-__device__ inline long coot_to_long(const  short& x) { return (long) x; }
-__device__ inline long coot_to_long(const   uint& x) { return (long) x; }
-__device__ inline long coot_to_long(const    int& x) { return (long) x; }
-__device__ inline long coot_to_long(const size_t& x) { return (long) x; }
-__device__ inline long coot_to_long(const   long& x) { return (long) x; }
+__device__ inline long coot_to_long(const     uchar& x) { return (long) x; }
+__device__ inline long coot_to_long(const      char& x) { return (long) x; }
+__device__ inline long coot_to_long(const    ushort& x) { return (long) x; }
+__device__ inline long coot_to_long(const     short& x) { return (long) x; }
+__device__ inline long coot_to_long(const      uint& x) { return (long) x; }
+__device__ inline long coot_to_long(const       int& x) { return (long) x; }
+__device__ inline long coot_to_long(const    size_t& x) { return (long) x; }
+__device__ inline long coot_to_long(const      long& x) { return (long) x; }
 #if defined(COOT_HAVE_FP16)
 #if CUDA_VERSION < 12020
-__device__ inline long coot_to_long(const __half& x) { return (long) ((long long) x); }
+__device__ inline long coot_to_long(const    __half& x) { return (long) ((long long) x); }
 #else
-__device__ inline long coot_to_long(const __half& x) { return (long) x; }
+__device__ inline long coot_to_long(const    __half& x) { return (long) x; }
 #endif
 #endif
-__device__ inline long coot_to_long(const  float& x) { return (long) x; }
-__device__ inline long coot_to_long(const double& x) { return (long) x; }
+__device__ inline long coot_to_long(const     float& x) { return (long) x; }
+__device__ inline long coot_to_long(const    double& x) { return (long) x; }
+__device__ inline long coot_to_long(const  cx_float& x) { return (long) x.x; }
+__device__ inline long coot_to_long(const cx_double& x) { return (long) x.x; }
 
 // Utility mathematical functions.
 __device__ inline long coot_absdiff(const long x, const long y) { return abs(x - y); }

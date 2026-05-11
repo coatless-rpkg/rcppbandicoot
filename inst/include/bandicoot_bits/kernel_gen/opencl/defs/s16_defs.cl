@@ -22,6 +22,25 @@ inline bool coot_is_signed_short()          { return true; }
 inline bool coot_isnan_short(const short x) { return false; }
 inline bool coot_isinf_short(const short x) { return false; }
 
+// Conversion operators.
+inline short coot_to_short_uchar(const         uchar x) { return (short) x;   }
+inline short coot_to_short_ushort(const       ushort x) { return (short) x;   }
+inline short coot_to_short_uint(const           uint x) { return (short) x;   }
+inline short coot_to_short_ulong(const         ulong x) { return (short) x;   }
+inline short coot_to_short_char(const           char x) { return (short) x;   }
+inline short coot_to_short_short(const         short x) { return x;           }
+inline short coot_to_short_int(const             int x) { return (short) x;   }
+inline short coot_to_short_long(const           long x) { return (short) x;   }
+#ifdef COOT_HAVE_FP16
+inline short coot_to_short_half(const           half x) { return (short) x;   }
+#endif
+inline short coot_to_short_float(const         float x) { return (short) x;   }
+inline short coot_to_short_cx_float(const   cx_float x) { return (short) x.x; }
+#ifdef COOT_HAVE_FP64
+inline short coot_to_short_double(const       double x) { return (short) x;   }
+inline short coot_to_short_cx_double(const cx_double x) { return (short) x.x; }
+#endif
+
 inline short coot_absdiff_short(const short x, const short y) { return abs(x - y); }
 inline short coot_conj_short(const short x) { return x; }
 inline short coot_abs_short(const short x) { return abs(x); }

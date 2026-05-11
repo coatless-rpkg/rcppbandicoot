@@ -24,23 +24,25 @@ __device__ inline bool  coot_isinf(const uchar)       { return false; }
 __device__ inline bool  coot_isfinite(const uchar)    { return true; }
 
 // Conversion functions for u8 elements.
-__device__ inline uchar coot_to_uchar(const  uchar& x) { return (uchar) x; }
-__device__ inline uchar coot_to_uchar(const   char& x) { return (uchar) x; }
-__device__ inline uchar coot_to_uchar(const ushort& x) { return (uchar) x; }
-__device__ inline uchar coot_to_uchar(const  short& x) { return (uchar) x; }
-__device__ inline uchar coot_to_uchar(const   uint& x) { return (uchar) x; }
-__device__ inline uchar coot_to_uchar(const    int& x) { return (uchar) x; }
-__device__ inline uchar coot_to_uchar(const size_t& x) { return (uchar) x; }
-__device__ inline uchar coot_to_uchar(const   long& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const     uchar& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const      char& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const    ushort& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const     short& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const      uint& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const       int& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const    size_t& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const      long& x) { return (uchar) x; }
 #if defined(COOT_HAVE_FP16)
 #if CUDA_VERSION < 12020
-__device__ inline uchar coot_to_uchar(const __half& x) { return (uchar) ((ushort) x); }
+__device__ inline uchar coot_to_uchar(const    __half& x) { return (uchar) ((ushort) x); }
 #else
-__device__ inline uchar coot_to_uchar(const __half& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const    __half& x) { return (uchar) x; }
 #endif
 #endif
-__device__ inline uchar coot_to_uchar(const  float& x) { return (uchar) x; }
-__device__ inline uchar coot_to_uchar(const double& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const     float& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const    double& x) { return (uchar) x; }
+__device__ inline uchar coot_to_uchar(const  cx_float& x) { return (uchar) x.x; }
+__device__ inline uchar coot_to_uchar(const cx_double& x) { return (uchar) x.x; }
 
 // Utility mathematical functions.
 __device__ inline uchar coot_absdiff(const uchar x, const uchar y) { return (x > y) ? (x - y) : (y - x); }

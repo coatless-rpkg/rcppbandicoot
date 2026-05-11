@@ -41,23 +41,23 @@ template
   >
 using mtglue_inline_function = concat_str
   <
-  func_prefix<backend>,                // optional __device__ or similar
-  eop_inline_str<backend>,             // inline
-  elem_type_str<out_eT, backend>,      // <eT>
-  space,                               //
-  func_name,                           // func_name
-  func_name_suffix<out_eT, backend>,   // optional "_uword" for some backends
-  func_name_suffix<eT, backend>,       // optional "_float" for some backends
-  eop_inline_function_arg,             // (const
-  elem_type_str<eT, backend>,          // <eT>
-  space_x,                             //  x
-  eop_extra_arg_list_const,            // , const
-  elem_type_str<eT, backend>,          // <eT>
-  space_y,                             //  y
-  eop_inline_function_body,            // ) { return
-  conv_elem_type_str<out_eT, backend>, // out_eT
-  open_paren,                          // (
-  func_body,                           // whatever the function body is
-  close_paren,                         // )
-  semicolon_close                      // ; } (plus a newline)
+  func_prefix<backend>,                    // optional __device__ or similar
+  eop_inline_str<backend>,                 // inline
+  elem_type_str<out_eT, backend>,          // <eT>
+  space,                                   //
+  func_name,                               // func_name
+  func_name_suffix<out_eT, backend>,       // optional "_uword" for some backends
+  func_name_suffix<eT, backend>,           // optional "_float" for some backends
+  eop_inline_function_arg,                 // (const
+  elem_type_str<eT, backend>,              // <eT>
+  space_x,                                 //  x
+  eop_extra_arg_list_const,                // , const
+  elem_type_str<eT, backend>,              // <eT>
+  space_y,                                 //  y
+  eop_inline_function_body,                // ) { return
+  conv_elem_type_str<out_eT, eT, backend>, // coot_to_out_eT
+  open_paren,                              // (
+  func_body,                               // whatever the function body is
+  close_paren,                             // )
+  semicolon_close                          // ; } (plus a newline)
   >;

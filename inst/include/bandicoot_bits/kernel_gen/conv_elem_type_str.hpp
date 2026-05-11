@@ -15,10 +15,15 @@
 
 
 //
-// The conv_elem_type_str<eT, backend> macro must be specialized for each backend.
-// It produces the function name necessary to convert from one type to another
-// (this could just be a C-style cast).
+// The conv_elem_type_str<out_eT, in_eT, backend> macro must be specialized
+// for each backend.  It produces the function name necessary to convert
+// from one type to another.
 //
 
-template<typename eT, coot_backend_t backend>
-struct conv_elem_type_str { };
+template<typename out_eT, typename in_eT, coot_backend_t backend>
+using conv_elem_type_str = concat_str
+  <
+  conv_elem_type_prefix,
+  elem_type_str<out_eT, backend>,
+  func_name_suffix<in_eT, backend>
+  >;

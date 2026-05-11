@@ -24,19 +24,21 @@ __device__ inline bool coot_isinf(const uint)       { return false; }
 __device__ inline bool coot_isfinite(const uint)    { return true; }
 
 // Conversion functions for u32 elements.
-__device__ inline uint coot_to_uint(const  uchar& x) { return (uint) x; }
-__device__ inline uint coot_to_uint(const   char& x) { return (uint) x; }
-__device__ inline uint coot_to_uint(const ushort& x) { return (uint) x; }
-__device__ inline uint coot_to_uint(const  short& x) { return (uint) x; }
-__device__ inline uint coot_to_uint(const   uint& x) { return (uint) x; }
-__device__ inline uint coot_to_uint(const    int& x) { return (uint) x; }
-__device__ inline uint coot_to_uint(const size_t& x) { return (uint) x; }
-__device__ inline uint coot_to_uint(const   long& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const     uchar& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const      char& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const    ushort& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const     short& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const      uint& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const       int& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const    size_t& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const      long& x) { return (uint) x; }
 #if defined(COOT_HAVE_FP16)
-__device__ inline uint coot_to_uint(const __half& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const    __half& x) { return (uint) x; }
 #endif
-__device__ inline uint coot_to_uint(const  float& x) { return (uint) x; }
-__device__ inline uint coot_to_uint(const double& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const     float& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const    double& x) { return (uint) x; }
+__device__ inline uint coot_to_uint(const  cx_float& x) { return (uint) x.x; }
+__device__ inline uint coot_to_uint(const cx_double& x) { return (uint) x.x; }
 
 // Utility mathematical functions.
 __device__ inline uint coot_absdiff(const uint x, const uint y) { return (x > y) ? (x - y) : (y - x); }

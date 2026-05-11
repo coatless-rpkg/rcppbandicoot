@@ -1,3 +1,9 @@
+# RcppBandicoot 4.0.1.1
+
+- Upgraded to bandicoot 4.0.1: "Bandwidth Glutton" (2026-05-08)
+  - Fixes for compiler warnings.
+  - Robustness fixes for unit tests.
+
 # RcppBandicoot 4.0.0.1
 
 - Upgraded to bandicoot 4.0.0: "Bandwidth Glutton" (2026-04-24)

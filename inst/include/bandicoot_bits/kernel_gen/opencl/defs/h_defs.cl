@@ -22,6 +22,23 @@ inline bool coot_is_signed_half()         { return true; }
 inline bool coot_isnan_half(const half x) { return isnan(x); }
 inline bool coot_isinf_half(const half x) { return isinf(x); }
 
+// Conversion operators.
+inline half coot_to_half_uchar(const         uchar x) { return (half) x;   }
+inline half coot_to_half_ushort(const       ushort x) { return (half) x;   }
+inline half coot_to_half_uint(const           uint x) { return (half) x;   }
+inline half coot_to_half_ulong(const         ulong x) { return (half) x;   }
+inline half coot_to_half_char(const           char x) { return (half) x;   }
+inline half coot_to_half_short(const         short x) { return (half) x;   }
+inline half coot_to_half_int(const             int x) { return (half) x;   }
+inline half coot_to_half_long(const           long x) { return (half) x;   }
+inline half coot_to_half_half(const           half x) { return x;          }
+inline half coot_to_half_float(const         float x) { return (half) x;   }
+inline half coot_to_half_cx_float(const   cx_float x) { return (half) x.x; }
+#ifdef COOT_HAVE_FP64
+inline half coot_to_half_double(const       double x) { return (half) x;   }
+inline half coot_to_half_cx_double(const cx_double x) { return (half) x.x; }
+#endif
+
 inline half coot_absdiff_half(const half x, const half y) { return fabs(x - y); }
 inline half coot_conj_half(const half x) { return x; }
 inline half coot_abs_half(const half x) { return fabs(x); }

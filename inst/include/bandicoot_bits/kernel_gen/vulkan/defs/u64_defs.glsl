@@ -12,4 +12,23 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 R"(
+
+// Conversion functions for uint64_t elements.
+uint64_t coot_to_uint64_t(const      bool x) { return uint64_t(x); }
+// uint64_t coot_to_uint64_t(const     uchar x) { return uint64_t(x); }
+// uint64_t coot_to_uint64_t(const      char x) { return uint64_t(x); }
+// uint64_t coot_to_uint64_t(const    ushort x) { return uint64_t(x); }
+// uint64_t coot_to_uint64_t(const     short x) { return uint64_t(x); }
+uint64_t coot_to_uint64_t(const      uint x) { return uint64_t(x); }
+uint64_t coot_to_uint64_t(const       int x) { return uint64_t(x); }
+uint64_t coot_to_uint64_t(const  uint64_t x) { return x;           }
+// uint64_t coot_to_uint64_t(const      long x) { return uint64_t(x); }
+// #if defined(COOT_HAVE_FP16)
+// uint64_t coot_to_uint64_t(const    __half x) { return uint64_t(x); }
+// #endif
+uint64_t coot_to_uint64_t(const     float x) { return uint64_t(x); }
+uint64_t coot_to_uint64_t(const    double x) { return uint64_t(x); }
+// uint64_t coot_to_uint64_t(const  cx_float x) { return x.x;           }
+// uint64_t coot_to_uint64_t(const cx_double x) { return uint64_t(x.x); }
+
 )"

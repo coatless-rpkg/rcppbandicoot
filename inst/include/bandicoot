@@ -181,6 +181,8 @@ namespace coot
 
     // type-specific and kernel-specific definitions, backend-agnostic
     #include "bandicoot_bits/kernel_gen/elem_type_str.hpp"
+    #include "bandicoot_bits/kernel_gen/macro_defn.hpp"
+    #include "bandicoot_bits/kernel_gen/func_name_suffix.hpp"
     #include "bandicoot_bits/kernel_gen/conv_elem_type_str.hpp"
     #include "bandicoot_bits/kernel_gen/isnan_str.hpp"
     #include "bandicoot_bits/kernel_gen/kernels.hpp"
@@ -190,16 +192,13 @@ namespace coot
     #include "bandicoot_bits/kernel_gen/type_defs.hpp"
     #include "bandicoot_bits/kernel_gen/kernel_funcs.hpp"
     #include "bandicoot_bits/kernel_gen/kernel_src.hpp"
-    #include "bandicoot_bits/kernel_gen/macro_defn.hpp"
     #include "bandicoot_bits/kernel_gen/func_prefix.hpp"
-    #include "bandicoot_bits/kernel_gen/func_name_suffix.hpp"
     #include "bandicoot_bits/kernel_gen/eop_inline_function.hpp"
     #include "bandicoot_bits/kernel_gen/mtglue_inline_function.hpp"
 
     // specific definitions for backends
     #if defined(COOT_USE_CUDA)
       #include "bandicoot_bits/kernel_gen/cuda/elem_type_str.hpp"
-      #include "bandicoot_bits/kernel_gen/cuda/conv_elem_type_str.hpp"
       #include "bandicoot_bits/kernel_gen/cuda/isnan_str.hpp"
       #include "bandicoot_bits/kernel_gen/cuda/pointer_arg.hpp"
       #include "bandicoot_bits/kernel_gen/cuda/pointer_access.hpp"
@@ -212,7 +211,7 @@ namespace coot
     #endif
     #if defined(COOT_USE_OPENCL)
       #include "bandicoot_bits/kernel_gen/opencl/elem_type_str.hpp"
-      #include "bandicoot_bits/kernel_gen/opencl/conv_elem_type_str.hpp"
+      #include "bandicoot_bits/kernel_gen/opencl/func_name_suffix.hpp"
       #include "bandicoot_bits/kernel_gen/opencl/isnan_str.hpp"
       #include "bandicoot_bits/kernel_gen/opencl/pointer_arg.hpp"
       #include "bandicoot_bits/kernel_gen/opencl/pointer_access.hpp"
@@ -221,11 +220,9 @@ namespace coot
       #include "bandicoot_bits/kernel_gen/opencl/pre_kernel_src.hpp"
       #include "bandicoot_bits/kernel_gen/opencl/post_kernel_src.hpp"
       #include "bandicoot_bits/kernel_gen/opencl/type_defs.hpp"
-      #include "bandicoot_bits/kernel_gen/opencl/func_name_suffix.hpp"
     #endif
     #if defined(COOT_USE_VULKAN)
       #include "bandicoot_bits/kernel_gen/vulkan/elem_type_str.hpp"
-      #include "bandicoot_bits/kernel_gen/vulkan/conv_elem_type_str.hpp"
       #include "bandicoot_bits/kernel_gen/vulkan/isnan_str.hpp"
       #include "bandicoot_bits/kernel_gen/vulkan/pointer_arg.hpp"
       #include "bandicoot_bits/kernel_gen/vulkan/pointer_access.hpp"

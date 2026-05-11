@@ -22,6 +22,25 @@ inline bool coot_is_signed_int()        { return true; }
 inline bool coot_isnan_int(const int x) { return false; }
 inline bool coot_isinf_int(const int x) { return false; }
 
+// Conversion operators.
+inline int coot_to_int_uchar(const         uchar x) { return (int) x;   }
+inline int coot_to_int_ushort(const       ushort x) { return (int) x;   }
+inline int coot_to_int_uint(const           uint x) { return (int) x;   }
+inline int coot_to_int_ulong(const         ulong x) { return (int) x;   }
+inline int coot_to_int_char(const           char x) { return (int) x;   }
+inline int coot_to_int_short(const         short x) { return (int) x;   }
+inline int coot_to_int_int(const             int x) { return x;         }
+inline int coot_to_int_long(const           long x) { return (int) x;   }
+#ifdef COOT_HAVE_FP16
+inline int coot_to_int_half(const           half x) { return (int) x;   }
+#endif
+inline int coot_to_int_float(const         float x) { return (int) x;   }
+inline int coot_to_int_cx_float(const   cx_float x) { return (int) x.x; }
+#ifdef COOT_HAVE_FP64
+inline int coot_to_int_double(const       double x) { return (int) x;   }
+inline int coot_to_int_cx_double(const cx_double x) { return (int) x.x; }
+#endif
+
 inline int coot_absdiff_int(const int x, const int y) { return abs(x - y); }
 inline int coot_conj_int(const int x) { return x; }
 inline int coot_abs_int(const int x) { return abs(x); }

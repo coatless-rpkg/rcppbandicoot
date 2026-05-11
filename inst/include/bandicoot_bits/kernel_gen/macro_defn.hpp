@@ -21,17 +21,8 @@
 template<coot_backend_t backend>
 struct macro_defn
   {
-  struct prefix
-    {
-    static inline constexpr size_t len() { return 3; }
-    static inline constexpr char_array<4> str() { return char_array<4>{ "-D " }; }
-    };
-
-  struct suffix
-    {
-    static inline constexpr size_t len() { return 0; }
-    static inline constexpr char_array<1> str() { return char_array<1>{ "" }; }
-    };
+  struct prefix { static inline constexpr auto& str() { return "-D "; } };
+  struct suffix { static inline constexpr auto& str() { return "";    } };
   };
 
 
@@ -41,15 +32,6 @@ struct macro_defn
 template<>
 struct macro_defn< CL_BACKEND >
   {
-  struct prefix
-    {
-    static inline constexpr size_t len() { return 4; }
-    static inline constexpr char_array<5> str() { return char_array<5>{ "-D \"" }; }
-    };
-
-  struct suffix
-    {
-    static inline constexpr size_t len() { return 1; }
-    static inline constexpr char_array<2> str() { return char_array<2>{ "\"" }; }
-    };
+  struct prefix { static inline constexpr auto& str() { return "-D \""; } };
+  struct suffix { static inline constexpr auto& str() { return "\"";    } };
   };

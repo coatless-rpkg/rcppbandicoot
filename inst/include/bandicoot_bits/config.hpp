@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
-// Copyright 2017-2023 Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2017-2026 Ryan Curtin (https://www.ratml.org)
+// Copyright 2017-2026 Conrad Sanderson (https://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -63,6 +63,17 @@
 #define COOT_CUDA_INCLUDE_PATH /usr/include/
 //// Set the above line to the include path used to include parts of the CUDA toolkit.
 //// These will be used by NVRTC to compile kernels on-the-fly.
+#endif
+
+#if !defined(COOT_USE_VULKAN)
+// #define COOT_USE_VULKAN
+//// Uncomment the above line if you have Vulkan available on your system.
+#endif
+
+#if !defined(COOT_USE_SHADERC)
+// #define COOT_USE_SHADERC
+//// Uncomment the above line if you have shaderc available on your system.
+//// shaderc is required for runtime compilation of Vulkan (GLSL -> SPIR-V) compute shaders.
 #endif
 
 #if !defined(COOT_DEFAULT_BACKEND)
@@ -241,8 +252,10 @@
     #define COOT_DEFAULT_BACKEND CL_BACKEND
   #elif defined(COOT_USE_CUDA)
     #define COOT_DEFAULT_BACKEND CUDA_BACKEND
+  #elif defined(COOT_USE_VULKAN)
+    #define COOT_DEFAULT_BACKEND VULKAN_BACKEND
   #else
-    #error "One of COOT_USE_OPENCL or COOT_USE_CUDA must be defined!"
+    #error "One of COOT_USE_OPENCL, COOT_USE_CUDA, or COOT_USE_VULKAN must be defined!"
   #endif
 #else
   // TODO: ensure that the backend is valid

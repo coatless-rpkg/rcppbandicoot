@@ -12,4 +12,23 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 R"(
+
+// Conversion functions for uint elements.
+int coot_to_int(const      bool x) { return int(x); }
+// int coot_to_int(const     uchar x) { return int(x); }
+// int coot_to_int(const      char x) { return int(x); }
+// int coot_to_int(const    ushort x) { return int(x); }
+// int coot_to_int(const     short x) { return int(x); }
+int coot_to_int(const      uint x) { return int(x); }
+int coot_to_int(const       int x) { return x;      }
+int coot_to_int(const  uint64_t x) { return int(x); }
+// int coot_to_int(const      long x) { return int(x); }
+// #if defined(COOT_HAVE_FP16)
+// int coot_to_int(const    __half x) { return int(x); }
+// #endif
+int coot_to_int(const     float x) { return int(x); }
+int coot_to_int(const    double x) { return int(x); }
+// int coot_to_int(const  cx_float x) { return x.x;       }
+// int coot_to_int(const cx_double x) { return int(x.x); }
+
 )"

@@ -24,19 +24,21 @@ __device__ inline bool  coot_isinf(const float x)     { return isinf(x); }
 __device__ inline bool  coot_isfinite(const float x)  { return isfinite(x); }
 
 // Conversion functions for float elements.
-__device__ inline float coot_to_float(const  uchar& x) { return (float) x; }
-__device__ inline float coot_to_float(const   char& x) { return (float) x; }
-__device__ inline float coot_to_float(const ushort& x) { return (float) x; }
-__device__ inline float coot_to_float(const  short& x) { return (float) x; }
-__device__ inline float coot_to_float(const   uint& x) { return (float) x; }
-__device__ inline float coot_to_float(const    int& x) { return (float) x; }
-__device__ inline float coot_to_float(const size_t& x) { return (float) x; }
-__device__ inline float coot_to_float(const   long& x) { return (float) x; }
+__device__ inline float coot_to_float(const     uchar& x) { return (float) x; }
+__device__ inline float coot_to_float(const      char& x) { return (float) x; }
+__device__ inline float coot_to_float(const    ushort& x) { return (float) x; }
+__device__ inline float coot_to_float(const     short& x) { return (float) x; }
+__device__ inline float coot_to_float(const      uint& x) { return (float) x; }
+__device__ inline float coot_to_float(const       int& x) { return (float) x; }
+__device__ inline float coot_to_float(const    size_t& x) { return (float) x; }
+__device__ inline float coot_to_float(const      long& x) { return (float) x; }
 #if defined(COOT_HAVE_FP16)
-__device__ inline float coot_to_float(const __half& x) { return __half2float(x); }
+__device__ inline float coot_to_float(const    __half& x) { return __half2float(x); }
 #endif
-__device__ inline float coot_to_float(const  float& x) { return (float) x; }
-__device__ inline float coot_to_float(const double& x) { return (float) x; }
+__device__ inline float coot_to_float(const     float& x) { return (float) x; }
+__device__ inline float coot_to_float(const    double& x) { return (float) x; }
+__device__ inline float coot_to_float(const  cx_float& x) { return (float) x.x; }
+__device__ inline float coot_to_float(const cx_double& x) { return (float) x.x; }
 
 // Utility mathematical functions.
 __device__ inline float coot_absdiff(const float x, const float y) { return fabs(x - y); }

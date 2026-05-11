@@ -544,7 +544,7 @@ struct elem_access_str< mtOp<out_eT, T1, mtop_conv_to>, i, backend, arg_name_pre
   <
   concat_str
     <
-    conv_elem_type_str<out_eT, backend>,
+    conv_elem_type_str<out_eT, typename T1::elem_type, backend>,
     open_paren
     >,
   elem_access_str< T1, i, backend, arg_name_prefix, arg_names >,
@@ -598,18 +598,18 @@ struct elem_access_str< mtGlue<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >,
     typename mtglue_type::func_name,
     func_name_suffix<out_eT, backend>,
     open_paren,
-    conv_elem_type_str<out_eT, backend>,
+    conv_elem_type_str<out_eT, typename T1::elem_type, backend>,
     open_paren
     >,
   elem_access_str< T1, i, backend, concat_str<arg_name_prefix, eglue_arg1_name>, arg_names >,
   concat_str
     <
     close_space_sep, // ),
-    conv_elem_type_str<out_eT, backend>,
+    conv_elem_type_str<out_eT, typename T2::elem_type, backend>,
     open_paren
     >,
   elem_access_str< T2, i, backend, concat_str<arg_name_prefix, eglue_arg2_name>, arg_names >,
-  concat_str< double_close_paren >
+  concat_str< double_close_paren > // ))
   > { };
 
 template<typename out_eT, typename T1, typename T2, typename mtglue_type, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>

@@ -23,22 +23,18 @@
 // The conv_elem_type_str<eT, backend> macro must be specialized for each backend.
 //
 
-struct macro_et_conv_def
-  {
-  static inline constexpr size_t len() { return 10; }
-  static inline constexpr char_array<11> str() { return char_array<11>{ "COOT_TO_ET" }; }
-  };
+struct macro_et_conv_def  { static inline constexpr auto& str() { return "COOT_TO_ET"; } };
+struct macro_from_et_str  { static inline constexpr auto& str() { return "_FROM_ET";   } };
 
-
-
-
-template<typename eT, size_t i, coot_backend_t backend >
+template<typename out_eT, size_t out_i, typename in_eT, size_t in_i, coot_backend_t backend >
 using macro_conv_elem_type = concat_str
   <
   typename macro_defn<backend>::prefix,
   macro_et_conv_def,
-  index_to_str<i>,
+  index_to_str<out_i>,
+  macro_from_et_str,
+  index_to_str<in_i>,
   equals,
-  conv_elem_type_str<eT, backend>,
+  conv_elem_type_str<out_eT, in_eT, backend>,
   typename macro_defn<backend>::suffix
   >;

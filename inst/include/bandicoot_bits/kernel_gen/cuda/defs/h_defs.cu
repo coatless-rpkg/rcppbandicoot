@@ -25,26 +25,28 @@ __device__ inline bool   coot_isfinite(const __half x)  { return !__hisnan(x) &&
 
 // Conversion functions for fp16 elements.
 #if CUDA_VERSION < 12020
-__device__ inline __half coot_to___half(const  uchar& x) { return (__half) ((ushort) x); }
-__device__ inline __half coot_to___half(const   char& x) { return (__half) ((short) x); }
+__device__ inline __half coot_to___half(const     uchar& x) { return (__half) ((ushort) x); }
+__device__ inline __half coot_to___half(const      char& x) { return (__half) ((short) x); }
 #else
-__device__ inline __half coot_to___half(const  uchar& x) { return (__half) x; }
-__device__ inline __half coot_to___half(const   char& x) { return (__half) x; }
+__device__ inline __half coot_to___half(const     uchar& x) { return (__half) x; }
+__device__ inline __half coot_to___half(const      char& x) { return (__half) x; }
 #endif
-__device__ inline __half coot_to___half(const ushort& x) { return (__half) x; }
-__device__ inline __half coot_to___half(const  short& x) { return (__half) x; }
-__device__ inline __half coot_to___half(const   uint& x) { return (__half) x; }
-__device__ inline __half coot_to___half(const    int& x) { return (__half) x; }
+__device__ inline __half coot_to___half(const    ushort& x) { return (__half) x; }
+__device__ inline __half coot_to___half(const     short& x) { return (__half) x; }
+__device__ inline __half coot_to___half(const      uint& x) { return (__half) x; }
+__device__ inline __half coot_to___half(const       int& x) { return (__half) x; }
 #if CUDA_VERSION < 12020
-__device__ inline __half coot_to___half(const size_t& x) { return (__half) ((unsigned long long) x); }
-__device__ inline __half coot_to___half(const   long& x) { return (__half) ((long long) x); }
+__device__ inline __half coot_to___half(const    size_t& x) { return (__half) ((unsigned long long) x); }
+__device__ inline __half coot_to___half(const      long& x) { return (__half) ((long long) x); }
 #else
-__device__ inline __half coot_to___half(const size_t& x) { return (__half) x; }
-__device__ inline __half coot_to___half(const   long& x) { return (__half) x; }
+__device__ inline __half coot_to___half(const    size_t& x) { return (__half) x; }
+__device__ inline __half coot_to___half(const      long& x) { return (__half) x; }
 #endif
-__device__ inline __half coot_to___half(const __half& x) { return (__half) x; }
-__device__ inline __half coot_to___half(const  float& x) { return __float2half(x); }
-__device__ inline __half coot_to___half(const double& x) { return __float2half((double) x); }
+__device__ inline __half coot_to___half(const    __half& x) { return (__half) x; }
+__device__ inline __half coot_to___half(const     float& x) { return __float2half(x); }
+__device__ inline __half coot_to___half(const    double& x) { return __float2half((float) x); }
+__device__ inline __half coot_to___half(const  cx_float& x) { return __float2half(x.x); }
+__device__ inline __half coot_to___half(const cx_double& x) { return __float2half((float) x.x); }
 
 // CUDA FP16 support does not include some arithmetic operators that we need for volatile elements so we add them ourselves...
 #if CUDA_VERSION < 12040

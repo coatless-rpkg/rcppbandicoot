@@ -34,18 +34,73 @@ void append_kernel_macros(std::vector<std::string>& result)
   const auto bounds_check_macro = macro_bounds_check<T, i, backend>::str();
   const auto elem_access_macro = macro_elem_access<T, i, backend>::str();
   const auto elem_type_macro = macro_elem_type<typename T::elem_type, i, backend>::str();
-  const auto elem_type_conv_macro = macro_conv_elem_type<typename T::elem_type, i, backend>::str();
 
   result.insert(result.end(),
       {
       std::string(kernel_params_macro.begin(), kernel_params_macro.end() - 1),
       std::string(bounds_check_macro.begin(), bounds_check_macro.end() - 1),
       std::string(elem_access_macro.begin(), elem_access_macro.end() - 1),
-      std::string(elem_type_macro.begin(), elem_type_macro.end() - 1),
-      std::string(elem_type_conv_macro.begin(), elem_type_conv_macro.end() - 1),
+      std::string(elem_type_macro.begin(), elem_type_macro.end() - 1)
       });
 
   append_kernel_macros<backend, i + 1, Ts...>(result);
+  }
+
+
+
+//
+// Generate COOT_TO_ET<x>_FROM_ET<y> macros for each combination of types.
+// By convention, we only generate macros for y > x.
+//
+
+template<size_t i, typename T, typename... Ts>
+struct get_elem
+  {
+  typedef typename get_elem<i - 1, Ts...>::result result;
+  };
+
+template<typename T, typename... Ts>
+struct get_elem<0, T, Ts...>
+  {
+  typedef typename T::elem_type result;
+  };
+
+template<coot_backend_t backend, size_t out_i, size_t in_i, typename... Ts>
+struct append_conv_to_macro_helper
+  {
+  static inline void apply(std::vector<std::string>& result)
+    {
+    const auto elem_type_conv_macro = macro_conv_elem_type<typename get_elem<out_i, Ts...>::result, out_i, typename get_elem<in_i, Ts...>::result, in_i, backend>::str();
+    result.push_back(std::string(elem_type_conv_macro.begin(), elem_type_conv_macro.end() - 1));
+    append_conv_to_macro_helper<backend, out_i, in_i - 1, Ts...>::apply(result);
+    }
+  };
+
+template<coot_backend_t backend, size_t i, typename... Ts>
+struct append_conv_to_macro_helper<backend, i, i, Ts...>
+  {
+  static inline void apply(std::vector<std::string>& result)
+    {
+    append_conv_to_macro_helper<backend, i - 1, sizeof...(Ts) - 1, Ts...>::apply(result);
+    }
+  };
+
+template<coot_backend_t backend, typename... Ts>
+struct append_conv_to_macro_helper<backend, 0, 0, Ts...>
+  {
+  static inline void apply(std::vector<std::string>& /* result */)
+    {
+    // nothing left to do
+    return;
+    }
+  };
+
+
+
+template<coot_backend_t backend, typename... Ts>
+void append_conv_to_macros(std::vector<std::string>& result)
+  {
+  append_conv_to_macro_helper<backend, sizeof...(Ts) - 1, sizeof...(Ts) - 1, Ts...>::apply(result);
   }
 
 
@@ -201,6 +256,9 @@ struct generator
     std::vector<std::string> result = {{ std::string(kernel_name_macro.begin(), kernel_name_macro.end() - 1) }};
 
     append_kernel_macros<backend, 0, Ts...>(result);
+
+    // Append COOT_TO_ET<x>_FROM_ET<y>() macro definitions.
+    append_conv_to_macros<backend, Ts...>(result);
 
     // Vulkan: COOT_OBJECT_i_PARAMS(name) declarations for each argument.
     append_buffer_macros_if_vulkan<backend, Ts...>(result);
