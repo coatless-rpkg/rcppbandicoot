@@ -53,11 +53,11 @@ op_pinv::apply_direct(Mat<eT2>& out, const T1& in, const typename T1::elem_type 
     // Now detect whether it is stored in a vector or matrix.
     strip_diagmat<T1> S(in);
     typedef typename strip_diagmat<T1>::stored_type ST1;
-    unwrap<ST1> U(S.M);
+    quasi_unwrap<ST1> U(S.M);
     if (U.M.n_rows == 1 || U.M.n_cols == 1)
       {
       // Aliases must be handled via a temporary.
-      alias_wrapper<Mat<eT2>, typename unwrap<ST1>::stored_type> W(out, U.M);
+      alias_wrapper<Mat<eT2>, typename quasi_unwrap<ST1>::stored_type> W(out, U.M);
       return apply_direct_diag(W.use, U.M, tol);
       }
     else
@@ -73,35 +73,43 @@ op_pinv::apply_direct(Mat<eT2>& out, const T1& in, const typename T1::elem_type 
     {
     // TODO: would be great to avoid actually materializing everything here
     // TODO: a `strip_symmat` struct would be useful for this
-
-    unwrap<T1> U(in);
-    extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+    
+    plain_unwrap<T1> E(in);
+    
     // apply_direct_sym() is destructive to the input matrix, so, we may need to make a copy.
-    if (is_Mat<T1>::value)
+    
+    if(plain_unwrap<T1>::is_generated)
+      {
+      // We have already created a temporary for unwrapping, so we can destructively use that.
+      
+      typedef typename plain_unwrap<T1>::stored_type E_stored_type;
+      
+      return apply_direct_sym(out, const_cast< E_stored_type& >(E.M), tol);
+      }
+    else
       {
       Mat<typename T1::elem_type> tmp(E.M);
       return apply_direct_sym(out, tmp, tol);
       }
-    else
-      {
-      // We have already created a temporary for unwrapping, so we can destructively use that.
-      return apply_direct_sym(out, const_cast<Mat<typename T1::elem_type>&>(E.M), tol);
-      }
     }
   else
     {
-    unwrap<T1> U(in);
-    extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+    plain_unwrap<T1> E(in);
+    
     // apply_direct_gen() is destructive to the input matrix, so, we may need to make a copy.
-    if (is_Mat<T1>::value)
+    
+    if(plain_unwrap<T1>::is_generated)
       {
-      Mat<typename T1::elem_type> tmp(E.M);
-      return apply_direct_gen(out, tmp, tol);
+      // We have already created a temporary for unwrapping, so we can destructively use that.
+      
+      typedef typename plain_unwrap<T1>::stored_type E_stored_type;
+      
+      return apply_direct_gen(out, const_cast< E_stored_type& >(E.M), tol);
       }
     else
       {
-      // We have already created a temporary for unwrapping, so we can destructively use that.
-      return apply_direct_gen(out, const_cast<Mat<typename T1::elem_type>&>(E.M), tol);
+      Mat<typename T1::elem_type> tmp(E.M);
+      return apply_direct_gen(out, tmp, tol);
       }
     }
   }

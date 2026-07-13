@@ -531,7 +531,7 @@ template<typename out_eT, typename T1, typename T2, typename mtglue_type, size_t
 struct kernel_param_str< mtGlue<out_eT, T1, T2, mtglue_mixed_core<mtglue_type> >, i, backend, arg_name_prefix, sep > : public nested_concat_str
   <
   kernel_param_str< T1, i, backend, concat_str< arg_name_prefix, eglue_arg1_name >, sep >,
-  concat_str < sep >,
+  concat_str< sep >,
   kernel_param_str< T2, i, backend, concat_str< arg_name_prefix, eglue_arg2_name >, sep >
   > { };
 
@@ -571,3 +571,32 @@ struct kernel_param_str< Op<T1, op_htrans>, i, backend, arg_name_prefix, sep > :
 template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename sep>
 struct kernel_param_str< Op<T1, op_strans>, i, backend, arg_name_prefix, sep > : public kernel_param_str< T1, i, backend, arg_name_prefix, sep > { };
 
+
+
+//
+// Op<T1, op_symmatu> and Op<T1, op_symmatl>: no extra arguments needed, unless T1 is a complex type;
+// then, we need to also pass the "do_conj" argument
+//
+
+template<bool is_cx, typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename sep>
+struct kernel_param_str_symmat_helper : public kernel_param_str< T1, i, backend, arg_name_prefix, sep > { };
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename sep>
+struct kernel_param_str_symmat_helper< true, T1, i, backend, arg_name_prefix, sep > : public nested_concat_str
+  <
+  kernel_param_str< T1, i, backend, concat_str< arg_name_prefix, arg_prefix_name >, sep >,
+  concat_str
+    <
+    sep,
+    uword_arg<do_conj_name, arg_name_prefix> // UWORD name_do_conj
+    >
+  > { };
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename sep>
+struct kernel_param_str_symmat : public kernel_param_str_symmat_helper< is_cx<typename T1::elem_type>::value, T1, i, backend, arg_name_prefix, sep > { };
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename sep>
+struct kernel_param_str< Op<T1, op_symmatu>, i, backend, arg_name_prefix, sep > : public kernel_param_str_symmat< T1, i, backend, arg_name_prefix, sep > { };
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename sep>
+struct kernel_param_str< Op<T1, op_symmatl>, i, backend, arg_name_prefix, sep > : public kernel_param_str_symmat< T1, i, backend, arg_name_prefix, sep > { };

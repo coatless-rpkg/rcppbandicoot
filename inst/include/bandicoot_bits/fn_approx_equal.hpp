@@ -40,8 +40,8 @@ approx_equal
   
   coot_conform_check( ((tol >= T(0)) == false), "approx_equal(): argument 'tol' must be >= 0" );
   
-  unwrap<T1> UA(A.get_ref());
-  unwrap<T2> UB(B.get_ref());
+  quasi_unwrap<T1> UA(A.get_ref());
+  quasi_unwrap<T2> UB(B.get_ref());
 
   if (UA.M.n_rows != UB.M.n_rows || UA.M.n_cols != UB.M.n_cols)
     {
@@ -113,8 +113,8 @@ approx_equal
   coot_conform_check( ((abs_tol >= T(0)) == false), "approx_equal(): argument 'abs_tol' must be >= 0" );
   coot_conform_check( ((rel_tol >= T(0)) == false), "approx_equal(): argument 'rel_tol' must be >= 0" );
   
-  unwrap<T1> UA(A.get_ref());
-  unwrap<T2> UB(B.get_ref());
+  quasi_unwrap<T1> UA(A.get_ref());
+  quasi_unwrap<T2> UB(B.get_ref());
 
   if (UA.M.n_rows != UB.M.n_rows || UA.M.n_cols != UB.M.n_cols)
     {
@@ -166,8 +166,8 @@ approx_equal
   
   coot_conform_check( ((tol >= T(0)) == false), "approx_equal(): argument 'tol' must be >= 0" );
   
-  unwrap_cube<T1> UA(A.get_ref());
-  unwrap_cube<T2> UB(B.get_ref());
+  quasi_unwrap_cube<T1> UA(A.get_ref());
+  quasi_unwrap_cube<T2> UB(B.get_ref());
 
   if (UA.M.n_rows != UB.M.n_rows || UA.M.n_cols != UB.M.n_cols || UA.M.n_slices != UB.M.n_slices)
     {
@@ -249,8 +249,8 @@ approx_equal
   coot_conform_check( ((abs_tol >= T(0)) == false), "approx_equal(): argument 'abs_tol' must be >= 0" );
   coot_conform_check( ((rel_tol >= T(0)) == false), "approx_equal(): argument 'rel_tol' must be >= 0" );
   
-  unwrap_cube<T1> UA(A.get_ref());
-  unwrap_cube<T2> UB(B.get_ref());
+  quasi_unwrap_cube<T1> UA(A.get_ref());
+  quasi_unwrap_cube<T2> UB(B.get_ref());
 
   if (UA.M.n_rows != UB.M.n_rows || UA.M.n_cols != UB.M.n_cols || UA.M.n_slices != UB.M.n_slices)
     {

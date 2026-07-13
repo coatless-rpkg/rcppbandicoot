@@ -26,9 +26,9 @@ op_repmat::apply(Mat<out_eT>& out, const Op<T1, op_repmat>& in)
   const uword copies_per_row = in.aux_uword_a;
   const uword copies_per_col = in.aux_uword_b;
 
-  const unwrap<T1> U(in.m);
+  const quasi_unwrap<T1> U(in.m);
 
-  alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type> W(out, U.M);
+  alias_wrapper<Mat<out_eT>, typename quasi_unwrap<T1>::stored_type> W(out, U.M);
 
   // Skip if there is nothing to do.
   if (W.using_aux && copies_per_row == 1 && copies_per_col == 1 && is_same_type<out_eT, typename T1::elem_type>::yes)
@@ -73,9 +73,9 @@ op_repmat::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_r
   const uword copies_per_row = in.aux_uword_a;
   const uword copies_per_col = in.aux_uword_b;
 
-  const unwrap<T1> U(in.m.q);
+  const quasi_unwrap<T1> U(in.m.q);
 
-  alias_wrapper<Mat<out_eT>, typename unwrap<T1>::stored_type> W(out, U.M);
+  alias_wrapper<Mat<out_eT>, typename quasi_unwrap<T1>::stored_type> W(out, U.M);
 
   // Skip if there is nothing to do.
   if (W.using_aux && copies_per_row == 1 && copies_per_col == 1 && is_same_type<out_eT, typename T1::elem_type>::yes)

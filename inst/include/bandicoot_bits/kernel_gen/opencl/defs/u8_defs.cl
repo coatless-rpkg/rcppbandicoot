@@ -46,6 +46,7 @@ inline uchar coot_conj_uchar(const uchar x) { return x; }
 inline uchar coot_abs_uchar(const uchar x) { return x; }
 inline uchar coot_min_uchar(const uchar x, const uchar y) { return (x < y) ? x : y; }
 inline uchar coot_max_uchar(const uchar x, const uchar y) { return (x > y) ? x : y; }
+inline uchar coot_sign_uchar(const uchar x) { return (x > 0) ? 1 : 0; }
 
 // Basic mathematical operators.
 inline uchar coot_plus_uchar(const uchar x, const uchar y)  { return x + y; }

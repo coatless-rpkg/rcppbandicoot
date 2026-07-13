@@ -65,7 +65,7 @@ class eop_neg               : public eop_core<eop_neg>
   // no extra arguments needed for the kernel
   const static size_t num_args = 0;
 
-  // inline eT coot_neg_func(const eT x) { return -x; }
+  // inline eT coot_neg_func(const eT x) { return coot_neg(x); }
   struct prefix          { static inline constexpr auto& str() { return "n";             } };
   struct func_name       { static inline constexpr auto& str() { return "coot_neg_func"; } }; // coot_neg_func so we don't collide with coot_neg for complex types
   struct func_body       { static inline constexpr auto& str() { return "-x";            } };
@@ -229,12 +229,16 @@ class eop_square            : public eop_core<eop_square>
   const static size_t num_args = 0;
 
   // inline eT coot_square(const eT x) { return x * x; }
-  struct prefix    { static inline constexpr auto& str() { return "sqr";         } };
-  struct func_name { static inline constexpr auto& str() { return "coot_square"; } };
-  struct func_body { static inline constexpr auto& str() { return "x * x";       } };
+  struct prefix           { static inline constexpr auto& str() { return "sqr";         } };
+  struct func_name        { static inline constexpr auto& str() { return "coot_square"; } };
+  struct func_body_inner1 { static inline constexpr auto& str() { return "coot_times";  } };
+  struct func_body_inner2 { static inline constexpr auto& str() { return "(x, x)";      } };
 
   template<typename eT, coot_backend_t backend>
-  struct aux_functions : public kernel_gen::eop_inline_function< eT, backend, func_name, num_args, eop_empty_arg_names, func_body > { };
+  using func_body = kernel_gen::concat_str< func_body_inner1, kernel_gen::func_name_suffix<eT, backend>, func_body_inner2 >;
+
+  template<typename eT, coot_backend_t backend>
+  struct aux_functions : public kernel_gen::eop_inline_function< eT, backend, func_name, num_args, eop_empty_arg_names, func_body<eT, backend> > { };
   };
 
 
@@ -281,8 +285,48 @@ class eop_sqrt              : public eop_core<eop_sqrt>
   struct func_name { static inline constexpr auto& str() { return "coot_sqrt"; } };
   struct func_body { static inline constexpr auto& str() { return "sqrt";      } };
 
+  struct cx_func_body_inner1 { static inline constexpr auto& str() { return " d = coot_hypot"; } };
+  struct cx_func_body_inner2 { static inline constexpr auto& str() { return "(x); return coot_cx_create"; } };
+  struct cx_func_body_inner3 { static inline constexpr auto& str() { return "(sqrt((d + x.x) / 2), coot_sign"; } };
+  struct cx_func_body_inner4 { static inline constexpr auto& str() { return "(x.y) * sqrt((d - x.x) / 2)); }"; } };
+
+  // For complex types, the sqrt() function is generated as:
+  //
+  // {
+  //   const eT d = coot_hypot(x);
+  //   return coot_cx_create(sqrt((d + x.x) / 2), coot_sign(x.y) * sqrt((d - x.x) / 2))
+  // }
   template<typename eT, coot_backend_t backend>
-  struct aux_functions : public kernel_gen::eop_inline_function< eT, backend, func_name, num_args, eop_empty_arg_names, eop_fp_cast_func_body<eT, func_body, backend> > { };
+  using cx_func_body = kernel_gen::concat_str
+    <
+    kernel_gen::eop_inline_function_defn< eT, backend, func_name, 0, eop_empty_arg_names >,
+    kernel_gen::brace_open,
+    kernel_gen::elem_type_str<typename get_pod_type<eT>::result, backend>,
+    cx_func_body_inner1,
+    kernel_gen::func_name_suffix<eT, backend>,
+    cx_func_body_inner2,
+    kernel_gen::func_name_suffix<eT, backend>,
+    cx_func_body_inner3,
+    kernel_gen::func_name_suffix<typename get_pod_type<eT>::result, backend>,
+    cx_func_body_inner4
+    >;
+
+  template<typename eT, coot_backend_t backend>
+  struct aux_functions : public eop_cx_func_body
+    <
+    eT,
+    kernel_gen::eop_inline_function
+      <
+      eT,
+      backend,
+      func_name,
+      num_args,
+      eop_empty_arg_names,
+      eop_fp_cast_func_body< eT, func_body, backend >
+      >,
+    // assumption: complex types are always floating-point
+    cx_func_body<eT, backend>
+    > { };
   };
 
 
@@ -1055,35 +1099,13 @@ class eop_sign              : public eop_core<eop_sign>
   template<typename T1>
   using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
 
-  // coot_sign
-  struct prefix     { static inline constexpr auto& str() { return "s";         } };
-  struct func_name  { static inline constexpr auto& str() { return "coot_sign";     } };
-  struct func_body1 { static inline constexpr auto& str() { return "((x > ";        } };
-  struct func_body2 { static inline constexpr auto& str() { return "(0)) ? ";       } };
-  struct func_body3 { static inline constexpr auto& str() { return "(1) : ((x == "; } };
-  struct func_body4 { static inline constexpr auto& str() { return "(0) : ";        } };
-  struct func_body5 { static inline constexpr auto& str() { return "(-1)))";        } };
+  // no need for a definition---this is already in the basic definitions for the type
+  struct prefix    { static inline constexpr auto& str() { return "s";         } };
+  struct func_name { static inline constexpr auto& str() { return "coot_sign"; } };
 
+  // no auxiliary function is needed, since we can just use the existing definition in the defs
   template<typename eT, coot_backend_t backend>
-  struct func_body : public kernel_gen::concat_str
-    <
-    func_body1,
-    kernel_gen::conv_elem_type_str<eT, int, backend>,
-    func_body2,
-    kernel_gen::conv_elem_type_str<eT, int, backend>,
-    func_body3,
-    kernel_gen::conv_elem_type_str<eT, int, backend>,
-    func_body2,
-    kernel_gen::conv_elem_type_str<eT, int, backend>,
-    func_body4,
-    kernel_gen::conv_elem_type_str<eT, int, backend>,
-    func_body5
-    > { };
-
-  // for floating-point types: (more complicated for other types)
-  // inline eT coot_sign(const eT x) { return ((x > eT(0)) ? eT(1) : ((x == eT(0)) ? eT(0) : eT(-1))); }
-  template<typename eT, coot_backend_t backend>
-  struct aux_functions : public kernel_gen::eop_inline_function< eT, backend, func_name, num_args, eop_empty_arg_names, func_body<eT, backend> > { };
+  using aux_functions = kernel_gen::empty_str;
   };
 
 

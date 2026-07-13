@@ -46,6 +46,7 @@ inline long coot_conj_long(const long x) { return x; }
 inline long coot_abs_long(const long x) { return abs(x); }
 inline long coot_min_long(const long x, const long y) { return (x < y) ? x : y; }
 inline long coot_max_long(const long x, const long y) { return (x > y) ? x : y; }
+inline long coot_sign_long(const long x) { return (x > 0) ? 1 : (x == 0 ? 0 : -1); }
 
 // Basic mathematical operators.
 inline long coot_plus_long(const long x, const long y)  { return x + y; }

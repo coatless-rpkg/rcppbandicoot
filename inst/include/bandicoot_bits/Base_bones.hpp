@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
 // Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
-// Copyright 2008-2017 Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2008-2026 Conrad Sanderson (https://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,7 @@
 template<typename elem_type, typename derived>
 struct Base_extra_yes
   {
-  coot_warn_unused inline const Op<derived, op_inv> i() const;   // matrix inverse
+  coot_warn_unused inline const Op<derived, op_inv_gen_default> i() const;   // matrix inverse
   
   coot_warn_unused inline bool is_sympd() const;
   coot_warn_unused inline bool is_sympd(typename get_pod_type<elem_type>::result tol) const;

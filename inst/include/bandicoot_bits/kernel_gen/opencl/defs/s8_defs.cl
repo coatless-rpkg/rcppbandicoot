@@ -46,6 +46,7 @@ inline char coot_conj_char(const char x) { return x; }
 inline char coot_abs_char(const char x) { return abs(x); }
 inline char coot_min_char(const char x, const char y) { return (x < y) ? x : y; }
 inline char coot_max_char(const char x, const char y) { return (x > y) ? x : y; }
+inline char coot_sign_char(const char x) { return (x > 0) ? 1 : (x == 0 ? 0 : -1); }
 
 // Basic mathematical operators.
 inline char coot_plus_char(const char x, const char y)  { return x + y; }

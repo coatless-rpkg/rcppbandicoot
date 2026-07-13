@@ -168,8 +168,7 @@ subview_elem1<eT,T1>::randu()
   // until we are able to index subviews in any arbitrary way in a generated kernel,
   // we use a slow implementation where we generate all the random numbers and
   // then insert them.
-  unwrap<T1> U(a.get_ref());
-  extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+  plain_unwrap<T1> E(a.get_ref());
 
   coot_conform_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::elem(): indices must be a vector" );
 
@@ -189,8 +188,7 @@ subview_elem1<eT,T1>::randn()
   // until we are able to index subviews in any arbitrary way in a generated kernel,
   // we use a slow implementation where we generate all the random numbers and
   // then insert them.
-  unwrap<T1> U(a.get_ref());
-  extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+  plain_unwrap<T1> E(a.get_ref());
 
   coot_conform_check( E.M.n_rows != 1 && E.M.n_cols != 1, "Mat::elem(): indices must be a vector" );
 

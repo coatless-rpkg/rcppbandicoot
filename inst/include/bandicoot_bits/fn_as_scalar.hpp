@@ -27,8 +27,8 @@ as_scalar(const Base<typename T1::elem_type, T1>& X)
 
   typedef typename T1::elem_type eT;
 
-  const no_conv_unwrap<T1> U(X.get_ref());
-  const typename no_conv_unwrap<T1>::stored_type& A = U.M;
+  const no_conv_quasi_unwrap<T1> U(X.get_ref());
+  const typename no_conv_quasi_unwrap<T1>::stored_type& A = U.M;
 
   if(A.n_elem != 1)
     {

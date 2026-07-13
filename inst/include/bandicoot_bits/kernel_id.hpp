@@ -186,9 +186,6 @@ struct oneway_kernel_id
     find_first,
     find_last,
     //
-    symmatu_inplace,
-    symmatl_inplace,
-    //
     reorder_cols,
     //
     rotate_180,
@@ -285,9 +282,6 @@ struct oneway_kernel_id
     names.push_back("find");
     names.push_back("find_first");
     names.push_back("find_last");
-
-    names.push_back("symmatu_inplace");
-    names.push_back("symmatl_inplace");
 
     names.push_back("reorder_cols");
 
@@ -616,9 +610,6 @@ struct twoway_kernel_id
     rel_any_neq_colwise,
     rel_any_neq_rowwise,
     //
-    symmatu,
-    symmatl,
-    //
     cross,
     //
     invalid_kernel
@@ -680,9 +671,6 @@ struct twoway_kernel_id
     names.push_back("rel_any_neq_small");
     names.push_back("rel_any_neq_colwise");
     names.push_back("rel_any_neq_rowwise");
-
-    names.push_back("symmatu");
-    names.push_back("symmatl");
 
     names.push_back("cross");
 

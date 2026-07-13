@@ -650,3 +650,15 @@ struct bounds_check_str< Op<T1, op_htrans>, i, backend, arg_name_prefix, arg_nam
 
 template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
 struct bounds_check_str< Op<T1, op_strans>, i, backend, arg_name_prefix, arg_names > : public bounds_check_str< T1, i, backend, arg_name_prefix, trans_arg_names<arg_names> > { };
+
+
+
+//
+// Op<T1, op_symmatu> and Op<T1, op_symmatl>: just bounds check the T1 (we already know it's square)
+//
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct bounds_check_str< Op<T1, op_symmatu>, i, backend, arg_name_prefix, arg_names > : public bounds_check_str< T1, i, backend, arg_name_prefix, arg_names > { };
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct bounds_check_str< Op<T1, op_symmatl>, i, backend, arg_name_prefix, arg_names > : public bounds_check_str< T1, i, backend, arg_name_prefix, arg_names > { };

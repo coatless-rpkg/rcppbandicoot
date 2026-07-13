@@ -19,20 +19,22 @@
 
 
 template<typename T1>
-struct unwrap_cube
+struct plain_unwrap_cube
   {
   typedef typename T1::elem_type eT;
   typedef Cube<eT>               stored_type;
 
   inline
-  unwrap_cube(const T1& A)
+  plain_unwrap_cube(const T1& A)
     : M(A)
     {
     coot_debug_sigprint();
     }
 
   const Cube<eT> M;
-
+  
+  static constexpr bool is_generated = true;
+  
   template<typename T2>
   constexpr bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
 
@@ -47,19 +49,57 @@ struct unwrap_cube
 
 
 template<typename eT>
-struct unwrap_cube< Cube<eT> >
+struct plain_unwrap_cube< Cube<eT> >
   {
   typedef Cube<eT> stored_type;
 
   inline
-  unwrap_cube(const Cube<eT>& A)
+  plain_unwrap_cube(const Cube<eT>& A)
     : M(A)
     {
     coot_debug_sigprint();
     }
 
   const Cube<eT>& M;
+  
+  static constexpr bool is_generated = false;
+  
+  template<typename T2>
+  constexpr bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
 
+  constexpr inline uword         get_row_offset()                    const { return 0; }
+  constexpr inline uword         get_col_offset()                    const { return 0; }
+  constexpr inline uword         get_slice_offset()                  const { return 0; }
+            inline uword         get_M_n_rows()                      const { return M.n_rows; }
+            inline uword         get_M_n_cols()                      const { return M.n_cols; }
+            inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.get_dev_mem(synchronise); }
+  };
+
+
+
+//
+//
+//
+
+
+
+template<typename T1>
+struct quasi_unwrap_cube
+  {
+  typedef typename T1::elem_type eT;
+  typedef Cube<eT>               stored_type;
+
+  inline
+  quasi_unwrap_cube(const T1& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  const Cube<eT> M;
+  
+  static constexpr bool is_generated = true;
+  
   template<typename T2>
   constexpr bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
 
@@ -74,19 +114,50 @@ struct unwrap_cube< Cube<eT> >
 
 
 template<typename eT>
-struct unwrap_cube< subview_cube<eT> >
+struct quasi_unwrap_cube< Cube<eT> >
+  {
+  typedef Cube<eT> stored_type;
+
+  inline
+  quasi_unwrap_cube(const Cube<eT>& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  const Cube<eT>& M;
+  
+  static constexpr bool is_generated = false;
+  
+  template<typename T2>
+  constexpr bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
+
+  constexpr inline uword         get_row_offset()                    const { return 0; }
+  constexpr inline uword         get_col_offset()                    const { return 0; }
+  constexpr inline uword         get_slice_offset()                  const { return 0; }
+            inline uword         get_M_n_rows()                      const { return M.n_rows; }
+            inline uword         get_M_n_cols()                      const { return M.n_cols; }
+            inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.get_dev_mem(synchronise); }
+  };
+
+
+
+template<typename eT>
+struct quasi_unwrap_cube< subview_cube<eT> >
   {
   typedef subview_cube<eT> stored_type;
 
   inline
-  unwrap_cube(const subview_cube<eT>& A)
+  quasi_unwrap_cube(const subview_cube<eT>& A)
     : M(A)
     {
     coot_debug_sigprint();
     }
 
   const subview_cube<eT>& M;
-
+  
+  static constexpr bool is_generated = false;
+  
   template<typename T2>
   constexpr bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
 

@@ -54,4 +54,8 @@ __device__ inline cx_float coot_times(const cx_float x, const cx_float y) { retu
 __device__ inline cx_float coot_div(const cx_float x, const cx_float y)   { return cuCdivf(x, y); }
 __device__ inline cx_float coot_neg(const cx_float x)                     { return make_cuFloatComplex(-x.x, -x.y); }
 
+// Special utility functions for complex numbers.
+__device__ inline float    coot_hypot(const cx_float x)                     { return cuCabsf(x);                    }
+__device__ inline cx_float coot_cx_create(const float re, const float imag) { return make_cuFloatComplex(re, imag); }
+
 )"

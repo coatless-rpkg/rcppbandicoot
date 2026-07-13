@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2023 Ryan Curtin (http://www.ratml.org)
+// Copyright 2023-2026 Ryan Curtin (http://www.ratml.org)
+// Copyright 2023-2026 Conrad Sanderson (https://conradsanderson.id.au)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -152,3 +153,69 @@ struct strip_diagmat< Op<Op<T1, op_diagmat>, op_htrans2> >
 
   const eOp<T1, eop_scalar_times> M;
   };
+
+
+
+//
+
+
+
+template<typename T1>
+struct strip_inv
+  {
+  typedef T1 stored_type;
+  
+  inline
+  strip_inv(const T1& X)
+    : M(X)
+    {
+    coot_debug_sigprint();
+    }
+  
+  const T1& M;
+  
+  static constexpr bool do_inv_gen = false;
+  static constexpr bool do_inv_spd = false;
+  };
+
+
+
+template<typename T1>
+struct strip_inv< Op<T1, op_inv_gen_default> >
+  {
+  typedef T1 stored_type;
+  
+  inline
+  strip_inv(const Op<T1, op_inv_gen_default>& X)
+    : M(X.m)
+    {
+    coot_debug_sigprint();
+    }
+  
+  const T1& M;
+  
+  static constexpr bool do_inv_gen = true;
+  static constexpr bool do_inv_spd = false;
+  };
+
+
+
+template<typename T1>
+struct strip_inv< Op<T1, op_inv_spd_default> >
+  {
+  typedef T1 stored_type;
+  
+  inline
+  strip_inv(const Op<T1, op_inv_spd_default>& X)
+    : M(X.m)
+    {
+    coot_debug_sigprint();
+    }
+  
+  const T1& M;
+  
+  static constexpr bool do_inv_gen = false;
+  static constexpr bool do_inv_spd = true;
+  };
+
+

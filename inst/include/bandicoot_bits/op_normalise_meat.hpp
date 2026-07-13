@@ -29,7 +29,7 @@ op_normalise_vec::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_normal
 
   coot_conform_check( (p == 0), "normalise(): parameter 'p' must be greater than zero" );
 
-  const unwrap<T1> U(in.m);
+  const quasi_unwrap<T1> U(in.m);
 
   const eT norm_val_a = norm(U.M, p);
   const eT norm_val_b = (norm_val_a != eT(0)) ? norm_val_a : eT(1);
@@ -69,7 +69,7 @@ op_normalise_vec::apply(Mat<eT>& out, const Op<mtOp<eT, T1, mtop_conv_to>, op_no
 
   coot_conform_check( (p == 0), "normalise(): parameter 'p' must be greater than zero" );
 
-  const unwrap<T1> U(in.m.q);
+  const quasi_unwrap<T1> U(in.m.q);
 
   const eT norm_val_a = norm(in.m, p);
   const eT norm_val_b = (norm_val_a != eT(0)) ? norm_val_a : eT(1);
@@ -131,8 +131,7 @@ op_normalise_mat::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_normal
   coot_conform_check( (p   == 0), "normalise(): parameter 'p' must be greater than zero" );
   coot_conform_check( (dim >  1), "normalise(): parameter 'dim' must be 0 or 1"          );
 
-  const unwrap<T1> U(in.m);
-  const extract_subview<typename unwrap<T1>::stored_type> S(U.M);
+  const plain_unwrap<T1> S(in.m);
 
   if (((void*) &out) == ((void*) &S.M))
     {

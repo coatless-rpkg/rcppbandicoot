@@ -26,8 +26,8 @@ glue_join_rows::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_join_rows>& glue
 
   const std::string func_name = (glue.aux_uword == 0) ? "join_rows()" : "join_horiz()";
 
-  const no_conv_unwrap<T1> U1(glue.A);
-  const no_conv_unwrap<T2> U2(glue.B);
+  const no_conv_quasi_unwrap<T1> U1(glue.A);
+  const no_conv_quasi_unwrap<T2> U2(glue.B);
 
   // check for same number of columns
   const uword A_n_rows = U1.M.n_rows;
@@ -53,8 +53,8 @@ glue_join_rows::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_join_rows>& glue
     }
 
   // We can't have the output be an alias of the input.
-  typedef typename no_conv_unwrap<T1>::stored_type UT1;
-  typedef typename no_conv_unwrap<T2>::stored_type UT2;
+  typedef typename no_conv_quasi_unwrap<T1>::stored_type UT1;
+  typedef typename no_conv_quasi_unwrap<T2>::stored_type UT2;
   alias_wrapper<Mat<out_eT>, UT1, UT2> W(out, U1.M, U2.M);
   W.use.set_size(new_n_rows, new_n_cols);
   coot_rt_t::join_rows(W.get_dev_mem(false),
@@ -79,9 +79,9 @@ glue_join_rows::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const
   {
   coot_debug_sigprint();
 
-  const no_conv_unwrap<T1> U1(A);
-  const no_conv_unwrap<T2> U2(B);
-  const no_conv_unwrap<T3> U3(C);
+  const no_conv_quasi_unwrap<T1> U1(A);
+  const no_conv_quasi_unwrap<T2> U2(B);
+  const no_conv_quasi_unwrap<T3> U3(C);
 
   // check for same number of columns
   const uword A_n_rows = U1.M.n_rows;
@@ -106,9 +106,9 @@ glue_join_rows::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const
     }
 
   // We can't have the output be an alias of the input.
-  typedef typename no_conv_unwrap<T1>::stored_type UT1;
-  typedef typename no_conv_unwrap<T2>::stored_type UT2;
-  typedef typename no_conv_unwrap<T3>::stored_type UT3;
+  typedef typename no_conv_quasi_unwrap<T1>::stored_type UT1;
+  typedef typename no_conv_quasi_unwrap<T2>::stored_type UT2;
+  typedef typename no_conv_quasi_unwrap<T3>::stored_type UT3;
   alias_wrapper<Mat<eT>, UT1, UT2, UT3> W(out, U1.M, U2.M, U3.M);
   W.use.set_size(out_n_rows, out_n_cols);
   coot_rt_t::join_rows(W.get_dev_mem(false),
@@ -133,10 +133,10 @@ glue_join_rows::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const
   {
   coot_debug_sigprint();
 
-  const no_conv_unwrap<T1> U1(A);
-  const no_conv_unwrap<T2> U2(B);
-  const no_conv_unwrap<T3> U3(C);
-  const no_conv_unwrap<T4> U4(D);
+  const no_conv_quasi_unwrap<T1> U1(A);
+  const no_conv_quasi_unwrap<T2> U2(B);
+  const no_conv_quasi_unwrap<T3> U3(C);
+  const no_conv_quasi_unwrap<T4> U4(D);
 
   // check for same number of columns
   const uword A_n_rows = U1.M.n_rows;
@@ -164,10 +164,10 @@ glue_join_rows::apply(Mat<eT>& out, const T1& A, const T2& B, const T3& C, const
     }
 
   // We can't have the output be an alias of an input.
-  typedef typename no_conv_unwrap<T1>::stored_type UT1;
-  typedef typename no_conv_unwrap<T2>::stored_type UT2;
-  typedef typename no_conv_unwrap<T3>::stored_type UT3;
-  typedef typename no_conv_unwrap<T4>::stored_type UT4;
+  typedef typename no_conv_quasi_unwrap<T1>::stored_type UT1;
+  typedef typename no_conv_quasi_unwrap<T2>::stored_type UT2;
+  typedef typename no_conv_quasi_unwrap<T3>::stored_type UT3;
+  typedef typename no_conv_quasi_unwrap<T4>::stored_type UT4;
   alias_wrapper<Mat<eT>, UT1, UT2, UT3, UT4> W(out, U1.M, U2.M, U3.M, U4.M);
   W.use.set_size(out_n_rows, out_n_cols);
   coot_rt_t::join_rows(W.get_dev_mem(false),

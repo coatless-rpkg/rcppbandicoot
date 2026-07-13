@@ -226,6 +226,14 @@ struct vk_buffer_decl< Op<T1, op_strans>, start_binding, arg_name_prefix > : pub
 
 
 
+template<typename T1, size_t start_binding, typename arg_name_prefix>
+struct vk_buffer_decl< Op<T1, op_symmatl>, start_binding, arg_name_prefix > : public vk_buffer_decl<T1, start_binding, arg_name_prefix> { };
+
+template<typename T1, size_t start_binding, typename arg_name_prefix>
+struct vk_buffer_decl< Op<T1, op_symmatu>, start_binding, arg_name_prefix > : public vk_buffer_decl<T1, start_binding, arg_name_prefix> { };
+
+
+
 template<typename T, size_t i, size_t start_binding, typename arg_name_prefix = empty_str>
 struct macro_kernel_push_params : public nested_concat_str
   <

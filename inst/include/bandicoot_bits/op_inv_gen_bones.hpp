@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2023 Ryan Curtin (http://www.ratml.org)
+// Copyright 2023-2026 Ryan Curtin (http://www.ratml.org)
+// Copyright 2023-2026 Conrad Sanderson (https://conradsanderson.id.au)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,26 +17,18 @@
 
 
 
-template<typename T1>
-coot_warn_unused
-inline
-const Op<T1, op_symmatu>
-symmatu(const Base<typename T1::elem_type, T1>& X, const bool do_conj = true)
+class op_inv_gen_default
+  : public traits_op_passthru
   {
-  coot_debug_sigprint();
+  public:
+  
+  template<typename T1>
+  inline static void apply(Mat<typename T1::elem_type>& out, const Op<T1, op_inv_gen_default>& in);
 
-  return Op<T1, op_symmatu>(X.get_ref(), (do_conj ? 1 : 0), 0);
-  }
+  template<typename T1>
+  inline static std::tuple<bool, std::string> apply_direct(Mat<typename T1::elem_type>& out, const Base<typename T1::elem_type, T1>& in);
+  };
 
 
 
-template<typename T1>
-coot_warn_unused
-inline
-const Op<T1, op_symmatl>
-symmatl(const Base<typename T1::elem_type, T1>& X, const bool do_conj = true)
-  {
-  coot_debug_sigprint();
-
-  return Op<T1, op_symmatl>(X.get_ref(), (do_conj ? 1 : 0), 0);
-  }
+// TODO: implement op_inv_gen_full

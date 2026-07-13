@@ -46,6 +46,7 @@ inline float coot_conj_float(const float x) { return x; }
 inline float coot_abs_float(const float x) { return fabs(x); }
 inline float coot_min_float(const float x, const float y) { return fmin(x, y); }
 inline float coot_max_float(const float x, const float y) { return fmax(x, y); }
+inline float coot_sign_float(const float x) { return (x > 0.0f) ? 1.0f : ( (x < 0.0f) ? -1.0f : ( (x == 0.0f) ? 0.0f : x ) ); }
 
 // Basic mathematical operators.
 inline float coot_plus_float(const float x, const float y)  { return x + y; }

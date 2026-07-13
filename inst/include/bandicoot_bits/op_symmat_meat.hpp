@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2023 Ryan Curtin (https://www.ratml.org)
+// Copyright 2023-2026 Ryan Curtin (https://www.ratml.org)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,69 +19,19 @@
 template<typename out_eT, typename T1>
 inline
 void
-op_symmat::apply(Mat<out_eT>& out, const Op<T1, op_symmat>& in)
+op_symmatu::apply(Mat<out_eT>& out, const Op<T1, op_symmatu>& in)
   {
   coot_debug_sigprint();
 
-  const uword lower = in.aux_uword_a;
+  Proxy<Op<T1, op_symmatu>> P_in(in);
+  coot_conform_check( (P_in.get_n_rows() != P_in.get_n_cols()), "symmatu(): given matrix must be square sized" );
 
-  const unwrap<T1> U(in.m);
-  const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+  // We have to check for aliasing; if the T1 modifies the input matrix, we can't do the operation in-place.
+  // NOTE: there is potential for optimization here; if the T1 *doesn't* modify the elements of the input, then we could do it in-place.
+  alias_wrapper<Mat<out_eT>, Proxy<Op<T1, op_symmatu>>> A(out, P_in);
+  A.use.set_size(P_in.get_n_rows(), P_in.get_n_cols());
 
-  if (lower)
-    {
-    coot_conform_check( (E.M.n_rows != E.M.n_cols), "symmatl(): given matrix must be square sized" );
-    }
-  else
-    {
-    coot_conform_check( (E.M.n_rows != E.M.n_cols), "symmatu(): given matrix must be square sized" );
-    }
-
-  // It's okay if `out` is an alias of `E.M`; the kernel can be run in-place with no problems.
-  out.set_size(E.M.n_rows, E.M.n_cols);
-
-  if (E.M.n_elem == 0)
-    {
-    // Nothing to do---quit early.
-    return;
-    }
-
-  coot_rt_t::symmat(out.get_dev_mem(false), E.M.get_dev_mem(false), E.M.n_rows, lower);
-  }
-
-
-
-template<typename out_eT, typename T1>
-inline
-void
-op_symmat::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_symmat>& in)
-  {
-  coot_debug_sigprint();
-
-  const uword lower = in.aux_uword_a;
-
-  const unwrap<T1> U(in.m.q);
-  const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
-
-  if (lower)
-    {
-    coot_conform_check( (E.M.n_rows != E.M.n_cols), "symmatl(): given matrix must be square sized" );
-    }
-  else
-    {
-    coot_conform_check( (E.M.n_rows != E.M.n_cols), "symmatu(): given matrix must be square sized" );
-    }
-
-  // Aliases are not possible if a conversion is involved.
-  out.set_size(E.M.n_rows, E.M.n_cols);
-
-  if (E.M.n_elem == 0)
-    {
-    // Nothing to do---quit early.
-    return;
-    }
-
-  coot_rt_t::symmat(out.get_dev_mem(false), E.M.get_dev_mem(false), E.M.n_rows, lower);
+  coot_rt_t::copy(make_proxy(A.use), P_in);
   }
 
 
@@ -89,7 +39,7 @@ op_symmat::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_s
 template<typename T1>
 inline
 uword
-op_symmat::compute_n_rows(const Op<T1, op_symmat>& op, const uword in_n_rows, const uword in_n_cols)
+op_symmatu::compute_n_rows(const Op<T1, op_symmatu>& op, const uword in_n_rows, const uword in_n_cols)
   {
   coot_ignore(op);
   coot_ignore(in_n_cols);
@@ -102,7 +52,53 @@ op_symmat::compute_n_rows(const Op<T1, op_symmat>& op, const uword in_n_rows, co
 template<typename T1>
 inline
 uword
-op_symmat::compute_n_cols(const Op<T1, op_symmat>& op, const uword in_n_rows, const uword in_n_cols)
+op_symmatu::compute_n_cols(const Op<T1, op_symmatu>& op, const uword in_n_rows, const uword in_n_cols)
+  {
+  coot_ignore(op);
+  coot_ignore(in_n_rows);
+
+  return in_n_cols;
+  }
+
+
+
+template<typename out_eT, typename T1>
+inline
+void
+op_symmatl::apply(Mat<out_eT>& out, const Op<T1, op_symmatl>& in)
+  {
+  coot_debug_sigprint();
+
+  Proxy<Op<T1, op_symmatl>> P_in(in);
+  coot_conform_check( (P_in.get_n_rows() != P_in.get_n_cols()), "symmatl(): given matrix must be square sized" );
+
+  // We have to check for aliasing; if the T1 modifies the input matrix, we can't do the operation in-place.
+  // NOTE: there is potential for optimization here; if the T1 *doesn't* modify the elements of the input, then we could do it in-place.
+  alias_wrapper<Mat<out_eT>, Proxy<Op<T1, op_symmatl>>> A(out, P_in);
+  A.use.set_size(P_in.get_n_rows(), P_in.get_n_cols());
+
+  coot_rt_t::copy(make_proxy(A.use), P_in);
+  }
+
+
+
+template<typename T1>
+inline
+uword
+op_symmatl::compute_n_rows(const Op<T1, op_symmatl>& op, const uword in_n_rows, const uword in_n_cols)
+  {
+  coot_ignore(op);
+  coot_ignore(in_n_cols);
+
+  return in_n_rows;
+  }
+
+
+
+template<typename T1>
+inline
+uword
+op_symmatl::compute_n_cols(const Op<T1, op_symmatl>& op, const uword in_n_rows, const uword in_n_cols)
   {
   coot_ignore(op);
   coot_ignore(in_n_rows);

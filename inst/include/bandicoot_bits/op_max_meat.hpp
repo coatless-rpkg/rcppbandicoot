@@ -33,7 +33,7 @@ op_max::apply(Mat<eT2>& out, const Op<T1, op_max>& in)
   //
   // On the other hand, T1 may be a conversion, giving the operation
   // Op<mtOp<T1::elem_type, T1, mtop_conv_to>, op_max>.  In this situation, we want to perform
-  // the conversion *before* computing the max.  We can detect this condition if no_conv_unwrap
+  // the conversion *before* computing the max.  We can detect this condition if no_conv_quasi_unwrap
   // holds a different type than eT2.
 
   // We can't perform two conversions though, so we'll greedily select the 'post' conversion if
@@ -42,7 +42,7 @@ op_max::apply(Mat<eT2>& out, const Op<T1, op_max>& in)
   if (is_same_type<eT2, typename T1::elem_type>::no)
     {
     // This is a post-max conversion, so unwrap fully.
-    const unwrap<T1> U(in.m);
+    const quasi_unwrap<T1> U(in.m);
 
     op_max::apply_noalias(out, U.M, dim, true);
     }
@@ -50,10 +50,10 @@ op_max::apply(Mat<eT2>& out, const Op<T1, op_max>& in)
     {
     // This is a pre-max conversion (or no conversion at all), so use a no-conv unwrap, which will
     // avoid performing a type conversion.
-    const no_conv_unwrap<T1> U(in.m);
+    const no_conv_quasi_unwrap<T1> U(in.m);
 
     // However, since there may be no conversion, we now have to consider aliases too.
-    alias_wrapper<Mat<eT2>, typename no_conv_unwrap<T1>::stored_type> W(out, U.M);
+    alias_wrapper<Mat<eT2>, typename no_conv_quasi_unwrap<T1>::stored_type> W(out, U.M);
     op_max::apply_noalias(W.use, U.M, dim, false);
     }
   }
@@ -153,7 +153,7 @@ op_max::apply_direct(const Base<typename T1::elem_type, T1>& in)
   {
   coot_debug_sigprint();
 
-  const unwrap<T1> U(in.get_ref());
+  const quasi_unwrap<T1> U(in.get_ref());
   const Mat<typename T1::elem_type>& A = U.M;
 
   return coot_rt_t::max_vec(A.get_dev_mem(false), A.n_elem);
@@ -168,7 +168,7 @@ op_max::apply_direct(const BaseCube<typename T1::elem_type, T1>& in)
   {
   coot_debug_sigprint();
 
-  const unwrap_cube<T1> U(in.get_ref());
+  const plain_unwrap_cube<T1> U(in.get_ref());
   const Cube<typename T1::elem_type>& A = U.M;
 
   return coot_rt_t::max_vec(A.get_dev_mem(false), A.n_elem);
@@ -184,7 +184,7 @@ op_max::apply_direct(const eOp<T1, eop_abs>& in)
   {
   coot_debug_sigprint();
 
-  const unwrap<T1> U(in.m.Q);
+  const plain_unwrap<T1> U(in.m.Q);
   const Mat<typename T1::elem_type>& A = U.M;
 
   return coot_rt_t::max_abs(A.get_dev_mem(false), A.n_elem);
@@ -206,22 +206,20 @@ op_max::apply(Cube<eT2>& out, const OpCube<T1, op_max>& in)
   if (is_same_type<eT2, typename T1::elem_type>::no)
     {
     // This is a post-min conversion, so unwrap fully.
-    const unwrap_cube<T1> U(in.m);
-
     // We do not have specific min/max kernels for subcubes, so we also must extract any subcube.
-    extract_subcube<typename unwrap_cube<T1>::stored_type> E(U.M);
+    const plain_unwrap_cube<T1> E(in.m);
+
     op_max::apply_noalias(out, E.M, dim, true);
     }
   else
     {
     // This is a pre-min conversion (or no conversion at all), so use a no-conv unwrap, which will
     // avoid performing a type conversion.
-    const no_conv_unwrap_cube<T1> U(in.m);
+    const no_conv_plain_unwrap_cube<T1> E(in.m);
 
     // However, since there may be no conversion, we now have to consider aliases too.
     // We do not have specific min/max kernels for subcubes, so we also must extract any subcube.
-    extract_subcube<typename no_conv_unwrap_cube<T1>::stored_type> E(U.M);
-    alias_wrapper<Cube<eT2>, Cube<typename no_conv_unwrap_cube<T1>::stored_type::elem_type>> W(out, U.M);
+    alias_wrapper<Cube<eT2>, Cube<typename no_conv_plain_unwrap_cube<T1>::stored_type::elem_type>> W(out, E.M);
     op_max::apply_noalias(W.use, E.M, dim, false);
     }
   }

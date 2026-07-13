@@ -26,8 +26,8 @@ glue_conv::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_conv>& in)
   const uword mode = in.aux_uword;
 
   // TODO: handle transposed input and other delayed inputs or optimizations
-  unwrap<T1> UA(in.A);
-  unwrap<T2> UB(in.B);
+  quasi_unwrap<T1> UA(in.A);
+  quasi_unwrap<T2> UB(in.B);
 
   typedef typename T1::elem_type eT;
 

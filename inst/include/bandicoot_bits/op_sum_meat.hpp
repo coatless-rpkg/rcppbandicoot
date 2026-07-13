@@ -35,7 +35,7 @@ op_sum::apply(Mat<out_eT>& out, const Op<T1, op_sum>& in)
   //
   // On the other hand, T1 may be a conversion, giving the operation
   // Op<mtOp<T1::elem_type, T1, mtop_conv_to>, op_sum>.  In this situation, we want to perform
-  // the conversion *before* computing the sum.  We can detect this condition if no_conv_unwrap
+  // the conversion *before* computing the sum.  We can detect this condition if no_conv_quasi_unwrap
   // holds a different type than out_eT.
 
   // We can't perform two conversions though, so we'll greedily select the 'post' conversion if
@@ -44,7 +44,7 @@ op_sum::apply(Mat<out_eT>& out, const Op<T1, op_sum>& in)
   if (is_same_type<out_eT, typename T1::elem_type>::no)
     {
     // This is a post-sum conversion, so unwrap fully.
-    const unwrap<T1> U(in.m);
+    const quasi_unwrap<T1> U(in.m);
 
     op_sum::apply_noalias(out, U.M, dim, true);
     }
@@ -52,10 +52,10 @@ op_sum::apply(Mat<out_eT>& out, const Op<T1, op_sum>& in)
     {
     // This is a pre-sum conversion (or no conversion at all), so use a no-conv unwrap, which will
     // avoid performing a type conversion.
-    const no_conv_unwrap<T1> U(in.m);
+    const no_conv_quasi_unwrap<T1> U(in.m);
 
     // However, since there may be no conversion, we now have to consider aliases too.
-    alias_wrapper<Mat<out_eT>, typename no_conv_unwrap<T1>::stored_type> W(out, U.M);
+    alias_wrapper<Mat<out_eT>, typename no_conv_quasi_unwrap<T1>::stored_type> W(out, U.M);
     op_sum::apply_noalias(W.use, U.M, dim, false);
     }
   }

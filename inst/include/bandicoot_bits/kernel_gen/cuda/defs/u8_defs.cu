@@ -50,6 +50,7 @@ __device__ inline uchar coot_min(const uchar x, const uchar y) { return min(x, y
 __device__ inline uchar coot_max(const uchar x, const uchar y) { return max(x, y); }
 __device__ inline uchar coot_conj(const uchar x) { return x; }
 __device__ inline uchar coot_abs(const uchar x) { return x; }
+__device__ inline uchar coot_sign(const uchar x) { return (x > 0) ? 1 : 0; }
 
 // Basic mathematical operators.
 __device__ inline uchar coot_plus(const uchar x, const uchar y)  { return x + y; }

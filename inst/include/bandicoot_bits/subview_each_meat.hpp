@@ -139,9 +139,9 @@ subview_each1<parent, mode>::inplace_op(twoway_kernel_id::enum_id op,
   parent& p = access::rw(subview_each_common<parent, mode>::P);
 
   // This will provide an interface to get the offsets for a subview, if parent is a subview.
-  const unwrap<parent> PU(p);
-  const no_conv_unwrap<T1> U(in.get_ref());
-  alias_wrapper<parent, typename no_conv_unwrap<T1>::stored_type> W(p, U.M);
+  const quasi_unwrap<parent> PU(p);
+  const no_conv_quasi_unwrap<T1> U(in.get_ref());
+  alias_wrapper<parent, typename no_conv_quasi_unwrap<T1>::stored_type> W(p, U.M);
 
   const uword copies_per_row = (mode == 1) ? p.n_rows : 1;
   const uword copies_per_col = (mode == 0) ? p.n_cols : 1;
@@ -290,10 +290,10 @@ subview_each2<parent, mode, TB>::inplace_op(twoway_kernel_id::enum_id op,
   parent& p = access::rw(subview_each_common<parent, mode>::P);
 
   // This will provide an interface to get the offsets for a subview, if parent is a subview.
-  const unwrap<parent> PU(p);
-  const unwrap<TB> IU(base_indices.get_ref());
-  const no_conv_unwrap<T1> U(in.get_ref());
-  alias_wrapper<parent, typename no_conv_unwrap<T1>::stored_type, typename unwrap<TB>::stored_type> W(p, U.M, IU.M);
+  const quasi_unwrap<parent> PU(p);
+  const quasi_unwrap<TB> IU(base_indices.get_ref());
+  const no_conv_quasi_unwrap<T1> U(in.get_ref());
+  alias_wrapper<parent, typename no_conv_quasi_unwrap<T1>::stored_type, typename quasi_unwrap<TB>::stored_type> W(p, U.M, IU.M);
 
   const uword copies_per_row = (mode == 1) ? IU.M.n_elem : 1;
   const uword copies_per_col = (mode == 0) ? IU.M.n_elem : 1;
@@ -407,8 +407,8 @@ subview_each1_aux::call_op
   )
   {
   // This will provide an interface to get the offsets for a subview, if parent is a subview.
-  const unwrap<parent> PU(X.P);
-  const no_conv_unwrap<T2> U(Y.get_ref());
+  const quasi_unwrap<parent> PU(X.P);
+  const no_conv_quasi_unwrap<T2> U(Y.get_ref());
 
   const uword copies_per_row = (mode == 1) ? X.P.n_rows : 1;
   const uword copies_per_col = (mode == 0) ? X.P.n_cols : 1;
@@ -519,9 +519,9 @@ subview_each2_aux::call_op
   )
   {
   // This will provide an interface to get the offsets for a subview, if parent is a subview.
-  const unwrap<parent> PU(X.P);
-  const unwrap<TB> IU(X.base_indices.get_ref());
-  const no_conv_unwrap<T2> U(Y.get_ref());
+  const quasi_unwrap<parent> PU(X.P);
+  const quasi_unwrap<TB> IU(X.base_indices.get_ref());
+  const no_conv_quasi_unwrap<T2> U(Y.get_ref());
 
   const uword copies_per_row = (mode == 1) ? IU.M.n_elem : 1;
   const uword copies_per_col = (mode == 0) ? IU.M.n_elem : 1;

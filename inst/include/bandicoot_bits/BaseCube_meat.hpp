@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
-// Copyright 2008-2016 Conrad Sanderson (http://conradsanderson.id.au)
+// Copyright 2008-2026 Conrad Sanderson (http://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 // Copyright 2023      Marcus Edel (http://www.kurg.org)
 // Copyright 2025      Ryan Curtin (http://www.ratml.org)
@@ -37,7 +37,7 @@ BaseCube<elem_type,derived>::print(const std::string extra_text) const
   {
   coot_debug_sigprint();
 
-  const unwrap_cube<derived> tmp( (*this).get_ref() );
+  const plain_unwrap_cube<derived> tmp( (*this).get_ref() );
 
   if(extra_text.length() != 0)
     {
@@ -61,7 +61,7 @@ BaseCube<elem_type,derived>::print(std::ostream& user_stream, const std::string 
   {
   coot_debug_sigprint();
 
-  const unwrap_cube<derived> tmp( (*this).get_ref() );
+  const plain_unwrap_cube<derived> tmp( (*this).get_ref() );
 
   if(extra_text.length() != 0)
     {
@@ -85,7 +85,7 @@ BaseCube<elem_type,derived>::raw_print(const std::string extra_text) const
   {
   coot_debug_sigprint();
 
-  const unwrap_cube<derived> tmp( (*this).get_ref() );
+  const plain_unwrap_cube<derived> tmp( (*this).get_ref() );
 
   if(extra_text.length() != 0)
     {
@@ -109,7 +109,7 @@ BaseCube<elem_type,derived>::raw_print(std::ostream& user_stream, const std::str
   {
   coot_debug_sigprint();
 
-  const unwrap_cube<derived> tmp( (*this).get_ref() );
+  const plain_unwrap_cube<derived> tmp( (*this).get_ref() );
 
   if(extra_text.length() != 0)
     {
@@ -133,7 +133,7 @@ BaseCube<elem_type,derived>::raw_print(std::ostream& user_stream, const std::str
 //  {
 //  coot_debug_sigprint();
 //
-//  const unwrap_cube<derived> tmp( (*this).get_ref() );
+//  const plain_unwrap_cube<derived> tmp( (*this).get_ref() );
 //
 //  if(extra_text.length() != 0)
 //    {
@@ -157,7 +157,7 @@ BaseCube<elem_type,derived>::raw_print(std::ostream& user_stream, const std::str
 //  {
 //  coot_debug_sigprint();
 //
-//  const unwrap_cube<derived> tmp( (*this).get_ref() );
+//  const plain_unwrap_cube<derived> tmp( (*this).get_ref() );
 //
 //  if(extra_text.length() != 0)
 //    {

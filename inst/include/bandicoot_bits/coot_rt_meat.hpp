@@ -3296,37 +3296,6 @@ coot_rt_t::find(dev_mem_t<uword>& out, uword& out_len, const dev_mem_t<eT> A, co
 template<typename eT1, typename eT2>
 inline
 void
-coot_rt_t::symmat(dev_mem_t<eT2> out, const dev_mem_t<eT1> in, const uword size, const uword lower)
-  {
-  coot_debug_sigprint();
-
-  if (get_rt().backend == CL_BACKEND)
-    {
-    #if defined(COOT_USE_OPENCL)
-    opencl::symmat(out, in, size, lower);
-    #else
-    coot_stop_runtime_error("coot_rt::symmat(): OpenCL backend not enabled");
-    #endif
-    }
-  else if (get_rt().backend == CUDA_BACKEND)
-    {
-    #if defined(COOT_USE_CUDA)
-    cuda::symmat(out, in, size, lower);
-    #else
-    coot_stop_runtime_error("coot_rt::symmat(): CUDA backend not enabled");
-    #endif
-    }
-  else
-    {
-    coot_stop_runtime_error("coot_rt::symmat(): unknown backend");
-    }
-  }
-
-
-
-template<typename eT1, typename eT2>
-inline
-void
 coot_rt_t::cross(dev_mem_t<eT2> out, const dev_mem_t<eT1> A, const dev_mem_t<eT1> B)
   {
   coot_debug_sigprint();

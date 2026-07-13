@@ -186,7 +186,7 @@ struct conv_to_mat_helper
 
     typedef typename T1::elem_type eT;
 
-    unwrap<T1> U(in);
+    quasi_unwrap<T1> U(in);
     arma::Mat<eT> M(U.M); // also works with subviews
 
     T2 out = arma::conv_to<T2>::from(M);
@@ -271,7 +271,7 @@ struct conv_to_cube_helper
 
     typedef typename T1::elem_type eT;
 
-    unwrap_cube<T1> U(in.get_ref());
+    quasi_unwrap_cube<T1> U(in.get_ref());
     arma::Cube<eT> M(U.M); // also works with subviews
 
     T2 out = arma::conv_to<T2>::from(M);

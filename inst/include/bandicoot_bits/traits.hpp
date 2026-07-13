@@ -1048,25 +1048,49 @@ struct resolves_to_symmat
   };
 
 template<typename T1>
-struct resolves_to_symmat< Op<T1, op_symmat> >
+struct resolves_to_symmat< Op<T1, op_symmatu> >
   {
   static constexpr bool value = true;
   };
 
 template<typename T1, typename eop_type>
-struct resolves_to_symmat< eOp<Op<T1, op_symmat>, eop_type> >
+struct resolves_to_symmat< eOp<Op<T1, op_symmatu>, eop_type> >
   {
   static constexpr bool value = true;
   };
 
 template<typename T1>
-struct resolves_to_symmat< Op<Op<T1, op_symmat>, op_htrans> >
+struct resolves_to_symmat< Op<Op<T1, op_symmatu>, op_htrans> >
   {
   static constexpr bool value = true;
   };
 
 template<typename T1>
-struct resolves_to_symmat< Op<Op<T1, op_symmat>, op_htrans2> >
+struct resolves_to_symmat< Op<Op<T1, op_symmatu>, op_htrans2> >
+  {
+  static constexpr bool value = true;
+  };
+
+template<typename T1>
+struct resolves_to_symmat< Op<T1, op_symmatl> >
+  {
+  static constexpr bool value = true;
+  };
+
+template<typename T1, typename eop_type>
+struct resolves_to_symmat< eOp<Op<T1, op_symmatl>, eop_type> >
+  {
+  static constexpr bool value = true;
+  };
+
+template<typename T1>
+struct resolves_to_symmat< Op<Op<T1, op_symmatl>, op_htrans> >
+  {
+  static constexpr bool value = true;
+  };
+
+template<typename T1>
+struct resolves_to_symmat< Op<Op<T1, op_symmatl>, op_htrans2> >
   {
   static constexpr bool value = true;
   };

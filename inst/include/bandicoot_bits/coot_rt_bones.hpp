@@ -555,9 +555,6 @@ class coot_rt_t
   static inline void find(dev_mem_t<uword>& out, uword& out_len, const dev_mem_t<eT> A, const uword n_elem, const uword k, const uword find_type);
 
   template<typename eT1, typename eT2>
-  static inline void symmat(dev_mem_t<eT2> out, const dev_mem_t<eT1> in, const uword size, const uword lower);
-
-  template<typename eT1, typename eT2>
   static inline void cross(dev_mem_t<eT2> out, const dev_mem_t<eT1> A, const dev_mem_t<eT1> B);
 
   template<typename eT>

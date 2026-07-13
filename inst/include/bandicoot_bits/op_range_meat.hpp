@@ -25,9 +25,8 @@ op_range::apply(Mat<out_eT>& out, const Op<T1, op_range>& in)
 
   typedef typename T1::elem_type eT;
 
-  unwrap<T1> U(in.m);
   // The kernels we have don't operate on subviews, or aliases.
-  extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+  plain_unwrap<T1> E(in.m);
   copy_alias<eT> C(E.M, out);
 
   const uword dim = in.aux_uword_a;
@@ -43,8 +42,7 @@ op_range::apply(Mat<eT>& out, const Op<mtOp<eT, T1, mtop_conv_to>, op_range>& in
   {
   coot_debug_sigprint();
 
-  unwrap<T1> U(in.m.q);
-  extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+  plain_unwrap<T1> E(in.m.q);
   // Aliases aren't possible for a type change.
 
   const uword dim = in.aux_uword_a;
@@ -106,7 +104,7 @@ op_range::range_vec(const T1& X)
   coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
-  unwrap<T1> U(X);
+  plain_unwrap<T1> U(X);
   const Mat<eT>& M = U.M;
 
   if (M.n_elem == 0)

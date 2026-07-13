@@ -21,13 +21,13 @@
 template<typename glue_type, typename T1>
 struct depth_lhs
   {
-  static const uword num = 0;
+  static constexpr uword num = 0;
   };
 
 template<typename glue_type, typename T1, typename T2>
 struct depth_lhs< glue_type, Glue<T1, T2, glue_type> >
   {
-  static const uword num = 1 + depth_lhs<glue_type, T1>::num;
+  static constexpr uword num = 1 + depth_lhs<glue_type, T1>::num;
   };
 
 
@@ -93,6 +93,23 @@ class glue_times
   inline static uword compute_n_rows(const Glue<T1, T2, glue_times>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
   template<typename T1, typename T2>
   inline static uword compute_n_cols(const Glue<T1, T2, glue_times>& glue, const uword A_n_rows, const uword A_n_cols, const uword B_n_rows, const uword B_n_cols);
+  };
+
+
+
+template<bool do_inv_detect>
+struct glue_times_redirect2_helper
+  {
+  template<typename out_eT, typename T1, typename T2>
+  inline static void apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& X);
+  };
+
+
+template<>
+struct glue_times_redirect2_helper<true>
+  {
+  template<typename out_eT, typename T1, typename T2>
+  inline static void apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& X);
   };
 
 

@@ -48,6 +48,7 @@ __device__ inline char coot_min(const char x, const char y) { return min(x, y); 
 __device__ inline char coot_max(const char x, const char y) { return max(x, y); }
 __device__ inline char coot_conj(const char x) { return x; }
 __device__ inline char coot_abs(const char x) { return abs(x); }
+__device__ inline char coot_sign(const char x) { return (x > 0) ? 1 : (x == 0) ? 0 : -1; }
 
 // Basic mathematical operators.
 __device__ inline char coot_plus(const char x, const char y)  { return x + y; }

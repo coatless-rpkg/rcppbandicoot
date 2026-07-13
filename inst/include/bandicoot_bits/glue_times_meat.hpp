@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
-// Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
-// Copyright 2008-2017 Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2017-2026 Ryan Curtin (https://www.ratml.org)
+// Copyright 2008-2026 Conrad Sanderson (https://conradsanderson.id.au)
 // Copyright 2008-2016 National ICT Australia (NICTA)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,29 +60,11 @@ glue_times_redirect<2>::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& 
   {
   coot_debug_sigprint();
 
-  const partial_unwrap<T1> tmp1(X.A);
-  const partial_unwrap<T2> tmp2(X.B);
-
-  typedef typename partial_unwrap<T1>::stored_type PT1;
-  typedef typename partial_unwrap<T2>::stored_type PT2;
-
-  const PT1& A = tmp1.M;
-  const PT2& B = tmp2.M;
-
-  const bool use_alpha = partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times;
-  const out_eT   alpha = use_alpha ? out_eT(tmp1.get_val() * tmp2.get_val()) : out_eT(0);
-
-  alias_wrapper<Mat<out_eT>, PT1, PT2> W(out, A, B);
-  glue_times::apply
-    <
-    out_eT,
-    PT1,
-    PT2,
-    partial_unwrap<T1>::do_trans,
-    partial_unwrap<T2>::do_trans,
-    (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times)
-    >
-    (W.use, A, B, alpha);
+  
+  constexpr bool elem_type_test_A = is_same_type<typename T1::elem_type, typename T2::elem_type>::value;
+  constexpr bool elem_type_test_B = is_same_type<typename T1::elem_type, out_eT                >::value;
+  
+  glue_times_redirect2_helper< is_supported_real_blas_type<out_eT>::value && elem_type_test_A && elem_type_test_B >::apply(out, X);
   }
 
 
@@ -183,9 +165,9 @@ glue_times::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& X)
   {
   coot_debug_sigprint();
 
-  const sword N_mat = 1 + depth_lhs< glue_times, Glue<T1, T2, glue_times> >::num;
+  constexpr uword N_mat = 1 + depth_lhs< glue_times, Glue<T1, T2, glue_times> >::num;
 
-  coot_debug_print(coot_str::format("N_mat: %d") % N_mat);
+  coot_debug_print(coot_str::format("glue_times::apply(): N_mat: %u") % N_mat);
 
   glue_times_redirect<N_mat>::apply(out, X);
   }
@@ -435,6 +417,85 @@ glue_times::compute_n_cols(const Glue<T1, T2, glue_times>& glue, const uword A_n
 
 
 
+//
+
+
+
+template<bool do_inv_detect>
+template<typename out_eT, typename T1, typename T2>
+inline
+void
+glue_times_redirect2_helper<do_inv_detect>::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& X)
+  {
+  coot_debug_sigprint();
+  
+  const partial_unwrap<T1> tmp1(X.A);
+  const partial_unwrap<T2> tmp2(X.B);
+  
+  typedef typename partial_unwrap<T1>::stored_type PT1;
+  typedef typename partial_unwrap<T2>::stored_type PT2;
+  
+  const PT1& A = tmp1.M;
+  const PT2& B = tmp2.M;
+  
+  const bool use_alpha = partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times;
+  const out_eT   alpha = use_alpha ? out_eT(tmp1.get_val() * tmp2.get_val()) : out_eT(0);
+  
+  alias_wrapper<Mat<out_eT>, PT1, PT2> W(out, A, B);
+  
+  glue_times::apply
+    <
+    out_eT,
+    PT1,
+    PT2,
+    partial_unwrap<T1>::do_trans,
+    partial_unwrap<T2>::do_trans,
+    (partial_unwrap<T1>::do_times || partial_unwrap<T2>::do_times)
+    >
+    (W.use, A, B, alpha);
+  }
+
+
+
+template<typename out_eT, typename T1, typename T2>
+inline
+void
+glue_times_redirect2_helper<true>::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times>& X)
+  {
+  coot_debug_sigprint();
+  
+  if(coot_config::optimise_invexpr && strip_inv<T1>::do_inv_gen)
+    {
+    // replace inv(A)*B with solve(A,B)
+    
+    coot_debug_print("glue_times_redirect<2>::apply(): detected inv(A)*B");
+    
+    const strip_inv<T1> A_strip(X.A);
+    
+    Mat<out_eT> A = A_strip.M;  // make a copy, as matrix 'A' will be destroyed by coot_rt_t::solve_square_fast()
+    
+    coot_conform_check( (A.is_square() == false), "inv(): given matrix must be square sized" );
+    
+    out = X.B;  // coot_rt_t::solve_square_fast() will overwrite matrix 'out' with the solution
+    
+    coot_conform_assert_mul_size(A, out, "matrix multiplication");
+    
+    const std::tuple<bool, std::string> status = coot_rt_t::solve_square_fast(A.get_dev_mem(true), false, out.get_dev_mem(true), out.n_rows, out.n_cols);
+    
+    if(std::get<0>(status) == false)
+      {
+      out.reset();
+      coot_stop_runtime_error("matrix multiplication: problem with matrix inverse; suggest to use solve() instead");
+      }
+    }
+  else
+    {
+    glue_times_redirect2_helper<false>::apply(out, X);
+    }
+  }
+
+
+
 // glue_times_diag
 
 template<typename out_eT, typename T1, typename T2>
@@ -505,8 +566,8 @@ glue_times_diag::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_times_diag>& X)
     // row and column offsets, in case either element is a subview.
     typedef typename partial_unwrap<ST1>::stored_type PST1;
     typedef typename partial_unwrap<ST2>::stored_type PST2;
-    unwrap<PST1> up1(p1.M);
-    unwrap<PST2> up2(p2.M);
+    quasi_unwrap<PST1> up1(p1.M);
+    quasi_unwrap<PST2> up2(p2.M);
 
     // ensure that the diagonal matrix (a vector) is treated as a row vector (not a column vector)
     // so that we can set the increment for each element correctly.

@@ -27,7 +27,7 @@ mtop_all::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_all>& in)
 
   coot_conform_check( (dim > 1), "all(): parameter 'dim' must be 0 or 1" );
 
-  unwrap<T1> U(in.q);
+  quasi_unwrap<T1> U(in.q);
 
   // Shortcut if the input is empty.
   if (U.M.n_elem == 0)
@@ -62,7 +62,7 @@ mtop_all::apply(Mat<uword>& out, const mtOp<uword, mtOp<eT2, T1, mtop_conv_to>, 
 
   coot_conform_check( (dim > 1), "all(): parameter 'dim' must be 0 or 1" );
 
-  unwrap<T1> U(in.q.q);
+  quasi_unwrap<T1> U(in.q.q);
 
   // Shortcut if the input is empty.
   if (U.M.n_elem == 0)
@@ -116,7 +116,7 @@ mtop_all::apply(Mat<uword>& out,
   if (opt1 || opt2 || opt3)
     {
     // Just call all() directly on the inner object.
-    unwrap<T1> U(in.q.q);
+    quasi_unwrap<T1> U(in.q.q);
 
     // Shortcut if the input is empty.
     if (U.M.n_elem == 0)
@@ -153,7 +153,7 @@ mtop_all::apply(Mat<uword>& out,
     }
 
   // No optimization available.
-  unwrap<mtOp<uword, T1, mtop_type>> U(in.q);
+  quasi_unwrap<mtOp<uword, T1, mtop_type>> U(in.q);
 
   // Shortcut if the input is empty.
   if (U.M.n_elem == 0)
@@ -227,7 +227,7 @@ mtop_all::all_vec(T1& X)
   coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
-  unwrap<T1> U(X);
+  quasi_unwrap<T1> U(X);
   if (U.M.n_elem == 0)
     {
     return true; // This matches compatibility with Armadillo and Octave.
@@ -258,7 +258,7 @@ mtop_all::all_vec(const mtOp<eT2, T1, mtop_conv_to>& op)
   {
   coot_debug_sigprint();
 
-  unwrap<T1> U(op.q);
+  quasi_unwrap<T1> U(op.q);
   if (U.M.n_elem == 0)
     {
     return true; // This matches compatibility with Armadillo and Octave.
@@ -315,7 +315,7 @@ mtop_all::all_vec(const mtOp<uword, T1, mtop_type>& in,
     }
 
   // No optimization possible.
-  unwrap<mtOp<uword, T1, mtop_type>> U(in);
+  quasi_unwrap<mtOp<uword, T1, mtop_type>> U(in);
   if (U.M.n_elem == 0)
     {
     return true; // This matches compatibility with Armadillo and Octave.

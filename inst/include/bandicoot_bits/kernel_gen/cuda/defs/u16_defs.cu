@@ -46,6 +46,7 @@ __device__ inline ushort coot_min(const ushort x, const ushort y) { return min(x
 __device__ inline ushort coot_max(const ushort x, const ushort y) { return max(x, y); }
 __device__ inline ushort coot_conj(const ushort x) { return x; }
 __device__ inline ushort coot_abs(const ushort x) { return x; }
+__device__ inline ushort coot_sign(const ushort x) { return (x > 0) ? 1 : 0; }
 
 // Basic mathematical operators.
 __device__ inline ushort coot_plus(const ushort x, const ushort y)  { return x + y; }

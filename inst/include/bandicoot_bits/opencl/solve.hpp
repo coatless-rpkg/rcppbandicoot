@@ -36,7 +36,7 @@ solve_square_fast(dev_mem_t<eT> A, const bool trans_A, dev_mem_t<eT> B, const uw
   magma_int_t info   = 0;
   magma_int_t status = 0; // NOTE: all paths through dgetrf and sgetrf just return status == info...
 
-  cpu_memory::mem_array<int> ipiv(n_rows);
+  cpu_memory::mem_array<magma_int_t> ipiv(n_rows, coot_zeros_indicator());
 
   if (is_float<eT>::value)
     {

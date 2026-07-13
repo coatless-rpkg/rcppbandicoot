@@ -16,14 +16,26 @@
 
 
 
-class op_symmat
+class op_symmatu
   : public traits_op_default
   {
   public:
 
-  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT>& out, const Op<T1, op_symmat>& in);
-  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_symmat>& in);
+  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT>& out, const Op<T1, op_symmatu>& in);
 
-  template<typename T1> inline static uword compute_n_rows(const Op<T1, op_symmat>& op, const uword in_n_rows, const uword in_n_cols);
-  template<typename T1> inline static uword compute_n_cols(const Op<T1, op_symmat>& op, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1> inline static uword compute_n_rows(const Op<T1, op_symmatu>& op, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1> inline static uword compute_n_cols(const Op<T1, op_symmatu>& op, const uword in_n_rows, const uword in_n_cols);
+  };
+
+
+
+class op_symmatl
+  : public traits_op_default
+  {
+  public:
+
+  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT>& out, const Op<T1, op_symmatl>& in);
+
+  template<typename T1> inline static uword compute_n_rows(const Op<T1, op_symmatl>& op, const uword in_n_rows, const uword in_n_cols);
+  template<typename T1> inline static uword compute_n_cols(const Op<T1, op_symmatl>& op, const uword in_n_rows, const uword in_n_cols);
   };

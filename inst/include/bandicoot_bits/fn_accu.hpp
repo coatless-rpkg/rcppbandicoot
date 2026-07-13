@@ -55,6 +55,6 @@ accu(const Base<typename T1::elem_type, T1>& X)
   {
   coot_debug_sigprint();
 
-  const unwrap<T1> U(X.get_ref());
+  const quasi_unwrap<T1> U(X.get_ref());
   return accu(U.M);
   }

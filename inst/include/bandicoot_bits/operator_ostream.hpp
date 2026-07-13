@@ -25,7 +25,7 @@ operator<< (std::ostream& o, const Base<eT, T1>& X)
   {
   coot_debug_sigprint();
 
-  const unwrap<T1> tmp(X.get_ref());
+  const quasi_unwrap<T1> tmp(X.get_ref());
 
   coot_ostream::print(o, tmp.M, true);
 
@@ -41,7 +41,7 @@ operator<< (std::ostream& o, const BaseCube<eT, T1>& X)
   {
   coot_debug_sigprint();
 
-  const unwrap_cube<T1> tmp(X.get_ref());
+  const plain_unwrap_cube<T1> tmp(X.get_ref());
 
   coot_ostream::print(o, tmp.M, true);
 

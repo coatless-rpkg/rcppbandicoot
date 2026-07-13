@@ -32,11 +32,10 @@ mtop_sort_index::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_sort_index>& 
 
   typedef typename T1::elem_type eT;
 
-  // Note that T1 cannot be a Mat, Row, or Col---the next overload of apply() handles that.
-  // Specifically that means that a new Mat is going to be created during the unwrap<> process.
-  const unwrap<T1> U(in.q);
   // The kernels we have don't operate on subviews.
-  const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+  const plain_unwrap<T1> E(in.q);
+
+  typedef typename plain_unwrap<T1>::stored_type E_stored_type;
 
   out.set_size(E.M.n_elem);
 
@@ -45,8 +44,19 @@ mtop_sort_index::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_sort_index>& 
     {
     return;
     }
-
-  coot_rt_t::sort_index_vec(out.get_dev_mem(false), const_cast<Mat<eT>&>(E.M).get_dev_mem(false), out.n_elem, sort_type, is_stable_sort);
+  
+  // coot_rt_t::sort_index_vec(out.get_dev_mem(false), const_cast< E_stored_type& >(E.M).get_dev_mem(false), out.n_elem, sort_type, is_stable_sort);
+  
+  if(plain_unwrap<T1>::is_generated)
+    {
+    coot_rt_t::sort_index_vec(out.get_dev_mem(false), const_cast< E_stored_type& >(E.M).get_dev_mem(false), out.n_elem, sort_type, is_stable_sort);
+    }
+  else
+    {
+    Mat<eT> tmp(E.M);
+    
+    coot_rt_t::sort_index_vec(out.get_dev_mem(false), tmp.get_dev_mem(false), out.n_elem, sort_type, is_stable_sort);
+    }
   }
 
 

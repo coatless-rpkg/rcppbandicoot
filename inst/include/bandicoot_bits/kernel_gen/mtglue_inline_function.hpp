@@ -54,7 +54,9 @@ using mtglue_inline_function = concat_str
   eop_extra_arg_list_const,                // , const
   elem_type_str<eT, backend>,              // <eT>
   space_y,                                 //  y
-  eop_inline_function_body,                // ) { return
+  close_paren,                             // )
+  space,                                   //
+  eop_inline_function_body,                // { return
   conv_elem_type_str<out_eT, eT, backend>, // coot_to_out_eT
   open_paren,                              // (
   func_body,                               // whatever the function body is

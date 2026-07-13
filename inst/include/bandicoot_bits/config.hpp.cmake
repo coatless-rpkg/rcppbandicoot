@@ -141,6 +141,12 @@
 //// Comment out the above line to disable use of std::mutex
 #endif
 
+#if !defined(COOT_OPTIMISE_INVEXPR)
+  #define COOT_OPTIMISE_INVEXPR
+  //// Comment out the above line to disable optimised handling
+  //// of inv() within compound expressions
+#endif
+
 #if !defined(COOT_OPTIMISE_POWEXPR)
   #define COOT_OPTIMISE_POWEXPR
   //// Comment out the above line to disable optimised handling of pow()
@@ -151,7 +157,7 @@
   //// Comment out the above line to disable conformance checks for bounds and size.
   //// This is NOT RECOMMENDED.
   //// It is strongly recommended that conformance checks are enabled during development,
-//// as this greatly aids in finding mistakes in your code.
+  //// as this greatly aids in finding mistakes in your code.
 #endif
 
 // #define COOT_DEBUG
@@ -214,6 +220,10 @@
 
 #if defined(COOT_DONT_USE_STD_MUTEX)
   #undef COOT_USE_STD_MUTEX
+#endif
+
+#if defined(COOT_DONT_OPTIMISE_INVEXPR)
+  #undef COOT_OPTIMISE_INVEXPR
 #endif
 
 #if defined(COOT_DONT_OPTIMISE_POWEXPR)
