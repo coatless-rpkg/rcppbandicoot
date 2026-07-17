@@ -53,4 +53,14 @@ inline cx_double coot_times_cx_double(const cx_double x, const cx_double y) { re
 inline cx_double coot_div_cx_double(const cx_double x, const cx_double y)   { return (cx_double)(cx_double)((x.x * y.x + x.y * y.y) / (y.x * y.x + y.y * y.y), (x.y * y.x - x.x * y.y) / (y.x * y.x + y.y * y.y)); }
 inline cx_double coot_neg_cx_double(const cx_double x)                      { return (cx_double)(-x.x, -x.y); }
 
+// Special utility functions for complex numbers.
+inline double    coot_hypot_cx_double(const cx_double x)
+  {
+  const double a = fabs(x.x), b = fabs(x.y);
+  const double m = (a > b) ? a : b;
+  const double r = (a < b) ? (a / m) : (b / m);
+  return m * sqrt(1.0 + r * r);
+  }
+inline cx_double coot_cx_create_cx_double(const double re, const double imag) { return (cx_double)(re, imag); }
+
 )"

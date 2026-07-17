@@ -44,6 +44,7 @@ inline half coot_conj_half(const half x) { return x; }
 inline half coot_abs_half(const half x) { return fabs(x); }
 inline half coot_min_half(const half x, const half y) { return fmin(x, y); }
 inline half coot_max_half(const half x, const half y) { return fmax(x, y); }
+inline half coot_sign_half(const half x) { return (x > (half) 0) ? (half) 1 : ( (x < (half) 0) ? (half) -1 : ( (x == (half) 0) ? (half) 0 : x ) ); }
 
 // Basic mathematical operators.
 inline half coot_plus_half(const half x, const half y)  { return x + y; }

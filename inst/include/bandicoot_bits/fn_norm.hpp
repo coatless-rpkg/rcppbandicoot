@@ -48,7 +48,7 @@ norm
   const bool is_vec = (S.get_n_rows() == 1) || (S.get_n_cols() == 1);
 
   // At this point, unwrapping is unavoidable, since we perform the norm computation directly and immediately.
-  const unwrap<T1> U(X);
+  const quasi_unwrap<T1> U(X);
 
   if(is_vec)
     {
@@ -98,7 +98,7 @@ norm
   const bool is_vec = (S.get_n_rows() == 1) || (S.get_n_cols() == 1);
 
   // At this point, unwrapping is unavoidable, since we perform the norm computation directly and immediately.
-  const unwrap<T1> U(X);
+  const quasi_unwrap<T1> U(X);
 
   if (is_vec)
     {

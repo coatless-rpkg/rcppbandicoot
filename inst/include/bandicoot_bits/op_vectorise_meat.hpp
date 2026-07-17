@@ -25,7 +25,7 @@ op_vectorise_col::apply(Mat<out_eT>& out, const Op<T1,op_vectorise_col>& in)
   {
   coot_debug_sigprint();
 
-  const unwrap<T1> U(in.m);
+  const quasi_unwrap<T1> U(in.m);
 
   if (U.M.n_elem == 0)
     {
@@ -194,7 +194,7 @@ op_vectorise_all::apply(Mat<out_eT>& out, const Op<T1,op_vectorise_all>& in)
       return;
       }
 
-    unwrap<T1> U(in.m);
+    quasi_unwrap<T1> U(in.m);
     op_vectorise_col::apply_direct(out, U.M);
     }
   else
@@ -208,7 +208,7 @@ op_vectorise_all::apply(Mat<out_eT>& out, const Op<T1,op_vectorise_all>& in)
         return;
         }
 
-      unwrap<T1> U(in.m);
+      quasi_unwrap<T1> U(in.m);
       op_vectorise_col::apply_direct(out, U.M, true /* use in row vector mode */);
       }
     else
@@ -269,14 +269,14 @@ op_vectorise_row::apply_direct(Mat<typename T1::elem_type>& out, const T1& expr)
 
   // TODO: select htrans/strans based on complex elements or not
   // Using op_htrans as part of the unwrap may combine the htrans with some earlier operations in the expression.
-  unwrap<Op<T1, op_htrans>> U(Op<T1, op_htrans>(expr, 0, 0));
+  quasi_unwrap<Op<T1, op_htrans>> U(Op<T1, op_htrans>(expr, 0, 0));
 
   // If U.M is an object we created during unwrapping, steal the memory and set the size.
   // Otherwise, copy U.M.
   // TODO: this is not correct!
   if (is_Mat<T1>::value || is_subview<T1>::value)
     {
-    // If `expr` is some type of matrix, then unwrap<T1> just stores the matrix itself.
+    // If `expr` is some type of matrix, then quasi_unwrap<T1> just stores the matrix itself.
     // That's not a temporary, and we can't steal its memory---we have to copy it.
     out.set_size(1, U.M.n_elem);
     // Create an alias of `out` that's the same size as the input.
@@ -306,7 +306,7 @@ op_vectorise_row::apply_direct(Mat<out_eT>& out, const T1& expr, const typename 
 
   // TODO: select htrans/strans based on complex elements or not
   // Using op_htrans as part of the unwrap may combine the htrans with some earlier operations in the expression.
-  unwrap<Op<T1, op_htrans>> U(Op<T1, op_htrans>(expr, 0, 0));
+  quasi_unwrap<Op<T1, op_htrans>> U(Op<T1, op_htrans>(expr, 0, 0));
 
   // A conversion operation is always necessary when the type is different.
   out.set_size(1, U.M.n_elem);
@@ -347,8 +347,8 @@ op_vectorise_cube_col::apply(Mat<typename T1::elem_type>& out, const CubeToMatOp
   {
   coot_debug_sigprint();
 
-  const unwrap_cube<T1> U(in.m);
-
+  const quasi_unwrap_cube<T1> U(in.m);
+  
   if(U.is_alias(out))
     {
     // output matrix is the same as the input matrix

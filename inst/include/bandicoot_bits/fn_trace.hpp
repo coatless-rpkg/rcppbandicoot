@@ -28,8 +28,7 @@ trace(const Base<typename T1::elem_type, T1>& X)
 
   typedef typename T1::elem_type eT;
 
-  const unwrap<T1>   U(X.get_ref());
-  const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+  const plain_unwrap<T1> E(X.get_ref());
   const Mat<eT>& A = E.M;
 
   if(A.n_elem == 0)  { return eT(0); }
@@ -39,14 +38,14 @@ trace(const Base<typename T1::elem_type, T1>& X)
 
 
 
-// trace(diagmat): just sum the elements
-template<typename T1>
-coot_warn_unused
-inline
-typename T1::elem_type
-trace(const Op<T1, op_diagmat>& X)
-  {
-  coot_debug_sigprint();
-
-  return accu(X.m);
-  }
+// // trace(diagmat): just sum the elements
+// template<typename T1>
+// coot_warn_unused
+// inline
+// typename T1::elem_type
+// trace(const Op<T1, op_diagmat>& X)
+//   {
+//   coot_debug_sigprint();
+//   
+//   return accu(X.m);  // BUG: the op_diagmat operation is skipped, so this sums the whole matrix, not just the elements on the diagonal!
+//   }

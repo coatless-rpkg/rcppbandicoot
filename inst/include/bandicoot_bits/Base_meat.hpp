@@ -35,7 +35,7 @@ Base<elem_type,derived>::print(const std::string extra_text) const
   {
   coot_debug_sigprint();
 
-  const unwrap<derived> tmp( (*this).get_ref() );
+  const quasi_unwrap<derived> tmp( (*this).get_ref() );
 
   if(extra_text.length() != 0)
     {
@@ -59,7 +59,7 @@ Base<elem_type,derived>::print(std::ostream& user_stream, const std::string extr
   {
   coot_debug_sigprint();
 
-  const unwrap<derived> tmp( (*this).get_ref() );
+  const quasi_unwrap<derived> tmp( (*this).get_ref() );
 
   if(extra_text.length() != 0)
     {
@@ -82,7 +82,7 @@ Base<elem_type,derived>::raw_print(const std::string extra_text) const
   {
   coot_debug_sigprint();
 
-  const unwrap<derived> tmp( (*this).get_ref() );
+  const quasi_unwrap<derived> tmp( (*this).get_ref() );
 
   if(extra_text.length() != 0)
     {
@@ -105,7 +105,7 @@ Base<elem_type,derived>::raw_print(std::ostream& user_stream, const std::string 
   {
   coot_debug_sigprint();
 
-  const unwrap<derived> tmp( (*this).get_ref() );
+  const quasi_unwrap<derived> tmp( (*this).get_ref() );
 
   if(extra_text.length() != 0)
     {
@@ -126,10 +126,10 @@ Base<elem_type,derived>::raw_print(std::ostream& user_stream, const std::string 
 
 template<typename elem_type, typename derived>
 inline
-const Op<derived, op_inv>
+const Op<derived, op_inv_gen_default>
 Base_extra_yes<elem_type,derived>::i() const
   {
-  return Op<derived, op_inv>(static_cast<const derived&>(*this));
+  return Op<derived, op_inv_gen_default>(static_cast<const derived&>(*this));
   }
 
 
@@ -311,7 +311,7 @@ elem_type
 Base<elem_type,derived>::min(uword& index_of_min_val) const
   {
   // We have to actually unwrap and evaluate.
-  const unwrap<derived> U( (*this).get_ref() );
+  const quasi_unwrap<derived> U( (*this).get_ref() );
 
   index_of_min_val = mtop_index_min::apply_direct(U.M);
 
@@ -326,7 +326,7 @@ elem_type
 Base<elem_type,derived>::max(uword& index_of_max_val) const
   {
   // We have to actually unwrap and evaluate.
-  const unwrap<derived> U( (*this).get_ref() );
+  const quasi_unwrap<derived> U( (*this).get_ref() );
 
   index_of_max_val = mtop_index_max::apply_direct(U.M);
 
@@ -340,7 +340,7 @@ inline
 elem_type
 Base<elem_type,derived>::min(uword& row_of_min_val, uword& col_of_min_val) const
   {
-  const unwrap<derived> U( (*this).get_ref() );
+  const quasi_unwrap<derived> U( (*this).get_ref() );
 
   uword index = mtop_index_min::apply_direct(U.M);
 
@@ -360,7 +360,7 @@ elem_type
 Base<elem_type,derived>::max(uword& row_of_max_val, uword& col_of_max_val) const
   {
 
-  const unwrap<derived> U( (*this).get_ref() );
+  const quasi_unwrap<derived> U( (*this).get_ref() );
 
   uword index = mtop_index_max::apply_direct(U.M);
 
@@ -403,7 +403,7 @@ Base<elem_type,derived>::is_symmetric() const
   
   // better-than-nothing implementation
   
-  const unwrap<derived> U( (*this).get_ref() );
+  const quasi_unwrap<derived> U( (*this).get_ref() );
   
   if(U.M.n_rows != U.M.n_cols)  { return false; }
   
@@ -425,7 +425,7 @@ Base<elem_type,derived>::is_symmetric(const typename get_pod_type<elem_type>::re
   
   coot_conform_check( ((tol >= T(0)) == false), "is_symmetric(): parameter 'tol' must be > 0" );
   
-  const unwrap<derived> U( (*this).get_ref() );
+  const quasi_unwrap<derived> U( (*this).get_ref() );
   
   if(U.M.n_rows != U.M.n_cols)  { return false; }
   
@@ -453,7 +453,7 @@ Base<elem_type,derived>::is_hermitian() const
   
   // better-than-nothing implementation
   
-  const unwrap<derived> U( (*this).get_ref() );
+  const quasi_unwrap<derived> U( (*this).get_ref() );
   
   if(U.M.n_rows != U.M.n_cols)  { return false; }
   
@@ -475,7 +475,7 @@ Base<elem_type,derived>::is_hermitian(const typename get_pod_type<elem_type>::re
   
   coot_conform_check( ((tol >= T(0)) == false), "is_hermitian(): parameter 'tol' must be > 0" );
   
-  const unwrap<derived> U( (*this).get_ref() );
+  const quasi_unwrap<derived> U( (*this).get_ref() );
   
   if(U.M.n_rows != U.M.n_cols)  { return false; }
   

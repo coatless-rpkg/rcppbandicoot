@@ -23,7 +23,7 @@ mtop_imag::apply(Mat<out_eT>& out, const mtOp<out_eT, T1, mtop_imag>& in)
   {
   coot_debug_sigprint();
 
-  unwrap<T1> U(in.q);
+  quasi_unwrap<T1> U(in.q);
 
   out.set_size(U.M.n_rows, U.M.n_cols);
 

@@ -241,7 +241,7 @@ subview<eT>::operator= (const Base<eT, T1>& in)
   {
   coot_debug_sigprint();
 
-  no_conv_unwrap<T1> U(in.get_ref());
+  no_conv_quasi_unwrap<T1> U(in.get_ref());
 
   coot_assert_same_size(n_rows, n_cols, U.M.n_rows, U.M.n_cols, "subview::operator=");
 

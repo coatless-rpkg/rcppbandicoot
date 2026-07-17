@@ -27,8 +27,7 @@ op_row_as_mat::apply(Mat<typename T1::elem_type>& out, const CubeToMatOp<T1, op_
 
   typedef typename T1::elem_type eT;
 
-  const unwrap_cube<T1> U(expr.m);
-  const extract_subcube<typename unwrap_cube<T1>::stored_type> E(U.M);
+  const plain_unwrap_cube<T1> E(expr.m);
   const Cube<eT>& A = E.M;
 
   const uword in_row = expr.aux_uword;

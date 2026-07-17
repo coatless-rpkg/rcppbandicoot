@@ -54,4 +54,8 @@ __device__ inline cx_double coot_times(const cx_double x, const cx_double y) { r
 __device__ inline cx_double coot_div(const cx_double x, const cx_double y)   { return cuCdiv(x, y); }
 __device__ inline cx_double coot_neg(const cx_double x)                      { return make_cuDoubleComplex(-x.x, -x.y); }
 
+// Special utility functions for complex numbers.
+__device__ inline double    coot_hypot(const cx_double x)                      { return cuCabs(x);                      }
+__device__ inline cx_double coot_cx_create(const double re, const double imag) { return make_cuDoubleComplex(re, imag); }
+
 )"

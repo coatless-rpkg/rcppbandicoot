@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //
-// Copyright 2025 Ryan Curtin (https://www.ratml.org)
+// Copyright 2025-2026 Ryan Curtin (https://www.ratml.org)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,9 +26,9 @@
 // does, because it may hold references.  These are generally not too onerous conditions to meet.
 //
 
-// If the type is a cube type, we have to use unwrap_cube.
-template<typename T1, bool is_cube> struct Proxy_unwrap_type           { typedef unwrap<T1> type; };
-template<typename T1>               struct Proxy_unwrap_type<T1, true> { typedef unwrap_cube<T1> type; };
+// If the type is a cube type, we have to use quasi_unwrap_cube.
+template<typename T1, bool is_cube> struct Proxy_unwrap_type           { typedef quasi_unwrap<T1>      type; };
+template<typename T1>               struct Proxy_unwrap_type<T1, true> { typedef quasi_unwrap_cube<T1> type; };
 
 template<typename T1>
 struct Proxy
@@ -1698,6 +1698,102 @@ struct Proxy< Op<T1, op_strans> >
   inline uword get_n_rows() const   { return P.get_n_cols();   }
   inline uword get_M_n_rows() const { return get_n_rows();     }
   inline uword get_n_cols() const   { return P.get_n_rows();   }
+  inline uword get_n_slices() const { return P.get_n_slices(); }
+  inline uword get_n_elem() const   { return P.get_n_elem();   }
+
+  inline bool is_empty() const { return P.is_empty(); }
+  };
+
+
+
+//
+// op_symmatu/op_symmatl
+//
+
+template<bool is_cx, typename T1>
+struct proxy_symmat_arg_types_helper           { typedef typename Proxy<T1>::arg_types result; };
+
+template<typename T1>
+struct proxy_symmat_arg_types_helper<true, T1> { typedef typename merge_tuple< typename Proxy<T1>::arg_types, std::tuple< const uword& > >::result result; };
+
+template<typename T1>
+inline
+typename enable_if2
+  <
+  is_cx< typename T1::elem_type >::no,
+  typename Proxy<T1>::arg_types
+  >::result
+symmat_proxy_args_helper(const Proxy<T1>& P, const uword& /* do_conj */) { return P.args(); }
+
+template<typename T1>
+inline
+typename enable_if2
+  <
+  is_cx< typename T1::elem_type >::yes,
+  typename merge_tuple< typename Proxy<T1>::arg_types, std::tuple< const uword& > >::result
+  >::result
+symmat_proxy_args_helper(const Proxy<T1>& P, const uword& do_conj) { return std::tuple_cat( P.args(), std::tie<const uword&>(do_conj) ); }
+
+
+
+template<typename T1>
+struct Proxy< Op<T1, op_symmatu> >
+  {
+  typedef Op<typename Proxy<T1>::held_type, op_symmatu> held_type;
+  typedef typename Proxy<T1>::elem_type                 elem_type;
+
+  const Proxy<T1> P;
+  const Op<T1, op_symmatu>& Q;
+
+  inline Proxy(const Op<T1, op_symmatu>& in_Q) : P(in_Q.m), Q(in_Q) { }
+
+  // an extra argument for do_conj is necessary *only* if the type of T1::elem_type is complex
+  static constexpr const size_t num_args = Proxy<T1>::num_args + (is_cx<typename T1::elem_type>::yes ? 1 : 0);
+  static constexpr const size_t num_dims = Proxy<T1>::num_dims;
+
+  typedef typename proxy_symmat_arg_types_helper< is_cx<typename T1::elem_type>::value, T1 >::result arg_types;
+
+  inline arg_types args() const { return symmat_proxy_args_helper(P, Q.aux_uword_a); }
+
+  template<typename T2> inline bool         is_alias(const T2& t) const { return P.is_alias(t);         }
+  template<typename T2> inline bool is_inexact_alias(const T2& t) const { return P.is_inexact_alias(t); }
+
+  inline uword get_n_rows() const   { return P.get_n_rows();   }
+  inline uword get_M_n_rows() const { return get_n_rows();     }
+  inline uword get_n_cols() const   { return P.get_n_cols();   }
+  inline uword get_n_slices() const { return P.get_n_slices(); }
+  inline uword get_n_elem() const   { return P.get_n_elem();   }
+
+  inline bool is_empty() const { return P.is_empty(); }
+  };
+
+
+
+template<typename T1>
+struct Proxy< Op<T1, op_symmatl> >
+  {
+  typedef Op<typename Proxy<T1>::held_type, op_symmatl> held_type;
+  typedef typename Proxy<T1>::elem_type                 elem_type;
+
+  const Proxy<T1> P;
+  const Op<T1, op_symmatl>& Q;
+
+  inline Proxy(const Op<T1, op_symmatl>& in_Q) : P(in_Q.m), Q(in_Q) { }
+
+  // an extra argument for do_conj is necessary *only* if the type of T1::elem_type is complex
+  static constexpr const size_t num_args = Proxy<T1>::num_args + (is_cx<typename T1::elem_type>::yes ? 1 : 0);
+  static constexpr const size_t num_dims = Proxy<T1>::num_dims;
+
+  typedef typename proxy_symmat_arg_types_helper< is_cx<typename T1::elem_type>::value, T1 >::result arg_types;
+
+  inline arg_types args() const { return symmat_proxy_args_helper(P, Q.aux_uword_a); }
+
+  template<typename T2> inline bool         is_alias(const T2& t) const { return P.is_alias(t);         }
+  template<typename T2> inline bool is_inexact_alias(const T2& t) const { return P.is_inexact_alias(t); }
+
+  inline uword get_n_rows() const   { return P.get_n_rows();   }
+  inline uword get_M_n_rows() const { return get_n_rows();     }
+  inline uword get_n_cols() const   { return P.get_n_cols();   }
   inline uword get_n_slices() const { return P.get_n_slices(); }
   inline uword get_n_elem() const   { return P.get_n_elem();   }
 

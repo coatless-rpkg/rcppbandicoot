@@ -30,7 +30,7 @@ op_det::apply_direct(typename T1::elem_type& out_val, const Base<typename T1::el
   if (strip_diagmat<T1>::do_diagmat)
     {
     const strip_diagmat<T1> strip(expr.get_ref());
-    const unwrap<typename strip_diagmat<T1>::stored_type> U(strip.M);
+    const quasi_unwrap<typename strip_diagmat<T1>::stored_type> U(strip.M);
     out_val = op_det::apply_diagmat(U.M);
     return true;
     }

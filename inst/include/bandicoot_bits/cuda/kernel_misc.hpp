@@ -30,10 +30,13 @@ inline kernel_dims create_kernel_dims()
 inline kernel_dims one_dimensional_grid_dims(const uword n_elem)
   {
   const size_t mtpb = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsPerBlock;
+  const size_t max_rows = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsDim[0];
+
+  const size_t max_val = (std::min)(mtpb, max_rows);
 
   kernel_dims result = create_kernel_dims();
-  result.d[3] = (std::min)(mtpb, n_elem);
-  result.d[0] = (n_elem + mtpb - 1) / mtpb;
+  result.d[3] = (int) (std::min)(max_val, n_elem);
+  result.d[0] = (int) ((n_elem + max_val - 1) / max_val);
 
   return result;
   }
@@ -48,34 +51,40 @@ inline kernel_dims one_dimensional_grid_dims(const uword n_elem)
 inline kernel_dims two_dimensional_grid_dims(const uword n_rows, const uword n_cols)
   {
   const size_t mtpb = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsPerBlock;
+  const size_t max_rows = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsDim[0];
+  const size_t max_cols = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsDim[1];
 
   const size_t rows = (size_t) n_rows;
   const size_t cols = (size_t) n_cols;
-  const size_t elem = rows * cols;
 
   kernel_dims result = create_kernel_dims();
 
   // Ideally, we'd like to fit everything into one block, but that may not be possible.
+  //
+  // Our restrictions are that the block dimensions cannot exceed `max_rows` in width,
+  // cannot exceed `max_cols` in its height, and the total number of elements (rows * cols)
+  // must be less than `mtpb` (max threads per block).
+  //
+  // Because Bandicoot matrices are generally such that threads in a row are going to
+  // be accessing adjacent elements of a matrix, we want to maximize the width of the grid as
+  // much as possible.
   result.d[3] = rows;
   result.d[4] = cols;
 
-  if (rows > mtpb)
-    {
-    // If the number of rows is greater than the maximum threads per block, we can handle one column at a time in each block.
-    result.d[3] = mtpb; // blockSize[0]
-    result.d[4] = 1;    // blockSize[1]
-    result.d[0] = (rows + mtpb - 1) / mtpb; // gridSize[0]
-    result.d[1] = cols; // gridSize[1]
+  const size_t rows_bound = (std::min)(mtpb, max_rows);
+  const size_t block_rows = (std::min)(rows, rows_bound);
 
-    // TODO: what if this is greater than the maximum grid size?  (seems very unlikely)
-    }
-  else if (elem > mtpb)
-    {
-    // We can't fit everything in a single block, so we'll process multiple columns in each block.
-    result.d[3] = rows;           // blockSize[0]
-    result.d[4] = mtpb / rows;    // blockSize[1] ; fit as many columns as we can
-    result.d[1] = ((cols + result.d[4] - 1) / result.d[4]); // gridSize[1]
-    }
+  const size_t cols_bound = (std::min)(max_cols, mtpb / block_rows);
+  const size_t block_cols = (std::min)(cols, cols_bound);
+
+  // Now compute how many grid blocks we need.
+  const size_t grid_rows = (rows + block_rows - 1) / block_rows;
+  const size_t grid_cols = (cols + block_cols - 1) / block_cols;
+
+  result.d[0] = (int) grid_rows;
+  result.d[1] = (int) grid_cols;
+  result.d[3] = (int) block_rows;
+  result.d[4] = (int) block_cols;
 
   return result;
   }
@@ -90,46 +99,47 @@ inline kernel_dims two_dimensional_grid_dims(const uword n_rows, const uword n_c
 inline kernel_dims three_dimensional_grid_dims(const uword n_rows, const uword n_cols, const uword n_slices)
   {
   const size_t mtpb = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsPerBlock;
+  const size_t max_rows = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsDim[0];
+  const size_t max_cols = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsDim[1];
+  const size_t max_slices = (size_t) get_rt().cuda_rt.dev_prop.maxThreadsDim[2];
 
   const size_t rows = (size_t) n_rows;
   const size_t cols = (size_t) n_cols;
   const size_t slices = (size_t) n_slices;
-  const size_t elem = rows * cols * slices;
 
   kernel_dims result = create_kernel_dims();
 
-  // Ideally, we'd like to fit everything into one block, but that may not be possible.
-  result.d[3] = rows;
-  result.d[4] = cols;
-  result.d[5] = slices;
+  // This is a packing problem: how can we fit the work into as few blocks as possible given that:
+  //
+  // * no block may exceed `mtpb` total elements
+  // * the X dimension cannot exceed `max_rows` elements
+  // * the Y dimension cannot exceed `max_cols` elements
+  // * the Z dimension cannot exceed `max_slices` elements
+  //
+  // Because Bandicoot matrices are generally such that threads in a row are going to
+  // be accessing adjacent elements of a matrix, we want to maximize the width of the grid as
+  // much as possible.
 
-  if (rows > mtpb)
-    {
-    // If the number of rows is greater than the maximum number of threads per block, then we will handle one column from each slice at a time.
-    result.d[3] = mtpb;
-    result.d[4] = 1;
-    result.d[5] = 1;
-    result.d[0] = (rows + mtpb - 1) / mtpb;
-    result.d[1] = cols;
-    result.d[2] = slices;
-    }
-  else if (rows * cols > mtpb)
-    {
-    // If the number of elements in each slice is greater than the number of threads per block, then we will handle one slice at a time.
-    result.d[3] = rows;
-    result.d[4] = mtpb / rows; // fit as many columns as we can
-    result.d[5] = 1;
-    result.d[1] = ((cols + result.d[4] - 1) / result.d[4]);
-    result.d[2] = slices;
-    }
-  else if (elem > mtpb)
-    {
-    // If the total number of elements is greater than the number of threads per block, we'll do our best to do as many slices as we can at a time.
-    result.d[3] = rows;
-    result.d[4] = cols;
-    result.d[5] = mtpb / (rows * cols);
-    result.d[2] = ((slices + result.d[5] - 1) / result.d[5]);
-    }
+  const size_t rows_bound = (std::min)(max_rows, mtpb);
+  const size_t block_rows = (std::min)(rows, rows_bound);
+
+  const size_t cols_bound = (std::min)(max_cols, mtpb / block_rows);
+  const size_t block_cols = (std::min)(cols, cols_bound);
+
+  const size_t slices_bound = (std::min)(max_slices, mtpb / (block_rows * block_cols));
+  const size_t block_slices = (std::min)(slices, slices_bound);
+
+  // Now compute how many grid blocks we need.
+  const size_t grid_rows = (rows + block_rows - 1) / block_rows;
+  const size_t grid_cols = (cols + block_cols - 1) / block_cols;
+  const size_t grid_slices = (slices + block_slices - 1) / block_slices;
+
+  result.d[0] = (int) grid_rows;
+  result.d[1] = (int) grid_cols;
+  result.d[2] = (int) grid_slices;
+  result.d[3] = (int) block_rows;
+  result.d[4] = (int) block_cols;
+  result.d[5] = (int) block_slices;
 
   return result;
   }

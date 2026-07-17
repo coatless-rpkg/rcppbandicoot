@@ -46,6 +46,7 @@ inline uint coot_conj_uint(const uint x) { return x; }
 inline uint coot_abs_uint(const uint x) { return x; }
 inline uint coot_min_uint(const uint x, const uint y) { return (x < y) ? x : y; }
 inline uint coot_max_uint(const uint x, const uint y) { return (x > y) ? x : y; }
+inline uint coot_sign_uint(const uint x) { return (x > 0) ? 1 : 0; }
 
 // Basic mathematical operators.
 inline uint coot_plus_uint(const uint x, const uint y)  { return x + y; }

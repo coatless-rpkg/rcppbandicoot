@@ -23,7 +23,7 @@ op_shuffle::apply(Mat<typename T1::elem_type>& out, const Op<T1,op_shuffle>& in)
   {
   coot_debug_sigprint();
 
-  const unwrap<T1> U(in.m);
+  const quasi_unwrap<T1> U(in.m);
   if (U.M.is_empty()) { return; }
 
   const uword dim = in.aux_uword_a;
@@ -31,7 +31,7 @@ op_shuffle::apply(Mat<typename T1::elem_type>& out, const Op<T1,op_shuffle>& in)
   coot_conform_check( (dim > 1), "shuffle(): parameter 'dim' must be 0 or 1" );
 
   // If the output is an alias of the input, allocate a temporary matrix.
-  alias_wrapper<Mat<typename T1::elem_type>, typename unwrap<T1>::stored_type> W(out, U.M);
+  alias_wrapper<Mat<typename T1::elem_type>, typename quasi_unwrap<T1>::stored_type> W(out, U.M);
   W.use.set_size(U.M.n_rows, U.M.n_cols);
   coot_rt_t::shuffle(W.get_dev_mem(false), W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
                      U.get_dev_mem(false), U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows(),
@@ -47,11 +47,11 @@ op_shuffle_vec::apply(Mat<typename T1::elem_type>& out, const Op<T1,op_shuffle_v
   {
   coot_debug_sigprint();
 
-  const unwrap<T1> U(in.m);
+  const quasi_unwrap<T1> U(in.m);
   if (U.M.is_empty()) { return; }
 
   // If the output is an alias of the input, allocate a temporary matrix.
-  alias_wrapper<Mat<typename T1::elem_type>, typename unwrap<T1>::stored_type> W(out, U.M);
+  alias_wrapper<Mat<typename T1::elem_type>, typename quasi_unwrap<T1>::stored_type> W(out, U.M);
   W.use.set_size(U.M.n_rows, U.M.n_cols);
   coot_rt_t::shuffle(W.get_dev_mem(false), W.get_row_offset(), W.get_col_offset(), out.n_elem,
                      U.get_dev_mem(false), U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows(),

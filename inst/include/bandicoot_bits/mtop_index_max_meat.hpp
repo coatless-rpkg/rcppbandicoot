@@ -27,9 +27,9 @@ mtop_index_max::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_index_max>& in
 
   coot_conform_check( (dim > 1), "index_max(): parameter 'dim' must be 0 or 1" );
 
-  const unwrap<T1> U(in.q);
+  const quasi_unwrap<T1> U(in.q);
 
-  alias_wrapper<Mat<uword>, typename unwrap<T1>::stored_type> W(out, in.q);
+  alias_wrapper<Mat<uword>, typename quasi_unwrap<T1>::stored_type> W(out, in.q);
   mtop_index_max::apply_noalias(W.use, U.M, dim);
   }
 
@@ -128,10 +128,9 @@ mtop_index_max::apply(Cube<uword>& out, const mtOpCube<uword, T1, mtop_index_max
 
   coot_conform_check( (dim > 2), "index_max(): parameter 'dim' must be 0, 1, or 2" );
 
-  const unwrap_cube<T1> U(in.q);
-  const extract_subcube<typename unwrap_cube<T1>::stored_type> E(U.M);
+  const plain_unwrap_cube<T1> E(in.q);
 
-  alias_wrapper<Cube<uword>, Cube<typename unwrap_cube<T1>::stored_type::elem_type>> W(out, in.q);
+  alias_wrapper<Cube<uword>, Cube<typename plain_unwrap_cube<T1>::stored_type::elem_type>> W(out, in.q);
   mtop_index_max::apply_noalias(W.use, E.M, dim);
   }
 
@@ -231,7 +230,7 @@ mtop_index_max::apply_direct(const Base<typename T1::elem_type, T1>& in)
   {
   coot_debug_sigprint();
 
-  const unwrap<T1> U(in.get_ref());
+  const plain_unwrap<T1> U(in.get_ref());
   const Mat<typename T1::elem_type>& A = U.M;
 
   return coot_rt_t::index_max_vec(A.get_dev_mem(false), A.n_elem);
@@ -246,7 +245,7 @@ mtop_index_max::apply_direct(const BaseCube<typename T1::elem_type, T1>& in)
   {
   coot_debug_sigprint();
 
-  const unwrap_cube<T1> U(in.get_ref());
+  const plain_unwrap_cube<T1> U(in.get_ref());
   const Cube<typename T1::elem_type>& A = U.M;
 
   return coot_rt_t::index_max_vec(A.get_dev_mem(false), A.n_elem);

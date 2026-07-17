@@ -67,13 +67,12 @@ template
   coot_backend_t backend,                   // backend we are generating the function for
   typename func_name,                       // name of the function (e.g. "coot_neg")
   size_t num_extra_args,                    // number of extra arguments after the scalar "x"
-  template<size_t arg_num> class arg_names, // names to use for each extra argument
-  typename func_body                        // body of function (without "return")
+  template<size_t arg_num> class arg_names  // names to use for each extra argument
   >
-using eop_inline_function = concat_str
+using eop_inline_function_defn = concat_str
   <
   func_prefix<backend>,          // optional __device__ or similar
-  eop_inline_str<backend>,       // inline (omitted for Vulkan/GLSL, which is a reserverd construct)
+  eop_inline_str<backend>,       // inline (omitted for Vulkan/GLSL, which is a reserved construct)
   elem_type_str<eT, backend>,    // <eT>
   space,                         //
   func_name,                     // func_name
@@ -82,7 +81,25 @@ using eop_inline_function = concat_str
   elem_type_str<eT, backend>,    // <eT>
   space_x,                       // x
   eop_extra_arg_list<eT, backend, num_extra_args, arg_names>, // optional , const <eT> extra_arg1, const <eT> extra_arg2
-  eop_inline_function_body,      // ) { return
+  close_paren
+  >;
+
+
+
+template
+  <
+  typename eT,                              // element type function should accept and return
+  coot_backend_t backend,                   // backend we are generating the function for
+  typename func_name,                       // name of the function (e.g. "coot_neg")
+  size_t num_extra_args,                    // number of extra arguments after the scalar "x"
+  template<size_t arg_num> class arg_names, // names to use for each extra argument
+  typename func_body                        // body of function (without "return")
+  >
+using eop_inline_function = concat_str
+  <
+  eop_inline_function_defn<eT, backend, func_name, num_extra_args, arg_names>, // __device__ inline eT func_name(...)
+  space,
+  eop_inline_function_body,      // { return
   func_body,                     // whatever the function body is
   semicolon_close                // ; } (and newline)
   >;

@@ -18,42 +18,52 @@
 
 
 
-//
-// The unwrap<> struct is a tool to actually evaluate expressions.
-// Construction of an unwrap<T1> object called `U` for some expression T1
-// will cause `U.M` to hold the result of the expression being evaluated:
-//
-// unwrap<T1> U(expr); // expr has type T1
-//
-// Importantly, `U.M` may have type `Mat` or `subview`!  That is, `unwrap`
-// does *not* extract subviews.  Make sure your code can handle that,
-// and also that you test both situations.  Extracting subviews can be done
-// with the `extract_subview` struct (see extract_subview.hpp).
-//
+// 
+// The plain_unwrap<> and quasi_unwrap<> structs are internal tools
+// to forcefully evaluate an expression into a matrix.
+// If the given expression is already a matrix, no copy is done.
+// 
+// Construction of a plain_unwrap<T1> or quasi_unwrap<T1> object called `U`
+// for expression T1 will cause `U.M` to hold the result of the expression
+// being evaluated:
+// 
+// plain_unwrap<T1> U(expr); // expr has type T1
+// 
+// For plain_unwrap<T1>, `U.M` will have type `Mat`, `Col`, or `Row`.
+// For quasi_unwrap<T1>, `U.M` can also be a `subview`.
+// 
+// Caveat: `quasi_unwrap<T1>` does *not* convert subviews into matrices.
+// Make sure your code can handle that, and also that you test both situations.
+// If subviews need to be converted to matrices, use `plain_unwrap<T1>` instead.
+// 
 // If you are going to call a backend function that accepts subviews (such
 // as eop_scalar()), you can use the convenience functions below to compute
 // offsets agnostic to whether `U.M` is a `Mat` or `subview`:
-//
+// 
 //  - get_row_offset()  (0 for `Mat`, `U.M.aux_row1` for `subview`s)
 //  - get_col_offset()  (0 for `Mat`, `U.M.aux_col1` for `subview`s)
 //  - get_M_n_rows()    (`U.M.n_rows` for `Mat`, `U.M.m.n_rows` for `subview`s)
 //  - get_dev_mem(sync) (`U.M.get_dev_mem(sync)` for `Mat`, `U.M.m.get_dev_mem(sync)` for `subview`s)
-//
+// 
+
+
 template<typename T1>
-struct unwrap
+struct plain_unwrap
   {
   typedef typename T1::elem_type eT;
   typedef Mat<eT>                stored_type;
 
   inline
-  unwrap(const T1& A)
+  plain_unwrap(const T1& A)
     : M(A)
     {
     coot_debug_sigprint();
     }
 
   Mat<eT> M;
-
+  
+  static constexpr bool is_generated = true;
+  
   template<typename T2>
   coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
 
@@ -66,19 +76,21 @@ struct unwrap
 
 
 template<typename eT>
-struct unwrap< Mat<eT> >
+struct plain_unwrap< Mat<eT> >
   {
   typedef Mat<eT> stored_type;
 
   inline
-  unwrap(const Mat<eT>& A)
+  plain_unwrap(const Mat<eT>& A)
     : M(A)
     {
     coot_debug_sigprint();
     }
 
   const Mat<eT>& M;
-
+  
+  static constexpr bool is_generated = false;
+  
   template<typename T2>
   coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
 
@@ -91,19 +103,21 @@ struct unwrap< Mat<eT> >
 
 
 template<typename eT>
-struct unwrap< Row<eT> >
+struct plain_unwrap< Row<eT> >
   {
   typedef Row<eT> stored_type;
 
   inline
-  unwrap(const Row<eT>& A)
+  plain_unwrap(const Row<eT>& A)
     : M(A)
     {
     coot_debug_sigprint();
     }
 
   const Row<eT>& M;
-
+  
+  static constexpr bool is_generated = false;
+  
   template<typename T2>
   coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
 
@@ -116,19 +130,21 @@ struct unwrap< Row<eT> >
 
 
 template<typename eT>
-struct unwrap< Col<eT> >
+struct plain_unwrap< Col<eT> >
   {
   typedef Col<eT> stored_type;
 
   inline
-  unwrap(const Col<eT>& A)
+  plain_unwrap(const Col<eT>& A)
     : M(A)
     {
     coot_debug_sigprint();
     }
 
   const Col<eT>& M;
-
+  
+  static constexpr bool is_generated = false;
+  
   template<typename T2>
   coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
 
@@ -140,96 +156,23 @@ struct unwrap< Col<eT> >
 
 
 
-template<typename eT>
-struct unwrap< subview<eT> >
-  {
-  typedef subview<eT> stored_type;
-
-  inline
-  unwrap(const subview<eT>& A)
-    : M(A)
-    {
-    coot_debug_sigprint();
-    }
-
-  const subview<eT>& M;
-
-  template<typename T2>
-  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
-
-  inline uword get_row_offset() const { return M.aux_row1; }
-  inline uword get_col_offset() const { return M.aux_col1; }
-  inline uword get_M_n_rows()   const { return M.m.n_rows; }
-  inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.m.get_dev_mem(synchronise); }
-  };
-
-
-
-template<typename eT>
-struct unwrap< subview_col<eT> >
-  {
-  typedef subview_col<eT> stored_type;
-
-  inline
-  unwrap(const subview_col<eT>& A)
-    : M(A)
-    {
-    coot_debug_sigprint();
-    }
-
-  const subview_col<eT>& M;
-
-  template<typename T2>
-  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
-
-  inline uword get_row_offset() const { return M.aux_row1; }
-  inline uword get_col_offset() const { return M.aux_col1; }
-  inline uword get_M_n_rows()   const { return M.m.n_rows; }
-  inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.m.get_dev_mem(synchronise); }
-  };
-
-
-
-template<typename eT>
-struct unwrap< subview_row<eT> >
-  {
-  typedef subview_row<eT> stored_type;
-
-  inline
-  unwrap(const subview_row<eT>& A)
-    : M(A)
-    {
-    coot_debug_sigprint();
-    }
-
-  const subview_row<eT>& M;
-
-  template<typename T2>
-  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
-
-  inline uword get_row_offset() const { return M.aux_row1; }
-  inline uword get_col_offset() const { return M.aux_col1; }
-  inline uword get_M_n_rows()   const { return M.m.n_rows; }
-  inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.m.get_dev_mem(synchronise); }
-  };
-
-
-
-// Since this is not no_conv_unwrap, we have to ensure that the stored_type has the correct out_eT.
+// Since this is not no_conv_quasi_unwrap, we have to ensure that the stored_type has the correct out_eT.
 template<typename out_eT, typename T1>
-struct unwrap< mtOp<out_eT, T1, mtop_conv_to> >
+struct plain_unwrap< mtOp<out_eT, T1, mtop_conv_to> >
   {
   typedef Mat<out_eT> stored_type;
 
   inline
-  unwrap(const mtOp<out_eT, T1, mtop_conv_to>& A)
+  plain_unwrap(const mtOp<out_eT, T1, mtop_conv_to>& A)
     : M(A)
     {
     coot_debug_sigprint();
     }
 
   Mat<out_eT> M;
-
+  
+  static constexpr bool is_generated = true;
+  
   template<typename T2>
   coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
 
@@ -242,19 +185,272 @@ struct unwrap< mtOp<out_eT, T1, mtop_conv_to> >
 
 
 template<typename out_eT, typename T1, typename T2, typename mtglue_type>
-struct unwrap< mtGlue<out_eT, T1, T2, mtglue_type> >
+struct plain_unwrap< mtGlue<out_eT, T1, T2, mtglue_type> >
   {
   typedef Mat<out_eT> stored_type;
 
   inline
-  unwrap(const mtGlue<out_eT, T1, T2, mtglue_type>& A)
+  plain_unwrap(const mtGlue<out_eT, T1, T2, mtglue_type>& A)
     : M(A)
     {
     coot_debug_sigprint();
     }
 
   Mat<out_eT> M;
+  
+  static constexpr bool is_generated = true;
+  
+  template<typename T3>
+  coot_inline bool is_alias(const T3& X) const { return coot::is_alias(X, M); }
 
+  constexpr inline uword             get_row_offset()                    const { return 0; }
+  constexpr inline uword             get_col_offset()                    const { return 0; }
+            inline uword             get_M_n_rows()                      const { return M.n_rows; }
+            inline dev_mem_t<out_eT> get_dev_mem(const bool synchronise) const { return M.get_dev_mem(synchronise); }
+  };
+
+
+
+//
+//
+//
+
+
+
+template<typename T1>
+struct quasi_unwrap
+  {
+  typedef typename T1::elem_type eT;
+  typedef Mat<eT>                stored_type;
+
+  inline
+  quasi_unwrap(const T1& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  Mat<eT> M;
+  
+  static constexpr bool is_generated = true;
+  
+  template<typename T2>
+  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
+
+  constexpr inline uword         get_row_offset()                    const { return 0; }
+  constexpr inline uword         get_col_offset()                    const { return 0; }
+            inline uword         get_M_n_rows()                      const { return M.n_rows; }
+            inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.get_dev_mem(synchronise); }
+  };
+
+
+
+template<typename eT>
+struct quasi_unwrap< Mat<eT> >
+  {
+  typedef Mat<eT> stored_type;
+
+  inline
+  quasi_unwrap(const Mat<eT>& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  const Mat<eT>& M;
+  
+  static constexpr bool is_generated = false;
+  
+  template<typename T2>
+  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
+
+  constexpr inline uword         get_row_offset()                    const { return 0; }
+  constexpr inline uword         get_col_offset()                    const { return 0; }
+            inline uword         get_M_n_rows()                      const { return M.n_rows; }
+            inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.get_dev_mem(synchronise); }
+  };
+
+
+
+template<typename eT>
+struct quasi_unwrap< Row<eT> >
+  {
+  typedef Row<eT> stored_type;
+
+  inline
+  quasi_unwrap(const Row<eT>& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  const Row<eT>& M;
+  
+  static constexpr bool is_generated = false;
+  
+  template<typename T2>
+  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
+
+  constexpr inline uword         get_row_offset()                    const { return 0; }
+  constexpr inline uword         get_col_offset()                    const { return 0; }
+            inline uword         get_M_n_rows()                      const { return M.n_rows; }
+            inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.get_dev_mem(synchronise); }
+  };
+
+
+
+template<typename eT>
+struct quasi_unwrap< Col<eT> >
+  {
+  typedef Col<eT> stored_type;
+
+  inline
+  quasi_unwrap(const Col<eT>& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  const Col<eT>& M;
+  
+  static constexpr bool is_generated = false;
+  
+  template<typename T2>
+  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
+
+  constexpr inline uword         get_row_offset()                    const { return 0; }
+  constexpr inline uword         get_col_offset()                    const { return 0; }
+            inline uword         get_M_n_rows()                      const { return M.n_rows; }
+            inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.get_dev_mem(synchronise); }
+  };
+
+
+
+template<typename eT>
+struct quasi_unwrap< subview<eT> >
+  {
+  typedef subview<eT> stored_type;
+
+  inline
+  quasi_unwrap(const subview<eT>& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  const subview<eT>& M;
+  
+  static constexpr bool is_generated = false;
+  
+  template<typename T2>
+  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
+
+  inline uword get_row_offset() const { return M.aux_row1; }
+  inline uword get_col_offset() const { return M.aux_col1; }
+  inline uword get_M_n_rows()   const { return M.m.n_rows; }
+  inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.m.get_dev_mem(synchronise); }
+  };
+
+
+
+template<typename eT>
+struct quasi_unwrap< subview_col<eT> >
+  {
+  typedef subview_col<eT> stored_type;
+
+  inline
+  quasi_unwrap(const subview_col<eT>& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  const subview_col<eT>& M;
+  
+  static constexpr bool is_generated = false;
+  
+  template<typename T2>
+  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
+
+  inline uword get_row_offset() const { return M.aux_row1; }
+  inline uword get_col_offset() const { return M.aux_col1; }
+  inline uword get_M_n_rows()   const { return M.m.n_rows; }
+  inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.m.get_dev_mem(synchronise); }
+  };
+
+
+
+template<typename eT>
+struct quasi_unwrap< subview_row<eT> >
+  {
+  typedef subview_row<eT> stored_type;
+
+  inline
+  quasi_unwrap(const subview_row<eT>& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  const subview_row<eT>& M;
+  
+  static constexpr bool is_generated = false;
+  
+  template<typename T2>
+  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
+
+  inline uword get_row_offset() const { return M.aux_row1; }
+  inline uword get_col_offset() const { return M.aux_col1; }
+  inline uword get_M_n_rows()   const { return M.m.n_rows; }
+  inline dev_mem_t<eT> get_dev_mem(const bool synchronise) const { return M.m.get_dev_mem(synchronise); }
+  };
+
+
+
+// Since this is not no_conv_quasi_unwrap, we have to ensure that the stored_type has the correct out_eT.
+template<typename out_eT, typename T1>
+struct quasi_unwrap< mtOp<out_eT, T1, mtop_conv_to> >
+  {
+  typedef Mat<out_eT> stored_type;
+
+  inline
+  quasi_unwrap(const mtOp<out_eT, T1, mtop_conv_to>& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  Mat<out_eT> M;
+  
+  static constexpr bool is_generated = true;
+  
+  template<typename T2>
+  coot_inline bool is_alias(const T2& X) const { return coot::is_alias(X, M); }
+
+  constexpr inline uword             get_row_offset()                    const { return 0; }
+  constexpr inline uword             get_col_offset()                    const { return 0; }
+            inline uword             get_M_n_rows()                      const { return M.n_rows; }
+            inline dev_mem_t<out_eT> get_dev_mem(const bool synchronise) const { return M.get_dev_mem(synchronise); }
+  };
+
+
+
+template<typename out_eT, typename T1, typename T2, typename mtglue_type>
+struct quasi_unwrap< mtGlue<out_eT, T1, T2, mtglue_type> >
+  {
+  typedef Mat<out_eT> stored_type;
+
+  inline
+  quasi_unwrap(const mtGlue<out_eT, T1, T2, mtglue_type>& A)
+    : M(A)
+    {
+    coot_debug_sigprint();
+    }
+
+  Mat<out_eT> M;
+  
+  static constexpr bool is_generated = true;
+  
   template<typename T3>
   coot_inline bool is_alias(const T3& X) const { return coot::is_alias(X, M); }
 

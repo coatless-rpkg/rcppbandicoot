@@ -26,6 +26,13 @@ struct coot_config
   #endif
   
   
+  #if defined(COOT_OPTIMISE_INVEXPR)
+    static constexpr bool optimise_invexpr = true;
+  #else
+    static constexpr bool optimise_invexpr = false;
+  #endif
+  
+  
   #if defined(COOT_OPTIMISE_POWEXPR)
     static constexpr bool optimise_powexpr = true;
   #else

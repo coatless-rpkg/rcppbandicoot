@@ -16,40 +16,80 @@
 
 
 
-// A version of unwrap<> that avoids a final type conversion if possible.
+// A version of quasi_unwrap<> that avoids a final type conversion if possible.
 // It does do type conversions if they are needed for an intermediate operation.
 // This is useful for operations that can accept a different input type.
 
 template<typename T1>
-struct no_conv_unwrap : public unwrap<T1>
+struct no_conv_plain_unwrap : public plain_unwrap<T1>
   {
   // By default we simply unwrap as normal.
-  no_conv_unwrap(const T1& x) : unwrap<T1>(x) { }
+  no_conv_plain_unwrap(const T1& x) : plain_unwrap<T1>(x) { }
   };
 
 
 
 template<typename out_eT, typename T1>
-struct no_conv_unwrap< mtOp<out_eT, T1, mtop_conv_to> > : public unwrap<T1>
+struct no_conv_plain_unwrap< mtOp<out_eT, T1, mtop_conv_to> > : public plain_unwrap<T1>
   {
   // If we got a conversion operation, we only unwrap the inner operation and avoid the conversion.
-  no_conv_unwrap(const mtOp<out_eT, T1, mtop_conv_to>& x) : unwrap<T1>(x.q) { }
+  no_conv_plain_unwrap(const mtOp<out_eT, T1, mtop_conv_to>& x) : plain_unwrap<T1>(x.q) { }
   };
 
 
 
 template<typename T1>
-struct no_conv_unwrap_cube : public unwrap_cube<T1>
+struct no_conv_quasi_unwrap : public quasi_unwrap<T1>
   {
   // By default we simply unwrap as normal.
-  no_conv_unwrap_cube(const T1& x) : unwrap_cube<T1>(x) { }
+  no_conv_quasi_unwrap(const T1& x) : quasi_unwrap<T1>(x) { }
   };
 
 
 
 template<typename out_eT, typename T1>
-struct no_conv_unwrap_cube< mtOpCube<out_eT, T1, mtop_conv_to> > : public unwrap_cube<T1>
+struct no_conv_quasi_unwrap< mtOp<out_eT, T1, mtop_conv_to> > : public quasi_unwrap<T1>
   {
-  // If we got a conversion operation, we onyl unrwap the inner operation and avoid the conversion.
-  no_conv_unwrap_cube(const mtOpCube<out_eT, T1, mtop_conv_to>& x) : unwrap_cube<T1>(x.q) { }
+  // If we got a conversion operation, we only unwrap the inner operation and avoid the conversion.
+  no_conv_quasi_unwrap(const mtOp<out_eT, T1, mtop_conv_to>& x) : quasi_unwrap<T1>(x.q) { }
+  };
+
+
+
+//
+
+
+
+template<typename T1>
+struct no_conv_plain_unwrap_cube : public plain_unwrap_cube<T1>
+  {
+  // By default we simply unwrap as normal.
+  no_conv_plain_unwrap_cube(const T1& x) : plain_unwrap_cube<T1>(x) { }
+  };
+
+
+
+template<typename out_eT, typename T1>
+struct no_conv_plain_unwrap_cube< mtOpCube<out_eT, T1, mtop_conv_to> > : public plain_unwrap_cube<T1>
+  {
+  // If we got a conversion operation, we only unwrap the inner operation and avoid the conversion.
+  no_conv_plain_unwrap_cube(const mtOpCube<out_eT, T1, mtop_conv_to>& x) : plain_unwrap_cube<T1>(x.q) { }
+  };
+
+
+
+template<typename T1>
+struct no_conv_quasi_unwrap_cube : public quasi_unwrap_cube<T1>
+  {
+  // By default we simply unwrap as normal.
+  no_conv_quasi_unwrap_cube(const T1& x) : quasi_unwrap_cube<T1>(x) { }
+  };
+
+
+
+template<typename out_eT, typename T1>
+struct no_conv_quasi_unwrap_cube< mtOpCube<out_eT, T1, mtop_conv_to> > : public quasi_unwrap_cube<T1>
+  {
+  // If we got a conversion operation, we only unwrap the inner operation and avoid the conversion.
+  no_conv_quasi_unwrap_cube(const mtOpCube<out_eT, T1, mtop_conv_to>& x) : quasi_unwrap_cube<T1>(x.q) { }
   };

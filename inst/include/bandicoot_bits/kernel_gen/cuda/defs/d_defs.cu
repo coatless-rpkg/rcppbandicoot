@@ -46,6 +46,7 @@ __device__ inline double coot_min(const double x, const double y) { return fmin(
 __device__ inline double coot_max(const double x, const double y) { return fmax(x, y); }
 __device__ inline double coot_conj(const double x) { return x; }
 __device__ inline double coot_abs(const double x) { return fabs(x); }
+__device__ inline double coot_sign(const double x) { return (x > 0.0) ? 1.0 : ( (x < 0.0) ? -1.0 : ( (x == 0.0) ? 0.0 : x ) ); }
 
 // Basic mathematical operators.
 __device__ inline double coot_plus(const double x, const double y)  { return x + y; }

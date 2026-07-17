@@ -46,6 +46,7 @@ inline ulong coot_conj_ulong(const ulong x) { return x; }
 inline ulong coot_abs_ulong(const ulong x) { return x; }
 inline ulong coot_min_ulong(const ulong x, const ulong y) { return (x < y) ? x : y; }
 inline ulong coot_max_ulong(const ulong x, const ulong y) { return (x > y) ? x : y; }
+inline ulong coot_sign_ulong(const ulong x) { return (x > 0) ? 1 : 0; }
 
 // Basic mathematical operators.
 inline ulong coot_plus_ulong(const ulong x, const ulong y)  { return x + y; }

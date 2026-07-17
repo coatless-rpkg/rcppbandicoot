@@ -299,6 +299,18 @@ struct elem_types_inner< Op<T1, op_htrans> >
   typedef typename elem_types_inner<T1>::result result;
   };
 
+template<typename T1>
+struct elem_types_inner< Op<T1, op_symmatu> >
+  {
+  typedef typename elem_types_inner<T1>::result result;
+  };
+
+template<typename T1>
+struct elem_types_inner< Op<T1, op_symmatl> >
+  {
+  typedef typename elem_types_inner<T1>::result result;
+  };
+
 
 
 //

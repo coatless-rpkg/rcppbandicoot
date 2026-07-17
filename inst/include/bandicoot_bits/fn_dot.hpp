@@ -28,16 +28,13 @@ dot
   {
   coot_debug_sigprint();
 
-  const unwrap<T1>    U(A.get_ref());
-  const unwrap<T2>    V(B.get_ref());
-
-  const extract_subview<typename unwrap<T1>::stored_type> E(U.M);
-  const extract_subview<typename unwrap<T2>::stored_type> F(V.M);
+  const plain_unwrap<T1> E(A.get_ref());
+  const plain_unwrap<T2> F(B.get_ref());
 
   const Mat<eT1>& X = E.M;
   const Mat<eT2>& Y = F.M;
 
-  // check same size
+  coot_conform_check( (X.n_elem != Y.n_elem), "dot(): objects must have the same number of elements" );
 
   return coot_rt_t::dot(X.get_dev_mem(false), Y.get_dev_mem(false), X.n_elem);
   }

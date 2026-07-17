@@ -30,10 +30,12 @@ struct space               { static inline constexpr auto& str() { return " ";  
 struct space_sep           { static inline constexpr auto& str() { return ", ";    } };
 struct space_semicolon     { static inline constexpr auto& str() { return "; ";    } };
 struct spaced_lt           { static inline constexpr auto& str() { return " < ";   } };
+struct spaced_lteq         { static inline constexpr auto& str() { return " <= ";  } };
 struct spaced_plus         { static inline constexpr auto& str() { return " + ";   } };
 struct spaced_mod          { static inline constexpr auto& str() { return " % ";   } };
 struct spaced_mul          { static inline constexpr auto& str() { return " * ";   } };
 struct spaced_div          { static inline constexpr auto& str() { return " / ";   } };
+struct spaced_eq           { static inline constexpr auto& str() { return " == ";  } };
 struct double_close_paren  { static inline constexpr auto& str() { return "))";    } };
 struct triple_close_paren  { static inline constexpr auto& str() { return ")))";   } };
 struct spaced_and          { static inline constexpr auto& str() { return " && ";  } };
@@ -49,6 +51,9 @@ struct zero_str            { static inline constexpr auto& str() { return "0";  
 struct one_str             { static inline constexpr auto& str() { return "1";     } };
 struct neg_one_str         { static inline constexpr auto& str() { return "-1";    } };
 struct x_str               { static inline constexpr auto& str() { return "x";     } };
+struct brace_open          { static inline constexpr auto& str() { return "{ ";    } };
+struct spaced_question     { static inline constexpr auto& str() { return " ? ";   } };
+struct spaced_colon        { static inline constexpr auto& str() { return " : ";   } };
 
 
 
@@ -85,6 +90,7 @@ struct eop_aux2_name          { static inline constexpr auto& str() { return "_a
 struct eglue_arg1_name        { static inline constexpr auto& str() { return "_a";              } };
 struct eglue_arg2_name        { static inline constexpr auto& str() { return "_b";              } };
 struct eop_scalar_arg_name    { static inline constexpr auto& str() { return "a";               } };
+struct do_conj_name           { static inline constexpr auto& str() { return "_do_conj";        } };
 
 
 
@@ -112,9 +118,9 @@ struct conj_str               { static inline constexpr auto& str() { return "co
 
 // names used for function construction
 
-struct eop_inline_function_arg  { static inline constexpr auto& str() { return "(const ";     } };
-struct eop_inline_function_body { static inline constexpr auto& str() { return ") { return "; } };
-struct eop_extra_arg_list_const { static inline constexpr auto& str() { return ", const ";    } };
+struct eop_inline_function_arg  { static inline constexpr auto& str() { return "(const ";   } };
+struct eop_inline_function_body { static inline constexpr auto& str() { return "{ return "; } };
+struct eop_extra_arg_list_const { static inline constexpr auto& str() { return ", const ";  } };
 
 
 

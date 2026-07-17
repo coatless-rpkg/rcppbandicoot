@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // 
 // Copyright 2017-2023 Ryan Curtin (https://www.ratml.org)
-// Copyright 2017      Conrad Sanderson (https://conradsanderson.id.au)
+// Copyright 2017-2026 Conrad Sanderson (https://conradsanderson.id.au)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -94,10 +94,19 @@ template<typename T1> class SizeProxyCube;
 
 struct coot_vec_indicator {};
 
+template<bool do_zeros> struct coot_initmode_indicator {};
+
+struct coot_zeros_indicator   : public coot_initmode_indicator<true > {};
+struct coot_nozeros_indicator : public coot_initmode_indicator<false> {};
+
+
 template<typename eT> struct conv_to;
 
 class op_sum;
-class op_inv;
+class op_inv_gen_default;  // op_inv_gen_default is distinct from op_inv_gen_full to allow conversion of inv(A)*B to solve(A,B)
+class op_inv_gen_full;     // TODO: implement inv(X, inv_opts)
+class op_inv_spd_default;  // TODO: implement inv_sympd(X)
+class op_inv_spd_full;     // TODO: implement inv_sympd(X, inv_opts)
 class op_strans;
 class op_htrans;
 class op_htrans2;
@@ -123,7 +132,8 @@ class op_cor;
 class op_sort;
 class op_sort_vec;
 class op_det;
-class op_symmat;
+class op_symmatu;
+class op_symmatl;
 class op_pinv;
 
 class op_row_as_mat;

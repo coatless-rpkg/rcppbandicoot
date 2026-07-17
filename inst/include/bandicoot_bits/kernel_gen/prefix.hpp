@@ -387,3 +387,25 @@ struct prefix< Op<T1, op_htrans> > : public concat_str
   op_htrans_prefix,
   prefix<T1>
   > { };
+
+
+
+// Op<T1, op_symmatu> -> "su_" then T1 prefix
+// Op<T1, op_symmatl> -> "sl_" then T1 prefix
+
+struct op_symmatu_prefix { static inline constexpr auto& str() { return "su_"; } };
+struct op_symmatl_prefix { static inline constexpr auto& str() { return "sl_"; } };
+
+template<typename T1>
+struct prefix< Op<T1, op_symmatu> > : public concat_str
+  <
+  op_symmatu_prefix,
+  prefix<T1>
+  > { };
+
+template<typename T1>
+struct prefix< Op<T1, op_symmatl> > : public concat_str
+  <
+  op_symmatl_prefix,
+  prefix<T1>
+  > { };

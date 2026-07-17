@@ -44,6 +44,7 @@ inline double coot_conj_double(const double x) { return x; }
 inline double coot_abs_double(const double x) { return fabs(x); }
 inline double coot_min_double(const double x, const double y) { return fmin(x, y); }
 inline double coot_max_double(const double x, const double y) { return fmax(x, y); }
+inline double coot_sign_double(const double x) { return (x > 0.0) ? 1.0 : ( (x < 0.0) ? -1.0 : ( (x == 0.0) ? 0.0 : x ) ); }
 
 // Basic mathematical operators.
 inline double coot_plus_double(const double x, const double y)  { return x + y; }

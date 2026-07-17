@@ -521,11 +521,8 @@ subview_elem2_both<eT, T1, T2>::randu(subview_elem2<eT, subview_elem2_both<eT, T
   // then insert them.
   coot_debug_sigprint();
 
-  unwrap<T1> U1(base_ri.get_ref());
-  unwrap<T2> U2(base_ci.get_ref());
-
-  extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-  extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
+  plain_unwrap<T1> E1(base_ri.get_ref());
+  plain_unwrap<T2> E2(base_ci.get_ref());
 
   coot_conform_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
   coot_conform_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
@@ -546,11 +543,8 @@ subview_elem2_both<eT, T1, T2>::randn(subview_elem2<eT, subview_elem2_both<eT, T
   // until we are able to index subviews in any arbitrary way in a generated kernel,
   // we use a slow implementation where we generate all the random numbers and
   // then insert them.
-  unwrap<T1> U1(base_ri.get_ref());
-  unwrap<T2> U2(base_ci.get_ref());
-
-  extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
-  extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
+  plain_unwrap<T1> E1(base_ri.get_ref());
+  plain_unwrap<T2> E2(base_ci.get_ref());
 
   coot_conform_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::elem(): row indices must be a vector" );
   coot_conform_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::elem(): column indices must be a vector" );
@@ -602,9 +596,7 @@ subview_elem2_all_cols<eT, T1>::randu(subview_elem2<eT, subview_elem2_all_cols<e
   // then insert them.
   coot_debug_sigprint();
 
-  unwrap<T1> U1(base_ri.get_ref());
-
-  extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
+  plain_unwrap<T1> E1(base_ri.get_ref());
 
   coot_conform_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
 
@@ -624,9 +616,7 @@ subview_elem2_all_cols<eT, T1>::randn(subview_elem2<eT, subview_elem2_all_cols<e
   // until we are able to index subviews in any arbitrary way in a generated kernel,
   // we use a slow implementation where we generate all the random numbers and
   // then insert them.
-  unwrap<T1> U1(base_ri.get_ref());
-
-  extract_subview<typename unwrap<T1>::stored_type> E1(U1.M);
+  plain_unwrap<T1> E1(base_ri.get_ref());
 
   coot_conform_check( E1.M.n_rows != 1 && E1.M.n_cols != 1, "Mat::rows(): row indices must be a vector" );
 
@@ -676,9 +666,7 @@ subview_elem2_all_rows<eT, T2>::randu(subview_elem2<eT, subview_elem2_all_rows<e
   // then insert them.
   coot_debug_sigprint();
 
-  unwrap<T2> U2(base_ci.get_ref());
-
-  extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
+  plain_unwrap<T2> E2(base_ci.get_ref());
 
   coot_conform_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
 
@@ -698,9 +686,7 @@ subview_elem2_all_rows<eT, T2>::randn(subview_elem2<eT, subview_elem2_all_rows<e
   // until we are able to index subviews in any arbitrary way in a generated kernel,
   // we use a slow implementation where we generate all the random numbers and
   // then insert them.
-  unwrap<T2> U2(base_ci.get_ref());
-
-  extract_subview<typename unwrap<T2>::stored_type> E2(U2.M);
+  plain_unwrap<T2> E2(base_ci.get_ref());
 
   coot_conform_check( E2.M.n_rows != 1 && E2.M.n_cols != 1, "Mat::cols(): column indices must be a vector" );
 

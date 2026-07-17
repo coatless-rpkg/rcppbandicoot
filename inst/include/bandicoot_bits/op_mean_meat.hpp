@@ -23,7 +23,7 @@ op_mean::apply(Mat<out_eT>& out, const Op<T1, op_mean>& in)
   {
   coot_debug_sigprint();
 
-  unwrap<T1> U(in.m);
+  quasi_unwrap<T1> U(in.m);
 
   const uword dim = in.aux_uword_a;
   apply_direct(out, U.M, dim, false);
@@ -38,7 +38,7 @@ op_mean::apply(Mat<eT>& out, const Op<mtOp<eT, T1, mtop_conv_to>, op_mean>& in)
   {
   coot_debug_sigprint();
 
-  unwrap<T1> U(in.m.q);
+  quasi_unwrap<T1> U(in.m.q);
 
   const uword dim = in.aux_uword_a;
   apply_direct(out, U.M, dim, true);
@@ -127,7 +127,7 @@ op_mean::mean_all(const T1& X)
   coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
-  unwrap<T1> U(X);
+  quasi_unwrap<T1> U(X);
 
   if (U.M.n_elem == 0)
     {

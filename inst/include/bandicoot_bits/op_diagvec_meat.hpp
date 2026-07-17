@@ -26,7 +26,7 @@ op_diagvec::apply(Mat<typename T1::elem_type>& out, const Op<T1, op_diagvec>& in
   // Extract diagonal id.
   const sword k = (in.aux_uword_b == 0) ? sword(in.aux_uword_a) : -sword(in.aux_uword_a);
 
-  unwrap<T1> U(in.m);
+  quasi_unwrap<T1> U(in.m);
   op_diagvec::apply_direct(out, U.M, k);
   }
 
@@ -45,7 +45,7 @@ op_diagvec::apply(Mat<out_eT>& out, const Op<T1, op_diagvec>& in, const typename
 
   // If the types are not the same, we have to force a conversion.
   mtOp<out_eT, T1, mtop_conv_to> mtop(in.m);
-  unwrap<mtOp<out_eT, T1, mtop_conv_to>> U(mtop);
+  quasi_unwrap<mtOp<out_eT, T1, mtop_conv_to>> U(mtop);
   op_diagvec::apply_direct(out, U.M, k);
   }
 

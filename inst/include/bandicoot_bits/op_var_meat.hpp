@@ -26,7 +26,7 @@ op_var::apply(Mat<out_eT>& out, const Op<T1, op_var>& in)
   const uword norm_type = in.aux_uword_a;
   const uword dim = in.aux_uword_b;
 
-  unwrap<T1> U(in.m);
+  quasi_unwrap<T1> U(in.m);
 
   apply_direct(out, U.M, dim, norm_type);
   }
@@ -154,7 +154,7 @@ op_var::var_vec(const T1& X, const uword norm_type)
   coot_debug_sigprint();
 
   typedef typename T1::elem_type eT;
-  unwrap<T1> U(X);
+  quasi_unwrap<T1> U(X);
   if (U.M.n_elem == 0)
     {
     return eT(0);

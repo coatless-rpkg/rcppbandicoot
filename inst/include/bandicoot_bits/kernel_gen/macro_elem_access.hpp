@@ -667,3 +667,118 @@ struct elem_access_str< Op<T1, op_htrans>, i, backend, arg_name_prefix, arg_name
   elem_access_str< T1, i, backend, arg_name_prefix, trans_arg_names<arg_names> >, // transposed access of T1
   concat_str< close_paren >
   > { };
+
+
+
+//
+// Op<T1, op_symmatu>: reflect the upper triangle to the lower triangle
+//
+// The general form is: (row > col) ? inner_argument_at(col, row) : inner_argument_at(row, col)
+// where `inner_argument_at()` is whatever the element access macro for the T1 is
+//
+
+// We need two utilities dealing with complex types; since whether or not we need to conjugate is only known
+// at runtime, we have to check the extra uword parameter '_do_conj' to see whether we are conjugating.
+// This helper class 'symmat_conj_elem_access_helper' just accesses the inner T1's element in the standard way
+// if T1 is *not* a complex type, and checks '_do_conj' otherwise.
+
+template<bool is_cx, typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct symmat_conj_elem_access_helper : public elem_access_str< T1, i, backend, arg_name_prefix, arg_names > { };
+
+// If it is a complex type, we want to generate something like:
+//
+// ((name_do_trans == 1) ? coot_conj(inner_argument_at(row, col)) : inner_argument_at(row, col)
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct symmat_conj_elem_access_helper<true, T1, i, backend, arg_name_prefix, arg_names> : public nested_concat_str
+  <
+  concat_str
+    <
+    double_open_paren, // ((
+    coot_concat_name,  // COOT_CONCAT(name,
+    arg_name_prefix,   //
+    do_conj_name,      // _do_conj
+    close_paren,       // )
+    spaced_eq,         //  ==
+    one_str,           // 1
+    close_paren,       // )
+    spaced_question,   //  ?
+    conj_str,          // coot_conj
+    func_name_suffix< typename T1::elem_type, backend >, // optional suffix to disambiguate function names
+    open_paren         // (
+    >,
+  elem_access_str< T1, i, backend, concat_str< arg_name_prefix, arg_prefix_name >, arg_names >,
+  concat_str< close_paren, spaced_colon >, // ) :
+  elem_access_str< T1, i, backend, concat_str< arg_name_prefix, arg_prefix_name >, arg_names >,
+  concat_str< close_paren > // )
+  > { };
+
+// The second utility we need is to access the non-reflected argument from the T1 (e.g. if we are doing symmatu,
+// this is used to get the element access of the upper triangular part of the output).  In this case, we do the same
+// thing for both the complex and non-complex case, but with the one caveat that if it is the complex case, we have
+// to append the _arg macro (arg_name_prefix) to the inner arguments.
+
+template<bool is_cx, typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct symmat_non_conj_elem_access_helper : public elem_access_str< T1, i, backend, arg_name_prefix, arg_names > { };
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct symmat_non_conj_elem_access_helper<true, T1, i, backend, arg_name_prefix, arg_names> : public elem_access_str< T1, i, backend, concat_str< arg_name_prefix, arg_prefix_name >, arg_names > { };
+
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct elem_access_str< Op<T1, op_symmatu>, i, backend, arg_name_prefix, arg_names > : public nested_concat_str
+  <
+  concat_str
+    <
+    double_open_paren,
+    typename arg_names::arg1,
+    spaced_lteq,
+    typename arg_names::arg2,
+    close_paren,
+    spaced_question
+    >,
+  symmat_non_conj_elem_access_helper // access at (row, col)
+    <
+    is_cx<typename T1::elem_type>::value, T1, i, backend, arg_name_prefix, arg_names
+    >,
+  concat_str< spaced_colon >,
+  symmat_conj_elem_access_helper // access at (col, row), possibly conjugating if needed
+    <
+    is_cx<typename T1::elem_type>::value, T1, i, backend, arg_name_prefix, trans_arg_names<arg_names>
+    >,
+  concat_str< close_paren >
+  > { };
+
+
+
+//
+// Op<T1, op_symmatl>: reflect the lower triangle to the upper triangle
+//
+// The general form is: (col > row) ? inner_argument_at(col, row) : inner_argument_at(row, col)
+// where `inner_argument_at()` is whatever the element access macro for the T1 is.  There is some extra
+// complexity, as the conjugate may need to be applied, but only for complex types and if the user
+// specified it!
+//
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct elem_access_str< Op<T1, op_symmatl>, i, backend, arg_name_prefix, arg_names > : public nested_concat_str
+  <
+  concat_str
+    <
+    double_open_paren,
+    typename arg_names::arg2,
+    spaced_lteq,
+    typename arg_names::arg1,
+    close_paren,
+    spaced_question
+    >,
+  symmat_non_conj_elem_access_helper // access at (row, col)
+    <
+    is_cx<typename T1::elem_type>::value, T1, i, backend, arg_name_prefix, arg_names
+    >,
+  concat_str< spaced_colon >,
+  symmat_conj_elem_access_helper // access at (col, row), possibly conjugating if needed
+    <
+    is_cx<typename T1::elem_type>::value, T1, i, backend, arg_name_prefix, trans_arg_names<arg_names>
+    >,
+  concat_str< close_paren >
+  > { };

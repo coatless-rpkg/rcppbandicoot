@@ -447,7 +447,7 @@ subview_cube<eT>::operator=(const Base<eT, T1>& x)
   {
   coot_debug_sigprint();
 
-  no_conv_unwrap<T1> U(x.get_ref());
+  no_conv_quasi_unwrap<T1> U(x.get_ref());
 
   // if this subview can be interpreted as an object with the same dimensions as x, we can use it
   const uword t_n_rows   = this->n_rows;
@@ -456,28 +456,19 @@ subview_cube<eT>::operator=(const Base<eT, T1>& x)
 
   const uword x_n_rows   = U.M.n_rows;
   const uword x_n_cols   = U.M.n_cols;
+  const uword x_n_elem   = U.M.n_elem;
 
-  if( ((x_n_rows == 1) || (x_n_cols == 1)) && (t_n_rows == 1) && (t_n_cols == 1) && (x.n_elem == t_n_slices) )
-    {
-    // interpret the matrix as a scalar that will apply to every (scalar) slice
-    coot_rt_t::broadcast_op(twoway_kernel_id::broadcast_set,
-                            m.dev_mem, m.dev_mem /* ignored */, U.get_dev_mem(false),
-                            1, 1,
-                            1, t_n_slices,
-                            U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows(),
-                            aux_row1 + aux_col1 * m.n_rows + aux_slice1 * m.n_rows * m.n_cols, 0, m.slice_elem);
-    }
-  else
-  if( (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) ||
+  if( (((x_n_rows == 1) || (x_n_cols == 1)) && (t_n_rows == 1) && (t_n_cols == 1) && (x_n_elem == t_n_slices)) ||
+      (t_n_rows == x_n_rows) && (t_n_cols == x_n_cols) && (t_n_slices == 1) ||
       (t_n_rows == x_n_rows) && (t_n_cols == 1) && (t_n_slices == x_n_cols) ||
       (t_n_rows == 1) && (t_n_cols == x_n_rows) && (t_n_slices == x_n_cols) )
     {
-    // interpret the matrix as a cube with one dimension as 1
-    coot_rt_t::copy(make_proxy_mat(*this, x.n_rows, x.n_cols), make_proxy(U.M));
+    // interpret the matrix as a cube with one or two dimensions as 1
+    coot_rt_t::copy(make_proxy_mat(*this, x_n_rows, x_n_cols), make_proxy(U.M));
     }
   else
     {
-    coot_stop_logic_error( coot_incompat_size_string(*this, x, "copy into subcube") );
+    coot_stop_logic_error( coot_incompat_size_string((*this).n_rows, (*this).n_cols, (*this).n_slices, U.M.n_rows, U.M.n_cols, 1, "copy into subcube") );
     }
   }
 
@@ -528,8 +519,8 @@ subview_cube<eT>::operator+=(const Base<eT, T1>& x)
   {
   coot_debug_sigprint();
 
-  // TODO: clean this up to avoid the no_conv_unwrap and create a Proxy only once
-  no_conv_unwrap<T1> U(x.get_ref());
+  // TODO: clean this up to avoid the no_conv_quasi_unwrap and create a Proxy only once
+  no_conv_quasi_unwrap<T1> U(x.get_ref());
 
   // if this subview can be interpreted as an object with the same dimensions as x, we can use it
   const uword t_n_rows   = this->n_rows;
@@ -538,25 +529,18 @@ subview_cube<eT>::operator+=(const Base<eT, T1>& x)
 
   const uword x_n_rows   = U.M.n_rows;
   const uword x_n_cols   = U.M.n_cols;
+  const uword x_n_elem   = U.M.n_elem;
 
-  if( ((x_n_rows == 1) || (x_n_cols == 1)) && (t_n_rows == 1) && (t_n_cols == 1) && (x.n_elem == t_n_slices) )
+
+  if( (((x_n_rows == 1) || (x_n_cols == 1)) && (t_n_rows == 1) && (t_n_cols == 1) && (x_n_elem == t_n_slices)) ||
+      is_valid_mat_to_cube(U.M) )
     {
-    // interpret the matrix as a scalar that will apply to every (scalar) slice
-    coot_rt_t::broadcast_op(twoway_kernel_id::broadcast_plus,
-                            m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                            1, 1,
-                            1, t_n_slices,
-                            U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows(),
-                            aux_row1 + aux_col1 * m.n_rows + aux_slice1 * m.n_rows * m.n_cols, 0, m.slice_elem);
-    }
-  else
-  if( is_valid_mat_to_cube(U.M) )
-    {
+    // interpret the matrix as a cube with one or two dimensions as 1
     (*this).operator+=(Cube<eT>(U.M.dev_mem, t_n_rows, t_n_cols, t_n_slices));
     }
   else
     {
-    coot_stop_logic_error( coot_incompat_size_string(*this, x, "addition") );
+    coot_stop_logic_error( coot_incompat_size_string((*this).n_rows, (*this).n_cols, (*this).n_slices, U.M.n_rows, U.M.n_cols, 1, "addition into subcube") );
     }
   }
 
@@ -570,7 +554,7 @@ subview_cube<eT>::operator-=(const Base<eT, T1>& x)
   {
   coot_debug_sigprint();
 
-  no_conv_unwrap<T1> U(x.get_ref());
+  no_conv_quasi_unwrap<T1> U(x.get_ref());
 
   // if this subview can be interpreted as an object with the same dimensions as x, we can use it
   const uword t_n_rows   = this->n_rows;
@@ -579,25 +563,17 @@ subview_cube<eT>::operator-=(const Base<eT, T1>& x)
 
   const uword x_n_rows   = U.M.n_rows;
   const uword x_n_cols   = U.M.n_cols;
+  const uword x_n_elem   = U.M.n_elem;
 
-  if( ((x_n_rows == 1) || (x_n_cols == 1)) && (t_n_rows == 1) && (t_n_cols == 1) && (x.n_elem == t_n_slices) )
+  if( (((x_n_rows == 1) || (x_n_cols == 1)) && (t_n_rows == 1) && (t_n_cols == 1) && (x_n_elem == t_n_slices)) ||
+      is_valid_mat_to_cube(U.M) )
     {
-    // interpret the matrix as a scalar that will apply to every (scalar) slice
-    coot_rt_t::broadcast_op(twoway_kernel_id::broadcast_minus_post,
-                            m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                            1, 1,
-                            1, t_n_slices,
-                            U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows(),
-                            aux_row1 + aux_col1 * m.n_rows + aux_slice1 * m.n_rows * m.n_cols, 0, m.slice_elem);
-    }
-  else
-  if( is_valid_mat_to_cube(U.M) )
-    {
+    // interpret the matrix as a cube with one or two dimensions as 1
     (*this).operator-=(Cube<eT>(U.M.dev_mem, t_n_rows, t_n_cols, t_n_slices));
     }
   else
     {
-    coot_stop_logic_error( coot_incompat_size_string(*this, x, "subtraction") );
+    coot_stop_logic_error( coot_incompat_size_string((*this).n_rows, (*this).n_cols, (*this).n_slices, U.M.n_rows, U.M.n_cols, 1, "subtraction into subcube") );
     }
   }
 
@@ -611,7 +587,7 @@ subview_cube<eT>::operator%=(const Base<eT, T1>& x)
   {
   coot_debug_sigprint();
 
-  no_conv_unwrap<T1> U(x.get_ref());
+  no_conv_quasi_unwrap<T1> U(x.get_ref());
 
   // if this subview can be interpreted as an object with the same dimensions as x, we can use it
   const uword t_n_rows   = this->n_rows;
@@ -620,25 +596,17 @@ subview_cube<eT>::operator%=(const Base<eT, T1>& x)
 
   const uword x_n_rows   = U.M.n_rows;
   const uword x_n_cols   = U.M.n_cols;
+  const uword x_n_elem   = U.M.n_elem;
 
-  if( ((x_n_rows == 1) || (x_n_cols == 1)) && (t_n_rows == 1) && (t_n_cols == 1) && (x.n_elem == t_n_slices) )
+  if( (((x_n_rows == 1) || (x_n_cols == 1)) && (t_n_rows == 1) && (t_n_cols == 1) && (x_n_elem == t_n_slices)) ||
+      is_valid_mat_to_cube(U.M) )
     {
-    // interpret the matrix as a scalar that will apply to every (scalar) slice
-    coot_rt_t::broadcast_op(twoway_kernel_id::broadcast_schur,
-                            m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                            1, 1,
-                            1, t_n_slices,
-                            U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows(),
-                            aux_row1 + aux_col1 * m.n_rows + aux_slice1 * m.n_rows * m.n_cols, 0, m.slice_elem);
-    }
-  else
-  if( is_valid_mat_to_cube(U.M) )
-    {
+    // interpret the matrix as a cube with one or two dimensions as 1
     (*this).operator%=(Cube<eT>(U.M.dev_mem, t_n_rows, t_n_cols, t_n_slices));
     }
   else
     {
-    coot_stop_logic_error( coot_incompat_size_string(*this, x, "element-wise multiplication") );
+    coot_stop_logic_error( coot_incompat_size_string((*this).n_rows, (*this).n_cols, (*this).n_slices, U.M.n_rows, U.M.n_cols, 1, "element-wise multiplication into subcube") );
     }
   }
 
@@ -652,7 +620,7 @@ subview_cube<eT>::operator/=(const Base<eT, T1>& x)
   {
   coot_debug_sigprint();
 
-  no_conv_unwrap<T1> U(x.get_ref());
+  no_conv_quasi_unwrap<T1> U(x.get_ref());
 
   // if this subview can be interpreted as an object with the same dimensions as x, we can use it
   const uword t_n_rows   = this->n_rows;
@@ -661,25 +629,17 @@ subview_cube<eT>::operator/=(const Base<eT, T1>& x)
 
   const uword x_n_rows   = U.M.n_rows;
   const uword x_n_cols   = U.M.n_cols;
+  const uword x_n_elem   = U.M.n_elem;
 
-  if( ((x_n_rows == 1) || (x_n_cols == 1)) && (t_n_rows == 1) && (t_n_cols == 1) && (x.n_elem == t_n_slices) )
+  if( (((x_n_rows == 1) || (x_n_cols == 1)) && (t_n_rows == 1) && (t_n_cols == 1) && (x_n_elem == t_n_slices)) ||
+      is_valid_mat_to_cube(U.M) )
     {
-    // interpret the matrix as a scalar that will apply to every (scalar) slice
-    coot_rt_t::broadcast_op(twoway_kernel_id::broadcast_div_post,
-                            m.dev_mem, m.dev_mem, U.get_dev_mem(false),
-                            1, 1,
-                            1, t_n_slices,
-                            U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows(),
-                            aux_row1 + aux_col1 * m.n_rows + aux_slice1 * m.n_rows * m.n_cols, 0, m.slice_elem);
-    }
-  else
-  if( is_valid_mat_to_cube(U.M) )
-    {
+    // interpret the matrix as a cube with one or two dimensions as 1
     (*this).operator/=(Cube<eT>(U.M.dev_mem, t_n_rows, t_n_cols, t_n_slices));
     }
   else
     {
-    coot_stop_logic_error( coot_incompat_size_string(*this, x, "addition into subcube") );
+    coot_stop_logic_error( coot_incompat_size_string((*this).n_rows, (*this).n_cols, (*this).n_slices, U.M.n_rows, U.M.n_cols, 1, "element-wise division into subcube") );
     }
   }
 

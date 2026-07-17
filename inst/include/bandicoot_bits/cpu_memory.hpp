@@ -18,34 +18,67 @@
 class cpu_memory
   {
   public:
-
+  
   // RAII wrapper for automatic deallocation of CPU memory when it goes out of scope
   template<typename eT>
   class mem_array
     {
     public:
-
-    mem_array(const uword n_elem) : chunk(cpu_memory::acquire<eT>(n_elem))  { }
-
+    
+    inline
+    mem_array(const uword n_elem)
+      {
+      coot_debug_sigprint_this(this);
+      
+      if(n_elem == 0)  { return; }
+      
+      chunk = cpu_memory::acquire<eT>(n_elem);
+      
+      // if(chunk != nullptr)  { std::memset((void*)chunk, 0, sizeof(eT)*n_elem); }
+      }
+    
+    
+    template<bool do_zeros>
+    inline
+    mem_array(const uword n_elem, const coot_initmode_indicator<do_zeros>&)
+      {
+      coot_debug_sigprint_this(this);
+      
+      if(n_elem == 0)  { return; }
+      
+      chunk = cpu_memory::acquire<eT>(n_elem);
+      
+      if(do_zeros)
+        {
+        if(chunk != nullptr)  { std::memset((void*)chunk, 0, sizeof(eT)*n_elem); }
+        }
+      }
+    
+    
+    inline
     ~mem_array()
       {
-      cpu_memory::release(chunk);
+      coot_debug_sigprint_this(this);
+      
+      if(chunk != nullptr)  { cpu_memory::release(chunk); }
       }
-
+    
+    
+    inline
     eT* memptr()
       {
       return chunk;
       }
-
+    
+    
     private:
-
-    eT* chunk;
+    
+    eT* chunk = nullptr;
     };
-
-  template<typename eT> inline coot_malloc static eT* acquire(const uword n_elem);
-
-  template<typename eT> inline static void release(eT* mem);
-
+  
+  template<typename eT> inline coot_malloc static eT*  acquire(const uword n_elem);
+  
+  template<typename eT> inline             static void release(eT* mem);
   };
 
 

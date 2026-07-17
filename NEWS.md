@@ -1,3 +1,10 @@
+# RcppBandicoot 4.0.2.1
+
+- Upgraded to bandicoot 4.0.2: "Bandwidth Glutton" (2026-07-13)
+  - Fix subcube broadcasting operations.
+  - Optimize CUDA grid size calculations.
+  - Fix `max(abs(X))` on CUDA.
+
 # RcppBandicoot 4.0.1.1
 
 - Upgraded to bandicoot 4.0.1: "Bandwidth Glutton" (2026-05-08)

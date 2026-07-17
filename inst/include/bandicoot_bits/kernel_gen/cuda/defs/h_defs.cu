@@ -71,6 +71,7 @@ __device__ inline __half coot_min(const __half x, const __half y) { return __hmi
 __device__ inline __half coot_max(const __half x, const __half y) { return __hmax(x, y); }
 __device__ inline __half coot_conj(const __half x) { return x; }
 __device__ inline __half coot_abs(const __half x) { return __habs(x); }
+__device__ inline __half coot_sign(const __half x) { return (x > (__half) 0) ? (__half) 1 : ( (x < (__half) 0) ? (__half) -1 : ( (x == (__half) 0) ? (__half) 0 : x ) ); }
 
 // Basic mathematical operators.
 __device__ inline __half coot_plus(const __half x, const __half y)  { return x + y; }

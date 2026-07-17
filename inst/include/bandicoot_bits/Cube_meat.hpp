@@ -2321,7 +2321,7 @@ Cube<eT>::operator()(const Base<uword,T1>& a) const
 /*   { */
 /*   arma_extra_debug_sigprint(); */
 
-/*   const unwrap_cube<T1> tmp(X.get_ref()); */
+/*   const plain_unwrap_cube<T1> tmp(X.get_ref()); */
 /*   const Cube<eT>& C   = tmp.M; */
 
 /*   const uword N = C.n_rows; */
@@ -2370,7 +2370,7 @@ Cube<eT>::operator()(const Base<uword,T1>& a) const
 /*   { */
 /*   arma_extra_debug_sigprint(); */
 
-/*   const unwrap_cube<T1> tmp(X.get_ref()); */
+/*   const plain_unwrap_cube<T1> tmp(X.get_ref()); */
 /*   const Cube<eT>& C   = tmp.M; */
 
 /*   const uword N = C.n_cols; */
@@ -2421,7 +2421,7 @@ Cube<eT>::operator()(const Base<uword,T1>& a) const
 /*   { */
 /*   arma_extra_debug_sigprint(); */
 
-/*   const unwrap_cube<T1> tmp(X.get_ref()); */
+/*   const plain_unwrap_cube<T1> tmp(X.get_ref()); */
 /*   const Cube<eT>& C   = tmp.M; */
 
 /*   const uword N = C.n_slices; */

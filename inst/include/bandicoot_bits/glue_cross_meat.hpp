@@ -23,8 +23,8 @@ glue_cross::apply(Mat<out_eT>& out, const Glue<T1, T2, glue_cross>& in)
   {
   coot_debug_sigprint();
 
-  const unwrap<T1> UA(in.A);
-  const unwrap<T2> UB(in.B);
+  const quasi_unwrap<T1> UA(in.A);
+  const quasi_unwrap<T2> UB(in.B);
 
   coot_conform_check( (UA.M.n_elem != 3 || UB.M.n_elem != 3), "cross(): each vector must have 3 elements" );
 

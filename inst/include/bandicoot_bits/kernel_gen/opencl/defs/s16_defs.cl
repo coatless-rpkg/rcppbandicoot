@@ -46,6 +46,7 @@ inline short coot_conj_short(const short x) { return x; }
 inline short coot_abs_short(const short x) { return abs(x); }
 inline short coot_min_short(const short x, const short y) { return (x < y) ? x : y; }
 inline short coot_max_short(const short x, const short y) { return (x > y) ? x : y; }
+inline short coot_sign_short(const short x) { return (x > 0) ? 1 : (x == 0 ? 0 : -1); }
 
 // Basic mathematical operators.
 inline short coot_plus_short(const short x, const short y)  { return x + y; }

@@ -55,4 +55,14 @@ inline cx_float coot_times_cx_float(const cx_float x, const cx_float y) { return
 inline cx_float coot_div_cx_float(const cx_float x, const cx_float y)   { return (cx_float)(cx_float)((x.x * y.x + x.y * y.y) / (y.x * y.x + y.y * y.y), (x.y * y.x - x.x * y.y) / (y.x * y.x + y.y * y.y)); }
 inline cx_float coot_neg_cx_float(const cx_float x)                     { return (cx_float)(-x.x, -x.y); }
 
+// Special utility functions for complex numbers.
+inline float    coot_hypot_cx_float(const cx_float x)
+  {
+  const float a = fabs(x.x), b = fabs(x.y);
+  const float m = (a > b) ? a : b;
+  const float r = (a < b) ? (a / m) : (b / m);
+  return m * sqrt(1.0f + r * r);
+  }
+inline cx_float coot_cx_create_cx_float(const float re, const float imag) { return (cx_float)(re, imag); }
+
 )"

@@ -30,7 +30,7 @@ op_reshape::apply(Mat<out_eT>& out, const Op<T1, op_reshape>& in)
     return;
     }
 
-  unwrap<T1> U(in.m);
+  quasi_unwrap<T1> U(in.m);
   op_reshape::apply_direct(out, U.M, in.aux_uword_a, in.aux_uword_b);
   }
 

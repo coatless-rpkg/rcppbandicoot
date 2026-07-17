@@ -21,28 +21,28 @@
 // instead.  This requires a little extra handling in case the object is a
 // subview.
 template<typename T1>
-struct special_cor_cov_unwrap : public no_conv_unwrap<T1>
+struct special_cor_cov_unwrap : public no_conv_quasi_unwrap<T1>
   {
   inline special_cor_cov_unwrap(const T1& t)
-    : no_conv_unwrap<T1>(t)
+    : no_conv_quasi_unwrap<T1>(t)
     , use_local_mat(false)
     {
     // If the input is a row vector, we treat it as a column vector instead.
-    if (no_conv_unwrap<T1>::M.n_rows == 1)
+    if (no_conv_quasi_unwrap<T1>::M.n_rows == 1)
       {
-      access::rw(local_mat) = unwrap_cor_trans(no_conv_unwrap<T1>::M);
+      access::rw(local_mat) = unwrap_cor_trans(no_conv_quasi_unwrap<T1>::M);
       access::rw(use_local_mat) = true;
       }
     }
 
-  typedef typename no_conv_unwrap<T1>::stored_type::elem_type eT;
+  typedef typename no_conv_quasi_unwrap<T1>::stored_type::elem_type eT;
 
-  uword         get_n_rows()                 const { return (use_local_mat) ? local_mat.n_rows            : no_conv_unwrap<T1>::M.n_rows;          }
-  uword         get_n_cols()                 const { return (use_local_mat) ? local_mat.n_cols            : no_conv_unwrap<T1>::M.n_cols;          }
-  dev_mem_t<eT> get_dev_mem(const bool sync) const { return (use_local_mat) ? local_mat.get_dev_mem(sync) : no_conv_unwrap<T1>::get_dev_mem(sync); }
-  uword         get_row_offset()             const { return (use_local_mat) ? 0                           : no_conv_unwrap<T1>::get_row_offset();  }
-  uword         get_col_offset()             const { return (use_local_mat) ? 0                           : no_conv_unwrap<T1>::get_col_offset();  }
-  uword         get_M_n_rows()               const { return (use_local_mat) ? local_mat.n_rows            : no_conv_unwrap<T1>::get_M_n_rows();    }
+  uword         get_n_rows()                 const { return (use_local_mat) ? local_mat.n_rows            : no_conv_quasi_unwrap<T1>::M.n_rows;          }
+  uword         get_n_cols()                 const { return (use_local_mat) ? local_mat.n_cols            : no_conv_quasi_unwrap<T1>::M.n_cols;          }
+  dev_mem_t<eT> get_dev_mem(const bool sync) const { return (use_local_mat) ? local_mat.get_dev_mem(sync) : no_conv_quasi_unwrap<T1>::get_dev_mem(sync); }
+  uword         get_row_offset()             const { return (use_local_mat) ? 0                           : no_conv_quasi_unwrap<T1>::get_row_offset();  }
+  uword         get_col_offset()             const { return (use_local_mat) ? 0                           : no_conv_quasi_unwrap<T1>::get_col_offset();  }
+  uword         get_M_n_rows()               const { return (use_local_mat) ? local_mat.n_rows            : no_conv_quasi_unwrap<T1>::get_M_n_rows();    }
 
   const bool use_local_mat;
   const Mat<eT> local_mat;

@@ -29,13 +29,10 @@ mtop_find::apply(Mat<uword>& out, const mtOp<uword, T1, mtop_find>& in)
     return;
     }
 
-  unwrap<T1> U(in.q);
-  extract_subview<typename unwrap<T1>::stored_type> E(U.M);
+  plain_unwrap<T1> E(in.q);
 
   const uword k         = in.aux_uword_a;
   const uword find_type = in.aux_uword_b;
-
-  out.reset(); // release any current memory
 
   uword result_size;
   dev_mem_t<uword> out_mem;
