@@ -9,3 +9,6 @@ config.status
 
 # Block generated flags
 R/flags.R
+# Coordination scratch
+.superpowers/
+docs/
