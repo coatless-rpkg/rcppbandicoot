@@ -24,8 +24,16 @@ BANDICOOT_LIBS=""
 OPENMP_CXXFLAGS='$(SHLIB_OPENMP_CXXFLAGS)'
 OPENCL_TARGET_VERSION=300
 
-## Kernel source directory (matches configure.ac logic)
-BANDICOOT_KERNELS_DIR=$("${R_HOME}/bin/Rscript" -e 'cat(paste(head(.libPaths(),1), "RcppBandicoot", "include", "bandicoot_bits", "ks", "", sep="/"))')
+## Kernel source directory (matches configure.ac logic).
+## R_LIBRARY_DIR is the final library directory; head(.libPaths(),1) during a
+## staged install is the transient 00LOCK-RcppBandicoot/00new staging tree.
+if [ -n "${R_LIBRARY_DIR}" ]; then
+    BANDICOOT_LIB_DIR="${R_LIBRARY_DIR}"
+else
+    BANDICOOT_LIB_DIR=$("${R_HOME}/bin/Rscript" -e 'cat(head(.libPaths(),1))')
+fi
+BANDICOOT_LIB_DIR=$(echo "${BANDICOOT_LIB_DIR}" | sed -e 's|/00LOCK-[^/]*/00new$||')
+BANDICOOT_KERNELS_DIR="${BANDICOOT_LIB_DIR}/RcppBandicoot/include/bandicoot_bits/ks/"
 
 ## Always disable CUDA on Windows (requires manual setup)
 BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CUDA"

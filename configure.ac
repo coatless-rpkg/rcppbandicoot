@@ -371,10 +371,26 @@ After installation, ensure GPU drivers are properly installed and configured.
 ])
 fi
 
-## Installation directory
+## Installation directory for the OpenCL kernel sources.
+##
+## R exports R_LIBRARY_DIR during `R CMD INSTALL`; it names the *final*
+## library directory.  head(.libPaths(),1) does not: under a staged install
+## (the default since R 3.6, and what R CMD check uses) it is the transient
+## <lib>/00LOCK-RcppBandicoot/00new tree, which is renamed away before the
+## package is ever loaded.  Baking that path into COOT_KERNEL_SOURCE_DIR
+## makes every kernel compile fail at runtime with
+## "Cannot open required kernel source."
+##
 ## Note that we end on 'ks', not 'kernels', to shorten the path.
 ## Note also that we ensure a final trailing '/'
-BANDICOOT_KERNELS_DIR=$(${R_HOME}/bin/Rscript -e 'cat(paste(head(.libPaths(),1), "RcppBandicoot", "include", "bandicoot_bits", "ks", "", sep="/"))')
+if test -n "${R_LIBRARY_DIR}"; then
+    BANDICOOT_LIB_DIR="${R_LIBRARY_DIR}"
+else
+    BANDICOOT_LIB_DIR=$(${R_HOME}/bin/Rscript -e 'cat(head(.libPaths(),1))')
+fi
+## Belt and braces: strip a staging suffix should one ever reach us.
+BANDICOOT_LIB_DIR=$(echo "${BANDICOOT_LIB_DIR}" | sed -e 's|/00LOCK-[[^/]]*/00new$||')
+BANDICOOT_KERNELS_DIR="${BANDICOOT_LIB_DIR}/RcppBandicoot/include/bandicoot_bits/ks/"
 
 
 

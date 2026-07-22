@@ -6,6 +6,7 @@
 autom4te.cache/
 config.log
 config.status
+configure~
 
 # Block generated flags
 R/flags.R
