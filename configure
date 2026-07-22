@@ -4543,6 +4543,20 @@ printf %s "checking for CLBlast... " >&6; }
     BANDICOOT_LIBS="${CLBLAST_LIBS} ${BANDICOOT_LIBS}"
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes (from CLBLAST_CPPFLAGS and CLBLAST_LIBS)" >&5
 printf '%s\n' "yes (from CLBLAST_CPPFLAGS and CLBLAST_LIBS)" >&6; }
+  elif test -n "${ENV_OPENCL_CPPFLAGS}" && test -n "${ENV_OPENCL_LIBS}"; then
+    ## OpenCL came from the environment (e.g. the Khronos ICD loader plus
+    ## PoCL) but no CLBlast environment pair was supplied. Do not fall through
+    ## to the Homebrew CLBlast probe: the Homebrew clblast bottle links
+    ## Apple's OpenCL.framework, and loading it alongside an
+    ## environment-supplied ICD loader is a reproduced SIGSEGV -- the same
+    ## hazard the clBLAS section below guards against, for the same reason.
+    ## The probe is safe only when OpenCL itself was autodetected, since then
+    ## there is exactly one OpenCL implementation in play rather than two
+    ## racing to be loaded.
+    HAVE_CLBLAST=0
+    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAST"
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no (skipping Homebrew probe: OpenCL supplied from environment; set CLBLAST_CPPFLAGS and CLBLAST_LIBS to enable)" >&5
+printf '%s\n' "no (skipping Homebrew probe: OpenCL supplied from environment; set CLBLAST_CPPFLAGS and CLBLAST_LIBS to enable)" >&6; }
   else
     saved_LIBS="${LIBS}"
     saved_LDFLAGS="${LDFLAGS}"
