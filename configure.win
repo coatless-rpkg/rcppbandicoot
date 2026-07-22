@@ -54,21 +54,22 @@ else
     HAVE_OPENCL=0
 fi
 
-## Check for CLBlast via environment variable
-if [ -n "${CLBLAST_CPPFLAGS}" ]; then
-    echo "  CLBlast: found (via CLBLAST_CPPFLAGS)"
+## CLBlast requires both the headers (CLBLAST_CPPFLAGS) and the link flags
+## (CLBLAST_LIBS). Enabling the backend with only one set would compile but
+## fail to link, so gate COOT_USE_CLBLAST on having both -- same rule as the
+## OpenCL check above.
+if [ -n "${CLBLAST_CPPFLAGS}" ] && [ -n "${CLBLAST_LIBS}" ]; then
+    echo "  CLBlast headers: found (via CLBLAST_CPPFLAGS)"
+    echo "  CLBlast library: found (via CLBLAST_LIBS): ${CLBLAST_LIBS}"
     BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_USE_CLBLAST ${CLBLAST_CPPFLAGS}"
+    BANDICOOT_LIBS="${BANDICOOT_LIBS} ${CLBLAST_LIBS}"
     HAVE_CLBLAST=1
 else
-    echo "  CLBlast: not found, disabling"
+    echo "  CLBlast: not configured (need both CLBLAST_CPPFLAGS and CLBLAST_LIBS)"
+    [ -z "${CLBLAST_CPPFLAGS}" ] && echo "    missing CLBLAST_CPPFLAGS"
+    [ -z "${CLBLAST_LIBS}" ] && echo "    missing CLBLAST_LIBS"
     BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAST"
     HAVE_CLBLAST=0
-fi
-
-## Check for CLBlast library
-if [ -n "${CLBLAST_LIBS}" ]; then
-    echo "  CLBlast library: ${CLBLAST_LIBS}"
-    BANDICOOT_LIBS="${BANDICOOT_LIBS} ${CLBLAST_LIBS}"
 fi
 
 ## Always disable clBLAS (CLBlast is preferred)
