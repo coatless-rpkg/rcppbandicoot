@@ -24,7 +24,11 @@ if (is.null(getOption("rcppbandicoot.ex_info"))) {
   options(rcppbandicoot.ex_info = gpu_device_info())
 }
 .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-if (isTRUE(.rcppbandicoot_ex_info$available)) {
+# RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
+# device (see tests/testthat/helper-gpu.R); examples honour it too so
+# R CMD check does not crash the R session running one.
+if (isTRUE(.rcppbandicoot_ex_info$available) &&
+    !("gpu_matrix_multiply" \%in\% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
   A <- matrix(c(1, 2, 3, 4), 2, 2)
   B <- matrix(c(5, 6, 7, 8), 2, 2)
   gpu_matrix_multiply(A, B)

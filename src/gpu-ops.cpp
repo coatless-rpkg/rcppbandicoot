@@ -15,7 +15,11 @@
 //'   options(rcppbandicoot.ex_info = gpu_device_info())
 //' }
 //' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
+//' # device (see tests/testthat/helper-gpu.R); examples honour it too so
+//' # R CMD check does not crash the R session running one.
+//' if (isTRUE(.rcppbandicoot_ex_info$available) &&
+//'     !("gpu_matrix_multiply" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
 //'   A <- matrix(c(1, 2, 3, 4), 2, 2)
 //'   B <- matrix(c(5, 6, 7, 8), 2, 2)
 //'   gpu_matrix_multiply(A, B)
@@ -39,7 +43,11 @@ coot::fmat gpu_matrix_multiply(const coot::fmat& A, const coot::fmat& B) {
 //'   options(rcppbandicoot.ex_info = gpu_device_info())
 //' }
 //' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
+//' # device (see tests/testthat/helper-gpu.R); examples honour it too so
+//' # R CMD check does not crash the R session running one.
+//' if (isTRUE(.rcppbandicoot_ex_info$available) &&
+//'     !("gpu_transpose" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
 //'   gpu_transpose(matrix(1:6, nrow = 2))
 //' }
 // [[Rcpp::export]]
@@ -62,7 +70,11 @@ coot::fmat gpu_transpose(const coot::fmat& A) {
 //'   options(rcppbandicoot.ex_info = gpu_device_info())
 //' }
 //' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
+//' # device (see tests/testthat/helper-gpu.R); examples honour it too so
+//' # R CMD check does not crash the R session running one.
+//' if (isTRUE(.rcppbandicoot_ex_info$available) &&
+//'     !("gpu_matrix_add" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
 //'   gpu_matrix_add(matrix(c(1, 2, 3, 4), 2, 2), matrix(c(5, 6, 7, 8), 2, 2))
 //' }
 // [[Rcpp::export]]
@@ -84,8 +96,12 @@ coot::fmat gpu_matrix_add(const coot::fmat& A, const coot::fmat& B) {
 //'   options(rcppbandicoot.ex_info = gpu_device_info())
 //' }
 //' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
+//' # device (see tests/testthat/helper-gpu.R); examples honour it too so
+//' # R CMD check does not crash the R session running one.
 //' if (isTRUE(.rcppbandicoot_ex_info$available) &&
-//'     isTRUE(.rcppbandicoot_ex_info$fp64)) {
+//'     isTRUE(.rcppbandicoot_ex_info$fp64) &&
+//'     !("gpu_element_square" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
 //'   gpu_element_square(matrix(c(1, 2, 3, 4), 2, 2))
 //' }
 // [[Rcpp::export]]
@@ -107,7 +123,11 @@ coot::mat gpu_element_square(const coot::mat& A) {
 //'   options(rcppbandicoot.ex_info = gpu_device_info())
 //' }
 //' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
+//' # device (see tests/testthat/helper-gpu.R); examples honour it too so
+//' # R CMD check does not crash the R session running one.
+//' if (isTRUE(.rcppbandicoot_ex_info$available) &&
+//'     !("gpu_sum" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
 //'   gpu_sum(matrix(1:6, nrow = 2))
 //' }
 // [[Rcpp::export]]
@@ -129,7 +149,11 @@ double gpu_sum(const coot::fmat& A) {
 //'   options(rcppbandicoot.ex_info = gpu_device_info())
 //' }
 //' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
+//' # device (see tests/testthat/helper-gpu.R); examples honour it too so
+//' # R CMD check does not crash the R session running one.
+//' if (isTRUE(.rcppbandicoot_ex_info$available) &&
+//'     !("gpu_mean" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
 //'   gpu_mean(matrix(1:6, nrow = 2))
 //' }
 // [[Rcpp::export]]
@@ -151,7 +175,11 @@ double gpu_mean(const coot::fmat& A) {
 //'   options(rcppbandicoot.ex_info = gpu_device_info())
 //' }
 //' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
+//' # device (see tests/testthat/helper-gpu.R); examples honour it too so
+//' # R CMD check does not crash the R session running one.
+//' if (isTRUE(.rcppbandicoot_ex_info$available) &&
+//'     !("gpu_eye" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
 //'   gpu_eye(3)
 //' }
 // [[Rcpp::export]]
@@ -174,7 +202,11 @@ coot::fmat gpu_eye(int n) {
 //'   options(rcppbandicoot.ex_info = gpu_device_info())
 //' }
 //' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
+//' # device (see tests/testthat/helper-gpu.R); examples honour it too so
+//' # R CMD check does not crash the R session running one.
+//' if (isTRUE(.rcppbandicoot_ex_info$available) &&
+//'     !("gpu_randu" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
 //'   dim(gpu_randu(4, 3))
 //' }
 // [[Rcpp::export]]
