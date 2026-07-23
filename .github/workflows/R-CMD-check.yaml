@@ -26,7 +26,7 @@ jobs:
           # runner's device.  Every entry is a bug someone has to fix; the
           # nightly run below clears the list so they are exercised for real.
           - {os: ubuntu-24.04,  r: 'release', xfail: ''}
-          - {os: macos-latest,  r: 'release', xfail: 'gpu_element_square,gpu_matrix_add,gpu_matrix_multiply,gpu_transpose'}
+          - {os: macos-latest,  r: 'release', xfail: 'gpu_element_square,gpu_matrix_add,gpu_matrix_multiply,gpu_transpose,gpu_sum_multipass'}
           - {os: windows-2025,  r: 'release', xfail: ''}
 
     env:
