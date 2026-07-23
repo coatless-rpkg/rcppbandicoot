@@ -42,7 +42,8 @@ inlineCxxPlugin <- function() {
     RcppBandicootCxxFlags(),
     settings$env$PKG_CXXFLAGS
   )
-  settings$env$USE_CXX14 <- "yes"
 
+  # No USE_CXX14: `R CMD config CXX14` has been defunct since R 4.5, and R's
+  # default CXX is already C++17 or later, which exceeds bandicoot's needs.
   settings
 }

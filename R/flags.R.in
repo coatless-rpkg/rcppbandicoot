@@ -28,8 +28,19 @@ RcppBandicootCxxFlags <- function() {
     stop("RcppBandicoot package not found")
   }
 
+  # Bandicoot reads its .cl kernel sources from disk at runtime, from the
+  # directory baked in as COOT_KERNEL_SOURCE_DIR.  Without it the header falls
+  # back to a __FILE__-relative "bandicoot_bits/kernels/opencl/", which this
+  # package does not ship (the directory is "ks/"), so every downstream GPU
+  # call throws "Cannot open required kernel source.".  Resolve it here rather
+  # than at configure time so it tracks wherever the package actually landed.
+  # The trailing slash is required: the header concatenates "opencl/<file>".
+  kernels <- paste0(file.path(path, "bandicoot_bits", "ks"), "/")
+
   # Combine include path with configure-time flags
-  paste0("-I", shQuote(path), " @BANDICOOT_CXXFLAGS@")
+  paste0("-I", shQuote(path),
+         sprintf(" -DCOOT_KERNEL_SOURCE_DIR='\"%s\"'", kernels),
+         " @BANDICOOT_CXXFLAGS@")
 }
 
 #' Get RcppBandicoot linker flags
