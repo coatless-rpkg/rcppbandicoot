@@ -19,6 +19,8 @@ License: GPL (>= 2)
 Depends: R (>= 4.4)
 LinkingTo: Rcpp (>= 1.1.0)
 Imports: Rcpp (>= 1.1.0)
+Suggests: testthat (>= 3.0.0), withr
+Config/testthat/edition: 3
 SystemRequirements: OpenCL (>= 1.2) or CUDA (>= 9.8), GPU device with appropriate drivers. For OpenCL: CLBlast (recommended) or clBLAS for BLAS operations.
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
