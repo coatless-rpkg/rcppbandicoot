@@ -25,9 +25,18 @@ jobs:
           # xfail lists the gpu_* operations known to be broken on that
           # runner's device.  Every entry is a bug someone has to fix; the
           # nightly run below clears the list so they are exercised for real.
-          - {os: ubuntu-24.04,  r: 'release', xfail: ''}
-          - {os: macos-latest,  r: 'release', xfail: 'gpu_element_square,gpu_matrix_add,gpu_matrix_multiply,gpu_transpose,gpu_sum_multipass'}
-          - {os: windows-2025,  r: 'release', xfail: ''}
+          #
+          # macOS pins opencl_runtime to 'apple' rather than the default
+          # 'pocl': PoCL's LLVM-based JIT segfaulted while compiling a kernel
+          # in every observed run here, but which kernel varied run to run
+          # (gpu_element_square, gpu_transpose, and gpu_eye each crashed it
+          # on separate attempts) -- a JIT code-generation bug, not a
+          # per-operation one, so excluding operations by name cannot make
+          # this leg reliably green. Apple's own OpenCL.framework has no
+          # third-party JIT in the loop.
+          - {os: ubuntu-24.04,  r: 'release', xfail: '', opencl_runtime: 'auto'}
+          - {os: macos-latest,  r: 'release', xfail: '', opencl_runtime: 'apple'}
+          - {os: windows-2025,  r: 'release', xfail: '', opencl_runtime: 'auto'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -67,6 +76,7 @@ jobs:
         id: opencl
         uses: coatless-actions/setup-opencl@v1
         with:
+          runtime: ${{ matrix.config.opencl_runtime }}
           verify: 'true'
           require-fp64: 'true'
 
