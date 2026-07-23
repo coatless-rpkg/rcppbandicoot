@@ -30,18 +30,18 @@ jobs:
           # alternative to PoCL's crashing JIT below) enumerates zero devices
           # on this runner, so that is not a usable alternative -- back to
           # 'pocl' via 'auto'. PoCL's LLVM JIT segfaulted compiling a kernel
-          # in most runs observed while building this workflow, but a
+          # in nearly every run observed while building this workflow, but a
           # different operation triggered it each time (gpu_element_square,
-          # then separately gpu_transpose, then separately gpu_eye) with one
-          # run showing no crash at all -- a nondeterministic JIT
-          # code-generation bug, not a specific broken operation. The xfail
-          # list below is therefore the union of everything observed to
-          # crash or return a wrong answer across those runs, to give this
-          # leg the best available chance of a clean run; residual flakiness
-          # on a still-listed-safe operation remains possible and would show
-          # up as a fresh crash here rather than a silent wrong answer.
+          # then separately gpu_transpose, then separately gpu_eye, then
+          # separately gpu_randu) -- a nondeterministic JIT code-generation
+          # bug, not a specific broken operation, so excluding operations by
+          # name cannot make this leg reliably green on its own. See the
+          # POCL_WORK_GROUP_METHOD / POCL_CPU_MAX_CU_COUNT step below for the
+          # accompanying mitigation. The xfail list is the union of every
+          # operation observed to crash or return a wrong answer across those
+          # runs, kept as a safety net alongside that mitigation.
           - {os: ubuntu-24.04,  r: 'release', xfail: '', opencl_runtime: 'auto'}
-          - {os: macos-latest,  r: 'release', xfail: 'gpu_element_square,gpu_matrix_add,gpu_matrix_multiply,gpu_transpose,gpu_eye,gpu_sum_multipass', opencl_runtime: 'auto'}
+          - {os: macos-latest,  r: 'release', xfail: 'gpu_element_square,gpu_matrix_add,gpu_matrix_multiply,gpu_transpose,gpu_eye,gpu_randu,gpu_sum_multipass', opencl_runtime: 'auto'}
           - {os: windows-2025,  r: 'release', xfail: '', opencl_runtime: 'auto'}
 
     env:
@@ -94,6 +94,21 @@ jobs:
           echo "device   : ${{ steps.opencl.outputs.device-name }}"
           echo "count    : ${{ steps.opencl.outputs.device-count }}"
           echo "fp64     : ${{ steps.opencl.outputs.fp64 }}"
+
+      # Mitigates the PoCL JIT segfault described above. loopvec (PoCL's
+      # default kernel compilation method) runs LLVM's loop vectorizer,
+      # which is the most likely source of a code-generation bug that
+      # corrupts memory unpredictably; cbs (context-based switching) avoids
+      # that pass entirely. Serializing to one worker thread additionally
+      # rules out a compile-time race as a contributing cause. Both are
+      # PoCL-specific and a no-op for Intel's runtime on Windows, so this
+      # only needs to run on macOS.
+      - name: Work around a PoCL JIT crash (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          echo "POCL_WORK_GROUP_METHOD=cbs" >> "$GITHUB_ENV"
+          echo "POCL_CPU_MAX_CU_COUNT=1" >> "$GITHUB_ENV"
 
       # Installs CLBlast and verifies a GEMM produces correct results.
       # Exports CLBLAST_CPPFLAGS / CLBLAST_LIBS -- which configure.win
