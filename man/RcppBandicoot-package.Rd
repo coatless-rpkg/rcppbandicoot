@@ -6,10 +6,16 @@
 \alias{RcppBandicoot-package}
 \title{RcppBandicoot: 'Rcpp' Integration for the `Bandicoot` Header-Only C++ GPU Accelerated Linear Algebra Library}
 \description{
-'Bandicoot' is a templated C++ GPU Linear Algebra library (by the 'Armadillo' team) that provides a simple set of abstractions for writing high performant code for graphics processing units. The 'RcppBandicoot' package includes the header files from the 'Bandicoot' library. Therefore, users do not need to install 'Bandicoot' to use 'RcppBandicoot'. Note that the 'Bandicoot' library is licensed under Apache License version 2.0 and 'RcppBandicoot' (the 'Rcpp' bindings/bridge to 'Bandicoot') is licensed under the GNU GPL version 2 or later. Note that 'Bandicoot' requires a compiler that supports 'C++14' and 'OpenCL' (>= 1.2) or 'CUDA' (>= 9.8).
+'Bandicoot' is a templated C++ GPU Linear Algebra library (by the 'Armadillo' team) that provides a simple set of abstractions for writing high performant code for graphics processing units. The 'RcppBandicoot' package includes the header files from the 'Bandicoot' library. Therefore, users do not need to install 'Bandicoot' to use 'RcppBandicoot'. Note that the 'Bandicoot' library is licensed under Apache License version 2.0 and 'RcppBandicoot' (the 'Rcpp' bindings/bridge to 'Bandicoot') is licensed under the GNU GPL version 2 or later. Note that 'Bandicoot' requires a compiler that supports 'OpenCL' (>= 1.2) or 'CUDA' (>= 9.8).
 }
 \author{
 \strong{Maintainer}: James Joseph Balamuta \email{balamut2@illinois.edu} (\href{https://orcid.org/0000-0003-2826-8458}{ORCID}) [copyright holder]
+
+Authors:
+\itemize{
+  \item James Joseph Balamuta \email{balamut2@illinois.edu} (\href{https://orcid.org/0000-0003-2826-8458}{ORCID}) [copyright holder]
+  \item Dirk Eddelbuettel \email{edd@debian.org} (\href{https://orcid.org/0000-0001-6419-907X}{ORCID})
+}
 
 }
 \keyword{internal}

@@ -22,4 +22,4 @@ Imports: Rcpp (>= 1.1.0)
 SystemRequirements: OpenCL (>= 1.2) or CUDA (>= 9.8), GPU device with appropriate drivers. For OpenCL: CLBlast (recommended) or clBLAS for BLAS operations.
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
+Config/roxygen2/version: 8.0.0

@@ -12,14 +12,34 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // gpu_initialize
-void gpu_initialize(std::string type, bool print_info);
-RcppExport SEXP _RcppBandicoot_gpu_initialize(SEXP typeSEXP, SEXP print_infoSEXP) {
+bool gpu_initialize(bool print_info);
+RcppExport SEXP _RcppBandicoot_gpu_initialize(SEXP print_infoSEXP) {
 BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::string >::type type(typeSEXP);
     Rcpp::traits::input_parameter< bool >::type print_info(print_infoSEXP);
-    gpu_initialize(type, print_info);
-    return R_NilValue;
+    rcpp_result_gen = Rcpp::wrap(gpu_initialize(print_info));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gpu_available
+bool gpu_available();
+RcppExport SEXP _RcppBandicoot_gpu_available() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(gpu_available());
+    return rcpp_result_gen;
+END_RCPP
+}
+// gpu_device_info
+Rcpp::List gpu_device_info();
+RcppExport SEXP _RcppBandicoot_gpu_device_info() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(gpu_device_info());
+    return rcpp_result_gen;
 END_RCPP
 }
 // bandicoot_version
@@ -124,7 +144,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_RcppBandicoot_gpu_initialize", (DL_FUNC) &_RcppBandicoot_gpu_initialize, 2},
+    {"_RcppBandicoot_gpu_initialize", (DL_FUNC) &_RcppBandicoot_gpu_initialize, 1},
+    {"_RcppBandicoot_gpu_available", (DL_FUNC) &_RcppBandicoot_gpu_available, 0},
+    {"_RcppBandicoot_gpu_device_info", (DL_FUNC) &_RcppBandicoot_gpu_device_info, 0},
     {"_RcppBandicoot_bandicoot_version", (DL_FUNC) &_RcppBandicoot_bandicoot_version, 0},
     {"_RcppBandicoot_gpu_matrix_multiply", (DL_FUNC) &_RcppBandicoot_gpu_matrix_multiply, 2},
     {"_RcppBandicoot_gpu_transpose", (DL_FUNC) &_RcppBandicoot_gpu_transpose, 1},
