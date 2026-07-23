@@ -37,8 +37,14 @@ RcppBandicootCxxFlags <- function() {
   # The trailing slash is required: the header concatenates "opencl/<file>".
   kernels <- paste0(file.path(path, "bandicoot_bits", "ks"), "/")
 
-  # Combine include path with configure-time flags
+  # Combine include path with configure-time flags.  COOT_TARGET_OPENCL_VERSION
+  # must match what the package itself was built with: src/Makevars adds it to
+  # PKG_CPPFLAGS separately from BANDICOOT_CXXFLAGS, so a downstream consumer
+  # that only picks up BANDICOOT_CXXFLAGS would compile the same headers against
+  # a different OpenCL API level than this package did, which fails to compile
+  # on some OpenCL header sets.  Emit it here, exactly as src/Makevars.in does.
   paste0("-I", shQuote(path),
+         " -DCOOT_TARGET_OPENCL_VERSION=@OPENCL_TARGET_VERSION@",
          sprintf(" -DCOOT_KERNEL_SOURCE_DIR='\"%s\"'", kernels),
          " @BANDICOOT_CXXFLAGS@")
 }
