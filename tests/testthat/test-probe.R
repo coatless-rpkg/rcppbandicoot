@@ -9,10 +9,13 @@ test_that("the device probes never throw and agree with one another", {
   # gpu_available() + gpu_device_info() pair, which reliably disagree with
   # each other once other kernels are already warm.
   info <- cached_gpu_device_info()
+  # Pin the field the C++ layer actually returns, before coercion: asserting
+  # against isTRUE(info$available) would be vacuous, since isTRUE always yields
+  # a scalar non-NA logical no matter what the C++ produced.
+  expect_type(info$available, "logical")
+  expect_length(info$available, 1L)
+  expect_false(is.na(info$available))
   available <- isTRUE(info$available)
-  expect_type(available, "logical")
-  expect_length(available, 1L)
-  expect_false(is.na(available))
 
   expect_type(info, "list")
   expect_true(all(c("available", "backend", "fp64", "fp16", "subgroups",
