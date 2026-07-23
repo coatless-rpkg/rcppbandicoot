@@ -12,6 +12,12 @@ test_that("RcppBandicootCxxFlags() points at the installed headers and kernels",
   ks <- sub(".*COOT_KERNEL_SOURCE_DIR='\"([^\"]*)\".*", "\\1", flags)
   expect_true(dir.exists(file.path(ks, "opencl", "defs")))
   expect_true(file.exists(file.path(ks, "opencl", "defs", "opencl_prelims.cl")))
+
+  # Regression guard for the second downstream-consumer bug: the package's own
+  # src/Makevars compiles the headers against a specific OpenCL API level, and a
+  # consumer picking up only BANDICOOT_CXXFLAGS would compile the same headers
+  # against a different level, which fails on some OpenCL header sets.
+  expect_match(flags, "-DCOOT_TARGET_OPENCL_VERSION=[0-9]+")
 })
 
 test_that("CxxFlags() and LdFlags() print and return their counterparts", {
