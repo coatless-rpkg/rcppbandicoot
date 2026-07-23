@@ -5,6 +5,9 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  schedule:
+    # Nightly, with no known-failure exclusions (see RCPPBANDICOOT_XFAIL below).
+    - cron: '17 5 * * *'
   workflow_dispatch:
 
 name: R-CMD-check
@@ -19,14 +22,29 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release'}
-          - {os: ubuntu-latest,  r: 'release'}
-          - {os: windows-latest, r: 'release'}
+          # xfail lists the gpu_* operations known to be broken on that
+          # runner's device.  Every entry is a bug someone has to fix; the
+          # nightly run below clears the list so they are exercised for real.
+          - {os: ubuntu-24.04,  r: 'release', xfail: ''}
+          - {os: macos-latest,  r: 'release', xfail: 'gpu_element_square,gpu_matrix_add,gpu_matrix_multiply'}
+          - {os: windows-2025,  r: 'release', xfail: ''}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-      INTEL_OPENCL_URL: "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/b6dccdb7-b503-41ea-bd4b-a78e9c2d8dd6/w_opencl_runtime_p_2025.1.0.972.exe"
+
+      # Turns every skip_if_no_gpu() into a hard error.  This is the whole
+      # point of the migration: CRAN never sets this variable, so the same
+      # suite skips cleanly there, while here a runner that enumerates zero
+      # devices fails the job instead of quietly reporting all-skips.  The
+      # previous workflow was green whether or not OpenCL worked.
+      RCPPBANDICOOT_REQUIRE_GPU: 'true'
+      RCPPBANDICOOT_REQUIRE_FP64: 'true'
+
+      # On push/PR, exclude the operations known to be broken on this runner.
+      # On the nightly schedule, exclude nothing: the known-broken operations
+      # run for real and the nightly stays red until upstream fixes them.
+      RCPPBANDICOOT_XFAIL: ${{ github.event_name == 'schedule' && '' || matrix.config.xfail }}
 
     steps:
       - uses: actions/checkout@v6
@@ -39,86 +57,41 @@ jobs:
         # every run. chmod via MSYS bash lands in a form R's tar sees.
         run: chmod +x configure cleanup
 
+      # Installs headers, an ICD loader, and a real CPU device (PoCL on Linux
+      # and macOS, Intel's CPU runtime on Windows), then fails the job if no
+      # device enumerates.  Exports OPENCL_CPPFLAGS / OPENCL_LIBS -- which
+      # configure.win already read and configure.ac now reads too -- plus
+      # OpenCL_ROOT / OpenCL_LIBRARY, OCL_ICD_VENDORS or OCL_ICD_FILENAMES,
+      # and SDKROOT on macOS.
+      - name: Set up OpenCL
+        id: opencl
+        uses: coatless-actions/setup-opencl@v1
+        with:
+          verify: 'true'
+          require-fp64: 'true'
+
+      - name: Report the OpenCL device
+        shell: bash
+        run: |
+          echo "runtime  : ${{ steps.opencl.outputs.runtime-name }}"
+          echo "platform : ${{ steps.opencl.outputs.platform-version }}"
+          echo "device   : ${{ steps.opencl.outputs.device-name }}"
+          echo "count    : ${{ steps.opencl.outputs.device-count }}"
+          echo "fp64     : ${{ steps.opencl.outputs.fp64 }}"
+
+      # Installs CLBlast and verifies a GEMM produces correct results.
+      # Exports CLBLAST_CPPFLAGS / CLBLAST_LIBS -- which configure.win
+      # already read and configure.ac now reads too -- plus CLBlast_DIR
+      # (unused by this package, exported for contract parity).
+      - name: Set up CLBlast
+        uses: coatless-actions/setup-clblast@v1
+
       - uses: r-lib/actions/setup-pandoc@v2
 
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
-          http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-
-      - name: Install clblast via Homebrew (macOS)
-        if: runner.os == 'macOS'
-        run: brew install clblast clblas clinfo
-
-      - name: Install clblast via apt (Ubuntu)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y opencl-headers ocl-icd-opencl-dev libclblast-dev
-
-      - name: Cache Intel OpenCL Runtime
-        if: runner.os == 'Windows'
-        id: cache-opencl-win
-        uses: actions/cache@v5
-        with:
-          # Default install location is x86 ...
-          path: C:\Program Files (x86)\Common Files\Intel\Shared Libraries
-          # Key is derived from INTEL_OPENCL_URL, so bumping the runtime
-          # URL above automatically invalidates the cache.
-          key: intel-opencl-runtime-${{ env.INTEL_OPENCL_URL }}
-          
-      - name: Install OpenCL SDK (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          vcpkg install opencl:x64-windows clblast:x64-windows
-          # Convert to forward slashes to avoid escaping issues in configure.win
-          $vcpkgPath = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" -replace '\\','/'
-
-          # Register OpenCL location
-          echo "OPENCL_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
-          echo "OPENCL_LIBS=-L$vcpkgPath/lib -lOpenCL" >> $env:GITHUB_ENV
-
-          # Register CLBlast location
-          echo "CLBLAST_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
-          echo "CLBLAST_LIBS=-L$vcpkgPath/lib -lclblast" >> $env:GITHUB_ENV
-
-          # Add vcpkg bin to PATH so DLLs can be found at runtime
-          echo "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows\bin" >> $env:GITHUB_PATH
-          
-      - name: Install Intel CPU Runtime for OpenCL (Windows)
-        if: runner.os == 'Windows' && steps.cache-opencl-win.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          # Download
-          curl -o opencl-installer.exe "${{ env.INTEL_OPENCL_URL }}"
-          
-          # Extract MSI from the self-extracting exe
-          $proc = Start-Process "./opencl-installer.exe" "-s -x -f extracted" -NoNewWindow -PassThru
-          $proc.WaitForExit()
-          
-          # Install via msiexec
-          $msi = Get-ChildItem ./extracted/*.msi | Select-Object -First 1
-          # Write the MSI log outside the repo so it doesn't end up in the
-          # package tarball (R CMD check flags it as a non-standard top-level file).
-          $logPath = "$env:RUNNER_TEMP\intel-opencl-install.log"
-          $proc = Start-Process "msiexec" "/i `"$msi`" /qn /l*! `"$logPath`"" -NoNewWindow -PassThru
-          $proc.WaitForExit()
-
-          if ($proc.ExitCode -ne 0) {
-            Get-Content $logPath
-            exit $proc.ExitCode
-          }
-          
-          Remove-Item -Recurse -Force extracted, opencl-installer.exe
-      
-      - name: Register Intel OpenCL ICD (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $dllPath = "C:\Program Files (x86)\Common Files\Intel\Shared Libraries\bin\OpenCL.dll"
-          REG ADD "HKLM\SOFTWARE\Khronos\OpenCL\Vendors" /v $dllPath /t REG_DWORD /d 0 /f
-          REG ADD "HKLM\SOFTWARE\Wow6432Node\Khronos\OpenCL\Vendors" /v $dllPath /t REG_DWORD /d 0 /f
-          Add-Content $env:GITHUB_PATH "C:\Program Files (x86)\Common Files\Intel\Shared Libraries\bin\"
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
