@@ -62,9 +62,7 @@ RcppBandicootCxxFlags <- function() {
 #' A character string containing the linker flags
 #' @export
 #' @examples
-#' \dontrun{
 #' RcppBandicootLdFlags()
-#' }
 RcppBandicootLdFlags <- function() {
   '@BANDICOOT_LIBS@'
 }

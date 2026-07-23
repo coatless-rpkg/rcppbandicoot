@@ -13,7 +13,14 @@
 //' effect of initialising the runtime.
 //' @export
 //' @examples
-//' gpu_initialize()
+//' # gpu_initialize() is not called directly here: see gpu_available()'s
+//' # example for why the GPU runtime may be probed at most once per R
+//' # session; gpu_device_info() is used for that one probe.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' isTRUE(.rcppbandicoot_ex_info$available)
 // [[Rcpp::export]]
 bool gpu_initialize(bool print_info = false) {
   // Deliberately the single-argument overload.  coot_init(const char*, bool,
@@ -37,7 +44,17 @@ bool gpu_initialize(bool print_info = false) {
 //' Never throws.
 //' @export
 //' @examples
-//' gpu_available()
+//' # gpu_available() re-initialises the GPU runtime every time it is
+//' # called, and Bandicoot's runtime must not be initialised more than once
+//' # per R session (a second init leaves already-compiled kernels dangling
+//' # and pointed at a freed context). Every example in this package
+//' # therefore probes the device via gpu_device_info() at most once per
+//' # session and reuses the cached result afterwards.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' isTRUE(.rcppbandicoot_ex_info$available)
 // [[Rcpp::export]]
 bool gpu_available() {
   try {
@@ -67,7 +84,13 @@ bool gpu_available() {
 //' reported as `FALSE`/zero.
 //' @export
 //' @examples
-//' str(gpu_device_info())
+//' # See gpu_available()'s example for why this probe is cached and reused
+//' # by every other example in this package.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' str(.rcppbandicoot_ex_info)
 // [[Rcpp::export]]
 Rcpp::List gpu_device_info() {
   Rcpp::List out = Rcpp::List::create(

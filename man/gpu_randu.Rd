@@ -17,3 +17,14 @@ Random matrix on GPU
 \description{
 Create a matrix with random values on the GPU
 }
+\examples{
+# See gpu_available()'s example for why this probe is cached and reused
+# by every other example in this package.
+if (is.null(getOption("rcppbandicoot.ex_info"))) {
+  options(rcppbandicoot.ex_info = gpu_device_info())
+}
+.rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+if (isTRUE(.rcppbandicoot_ex_info$available)) {
+  dim(gpu_randu(4, 3))
+}
+}

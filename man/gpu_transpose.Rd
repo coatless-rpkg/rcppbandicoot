@@ -15,3 +15,14 @@ Transposed matrix computed on GPU
 \description{
 Transpose a matrix on the GPU using Bandicoot
 }
+\examples{
+# See gpu_available()'s example for why this probe is cached and reused
+# by every other example in this package.
+if (is.null(getOption("rcppbandicoot.ex_info"))) {
+  options(rcppbandicoot.ex_info = gpu_device_info())
+}
+.rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+if (isTRUE(.rcppbandicoot_ex_info$available)) {
+  gpu_transpose(matrix(1:6, nrow = 2))
+}
+}

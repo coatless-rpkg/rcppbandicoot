@@ -17,3 +17,16 @@ Product of A and B computed on GPU
 \description{
 Multiply two matrices on the GPU using Bandicoot
 }
+\examples{
+# See gpu_available()'s example for why this probe is cached and reused
+# by every other example in this package.
+if (is.null(getOption("rcppbandicoot.ex_info"))) {
+  options(rcppbandicoot.ex_info = gpu_device_info())
+}
+.rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+if (isTRUE(.rcppbandicoot_ex_info$available)) {
+  A <- matrix(c(1, 2, 3, 4), 2, 2)
+  B <- matrix(c(5, 6, 7, 8), 2, 2)
+  gpu_matrix_multiply(A, B)
+}
+}

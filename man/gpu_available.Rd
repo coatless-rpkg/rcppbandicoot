@@ -17,5 +17,15 @@ this answers the runtime question: is there a device, and can this build
 actually reach its kernel sources?
 }
 \examples{
-gpu_available()
+# gpu_available() re-initialises the GPU runtime every time it is
+# called, and Bandicoot's runtime must not be initialised more than once
+# per R session (a second init leaves already-compiled kernels dangling
+# and pointed at a freed context). Every example in this package
+# therefore probes the device via gpu_device_info() at most once per
+# session and reuses the cached result afterwards.
+if (is.null(getOption("rcppbandicoot.ex_info"))) {
+  options(rcppbandicoot.ex_info = gpu_device_info())
+}
+.rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+isTRUE(.rcppbandicoot_ex_info$available)
 }

@@ -14,7 +14,14 @@
 #' effect of initialising the runtime.
 #' @export
 #' @examples
-#' gpu_initialize()
+#' # gpu_initialize() is not called directly here: see gpu_available()'s
+#' # example for why the GPU runtime may be probed at most once per R
+#' # session; gpu_device_info() is used for that one probe.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' isTRUE(.rcppbandicoot_ex_info$available)
 gpu_initialize <- function(print_info = FALSE) {
     .Call(`_RcppBandicoot_gpu_initialize`, print_info)
 }
@@ -31,7 +38,17 @@ gpu_initialize <- function(print_info = FALSE) {
 #' Never throws.
 #' @export
 #' @examples
-#' gpu_available()
+#' # gpu_available() re-initialises the GPU runtime every time it is
+#' # called, and Bandicoot's runtime must not be initialised more than once
+#' # per R session (a second init leaves already-compiled kernels dangling
+#' # and pointed at a freed context). Every example in this package
+#' # therefore probes the device via gpu_device_info() at most once per
+#' # session and reuses the cached result afterwards.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' isTRUE(.rcppbandicoot_ex_info$available)
 gpu_available <- function() {
     .Call(`_RcppBandicoot_gpu_available`)
 }
@@ -45,7 +62,13 @@ gpu_available <- function() {
 #' reported as `FALSE`/zero.
 #' @export
 #' @examples
-#' str(gpu_device_info())
+#' # See gpu_available()'s example for why this probe is cached and reused
+#' # by every other example in this package.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' str(.rcppbandicoot_ex_info)
 gpu_device_info <- function() {
     .Call(`_RcppBandicoot_gpu_device_info`)
 }
@@ -68,6 +91,18 @@ bandicoot_version <- function() {
 #' @param B Second matrix
 #' @return Product of A and B computed on GPU
 #' @export
+#' @examples
+#' # See gpu_available()'s example for why this probe is cached and reused
+#' # by every other example in this package.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+#'   A <- matrix(c(1, 2, 3, 4), 2, 2)
+#'   B <- matrix(c(5, 6, 7, 8), 2, 2)
+#'   gpu_matrix_multiply(A, B)
+#' }
 gpu_matrix_multiply <- function(A, B) {
     .Call(`_RcppBandicoot_gpu_matrix_multiply`, A, B)
 }
@@ -79,6 +114,16 @@ gpu_matrix_multiply <- function(A, B) {
 #' @param A Matrix to transpose
 #' @return Transposed matrix computed on GPU
 #' @export
+#' @examples
+#' # See gpu_available()'s example for why this probe is cached and reused
+#' # by every other example in this package.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+#'   gpu_transpose(matrix(1:6, nrow = 2))
+#' }
 gpu_transpose <- function(A) {
     .Call(`_RcppBandicoot_gpu_transpose`, A)
 }
@@ -91,6 +136,16 @@ gpu_transpose <- function(A) {
 #' @param B Second matrix
 #' @return Sum of A and B computed on GPU
 #' @export
+#' @examples
+#' # See gpu_available()'s example for why this probe is cached and reused
+#' # by every other example in this package.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+#'   gpu_matrix_add(matrix(c(1, 2, 3, 4), 2, 2), matrix(c(5, 6, 7, 8), 2, 2))
+#' }
 gpu_matrix_add <- function(A, B) {
     .Call(`_RcppBandicoot_gpu_matrix_add`, A, B)
 }
@@ -102,6 +157,17 @@ gpu_matrix_add <- function(A, B) {
 #' @param A Input matrix
 #' @return Matrix with each element squared, computed on GPU
 #' @export
+#' @examples
+#' # See gpu_available()'s example for why this probe is cached and reused
+#' # by every other example in this package.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' if (isTRUE(.rcppbandicoot_ex_info$available) &&
+#'     isTRUE(.rcppbandicoot_ex_info$fp64)) {
+#'   gpu_element_square(matrix(c(1, 2, 3, 4), 2, 2))
+#' }
 gpu_element_square <- function(A) {
     .Call(`_RcppBandicoot_gpu_element_square`, A)
 }
@@ -113,6 +179,16 @@ gpu_element_square <- function(A) {
 #' @param A Input matrix
 #' @return Sum of all elements
 #' @export
+#' @examples
+#' # See gpu_available()'s example for why this probe is cached and reused
+#' # by every other example in this package.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+#'   gpu_sum(matrix(1:6, nrow = 2))
+#' }
 gpu_sum <- function(A) {
     .Call(`_RcppBandicoot_gpu_sum`, A)
 }
@@ -124,6 +200,16 @@ gpu_sum <- function(A) {
 #' @param A Input matrix
 #' @return Mean of all elements
 #' @export
+#' @examples
+#' # See gpu_available()'s example for why this probe is cached and reused
+#' # by every other example in this package.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+#'   gpu_mean(matrix(1:6, nrow = 2))
+#' }
 gpu_mean <- function(A) {
     .Call(`_RcppBandicoot_gpu_mean`, A)
 }
@@ -135,6 +221,16 @@ gpu_mean <- function(A) {
 #' @param n Size of the identity matrix
 #' @return n x n identity matrix on GPU
 #' @export
+#' @examples
+#' # See gpu_available()'s example for why this probe is cached and reused
+#' # by every other example in this package.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+#'   gpu_eye(3)
+#' }
 gpu_eye <- function(n) {
     .Call(`_RcppBandicoot_gpu_eye`, n)
 }
@@ -147,6 +243,16 @@ gpu_eye <- function(n) {
 #' @param n_cols Number of columns
 #' @return Random matrix on GPU
 #' @export
+#' @examples
+#' # See gpu_available()'s example for why this probe is cached and reused
+#' # by every other example in this package.
+#' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+#'   options(rcppbandicoot.ex_info = gpu_device_info())
+#' }
+#' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+#'   dim(gpu_randu(4, 3))
+#' }
 gpu_randu <- function(n_rows, n_cols) {
     .Call(`_RcppBandicoot_gpu_randu`, n_rows, n_cols)
 }

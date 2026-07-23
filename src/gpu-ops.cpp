@@ -8,6 +8,18 @@
 //' @param B Second matrix
 //' @return Product of A and B computed on GPU
 //' @export
+//' @examples
+//' # See gpu_available()'s example for why this probe is cached and reused
+//' # by every other example in this package.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//'   A <- matrix(c(1, 2, 3, 4), 2, 2)
+//'   B <- matrix(c(5, 6, 7, 8), 2, 2)
+//'   gpu_matrix_multiply(A, B)
+//' }
 // [[Rcpp::export]]
 coot::fmat gpu_matrix_multiply(const coot::fmat& A, const coot::fmat& B) {
   return A * B;
@@ -20,6 +32,16 @@ coot::fmat gpu_matrix_multiply(const coot::fmat& A, const coot::fmat& B) {
 //' @param A Matrix to transpose
 //' @return Transposed matrix computed on GPU
 //' @export
+//' @examples
+//' # See gpu_available()'s example for why this probe is cached and reused
+//' # by every other example in this package.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//'   gpu_transpose(matrix(1:6, nrow = 2))
+//' }
 // [[Rcpp::export]]
 coot::fmat gpu_transpose(const coot::fmat& A) {
  return coot::trans(A);
@@ -33,6 +55,16 @@ coot::fmat gpu_transpose(const coot::fmat& A) {
 //' @param B Second matrix
 //' @return Sum of A and B computed on GPU
 //' @export
+//' @examples
+//' # See gpu_available()'s example for why this probe is cached and reused
+//' # by every other example in this package.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//'   gpu_matrix_add(matrix(c(1, 2, 3, 4), 2, 2), matrix(c(5, 6, 7, 8), 2, 2))
+//' }
 // [[Rcpp::export]]
 coot::fmat gpu_matrix_add(const coot::fmat& A, const coot::fmat& B) {
  return A + B;
@@ -45,6 +77,17 @@ coot::fmat gpu_matrix_add(const coot::fmat& A, const coot::fmat& B) {
 //' @param A Input matrix
 //' @return Matrix with each element squared, computed on GPU
 //' @export
+//' @examples
+//' # See gpu_available()'s example for why this probe is cached and reused
+//' # by every other example in this package.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' if (isTRUE(.rcppbandicoot_ex_info$available) &&
+//'     isTRUE(.rcppbandicoot_ex_info$fp64)) {
+//'   gpu_element_square(matrix(c(1, 2, 3, 4), 2, 2))
+//' }
 // [[Rcpp::export]]
 coot::mat gpu_element_square(const coot::mat& A) {
  return coot::square(A);
@@ -57,6 +100,16 @@ coot::mat gpu_element_square(const coot::mat& A) {
 //' @param A Input matrix
 //' @return Sum of all elements
 //' @export
+//' @examples
+//' # See gpu_available()'s example for why this probe is cached and reused
+//' # by every other example in this package.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//'   gpu_sum(matrix(1:6, nrow = 2))
+//' }
 // [[Rcpp::export]]
 double gpu_sum(const coot::fmat& A) {
  return coot::accu(A);
@@ -69,6 +122,16 @@ double gpu_sum(const coot::fmat& A) {
 //' @param A Input matrix
 //' @return Mean of all elements
 //' @export
+//' @examples
+//' # See gpu_available()'s example for why this probe is cached and reused
+//' # by every other example in this package.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//'   gpu_mean(matrix(1:6, nrow = 2))
+//' }
 // [[Rcpp::export]]
 double gpu_mean(const coot::fmat& A) {
  return coot::mean(coot::mean(A));
@@ -81,6 +144,16 @@ double gpu_mean(const coot::fmat& A) {
 //' @param n Size of the identity matrix
 //' @return n x n identity matrix on GPU
 //' @export
+//' @examples
+//' # See gpu_available()'s example for why this probe is cached and reused
+//' # by every other example in this package.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//'   gpu_eye(3)
+//' }
 // [[Rcpp::export]]
 coot::fmat gpu_eye(int n) {
  return coot::eye<coot::fmat>(n, n);
@@ -94,6 +167,16 @@ coot::fmat gpu_eye(int n) {
 //' @param n_cols Number of columns
 //' @return Random matrix on GPU
 //' @export
+//' @examples
+//' # See gpu_available()'s example for why this probe is cached and reused
+//' # by every other example in this package.
+//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
+//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' }
+//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+//' if (isTRUE(.rcppbandicoot_ex_info$available)) {
+//'   dim(gpu_randu(4, 3))
+//' }
 // [[Rcpp::export]]
 coot::fmat gpu_randu(int n_rows, int n_cols) {
  return coot::randu<coot::fmat>(n_rows, n_cols);
