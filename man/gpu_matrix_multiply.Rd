@@ -17,3 +17,11 @@ Product of A and B computed on GPU
 \description{
 Multiply two matrices on the GPU using Bandicoot
 }
+\examples{
+# This example runs during R CMD check. It executes a real OpenCL kernel,
+# so it only passes on a runner that has a working OpenCL device. The
+# ad-hoc CI setup on this branch never provided one, which is exactly what
+# this example is here to demonstrate.
+A <- matrix(c(1, 2, 3, 4), 2, 2)
+gpu_matrix_multiply(A, A)
+}
