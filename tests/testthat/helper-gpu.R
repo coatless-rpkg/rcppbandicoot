@@ -1,8 +1,13 @@
 # Custom skip helpers live here, not in R/, per testthat's Skipping vignette:
 # they are auto-sourced by test_check() and never pollute the namespace.
 
+# Recognise the truthy spellings a workflow author might reasonably write, not
+# only as.logical()'s vocabulary.  as.logical("1") is NA, so a bare
+# RCPPBANDICOOT_REQUIRE_GPU=1 would otherwise be silently false -- which turns
+# the loud "CI promised a device and there isn't one" failure back into a quiet
+# skip, the exact green-but-tested-nothing outcome this gate exists to prevent.
 env_true <- function(name) {
-  isTRUE(as.logical(Sys.getenv(name, "false")))
+  tolower(trimws(Sys.getenv(name, ""))) %in% c("1", "true", "yes", "on")
 }
 
 # Skip the device tests when there is no device -- unless this repo's own CI
