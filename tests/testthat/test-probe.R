@@ -16,6 +16,15 @@ test_that("the device probes never throw and agree with one another", {
   } else {
     expect_false(info$available)
     expect_identical(info$backend, "none")
+    # Pin the full no-device contract, not just two keys: the remaining six are
+    # hardcoded C++ defaults on the early-return path, and this is the branch
+    # CRAN and every device-free run actually take. expect_identical also pins
+    # the type (logical vs the doubles), so a field silently becoming NA or an
+    # integer would be caught here.
+    expect_identical(info[c("fp64", "fp16", "subgroups")],
+                     list(fp64 = FALSE, fp16 = FALSE, subgroups = FALSE))
+    expect_identical(info[c("subgroup_size", "n_units", "max_wg")],
+                     list(subgroup_size = 0, n_units = 0, max_wg = 0))
   }
 })
 
