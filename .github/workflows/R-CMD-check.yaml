@@ -40,14 +40,13 @@ jobs:
           # xfail lists gpu_* operations skipped on that runner. On the nightly
           # schedule the list is cleared (see RCPPBANDICOOT_XFAIL below) so the
           # real, unmitigated state is visible. Both experimental legs exclude
-          # every operation, for different reasons. On macOS PoCL's LLVM JIT
-          # crash is nondeterministic -- a different operation each run -- so no
-          # single op can be blamed. On Windows Intel's runtime aborts hard
-          # (0xC0000005) while compiling at least one kernel (observed on
-          # gpu_element_square); a hard access violation cannot be caught, and
-          # R CMD check runs examples alphabetically so the first crasher masks
-          # the rest, leaving the minimal set uncharacterised -- all are
-          # excluded conservatively until it is.
+          # every operation, for the same underlying reason -- the runtime's
+          # kernel compiler crashes with a hard access violation the R session
+          # cannot catch -- established differently on each. On macOS PoCL's
+          # LLVM JIT crash is nondeterministic, a different op each run. On
+          # Windows a per-op probe (each op in its own R process) showed Intel's
+          # runtime crashes on every compute op, even gpu_eye(3), while the
+          # device probes succeed. Both are upstream issues.
           - {os: ubuntu-24.04,  r: 'release', experimental: false, xfail: '', opencl_runtime: 'auto'}
           - {os: macos-latest,  r: 'release', experimental: true,  xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu', opencl_runtime: 'auto'}
           - {os: windows-2025,  r: 'release', experimental: true,  xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu', opencl_runtime: 'auto'}
@@ -136,43 +135,6 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
           needs: check
-
-      # TEMPORARY diagnostic (Windows): a hard access violation kills the R
-      # session, and R CMD check runs examples alphabetically, so the first
-      # crasher masks every op after it. Invoke each op in its OWN R process so
-      # one crash cannot mask the others, yielding a complete per-op map in a
-      # single run. Never fails the job (set +e; exits 0) so the check step
-      # below still governs the leg's real outcome.
-      - name: Probe each GPU op in isolation (diagnostic)
-        if: runner.os == 'Windows'
-        shell: bash
-        run: |
-          set +e
-          echo "::group::Install package for probing"
-          R CMD INSTALL --no-multiarch . >install.log 2>&1
-          if [ $? -ne 0 ]; then echo "install failed:"; tail -40 install.log; echo "::endgroup::"; exit 0; fi
-          echo "::endgroup::"
-          calls=(
-            "gpu_transpose(matrix(1:6,2))"
-            "gpu_matrix_add(matrix(c(1,2,3,4),2),matrix(c(5,6,7,8),2))"
-            "gpu_matrix_multiply(matrix(c(1,2,3,4),2),matrix(c(5,6,7,8),2))"
-            "gpu_element_square(matrix(c(1,2,3,4),2))"
-            "gpu_sum(matrix(1:6,2))"
-            "gpu_mean(matrix(1:6,2))"
-            "gpu_eye(3)"
-            "gpu_randu(4,3)"
-          )
-          echo "=== PER-OP ISOLATION PROBE ==="
-          for c in "${calls[@]}"; do
-            out=$(Rscript -e "suppressMessages(library(RcppBandicoot)); invisible(${c}); cat('PROBE_OK')" 2>&1)
-            code=$?
-            if printf '%s' "$out" | grep -q PROBE_OK; then
-              echo "PROBE_RESULT ok           :: ${c}"
-            else
-              echo "PROBE_RESULT crash(exit=${code}) :: ${c} :: $(printf '%s' "$out" | tr '\n' ' ' | tail -c 160)"
-            fi
-          done
-          echo "=== END PROBE ==="
 
       - uses: r-lib/actions/check-r-package@v2
         with:
