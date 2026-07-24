@@ -39,11 +39,15 @@ jobs:
         config:
           # xfail lists gpu_* operations skipped on that runner. On the nightly
           # schedule the list is cleared (see RCPPBANDICOOT_XFAIL below) so the
-          # real, unmitigated state is visible. On macOS the list is every
-          # operation, because the JIT crash is not tied to a specific one.
+          # real, unmitigated state is visible. On macOS and Windows the list is
+          # every operation, because the crash is a code-generation bug in the
+          # kernel compiler (PoCL's LLVM JIT on macOS, Intel's Clang-based
+          # common_clang on Windows) and so is not tied to a specific operation:
+          # the crash is a hard access violation the R session cannot catch, so
+          # the guarded op must not run at all rather than run and be tolerated.
           - {os: ubuntu-24.04,  r: 'release', experimental: false, xfail: '', opencl_runtime: 'auto'}
           - {os: macos-latest,  r: 'release', experimental: true,  xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu', opencl_runtime: 'auto'}
-          - {os: windows-2025,  r: 'release', experimental: true,  xfail: '', opencl_runtime: 'auto'}
+          - {os: windows-2025,  r: 'release', experimental: true,  xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu', opencl_runtime: 'auto'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
