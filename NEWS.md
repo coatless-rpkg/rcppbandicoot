@@ -1,5 +1,10 @@
 # RcppBandicoot 4.0.2.1
 
+- New `gpu_available()`, `gpu_device_info()`, and `gpu_initialize()` report
+  and initialise the active OpenCL device from R.
+- GPU kernel sources now resolve at package load from their installed
+  location, so operations work in a binary or relocated install rather than
+  failing to open the kernel source.
 - Upgraded to bandicoot 4.0.2: "Bandwidth Glutton" (2026-07-13)
   - Fix subcube broadcasting operations.
   - Optimize CUDA grid size calculations.
