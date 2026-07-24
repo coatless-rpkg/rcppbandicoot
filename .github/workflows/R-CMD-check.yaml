@@ -137,6 +137,43 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      # TEMPORARY diagnostic (Windows): a hard access violation kills the R
+      # session, and R CMD check runs examples alphabetically, so the first
+      # crasher masks every op after it. Invoke each op in its OWN R process so
+      # one crash cannot mask the others, yielding a complete per-op map in a
+      # single run. Never fails the job (set +e; exits 0) so the check step
+      # below still governs the leg's real outcome.
+      - name: Probe each GPU op in isolation (diagnostic)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          set +e
+          echo "::group::Install package for probing"
+          R CMD INSTALL --no-multiarch . >install.log 2>&1
+          if [ $? -ne 0 ]; then echo "install failed:"; tail -40 install.log; echo "::endgroup::"; exit 0; fi
+          echo "::endgroup::"
+          calls=(
+            "gpu_transpose(matrix(1:6,2))"
+            "gpu_matrix_add(matrix(c(1,2,3,4),2),matrix(c(5,6,7,8),2))"
+            "gpu_matrix_multiply(matrix(c(1,2,3,4),2),matrix(c(5,6,7,8),2))"
+            "gpu_element_square(matrix(c(1,2,3,4),2))"
+            "gpu_sum(matrix(1:6,2))"
+            "gpu_mean(matrix(1:6,2))"
+            "gpu_eye(3)"
+            "gpu_randu(4,3)"
+          )
+          echo "=== PER-OP ISOLATION PROBE ==="
+          for c in "${calls[@]}"; do
+            out=$(Rscript -e "suppressMessages(library(RcppBandicoot)); invisible(${c}); cat('PROBE_OK')" 2>&1)
+            code=$?
+            if printf '%s' "$out" | grep -q PROBE_OK; then
+              echo "PROBE_RESULT ok           :: ${c}"
+            else
+              echo "PROBE_RESULT crash(exit=${code}) :: ${c} :: $(printf '%s' "$out" | tr '\n' ' ' | tail -c 160)"
+            fi
+          done
+          echo "=== END PROBE ==="
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
