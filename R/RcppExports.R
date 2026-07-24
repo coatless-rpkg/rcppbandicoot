@@ -98,11 +98,12 @@ bandicoot_version <- function() {
 #'   options(rcppbandicoot.ex_info = gpu_device_info())
 #' }
 #' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' .rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
 #' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
 #' # device (see tests/testthat/helper-gpu.R); examples honour it too so
 #' # R CMD check does not crash the R session running one.
 #' if (isTRUE(.rcppbandicoot_ex_info$available) &&
-#'     !("gpu_matrix_multiply" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
+#'     !("gpu_matrix_multiply" %in% .rcppbandicoot_ex_xfail)) {
 #'   A <- matrix(c(1, 2, 3, 4), 2, 2)
 #'   B <- matrix(c(5, 6, 7, 8), 2, 2)
 #'   gpu_matrix_multiply(A, B)
@@ -125,11 +126,12 @@ gpu_matrix_multiply <- function(A, B) {
 #'   options(rcppbandicoot.ex_info = gpu_device_info())
 #' }
 #' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' .rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
 #' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
 #' # device (see tests/testthat/helper-gpu.R); examples honour it too so
 #' # R CMD check does not crash the R session running one.
 #' if (isTRUE(.rcppbandicoot_ex_info$available) &&
-#'     !("gpu_transpose" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
+#'     !("gpu_transpose" %in% .rcppbandicoot_ex_xfail)) {
 #'   gpu_transpose(matrix(1:6, nrow = 2))
 #' }
 gpu_transpose <- function(A) {
@@ -151,11 +153,12 @@ gpu_transpose <- function(A) {
 #'   options(rcppbandicoot.ex_info = gpu_device_info())
 #' }
 #' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' .rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
 #' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
 #' # device (see tests/testthat/helper-gpu.R); examples honour it too so
 #' # R CMD check does not crash the R session running one.
 #' if (isTRUE(.rcppbandicoot_ex_info$available) &&
-#'     !("gpu_matrix_add" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
+#'     !("gpu_matrix_add" %in% .rcppbandicoot_ex_xfail)) {
 #'   gpu_matrix_add(matrix(c(1, 2, 3, 4), 2, 2), matrix(c(5, 6, 7, 8), 2, 2))
 #' }
 gpu_matrix_add <- function(A, B) {
@@ -176,12 +179,13 @@ gpu_matrix_add <- function(A, B) {
 #'   options(rcppbandicoot.ex_info = gpu_device_info())
 #' }
 #' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' .rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
 #' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
 #' # device (see tests/testthat/helper-gpu.R); examples honour it too so
 #' # R CMD check does not crash the R session running one.
 #' if (isTRUE(.rcppbandicoot_ex_info$available) &&
 #'     isTRUE(.rcppbandicoot_ex_info$fp64) &&
-#'     !("gpu_element_square" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
+#'     !("gpu_element_square" %in% .rcppbandicoot_ex_xfail)) {
 #'   gpu_element_square(matrix(c(1, 2, 3, 4), 2, 2))
 #' }
 gpu_element_square <- function(A) {
@@ -202,11 +206,12 @@ gpu_element_square <- function(A) {
 #'   options(rcppbandicoot.ex_info = gpu_device_info())
 #' }
 #' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' .rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
 #' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
 #' # device (see tests/testthat/helper-gpu.R); examples honour it too so
 #' # R CMD check does not crash the R session running one.
 #' if (isTRUE(.rcppbandicoot_ex_info$available) &&
-#'     !("gpu_sum" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
+#'     !("gpu_sum" %in% .rcppbandicoot_ex_xfail)) {
 #'   gpu_sum(matrix(1:6, nrow = 2))
 #' }
 gpu_sum <- function(A) {
@@ -227,11 +232,12 @@ gpu_sum <- function(A) {
 #'   options(rcppbandicoot.ex_info = gpu_device_info())
 #' }
 #' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' .rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
 #' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
 #' # device (see tests/testthat/helper-gpu.R); examples honour it too so
 #' # R CMD check does not crash the R session running one.
 #' if (isTRUE(.rcppbandicoot_ex_info$available) &&
-#'     !("gpu_mean" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
+#'     !("gpu_mean" %in% .rcppbandicoot_ex_xfail)) {
 #'   gpu_mean(matrix(1:6, nrow = 2))
 #' }
 gpu_mean <- function(A) {
@@ -252,11 +258,12 @@ gpu_mean <- function(A) {
 #'   options(rcppbandicoot.ex_info = gpu_device_info())
 #' }
 #' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' .rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
 #' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
 #' # device (see tests/testthat/helper-gpu.R); examples honour it too so
 #' # R CMD check does not crash the R session running one.
 #' if (isTRUE(.rcppbandicoot_ex_info$available) &&
-#'     !("gpu_eye" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
+#'     !("gpu_eye" %in% .rcppbandicoot_ex_xfail)) {
 #'   gpu_eye(3)
 #' }
 gpu_eye <- function(n) {
@@ -278,11 +285,12 @@ gpu_eye <- function(n) {
 #'   options(rcppbandicoot.ex_info = gpu_device_info())
 #' }
 #' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+#' .rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
 #' # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
 #' # device (see tests/testthat/helper-gpu.R); examples honour it too so
 #' # R CMD check does not crash the R session running one.
 #' if (isTRUE(.rcppbandicoot_ex_info$available) &&
-#'     !("gpu_randu" %in% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
+#'     !("gpu_randu" %in% .rcppbandicoot_ex_xfail)) {
 #'   dim(gpu_randu(4, 3))
 #' }
 gpu_randu <- function(n_rows, n_cols) {

@@ -22,11 +22,12 @@ if (is.null(getOption("rcppbandicoot.ex_info"))) {
   options(rcppbandicoot.ex_info = gpu_device_info())
 }
 .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
+.rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
 # RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
 # device (see tests/testthat/helper-gpu.R); examples honour it too so
 # R CMD check does not crash the R session running one.
 if (isTRUE(.rcppbandicoot_ex_info$available) &&
-    !("gpu_mean" \%in\% strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL", ""), ",", fixed = TRUE)[[1]])) {
+    !("gpu_mean" \%in\% .rcppbandicoot_ex_xfail)) {
   gpu_mean(matrix(1:6, nrow = 2))
 }
 }
