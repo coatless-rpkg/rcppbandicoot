@@ -45,6 +45,10 @@ if [ -n "${OPENCL_CPPFLAGS}" ] && [ -n "${OPENCL_LIBS}" ]; then
     echo "  OpenCL headers: found (via OPENCL_CPPFLAGS)"
     echo "  OpenCL library: found (via OPENCL_LIBS): ${OPENCL_LIBS}"
     BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_USE_OPENCL ${OPENCL_CPPFLAGS}"
+    ## OpenCL is the only backend on Windows (CUDA is disabled above), so it is
+    ## the default backend -- matching configure.ac's CL_BACKEND choice, and
+    ## what RcppBandicootCxxFlags() reports to downstream consumers.
+    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DEFAULT_BACKEND=CL_BACKEND"
     BANDICOOT_LIBS="${BANDICOOT_LIBS} ${OPENCL_LIBS}"
     HAVE_OPENCL=1
 else
@@ -162,6 +166,7 @@ fi
 if [ -f "R/flags.R.in" ]; then
     sed -e "s|@BANDICOOT_CXXFLAGS@|${BANDICOOT_CXXFLAGS}|g" \
         -e "s|@BANDICOOT_LIBS@|${BANDICOOT_LIBS}|g" \
+        -e "s|@OPENCL_TARGET_VERSION@|${OPENCL_TARGET_VERSION}|g" \
         -e "s|@OPENCL_CXXFLAGS@|${OPENCL_CXXFLAGS_FOR_R}|g" \
         -e "s|@OPENCL_LIBS@|${OPENCL_LIBS_FOR_R}|g" \
         -e "s|@CUDA_CXXFLAGS@|${CUDA_CXXFLAGS}|g" \
