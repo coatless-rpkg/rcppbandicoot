@@ -39,12 +39,15 @@ jobs:
         config:
           # xfail lists gpu_* operations skipped on that runner. On the nightly
           # schedule the list is cleared (see RCPPBANDICOOT_XFAIL below) so the
-          # real, unmitigated state is visible. On macOS and Windows the list is
-          # every operation, because the crash is a code-generation bug in the
-          # kernel compiler (PoCL's LLVM JIT on macOS, Intel's Clang-based
-          # common_clang on Windows) and so is not tied to a specific operation:
-          # the crash is a hard access violation the R session cannot catch, so
-          # the guarded op must not run at all rather than run and be tolerated.
+          # real, unmitigated state is visible. Both experimental legs exclude
+          # every operation, for different reasons. On macOS PoCL's LLVM JIT
+          # crash is nondeterministic -- a different operation each run -- so no
+          # single op can be blamed. On Windows Intel's runtime aborts hard
+          # (0xC0000005) while compiling at least one kernel (observed on
+          # gpu_element_square); a hard access violation cannot be caught, and
+          # R CMD check runs examples alphabetically so the first crasher masks
+          # the rest, leaving the minimal set uncharacterised -- all are
+          # excluded conservatively until it is.
           - {os: ubuntu-24.04,  r: 'release', experimental: false, xfail: '', opencl_runtime: 'auto'}
           - {os: macos-latest,  r: 'release', experimental: true,  xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu', opencl_runtime: 'auto'}
           - {os: windows-2025,  r: 'release', experimental: true,  xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu', opencl_runtime: 'auto'}
