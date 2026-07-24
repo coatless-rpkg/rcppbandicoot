@@ -142,6 +142,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// set_kernel_source_dir
+void set_kernel_source_dir(std::string path);
+RcppExport SEXP _RcppBandicoot_set_kernel_source_dir(SEXP pathSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type path(pathSEXP);
+    set_kernel_source_dir(path);
+    return R_NilValue;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_RcppBandicoot_gpu_initialize", (DL_FUNC) &_RcppBandicoot_gpu_initialize, 1},
@@ -156,6 +166,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_RcppBandicoot_gpu_mean", (DL_FUNC) &_RcppBandicoot_gpu_mean, 1},
     {"_RcppBandicoot_gpu_eye", (DL_FUNC) &_RcppBandicoot_gpu_eye, 1},
     {"_RcppBandicoot_gpu_randu", (DL_FUNC) &_RcppBandicoot_gpu_randu, 2},
+    {"_RcppBandicoot_set_kernel_source_dir", (DL_FUNC) &_RcppBandicoot_set_kernel_source_dir, 1},
     {NULL, NULL, 0}
 };
 

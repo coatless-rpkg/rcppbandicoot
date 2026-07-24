@@ -289,3 +289,18 @@ gpu_randu <- function(n_rows, n_cols) {
     .Call(`_RcppBandicoot_gpu_randu`, n_rows, n_cols)
 }
 
+#' Set the Bandicoot kernel source directory
+#'
+#' Internal. Called from \code{.onLoad} with the installed location of the
+#' bandicoot kernel sources so they resolve at run time regardless of where
+#' the package was built. The trailing slash is required: Bandicoot appends
+#' \code{"opencl/<file>"} to this path.
+#'
+#' @param path Directory holding the bandicoot kernel sources, with a
+#'   trailing slash.
+#' @return Invisibly \code{NULL}.
+#' @keywords internal
+set_kernel_source_dir <- function(path) {
+    invisible(.Call(`_RcppBandicoot_set_kernel_source_dir`, path))
+}
+

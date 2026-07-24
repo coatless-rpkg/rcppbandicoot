@@ -33,6 +33,25 @@
 #define COOT_CERR_STREAM Rcpp::Rcerr
 #endif
 
+// Runtime-resolved kernel source directory.
+//
+// Bandicoot 4.x reads its .cl kernel sources from disk at run time, from the
+// directory named by the COOT_KERNEL_SOURCE_DIR macro. A compile-time absolute
+// path (baked in by configure) is correct only for a source install on the
+// same machine: a binary package built on one machine and installed on another
+// -- as CRAN ships macOS and Windows builds -- would carry the build machine's
+// path, which does not exist on the user's machine, and every GPU call would
+// throw "Cannot open required kernel source."
+//
+// So src/Makevars defines COOT_KERNEL_SOURCE_DIR as a call to this function
+// rather than as a string literal. Bandicoot uses the macro only as
+// `const char* source_dir = COOT_KERNEL_SOURCE_DIR;`, so the call resolves the
+// directory at run time. R's .onLoad sets it (via set_kernel_source_dir())
+// from system.file(), which always points at the real install location.
+// Defined in src/kernel_dir.cpp; must be declared before <bandicoot> is
+// included so the macro expansion inside the bandicoot headers sees it.
+const char* rcppbandicoot_kernel_dir();
+
 // Include the Bandicoot library
 #include <bandicoot>
 
