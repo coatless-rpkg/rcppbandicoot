@@ -1,5 +1,5 @@
 Package: RcppBandicoot
-Title: 'Rcpp' Integration for the `Bandicoot` Header-Only C++ GPU Accelerated Linear Algebra Library
+Title: 'Rcpp' Integration for the 'Bandicoot' Header-Only C++ GPU Accelerated Linear Algebra Library
 Version: 4.0.2.1
 Authors@R: c(person("James Joseph", "Balamuta", email = "balamut2@illinois.edu", 
                     role = c("aut", "cre", "cph"), 
@@ -13,15 +13,27 @@ Description: 'Bandicoot' is a templated C++ GPU Linear Algebra library
  Therefore, users do not need to install 'Bandicoot' to use 'RcppBandicoot'.
  Note that the 'Bandicoot' library is licensed under Apache License version 2.0 and
  'RcppBandicoot' (the 'Rcpp' bindings/bridge to 'Bandicoot') is licensed under
- the GNU GPL version 2 or later. Note that 'Bandicoot' requires a compiler that
- supports 'OpenCL' (>= 1.2) or 'CUDA' (>= 9.8).
+ the GNU GPL version 2 or later. Building 'RcppBandicoot' requires the
+ development files for 'OpenCL' (>= 1.2) or 'CUDA'; running a computation on a
+ device additionally requires a GPU with working vendor drivers.
 License: GPL (>= 2)
-Depends: R (>= 4.4)
+URL: https://github.com/coatless-rpkg/rcppbandicoot
+BugReports: https://github.com/coatless-rpkg/rcppbandicoot/issues
+Depends: R (>= 4.2.3)
 LinkingTo: Rcpp (>= 1.1.0)
 Imports: Rcpp (>= 1.1.0)
-Suggests: testthat (>= 3.0.0), withr
+Suggests: testthat (>= 3.0.0)
 Config/testthat/edition: 3
-SystemRequirements: OpenCL (>= 1.2) or CUDA (>= 9.8), GPU device with appropriate drivers. For OpenCL: CLBlast (recommended) or clBLAS for BLAS operations.
+SystemRequirements: To build: OpenCL headers and an OpenCL ICD loader (Debian
+ and Ubuntu: opencl-headers, ocl-icd-opencl-dev; Fedora, RHEL and derivatives:
+ opencl-headers, ocl-icd; openSUSE: opencl-headers, libOpenCL1; Alpine:
+ opencl-dev; macOS: the OpenCL framework shipped with the system), or, for the
+ optional CUDA backend, the CUDA toolkit (cuda, cudart, cuBLAS, cuRAND,
+ cuSOLVER and NVRTC). Optionally CLBlast (recommended) or clBLAS, which
+ accelerate the OpenCL BLAS calls. To run a computation: a GPU device with
+ working vendor drivers. Headers and an ICD loader alone -- which is all the
+ CRAN and r-universe build machines install -- enumerate zero devices, so
+ binaries built there load fine but report no usable device.
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Config/roxygen2/version: 8.0.0

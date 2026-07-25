@@ -4,6 +4,15 @@ Overall license:
    The underlying Bandicoot library is released under the
    Apache License, Version 2.0, February 2004 (https://opensource.org/license/apache-2-0/)
 
+   Upstream Bandicoot ships a NOTICE.txt file; section 4(d) of the Apache
+   License requires that its attribution notices travel with any
+   redistribution.  They are reproduced verbatim in the NOTICE file installed
+   alongside this one.
+
+   Parts of Bandicoot's OpenCL backend are adaptations of MAGMA and clMAGMA
+   (University of Tennessee) and carry an additional 3-clause BSD license on
+   top of the Apache License; see the final stanza below.
+
    The aggregation, integration and packaging work is released under the
    GNU GPL (>= 2).
 
@@ -11,15 +20,19 @@ Details:
 ========
 
 Files: *
-Copyright: 2023 James Joseph Balamuta
+Copyright: 2023-2026 James Joseph Balamuta
 License: GPL (>= 2)
 
-Files: inst/include/bandicoot.h:
-       inst/include/bandicoot_bits/*:
+Files: inst/include/bandicoot
+       inst/include/bandicoot_bits/*
+       inst/NOTICE
 Copyright:
-  Copyright 2017-2023, Ryan Curtin <ryan@ratml.org>
-  Copyright 2017-2023, Marcus Edel <marcus.edel@fu-berlin.de>
-  Copyright 2017-2023, Conrad Sanderson
+  Copyright 2017-2026 Ryan Curtin (https://ratml.org)
+  Copyright 2017-2026 Marcus Edel (https://kurg.org)
+  Copyright 2017-2026 Conrad Sanderson (https://conradsanderson.id.au)
+  Copyright 2017-2026 Data61 / CSIRO
+  Copyright 2008-2016 National ICT Australia (NICTA)
+  Copyright 2022      Gopi Tatiraju
 
 License: Apache License, Version 2.0
    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
@@ -219,3 +232,49 @@ License: Apache License, Version 2.0
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+Files: inst/include/bandicoot_bits/opencl/magma/*.hpp
+       inst/include/bandicoot_bits/ks/opencl/magma_real/*.cl
+Copyright:
+  Copyright 2009-2015 University of Tennessee (MAGMA and clMAGMA)
+  Copyright 2023      Ryan Curtin (http://www.ratml.org)
+  Copyright 2017      Conrad Sanderson (http://conradsanderson.id.au)
+
+License: BSD-3-clause and Apache License, Version 2.0
+   These 60 headers and 16 OpenCL kernel sources are adaptations of clMAGMA
+   1.3 (2014-11-14) and/or MAGMA 2.7 (2022-11-09), which supply the LAPACK
+   functionality bandicoot does not implement by hand; see
+   inst/include/bandicoot_bits/opencl/magma/README.md.  The adaptations are
+   Apache-2.0 (full text above); the code they are derived from is under the
+   3-clause BSD license reproduced below, exactly as it appears in the header
+   of each of those files.
+
+    -- Innovative Computing Laboratory
+    -- Electrical Engineering and Computer Science Department
+    -- University of Tennessee
+    -- (C) Copyright 2009-2015
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+
+    * Redistributions of source code must retain the above copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+    * Neither the name of the University of Tennessee, Knoxville nor the
+      names of its contributors may be used to endorse or promote products
+      derived from this software without specific prior written permission.
+
+    This software is provided by the copyright holders and contributors
+    ``as is'' and any express or implied warranties, including, but not
+    limited to, the implied warranties of merchantability and fitness for
+    a particular purpose are disclaimed. In no event shall the copyright
+    holders or contributors be liable for any direct, indirect, incidental,
+    special, exemplary, or consequential damages (including, but not
+    limited to, procurement of substitute goods or services; loss of use,
+    data, or profits; or business interruption) however caused and on any
+    theory of liability, whether in contract, strict liability, or tort
+    (including negligence or otherwise) arising in any way out of the use
+    of this software, even if advised of the possibility of such damage.

@@ -2,6 +2,22 @@
 
 - New `gpu_available()`, `gpu_device_info()`, and `gpu_initialize()` report
   and initialise the active OpenCL device from R.
+- New `gpu_set_seed()` sets the device random number generator's seed.
+  `gpu_randu()` now also seeds the device once per session from R's own RNG
+  stream, so two fresh R sessions no longer return bit-identical draws.
+- `bandicoot_version()` now returns the version as a character string. It
+  previously printed to the console and returned `NULL` invisibly.
+- `NA` in integer and logical input is now handled rather than silently
+  arriving on the device as `-2147483648`.
+- `RcppBandicootCxxFlags()` now emits `-DCOOT_KERNEL_SOURCE_DIR` and
+  `-DCOOT_TARGET_OPENCL_VERSION`. Downstream code that compiles the bundled
+  headers picks up the kernel location and OpenCL API level this package was
+  itself built with instead of the header's own defaults.
+- The `Rcpp` inline plugin no longer sets `USE_CXX14`. `R CMD config CXX14`
+  has been defunct since R 4.5, and R's default C++ standard already exceeds
+  what Bandicoot requires.
+- Windows builds now define `COOT_DEFAULT_BACKEND=CL_BACKEND`, matching the
+  only backend those builds enable.
 - GPU kernel sources now resolve at package load from their installed
   location, so operations work in a binary or relocated install rather than
   failing to open the kernel source.

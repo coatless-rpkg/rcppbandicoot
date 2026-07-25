@@ -1,15 +1,15 @@
-citHeader("To cite the 'RcppBandicoot' R package and 'Bandicoot' libray in publications, please use:")
+citHeader("To cite the 'RcppBandicoot' R package and 'Bandicoot' library in publications, please use:")
 
 bibentry(
   bibtype      = "Manual",
-  title        = "{RcppBandicoot: 'Rcpp' Integration for the `Bandicoot` C++ GPU Accelerated Linear Algebra Library}",
+  title        = "{RcppBandicoot: 'Rcpp' Integration for the 'Bandicoot' C++ GPU Accelerated Linear Algebra Library}",
   author       = c(
     as.person("James Joseph Balamuta")
   ),
-  year         = 2023,
+  year         = format(Sys.Date(), "%Y"),
   textVersion  = paste(
-    "Balamuta, J.J. (2023)",
-    "RcppBandicoot: 'Rcpp' Integration for the `Bandicoot` C++ GPU Accelerated Linear Algebra Library.",
+    sprintf("Balamuta, J.J. (%s)", format(Sys.Date(), "%Y")),
+    "RcppBandicoot: 'Rcpp' Integration for the 'Bandicoot' C++ GPU Accelerated Linear Algebra Library.",
     "URL https://cran.r-project.org/package=RcppBandicoot."
   )
 )
