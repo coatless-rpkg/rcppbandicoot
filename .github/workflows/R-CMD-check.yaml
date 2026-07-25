@@ -6,9 +6,21 @@ on:
   pull_request:
     branches: [main, master]
   schedule:
-    # Nightly, with no known-failure exclusions (see RCPPBANDICOOT_XFAIL below).
+    # Nightly, with no known-failure exclusions (see RCPPBANDICOOT_XFAIL below)
+    # and a verdict of its own (see the last step in the job).
     - cron: '17 5 * * *'
   workflow_dispatch:
+    # Defaults to false, so a plain manual run behaves exactly as it always
+    # has. It exists because a scheduled workflow only ever runs from the
+    # default branch: without this switch the nightly path could not be
+    # exercised even once before it is merged, and its first execution would
+    # be on main, unobserved, at 05:17. Set it to true on a manual run to get
+    # a nightly without waiting for one.
+    inputs:
+      nightly:
+        description: 'Run as the nightly: no exclusions, compare against nightly_expect'
+        type: boolean
+        default: false
 
 name: R-CMD-check
 
@@ -27,12 +39,21 @@ jobs:
 
     # Everything except the gating Linux leg is experimental: its failure does
     # not fail the workflow, so a pull request gates on that one leg alone.
-    # The nightly is the exception. It exists to show the unmitigated state,
-    # so no leg is excused there and a broken one turns the run red -- which
-    # is the only way GitHub notifies anyone. `false && anything` is false, so
-    # putting the event test first forces continue-on-error off for every leg
-    # on a schedule without needing a second expression.
-    continue-on-error: ${{ github.event_name != 'schedule' && matrix.config.experimental }}
+    # The nightly is the exception, and no leg is excused there -- but note
+    # what it is that has to be able to turn the run red. It is no longer
+    # R CMD check exiting non-zero, which on a nightly it is *supposed* to do;
+    # it is the last step in this job, which compares the operations that
+    # failed against the ones recorded as already broken. That step needs a
+    # failing job to be heard, since a failing job is the only thing GitHub
+    # notifies anyone about.
+    #
+    # `false && anything` is false, so putting the event tests first forces
+    # continue-on-error off for every leg on a nightly without needing a
+    # second expression. `inputs.nightly` is null on every event except
+    # workflow_dispatch, and GitHub compares null to a boolean by casting both
+    # to numbers (null -> 0, true -> 1), so `inputs.nightly != true` is
+    # reliably true on push, pull_request and schedule alike.
+    continue-on-error: ${{ github.event_name != 'schedule' && inputs.nightly != true && matrix.config.experimental }}
 
     # The two Linux legs gate the build: one with a real device, where every
     # operation runs for real and a regression fails the job, and one with no
@@ -49,13 +70,55 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          # nightly_expect / nightly_exact are read only on a nightly and do
+          # nothing on push or pull_request. They are what stops the nightly
+          # from being red every single night.
+          #
+          # The nightly clears the exclusions, so the known-broken operations
+          # run for real and their failure is the point of the run rather than
+          # an accident. Failing the job on it made the nightly unconditionally
+          # red on two platforms at once, and a signal that is always red is
+          # not a signal -- nobody reads it, and the day macOS starts working
+          # nobody notices. So the nightly reports which operations died and
+          # goes red only when that set has MOVED away from nightly_expect.
+          #
+          # nightly_expect is a comma-separated list of test-script stems:
+          # tests/zz-gpu-transpose.R is `gpu-transpose`. That is deliberately
+          # not the vocabulary xfail uses, and the two lists cannot be merged.
+          # xfail holds gpu_* names that skip_if_xfail() consults from inside a
+          # test, and they are not in correspondence with the scripts: both
+          # zz-gpu-seed.R and zz-gpu-sum-na.R gate on another operation's key
+          # (gpu_randu and gpu_sum), so ten xfail names cover twelve scripts.
+          # What a crashed run leaves behind is a per-SCRIPT exit status, so
+          # per script is what can honestly be recorded and compared.
+          #
+          # nightly_exact: 'true' requires the observed set to equal this one,
+          # and moving in either direction turns the run red -- something new
+          # broke, or something started working, and the second is the upstream
+          # fix this package is waiting for. Empty means the leg's crash is
+          # nondeterministic, so equality is not a question that has an answer
+          # there and only the boundaries are asserted instead: nothing outside
+          # the list may fail, and the list may not empty out. See macOS below.
+          #
+          # These lists live in the matrix rather than in a data file of their
+          # own. A file would have had to go under .github/ -- ^\.github$ is
+          # already in .Rbuildignore, whereas a file at the repo root would NOT
+          # be and would ship inside the package tarball to CRAN. That was
+          # workable; the matrix wins anyway, because the day an operation
+          # starts working the fix is to shorten this list AND the xfail list
+          # three lines above it, and two lists that must be edited together
+          # are much likelier to be if they are read together.
+
           # The gating leg: a real PoCL device, no exclusions, every operation
           # run for real. It is also the only leg that runs the examples,
           # since it is the only platform where every operation works.
+          # Nothing may fail here, on any event -- hence the empty expectation.
           - os: ubuntu-24.04
             r: 'release'
             experimental: false
             xfail: ''
+            nightly_expect: ''
+            nightly_exact: 'true'
             opencl_runtime: 'auto'
             gpu_examples: 'true'
             opencl_version: ''
@@ -87,6 +150,8 @@ jobs:
             r: 'release'
             experimental: false
             xfail: ''
+            nightly_expect: ''
+            nightly_exact: 'true'
             opencl_runtime: 'none'
             gpu_examples: ''
             opencl_version: ''
@@ -101,6 +166,8 @@ jobs:
             r: 'devel'
             experimental: true
             xfail: ''
+            nightly_expect: ''
+            nightly_exact: 'true'
             opencl_runtime: 'auto'
             gpu_examples: ''
             opencl_version: ''
@@ -129,10 +196,27 @@ jobs:
           # why an earlier 3-run pass had gpu_matrix_add failing 3/3 where 20
           # runs gave 0/20. No operation can be released on its own evidence.
           #
+          # That same nondeterminism is exactly why macOS carries an empty
+          # nightly_exact. A set that was three scripts under one measurement
+          # and six under the next cannot be compared for equality: the nightly
+          # would drift every night, be red every night, and be worth nothing
+          # every night -- which is the failure the nightly_expect machinery
+          # exists to remove, reintroduced by the back door. So the whole list
+          # is recorded as able to fail, and the only transition that turns the
+          # run red on macOS is the one actually worth waking up for: every
+          # script passing, meaning the JIT fault is gone. Which subset died is
+          # still tabulated every night, so the trend stays readable without
+          # being alarmed on. The cost is honest and worth stating: on this leg
+          # a single operation becoming reliable is invisible to the red/green
+          # verdict, because on this leg it is not distinguishable from luck.
+          #
           # Windows, 3 runs per operation: every operation crashed every time,
           # while the device probes succeed. Unchanged with Intel's vectoriser
           # disabled (CL_CONFIG_USE_VECTORIZER=False), so that lever is ruled
-          # out.
+          # out. That is a deterministic failure, not a flaky one -- the
+          # runtime cannot compile a kernel at all -- so Windows does get an
+          # exact comparison, and one operation there starting to work is news
+          # rather than noise.
           #
           # Both lists therefore stay whole. What the per-operation split buys
           # here is not a shorter list but a readable failure: the core
@@ -142,6 +226,8 @@ jobs:
             r: 'release'
             experimental: true
             xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu,gpu_session'
+            nightly_expect: 'gpu-element-square,gpu-eye,gpu-matrix-add,gpu-matrix-multiply,gpu-mean,gpu-randu,gpu-seed,gpu-session,gpu-sum,gpu-sum-multipass,gpu-sum-na,gpu-transpose'
+            nightly_exact: ''
             opencl_runtime: 'auto'
             gpu_examples: ''
             opencl_version: ''
@@ -163,6 +249,8 @@ jobs:
             r: 'release'
             experimental: true
             xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu,gpu_session'
+            nightly_expect: 'gpu-element-square,gpu-eye,gpu-matrix-add,gpu-matrix-multiply,gpu-mean,gpu-randu,gpu-seed,gpu-session,gpu-sum,gpu-sum-multipass,gpu-sum-na,gpu-transpose'
+            nightly_exact: 'true'
             opencl_runtime: 'auto'
             gpu_examples: ''
             opencl_version: ''
@@ -210,15 +298,19 @@ jobs:
       _R_CHECK_NO_STOP_ON_TEST_ERROR_: true
 
       # On push/PR, exclude the operations known to be broken on this runner.
-      # On the nightly schedule, exclude nothing: the known-broken operations
-      # run for real and the nightly stays red until upstream fixes them.
+      # On a nightly, exclude nothing: the known-broken operations run for
+      # real, and the last step in this job decides what their failing means.
       #
-      # The event test has to come first and produce the exclusion list, not
+      # The event tests have to come first and produce the exclusion list, not
       # the empty string.  GitHub treats '' as false, so writing it the other
       # way round (`event_name == 'schedule' && '' || xfail`) makes the
       # schedule branch fall straight through to the full exclusion list --
       # the nightly then excludes precisely the operations it exists to run.
-      RCPPBANDICOOT_XFAIL: ${{ github.event_name != 'schedule' && matrix.config.xfail || '' }}
+      # The same trap is why the nightly condition is expressed here as its
+      # negation (`!= 'schedule'` and `!= true`) rather than hoisted into a
+      # shared env var: an env value is a string, and the string 'false' is
+      # truthy, so `env.X` would read as nightly on every event there is.
+      RCPPBANDICOOT_XFAIL: ${{ github.event_name != 'schedule' && inputs.nightly != true && matrix.config.xfail || '' }}
 
     steps:
       - uses: actions/checkout@v6
@@ -301,6 +393,208 @@ jobs:
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
+        id: check
+        # The one place the nightly diverges from push and pull_request. On a
+        # nightly the check is EXPECTED to exit non-zero, because the excluded
+        # operations are running for real, so its result must not be the job's
+        # result -- the step below decides that instead, and it cannot decide
+        # anything if the job has already ended here. On every other event this
+        # evaluates to false, which is precisely the default, so push and
+        # pull_request keep gating exactly as before.
+        #
+        # This is a step-level continue-on-error, deliberately, not the
+        # job-level one above: the job-level flag would swallow the verdict
+        # step's failure too and the nightly could never go red at all.
+        continue-on-error: ${{ github.event_name == 'schedule' || inputs.nightly == true }}
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+      # The nightly's actual verdict, and the only step that reads
+      # nightly_expect. It tabulates which per-operation test script died,
+      # writes that to the run summary so the state is legible without opening
+      # a log, and fails the job only when the set has moved.
+      #
+      # always(), because the step it interprets is allowed to fail: a plain
+      # `if` would skip this whenever there was something to report, leaving
+      # the nightly red with nothing to read, which is where this started.
+      - name: Compare the unmitigated GPU state against the recorded one
+        if: ${{ always() && (github.event_name == 'schedule' || inputs.nightly == true) }}
+        shell: bash
+        env:
+          EXPECTED: ${{ matrix.config.nightly_expect }}
+          EXACT: ${{ matrix.config.nightly_exact }}
+          CHECK_OUTCOME: ${{ steps.check.outcome }}
+          LEG: ${{ matrix.config.os }} (R ${{ matrix.config.r }}${{ matrix.config.opencl_runtime == 'none' && ', device-free' || '' }})
+        run: |
+          set -euo pipefail
+
+          # Set comparison is sort-order sensitive, so pin the collation rather
+          # than inherit whatever locale a given runner image ships with.
+          export LC_ALL=C
+
+          summary="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+          rc=0
+
+          # ::error:: puts the reason on the run itself, which is the part a
+          # notification mail quotes; the summary line is for whoever then
+          # opens the run and wants the table underneath it.
+          note_failure() {
+            echo "::error title=nightly drift on ${LEG}::$1"
+            printf '\n> [!IMPORTANT]\n> %s\n' "$1" >> "$summary"
+            rc=1
+          }
+
+          printf '## %s\n\n' "$LEG" >> "$summary"
+
+          # r-lib/actions/check-r-package leaves <check-dir>/<pkg>.Rcheck and
+          # its check-dir input defaults to 'check'. Globbed rather than named
+          # so a package rename does not turn this into a step that silently
+          # finds nothing and reports everything as fixed.
+          check_dir=""
+          for d in check/*.Rcheck; do
+            if [ -d "$d" ]; then
+              check_dir="$d"
+              break
+            fi
+          done
+
+          if [ -z "$check_dir" ]; then
+            printf 'R CMD check left no results directory: nothing ran.\n' >> "$summary"
+            note_failure "the job failed before R CMD check produced any results"
+            exit 1
+          fi
+
+          tests_dir="$check_dir/tests"
+          tmp="$(mktemp -d)"
+          : > "$tmp/observed"
+          : > "$tmp/notrun"
+          total=0
+
+          printf '| operation | outcome |\n| --- | :-- |\n' >> "$summary"
+
+          # tests/zz-gpu-<op>.R is the unit, because it is the unit R CMD check
+          # can report on after a crash: tools:::.runPackageTests renames
+          # <script>.Rout to <script>.Rout.fail when the process exits
+          # non-zero, and an access violation exits non-zero. That rename is
+          # the only trace the failure mode on macOS and Windows leaves behind,
+          # since no R-level handler ever gets to run. The scripts are
+          # enumerated from the checkout rather than listed here, so a new
+          # operation is picked up the day it is added -- and shows up as drift
+          # against nightly_expect, which is the correct thing for it to do.
+          for script in tests/zz-gpu-*.R; do
+            [ -e "$script" ] || continue
+            base="$(basename "$script" .R)"
+            op="${base#zz-}"
+            total=$((total + 1))
+            if [ -f "$tests_dir/$base.Rout.fail" ]; then
+              printf '%s\n' "$op" >> "$tmp/observed"
+              printf '| `%s` | **failed** |\n' "$op" >> "$summary"
+            elif [ -f "$tests_dir/$base.Rout" ]; then
+              printf '| `%s` | passed |\n' "$op" >> "$summary"
+            else
+              printf '%s\n' "$op" >> "$tmp/notrun"
+              printf '| `%s` | did not run |\n' "$op" >> "$summary"
+            fi
+          done
+
+          sort -u -o "$tmp/observed" "$tmp/observed"
+          printf '%s\n' "${EXPECTED:-}" \
+            | tr ',' '\n' | tr -d '[:blank:]\r' | sed '/^$/d' | sort -u > "$tmp/expected"
+
+          n_observed="$(wc -l < "$tmp/observed" | tr -d '[:blank:]')"
+          n_expected="$(wc -l < "$tmp/expected" | tr -d '[:blank:]')"
+
+          printf '\n%s of %s operations failed; %s recorded as expected to be able to fail.\n' \
+            "$n_observed" "$total" "$n_expected" >> "$summary"
+
+          if [ -s "$tmp/notrun" ]; then
+            # Comparing now would report operations that never executed as
+            # having started working, which is the one thing this step must
+            # never say. Report the gap and make no claim about the rest.
+            note_failure "R CMD check did not reach every operation ($(paste -sd, "$tmp/notrun")); no comparison was made"
+          else
+            new_fail="$(comm -13 "$tmp/expected" "$tmp/observed")"
+            new_pass="$(comm -23 "$tmp/expected" "$tmp/observed")"
+
+            if [ -n "$new_fail" ]; then
+              note_failure "newly failing: $(printf '%s' "$new_fail" | paste -sd, -)"
+            fi
+
+            if [ "${EXACT:-}" = "true" ]; then
+              # An operation leaving the expected set on a deterministic leg is
+              # the upstream fix this package has been waiting for. It goes red
+              # so that somebody shortens this leg's nightly_expect AND its
+              # xfail, the second of which is what actually re-enables the
+              # operation on push and pull_request. Absorbing it silently would
+              # mean the fix arrived and nothing changed.
+              if [ -n "$new_pass" ]; then
+                note_failure "newly passing: $(printf '%s' "$new_pass" | paste -sd, -)"
+              fi
+            else
+              # Nondeterministic leg: which subset dies varies run to run, so a
+              # shrinking set is not evidence of anything and is reported
+              # without a verdict. Only the fault disappearing entirely is.
+              if [ -n "$new_pass" ]; then
+                printf '\nPassed tonight, though recorded as able to fail: `%s`. This leg crashes nondeterministically, so that is not treated as a change.\n' \
+                  "$(printf '%s' "$new_pass" | paste -sd, -)" >> "$summary"
+              fi
+              if [ "$n_observed" -eq 0 ] && [ "$n_expected" -gt 0 ]; then
+                note_failure "every operation passed on a leg where $n_expected are recorded as able to fail -- the upstream fault may be gone"
+              fi
+            fi
+          fi
+
+          # A nightly that watched only the operation list would go green on a
+          # new compiler warning or a failed install, because neither is an
+          # operation -- and it would have been red for those before this step
+          # existed. So everything R CMD check flagged outside the tests
+          # section is reported too. 00check.log carries a status either on the
+          # '* checking ...' line itself, or, when the check printed output
+          # first, on a line of its own just below it with a single leading
+          # space; the indented excerpt blocks are two spaces in and so cannot
+          # be mistaken for one.
+          if [ -f "$check_dir/00check.log" ]; then
+            other="$(awk '
+              /^\* checking / {
+                line = $0
+                sub(/^\* checking /, "", line)
+                if (match(line, /\.\.\.[ ]*(ERROR|WARNING)$/)) {
+                  status = substr(line, RSTART)
+                  sub(/^\.\.\.[ ]*/, "", status)
+                  what = substr(line, 1, RSTART - 1)
+                  sub(/[ ]+$/, "", what)
+                  print status " " what
+                  section = ""
+                } else {
+                  sub(/[ ]*\.\.\.[ ]*$/, "", line)
+                  section = line
+                }
+                next
+              }
+              /^ (ERROR|WARNING)$/ { if (section != "") print $1 " " section }
+            ' "$check_dir/00check.log" | grep -vE '^(ERROR|WARNING) tests$' || true)"
+
+            if [ -n "$other" ]; then
+              printf '\nR CMD check also reported, outside the test scripts:\n\n' >> "$summary"
+              printf '%s\n' "$other" | sed 's/^/- /' >> "$summary"
+              note_failure "R CMD check reported a problem unrelated to the GPU operations"
+            fi
+          fi
+
+          # Backstop. The check step is allowed to fail on a nightly, so if it
+          # failed and nothing above accounts for it, report that rather than
+          # call the run green on a failure this step did not understand.
+          if [ "${CHECK_OUTCOME:-}" = "failure" ] && [ "$rc" -eq 0 ] && [ "$n_observed" -eq 0 ]; then
+            note_failure "R CMD check failed, but no operation failed and no other check problem was found -- read the log"
+          fi
+
+          # Printed on every nightly, passing or not, so that recording a new
+          # expectation is a copy and a paste rather than a transcription.
+          as_list() {
+            if [ -s "$1" ]; then paste -sd, "$1"; else printf '(none)'; fi
+          }
+          printf '\nRecorded (`nightly_expect`): `%s`\n' "$(as_list "$tmp/expected")" >> "$summary"
+          printf '\nObserved tonight: `%s`\n' "$(as_list "$tmp/observed")" >> "$summary"
+
+          exit "$rc"
