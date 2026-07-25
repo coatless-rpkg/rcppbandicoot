@@ -60,7 +60,11 @@ test_that("a fresh session does not reproduce the previous session's draw", {
   first <- draw_in_subprocess()
   second <- draw_in_subprocess()
 
-  skip_if(!nzchar(first) || !nzchar(second),
+  # tail() of an empty vector is character(0), and identical(character(0),
+  # character(0)) is TRUE -- so without the length guard the intended skip
+  # falls through and reports a spurious failure instead.
+  skip_if(length(first) != 1L || length(second) != 1L ||
+            !nzchar(first) || !nzchar(second),
           "subprocess did not produce a draw (no device in the child session)")
   expect_false(identical(first, second))
 })

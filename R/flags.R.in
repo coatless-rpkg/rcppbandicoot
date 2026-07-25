@@ -39,6 +39,20 @@ drop_missing_dirs <- function(flags, what) {
     } else if (grepl("^-[IL].", tokens[i])) {
       dir <- substring(tokens[i], 3L)
     }
+    ## A value carrying quote characters cannot be tested by splitting on
+    ## whitespace: configure.win escapes quotes through to here, and a quoted
+    ## path containing a space -- the ordinary Windows spelling, e.g.
+    ## -I"C:/Program Files/Intel/include" -- is torn across several tokens.
+    ## Unquote a cleanly matched pair; leave anything still quoted strictly
+    ## alone, so a flag is never dropped on the strength of a partial path.
+    if (!is.na(dir)) {
+      if (grepl('^".*"$', dir) || grepl("^'.*'$", dir)) {
+        dir <- substring(dir, 2L, nchar(dir) - 1L)
+      }
+      if (!nzchar(dir) || grepl("[\"']", dir)) {
+        dir <- NA_character_
+      }
+    }
     if (!is.na(dir) && !dir.exists(dir)) {
       keep[span] <- FALSE
       gone <- c(gone, dir)
@@ -261,8 +275,11 @@ bandicoot_config <- function(verbose = FALSE) {
 #' @examples
 #' CxxFlags()
 CxxFlags <- function() {
-  cat(RcppBandicootCxxFlags())
-  invisible(RcppBandicootCxxFlags())
+  ## Resolved once: the accessor warns about SDK directories that have since
+  ## disappeared, and calling it twice would print that warning twice.
+  flags <- RcppBandicootCxxFlags()
+  cat(flags)
+  invisible(flags)
 }
 
 #' Print RcppBandicoot linker flags
@@ -276,6 +293,8 @@ CxxFlags <- function() {
 #' @examples
 #' LdFlags()
 LdFlags <- function() {
-  cat(RcppBandicootLdFlags())
-  invisible(RcppBandicootLdFlags())
+  ## Resolved once, for the same reason as CxxFlags().
+  flags <- RcppBandicootLdFlags()
+  cat(flags)
+  invisible(flags)
 }

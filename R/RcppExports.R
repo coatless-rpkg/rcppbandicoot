@@ -29,8 +29,16 @@ bandicoot_version <- function() {
 #' `TRUE` if a device was selected, `FALSE` otherwise. Called for its side
 #' effect of initialising the runtime.
 #' @export
-#' @examplesIf nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))
+#' @examples
+#' # Not run: coot_init() releases and rebuilds the runtime's context on every
+#' # call without evicting the compiled-kernel cache, so calling any of
+#' # gpu_initialize(), gpu_available() or gpu_device_info() more than once in a
+#' # session leaves dangling kernel handles and every later GPU call fails with
+#' # cl_invalid_context. R CMD check runs all examples in ONE process, so only
+#' # gpu_available() is executed there; see its help page.
+#' \dontrun{
 #' gpu_initialize()
+#' }
 gpu_initialize <- function(print_info = FALSE) {
     .Call(`_RcppBandicoot_gpu_initialize`, print_info)
 }
@@ -60,8 +68,13 @@ gpu_available <- function() {
 #' `max_wg`. Never throws; on a machine with no device every capability is
 #' reported as `FALSE`/zero.
 #' @export
-#' @examplesIf nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))
+#' @examples
+#' # Not run for the same single-initialisation reason given in
+#' # [gpu_initialize()]: this is the one example process, and gpu_available()
+#' # already spends the session's single permitted runtime initialisation.
+#' \dontrun{
 #' str(gpu_device_info())
+#' }
 gpu_device_info <- function() {
     .Call(`_RcppBandicoot_gpu_device_info`)
 }

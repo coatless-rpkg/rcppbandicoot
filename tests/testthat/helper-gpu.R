@@ -64,7 +64,8 @@ cached_gpu_device_info <- function() {
 # devtools::test() only.  rcmdcheck and r-lib/actions/check-r-package never set
 # it, so skip_on_cran() would fire in our own CI too and we would be back to a
 # green build that ran no kernels.  RCPPBANDICOOT_REQUIRE_GPU is set in
-# .github/workflows/R-CMD-check.yaml and nowhere else; CRAN cannot set it.
+# .github/workflows/R-CMD-check.yaml and .github/workflows/upstream-update.yml,
+# and nowhere else; CRAN cannot set it.
 skip_if_no_gpu <- function() {
   info <- cached_gpu_device_info()
   if (isTRUE(info$available)) {

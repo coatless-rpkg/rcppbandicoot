@@ -20,7 +20,13 @@ against. Bandicoot also initialises lazily on the first GPU call, so this
 is only needed when you want the device chosen (and reported) up front.
 }
 \examples{
-\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+# Not run: coot_init() releases and rebuilds the runtime's context on every
+# call without evicting the compiled-kernel cache, so calling any of
+# gpu_initialize(), gpu_available() or gpu_device_info() more than once in a
+# session leaves dangling kernel handles and every later GPU call fails with
+# cl_invalid_context. R CMD check runs all examples in ONE process, so only
+# gpu_available() is executed there; see its help page.
+\dontrun{
 gpu_initialize()
-\dontshow{\}) # examplesIf}
+}
 }

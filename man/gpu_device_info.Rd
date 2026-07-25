@@ -16,7 +16,10 @@ reported as \code{FALSE}/zero.
 Report the selected GPU device's properties
 }
 \examples{
-\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+# Not run for the same single-initialisation reason given in
+# [gpu_initialize()]: this is the one example process, and gpu_available()
+# already spends the session's single permitted runtime initialisation.
+\dontrun{
 str(gpu_device_info())
-\dontshow{\}) # examplesIf}
+}
 }

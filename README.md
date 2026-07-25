@@ -158,7 +158,7 @@ the directory they live in.
 
 From a downstream package, this almost always means the `src/Makevars` above is
 missing, so `COOT_KERNEL_SOURCE_DIR` was never defined. From RcppBandicoot
-itself, compare `get_kernel_source_dir()` against
+itself, compare `RcppBandicoot:::get_kernel_source_dir()` against
 `system.file("include", "bandicoot_bits", "ks", package = "RcppBandicoot")`:
 they should be the same path with a trailing slash, and it should contain an
 `opencl/` subdirectory. If the second is `""`, the kernel sources did not
