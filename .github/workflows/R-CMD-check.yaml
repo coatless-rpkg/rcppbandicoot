@@ -255,31 +255,40 @@ jobs:
           # asset, and the action requires one. Fixing that belongs in the
           # action, not here; until then the hypothesis stays untested and the
           # whole list stands.
-          # Pinned to the last oclcpuexp release built on LLVM 20. The
-          # pre-migration workflow shipped Intel's official runtime, whose
-          # common_clang64.dll reports clang 20.0.0git, where the release this
-          # leg moved to reports 22.1.0 -- and failure tracks the LLVM
-          # generation across the whole matrix (PoCL on 16 works, PoCL on 21 is
-          # nondeterministic, this on 22 fails on every operation). So the
-          # runtime swap is the most likely thing the migration broke, and
-          # because the old CI never executed a kernel nobody could have seen it.
+          # Pinned to the last oclcpuexp release built on LLVM 20, and the pin
+          # is load-bearing rather than precautionary.
           #
-          # The exclusions are CLEARED so the question actually gets asked. If
-          # the operations pass, the swap was the fault and the fix is this pin.
-          # If they still crash, Windows never worked, the runtime choice is
-          # irrelevant, and the list goes back. The leg is experimental either
-          # way, so a wrong guess costs a red mark on a non-blocking job.
+          # Migrating this leg swapped Intel's official runtime -- whose
+          # common_clang64.dll reports clang 20.0.0git -- for an oclcpuexp
+          # release reporting 22.1.0, and on that one EVERY operation died with
+          # 0xC0000005 inside the kernel compiler. Measured on the pinned
+          # runtime instead: no crash anywhere, and eleven of the twelve
+          # operation scripts pass. So the migration regressed this platform,
+          # and nobody could have noticed, because the CI it replaced never
+          # executed a kernel. Do not unpin without re-running the whole leg
+          # with the exclusions cleared.
           #
-          # version-sha256 is required because the GitHub API reports no digest
-          # for this release's asset -- the exact gap that made this experiment
-          # impossible until setup-opencl grew the input. The value was computed
-          # from the downloaded archive, so it pins the artifact against later
-          # substitution; it does not independently authenticate it.
+          # version-sha256 is required because the GitHub API publishes no
+          # digest for this release's asset -- the gap that made the pin
+          # impossible until setup-opencl grew the input. The value was
+          # computed from the downloaded archive, so it pins the artifact
+          # against later substitution; it does not independently authenticate
+          # it.
+          #
+          # The one exclusion is not a crash. gpu_sum on the multi-pass
+          # reduction path returns a wrong NUMBER on this runtime -- 25040.2
+          # where the answer is 79993.0, about a third of it -- which is the
+          # single-pass result being returned as if it were the whole
+          # reduction. The test suite caught it precisely because it compares
+          # against sum(A) rather than merely checking the call returns. It is
+          # an upstream correctness bug, not something this package can fix,
+          # and it is far more dangerous than the crashes: a crash announces
+          # itself, this quietly hands back a plausible number.
           - os: windows-2025
             r: 'release'
             experimental: true
-            xfail: ''
-            nightly_expect: 'gpu-element-square,gpu-eye,gpu-matrix-add,gpu-matrix-multiply,gpu-mean,gpu-randu,gpu-seed,gpu-session,gpu-sum,gpu-sum-multipass,gpu-sum-na,gpu-transpose'
+            xfail: 'gpu_sum_multipass'
+            nightly_expect: 'gpu-sum-multipass'
             nightly_exact: 'true'
             opencl_runtime: 'auto'
             gpu_examples: ''
