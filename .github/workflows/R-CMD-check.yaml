@@ -256,7 +256,7 @@ jobs:
       # single lever on a crash inside its kernel compiler. Never fails the
       # job; the check step below still decides the leg.
       - name: Re-measure the known-failure list (diagnostic)
-        if: runner.os == 'macOS' || runner.os == 'Windows'
+        if: runner.os == 'macOS'
         shell: bash
         run: |
           set +e
@@ -276,18 +276,14 @@ jobs:
             echo "--- $1 ---"
             for c in "${calls[@]}"; do
               ok=0; crash=0
-              for rep in 1 2 3; do
+              for rep in $(seq 1 20); do
                 out=$(Rscript -e "suppressMessages(library(RcppBandicoot)); invisible(${c}); cat('OK')" 2>&1)
                 if printf '%s' "$out" | grep -q OK; then ok=$((ok+1)); else crash=$((crash+1)); fi
               done
-              printf 'PROBE %-12s ok=%d crash=%d :: %s\n' "$1" "$ok" "$crash" "${c%%(*}"
+              printf 'PROBE %-12s ok=%2d crash=%2d :: %s\n' "$1" "$ok" "$crash" "${c%%(*}"
             done
           }
           run_matrix "default"
-          if [ "${RUNNER_OS}" = "Windows" ]; then
-            export CL_CONFIG_USE_VECTORIZER=False
-            run_matrix "no-vectoriser"
-          fi
 
       - uses: r-lib/actions/check-r-package@v2
         with:
