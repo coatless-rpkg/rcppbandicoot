@@ -49,11 +49,17 @@ jobs:
     #
     # `false && anything` is false, so putting the event tests first forces
     # continue-on-error off for every leg on a nightly without needing a
-    # second expression. `inputs.nightly` is null on every event except
-    # workflow_dispatch, and GitHub compares null to a boolean by casting both
-    # to numbers (null -> 0, true -> 1), so `inputs.nightly != true` is
-    # reliably true on push, pull_request and schedule alike.
-    continue-on-error: ${{ github.event_name != 'schedule' && inputs.nightly != true && matrix.config.experimental }}
+    # second expression.
+    #
+    # The manual switch is read as github.event.inputs.nightly, a STRING,
+    # rather than as the typed inputs.nightly. Comparing a string to a boolean
+    # sends both through GitHub's numeric cast, where 'true' becomes NaN and
+    # the comparison is false however it is written -- so a dispatched nightly
+    # silently behaved like a normal run in some expressions and like a
+    # nightly in others. github.event.inputs.<name> is the raw string on
+    # workflow_dispatch and null everywhere else, so 'true' compares cleanly
+    # and null does not match.
+    continue-on-error: ${{ github.event_name != 'schedule' && github.event.inputs.nightly != 'true' && matrix.config.experimental }}
 
     # The two Linux legs gate the build: one with a real device, where every
     # operation runs for real and a regression fails the job, and one with no
@@ -310,7 +316,7 @@ jobs:
       # negation (`!= 'schedule'` and `!= true`) rather than hoisted into a
       # shared env var: an env value is a string, and the string 'false' is
       # truthy, so `env.X` would read as nightly on every event there is.
-      RCPPBANDICOOT_XFAIL: ${{ github.event_name != 'schedule' && inputs.nightly != true && matrix.config.xfail || '' }}
+      RCPPBANDICOOT_XFAIL: ${{ github.event_name != 'schedule' && github.event.inputs.nightly != 'true' && matrix.config.xfail || '' }}
 
     steps:
       - uses: actions/checkout@v6
@@ -405,7 +411,7 @@ jobs:
         # This is a step-level continue-on-error, deliberately, not the
         # job-level one above: the job-level flag would swallow the verdict
         # step's failure too and the nightly could never go red at all.
-        continue-on-error: ${{ github.event_name == 'schedule' || inputs.nightly == true }}
+        continue-on-error: ${{ github.event_name == 'schedule' || github.event.inputs.nightly == 'true' }}
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
@@ -419,7 +425,7 @@ jobs:
       # `if` would skip this whenever there was something to report, leaving
       # the nightly red with nothing to read, which is where this started.
       - name: Compare the unmitigated GPU state against the recorded one
-        if: ${{ always() && (github.event_name == 'schedule' || inputs.nightly == true) }}
+        if: ${{ always() && (github.event_name == 'schedule' || github.event.inputs.nightly == 'true') }}
         shell: bash
         env:
           EXPECTED: ${{ matrix.config.nightly_expect }}
