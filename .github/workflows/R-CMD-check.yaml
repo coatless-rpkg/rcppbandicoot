@@ -63,21 +63,28 @@ jobs:
           # The CRAN configuration: OpenCL headers and an ICD loader, no
           # runtime and so no device at all. That is exactly what CRAN and
           # r-universe provision, and nothing else in this matrix exercises
-          # it -- skip_if_no_gpu() has never been observed running in the
-          # environment it was written for. This leg asserts that the package
-          # still compiles and links there, enumerates zero devices, and skips
-          # the device tests cleanly rather than erroring.
+          # it. This leg asserts that the package still compiles and links
+          # there, enumerates zero devices, and skips the device tests
+          # cleanly rather than erroring.
+          #
+          # It gates, for two reasons. It is the configuration almost every
+          # user of a binary install actually has, so a regression here is a
+          # regression for the majority. And it is the ONLY leg that can run
+          # the no-device error path: test-probe.R's "a GPU call raises an R
+          # condition rather than crashing" is unreachable wherever a device
+          # exists, so without this leg that assertion never executes at all.
+          # The two Linux legs are complements, not duplicates -- each covers
+          # the blind spot the other cannot reach.
           #
           # A build with no backend at all cannot be tested: config.hpp
           # #errors unless one of COOT_USE_OPENCL/CUDA/VULKAN is defined, so
           # headers-plus-loader is as close to a GPU-free machine as this
-          # package can be compiled for. RCPPBANDICOOT_REQUIRE_GPU is unset
+          # package can be compiled for. RCPPBANDICOOT_REQUIRE_GPU is false
           # here (see env below): with it set, zero devices would be a hard
-          # failure, the opposite of what this leg asserts. Experimental until
-          # it has been seen green; it should gate once it has.
+          # failure, the opposite of what this leg asserts.
           - os: ubuntu-24.04
             r: 'release'
-            experimental: true
+            experimental: false
             xfail: ''
             opencl_runtime: 'none'
             gpu_examples: ''
