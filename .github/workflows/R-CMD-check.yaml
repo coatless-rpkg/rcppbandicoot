@@ -246,6 +246,49 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      # TEMPORARY. Re-measures the xfail lists on the two upstream-broken
+      # platforms. The macOS list predates the PoCL cbs workaround above and
+      # has never been rechecked against it; the Windows list was measured with
+      # no Intel workaround applied at all. Each operation runs in its own R
+      # process so a hard crash cannot mask the ones after it, and three times
+      # each because the macOS JIT crash is nondeterministic. Windows is
+      # additionally re-run with Intel's vectoriser disabled, the most likely
+      # single lever on a crash inside its kernel compiler. Never fails the
+      # job; the check step below still decides the leg.
+      - name: Re-measure the known-failure list (diagnostic)
+        if: runner.os == 'macOS' || runner.os == 'Windows'
+        shell: bash
+        run: |
+          set +e
+          R CMD INSTALL --no-multiarch . >probe-install.log 2>&1
+          if [ $? -ne 0 ]; then echo "install failed"; tail -30 probe-install.log; exit 0; fi
+          calls=(
+            "gpu_transpose(matrix(1:6,2))"
+            "gpu_matrix_add(matrix(c(1,2,3,4),2),matrix(c(5,6,7,8),2))"
+            "gpu_matrix_multiply(matrix(c(1,2,3,4),2),matrix(c(5,6,7,8),2))"
+            "gpu_element_square(matrix(c(1,2,3,4),2))"
+            "gpu_sum(matrix(1:6,2))"
+            "gpu_mean(matrix(1:6,2))"
+            "gpu_eye(3)"
+            "gpu_randu(4,3)"
+          )
+          run_matrix() {
+            echo "--- $1 ---"
+            for c in "${calls[@]}"; do
+              ok=0; crash=0
+              for rep in 1 2 3; do
+                out=$(Rscript -e "suppressMessages(library(RcppBandicoot)); invisible(${c}); cat('OK')" 2>&1)
+                if printf '%s' "$out" | grep -q OK; then ok=$((ok+1)); else crash=$((crash+1)); fi
+              done
+              printf 'PROBE %-12s ok=%d crash=%d :: %s\n' "$1" "$ok" "$crash" "${c%%(*}"
+            done
+          }
+          run_matrix "default"
+          if [ "${RUNNER_OS}" = "Windows" ]; then
+            export CL_CONFIG_USE_VECTORIZER=False
+            run_matrix "no-vectoriser"
+          fi
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
