@@ -6,7 +6,13 @@
 ##
 
 rm -f config.log config.status
-rm -f src/Makevars src/*.o src/*.so src/symbols.rds 
+rm -f src/Makevars src/*.o src/*.so src/symbols.rds
+
+## src/Makevars.win and R/flags.R are written by configure.win, but a tree that
+## has been configured on either platform can hold them, and both bake in the
+## build machine's absolute paths (library directory, SDK paths, OpenCL flags).
+## Remove them here too so whichever cleanup script runs leaves the same tree.
+rm -f src/Makevars.win R/flags.R
 
 rm -f */*~ *~
 

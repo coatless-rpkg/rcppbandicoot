@@ -4527,6 +4527,17 @@ printf '%s\n' "no" >&6; }
     fi
 fi
 
+if test "x${HAVE_OPENCL}" = x0; then
+  ## Explicitly disable OpenCL since bandicoot's config.hpp enables it by
+  ## default -- the same reason the CUDA section below emits
+  ## -DCOOT_DONT_USE_CUDA.  Without this a CUDA-only build lets config.hpp
+  ## self-define COOT_USE_OPENCL and the compile dies on a missing
+  ## <CL/opencl.h>.  CLBlast and clBLAS need no companion flag here: their
+  ## headers are only reached from inside the COOT_USE_OPENCL guard in
+  ## include_opencl.hpp, which this flag switches off.
+  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_OPENCL"
+fi
+
 ## =============================================================================
 ## CLBlast Detection (preferred for OpenCL)
 ## =============================================================================
@@ -5067,7 +5078,6 @@ For OpenCL support, install:
 
 For CUDA support, install:
   CUDA Toolkit from: https://developer.nvidia.com/cuda-downloads
-  Minimum version: CUDA 9.8
 
 After installation, ensure GPU drivers are properly installed and configured.
 ================================================================================

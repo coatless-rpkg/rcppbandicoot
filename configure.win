@@ -18,6 +18,31 @@ if test -z "${R_HOME}"; then
     exit 1
 fi
 
+## Escape a value for use as sed *replacement* text.  sed gives three
+## characters special meaning there: a backslash, an & (stands for the whole
+## match), and the delimiter, which is | throughout this script.  Without this
+## the natural Windows spelling OPENCL_CPPFLAGS=-IC:\OpenCL\include arrives in
+## the generated file as -IC:OpenCLinclude, and a value containing & or |
+## corrupts the substitution outright, leaving a literal @PLACEHOLDER@ behind.
+## esc() is applied at the point of substitution rather than where the value is
+## captured, so a composed value such as BANDICOOT_CXXFLAGS -- which folds in
+## OPENCL_CPPFLAGS and CLBLAST_CPPFLAGS -- is escaped exactly once.
+esc() {
+    printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'
+}
+
+## Same job, for the R/flags.R substitutions.  Every placeholder in
+## R/flags.R.in sits inside an R string literal, so a value that reaches R with
+## its backslashes intact -- which is exactly what esc() now guarantees --
+## makes the generated file unparseable: -IC:\OpenCL\include becomes the
+## unrecognized escape '\O'.  Escape backslash and both quote characters for R
+## first, then hand the result to esc() for sed.  src/Makevars.win keeps the
+## plain esc(), since make passes those flags straight to the compiler and must
+## not see doubled backslashes.
+esc_r() {
+    esc "$(printf '%s' "$1" | sed -e 's/[\\"'\'']/\\&/g')"
+}
+
 ## Default values
 BANDICOOT_CXXFLAGS=""
 BANDICOOT_LIBS=""
@@ -83,13 +108,27 @@ HAVE_CLBLAS=0
 ## Add common flags
 BANDICOOT_CXXFLAGS="${OPENMP_CXXFLAGS} ${BANDICOOT_CXXFLAGS}"
 
-## Add R's LAPACK/BLAS
-BANDICOOT_LIBS="${BANDICOOT_LIBS} \$(LAPACK_LIBS) \$(BLAS_LIBS) \$(FLIBS)"
+## Add R's LAPACK/BLAS, resolved to real flags rather than left as make variable
+## references -- exactly as configure.ac does on Unix.  R/flags.R is R source,
+## not a makefile, so a literal $(LAPACK_LIBS) reaching RcppBandicootLdFlags()
+## survives into a downstream package's PKG_LIBS via $(shell ...), which make
+## does NOT re-expand; the recipe shell then treats it as command substitution
+## and silently drops it, so the downstream package fails to link R's LAPACK.
+LAPACK_LIBS=$("${R_HOME}/bin/R" CMD config LAPACK_LIBS)
+BLAS_LIBS=$("${R_HOME}/bin/R" CMD config BLAS_LIBS)
+FLIBS=$("${R_HOME}/bin/R" CMD config FLIBS)
+LAPACK_BLAS_LIBS="${LAPACK_LIBS} ${BLAS_LIBS} ${FLIBS}"
+BANDICOOT_LIBS="${BANDICOOT_LIBS} ${LAPACK_BLAS_LIBS}"
 
-## Check if we have at least OpenCL
+## Check if we have at least OpenCL.  Stopping here is deliberate, and matches
+## the AC_MSG_ERROR configure.ac raises for the same condition: bandicoot's
+## config.hpp self-defines COOT_USE_OPENCL when nothing disables it, so a build
+## that continues past this point fails much later as an unreadable cascade of
+## compiler errors about a missing <CL/opencl.h> rather than the actionable
+## message below.
 if [ "${HAVE_OPENCL}" = "0" ]; then
     echo ""
-    echo "WARNING: No GPU backend detected!"
+    echo "ERROR: No GPU backend detected!"
     echo ""
     echo "RcppBandicoot requires OpenCL headers to compile on Windows."
     echo "Set the following environment variables before building:"
@@ -99,6 +138,7 @@ if [ "${HAVE_OPENCL}" = "0" ]; then
     echo "  CLBLAST_CPPFLAGS - Path to CLBlast headers (optional)"
     echo "  CLBLAST_LIBS     - CLBlast library flags (optional)"
     echo ""
+    exit 1
 fi
 
 echo ""
@@ -111,11 +151,11 @@ echo ""
 
 ## Generate Makevars.win from template
 if [ -f "src/Makevars.win.in" ]; then
-    sed -e "s|@BANDICOOT_CXXFLAGS@|${BANDICOOT_CXXFLAGS}|g" \
-        -e "s|@BANDICOOT_LIBS@|${BANDICOOT_LIBS}|g" \
-        -e "s|@OPENMP_CXXFLAGS@|${OPENMP_CXXFLAGS}|g" \
-        -e "s|@OPENCL_TARGET_VERSION@|${OPENCL_TARGET_VERSION}|g" \
-        -e "s|@BANDICOOT_KERNELS_DIR@|${BANDICOOT_KERNELS_DIR}|g" \
+    sed -e "s|@BANDICOOT_CXXFLAGS@|$(esc "${BANDICOOT_CXXFLAGS}")|g" \
+        -e "s|@BANDICOOT_LIBS@|$(esc "${BANDICOOT_LIBS}")|g" \
+        -e "s|@OPENMP_CXXFLAGS@|$(esc "${OPENMP_CXXFLAGS}")|g" \
+        -e "s|@OPENCL_TARGET_VERSION@|$(esc "${OPENCL_TARGET_VERSION}")|g" \
+        -e "s|@BANDICOOT_KERNELS_DIR@|$(esc "${BANDICOOT_KERNELS_DIR}")|g" \
         src/Makevars.win.in > src/Makevars.win
     echo "Generated src/Makevars.win"
 else
@@ -145,7 +185,8 @@ CLBLAST_CXXFLAGS_FOR_R=""
 CLBLAST_LIBS_FOR_R=""
 CLBLAS_CXXFLAGS=""
 CLBLAS_LIBS=""
-LAPACK_BLAS_LIBS="\$(LAPACK_LIBS) \$(BLAS_LIBS) \$(FLIBS)"
+## LAPACK_BLAS_LIBS is already resolved above, alongside BANDICOOT_LIBS; it must
+## not be reset to make variable references here, since this block feeds R source.
 CLBLAST_PREFIX=""
 CLBLAS_PREFIX=""
 CUDA_HOME=""
@@ -164,28 +205,28 @@ if [ "${HAVE_CLBLAST}" = "1" ]; then
 fi
 
 if [ -f "R/flags.R.in" ]; then
-    sed -e "s|@BANDICOOT_CXXFLAGS@|${BANDICOOT_CXXFLAGS}|g" \
-        -e "s|@BANDICOOT_LIBS@|${BANDICOOT_LIBS}|g" \
-        -e "s|@OPENCL_TARGET_VERSION@|${OPENCL_TARGET_VERSION}|g" \
-        -e "s|@OPENCL_CXXFLAGS@|${OPENCL_CXXFLAGS_FOR_R}|g" \
-        -e "s|@OPENCL_LIBS@|${OPENCL_LIBS_FOR_R}|g" \
-        -e "s|@CUDA_CXXFLAGS@|${CUDA_CXXFLAGS}|g" \
-        -e "s|@CUDA_LIBS@|${CUDA_LIBS}|g" \
-        -e "s|@CLBLAST_CXXFLAGS@|${CLBLAST_CXXFLAGS_FOR_R}|g" \
-        -e "s|@CLBLAST_LIBS@|${CLBLAST_LIBS_FOR_R}|g" \
-        -e "s|@CLBLAS_CXXFLAGS@|${CLBLAS_CXXFLAGS}|g" \
-        -e "s|@CLBLAS_LIBS@|${CLBLAS_LIBS}|g" \
-        -e "s|@LAPACK_BLAS_LIBS@|${LAPACK_BLAS_LIBS}|g" \
-        -e "s|@HAVE_OPENCL@|${HAVE_OPENCL}|g" \
-        -e "s|@HAVE_CUDA@|${HAVE_CUDA}|g" \
-        -e "s|@HAVE_CLBLAST@|${HAVE_CLBLAST}|g" \
-        -e "s|@HAVE_CLBLAS@|${HAVE_CLBLAS}|g" \
-        -e "s|@HAVE_OPENMP@|${HAVE_OPENMP}|g" \
-        -e "s|@DEFAULT_BACKEND@|${DEFAULT_BACKEND}|g" \
-        -e "s|@CLBLAST_PREFIX@|${CLBLAST_PREFIX}|g" \
-        -e "s|@CLBLAS_PREFIX@|${CLBLAS_PREFIX}|g" \
-        -e "s|@CUDA_HOME@|${CUDA_HOME}|g" \
-        -e "s|@SDKPATH@|${SDKPATH}|g" \
+    sed -e "s|@BANDICOOT_CXXFLAGS@|$(esc_r "${BANDICOOT_CXXFLAGS}")|g" \
+        -e "s|@BANDICOOT_LIBS@|$(esc_r "${BANDICOOT_LIBS}")|g" \
+        -e "s|@OPENCL_TARGET_VERSION@|$(esc_r "${OPENCL_TARGET_VERSION}")|g" \
+        -e "s|@OPENCL_CXXFLAGS@|$(esc_r "${OPENCL_CXXFLAGS_FOR_R}")|g" \
+        -e "s|@OPENCL_LIBS@|$(esc_r "${OPENCL_LIBS_FOR_R}")|g" \
+        -e "s|@CUDA_CXXFLAGS@|$(esc_r "${CUDA_CXXFLAGS}")|g" \
+        -e "s|@CUDA_LIBS@|$(esc_r "${CUDA_LIBS}")|g" \
+        -e "s|@CLBLAST_CXXFLAGS@|$(esc_r "${CLBLAST_CXXFLAGS_FOR_R}")|g" \
+        -e "s|@CLBLAST_LIBS@|$(esc_r "${CLBLAST_LIBS_FOR_R}")|g" \
+        -e "s|@CLBLAS_CXXFLAGS@|$(esc_r "${CLBLAS_CXXFLAGS}")|g" \
+        -e "s|@CLBLAS_LIBS@|$(esc_r "${CLBLAS_LIBS}")|g" \
+        -e "s|@LAPACK_BLAS_LIBS@|$(esc_r "${LAPACK_BLAS_LIBS}")|g" \
+        -e "s|@HAVE_OPENCL@|$(esc_r "${HAVE_OPENCL}")|g" \
+        -e "s|@HAVE_CUDA@|$(esc_r "${HAVE_CUDA}")|g" \
+        -e "s|@HAVE_CLBLAST@|$(esc_r "${HAVE_CLBLAST}")|g" \
+        -e "s|@HAVE_CLBLAS@|$(esc_r "${HAVE_CLBLAS}")|g" \
+        -e "s|@HAVE_OPENMP@|$(esc_r "${HAVE_OPENMP}")|g" \
+        -e "s|@DEFAULT_BACKEND@|$(esc_r "${DEFAULT_BACKEND}")|g" \
+        -e "s|@CLBLAST_PREFIX@|$(esc_r "${CLBLAST_PREFIX}")|g" \
+        -e "s|@CLBLAS_PREFIX@|$(esc_r "${CLBLAS_PREFIX}")|g" \
+        -e "s|@CUDA_HOME@|$(esc_r "${CUDA_HOME}")|g" \
+        -e "s|@SDKPATH@|$(esc_r "${SDKPATH}")|g" \
         R/flags.R.in > R/flags.R
     echo "Generated R/flags.R"
 else

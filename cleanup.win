@@ -1,0 +1,16 @@
+#!/bin/sh
+##
+## RcppBandicoot cleanup.win script
+##
+## Windows counterpart of 'cleanup': R CMD INSTALL --clean / --preclean runs
+## this file instead of 'cleanup' on Windows, so the files configure.win writes
+## -- src/Makevars.win and R/flags.R, both holding the build machine's absolute
+## paths -- have to be removed here as well.  configure.win is a plain shell
+## script rather than an autoconf product, so there are no
+## config.log/config.status/autom4te.cache artefacts to clear on this path.
+##
+
+rm -f src/Makevars src/Makevars.win src/*.o src/*.dll src/symbols.rds
+rm -f R/flags.R
+
+rm -f */*~ *~
