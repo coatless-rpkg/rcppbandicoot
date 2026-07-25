@@ -6,7 +6,7 @@
 ## See src/Makevars.in for why COOT_KERNEL_SOURCE_DIR is a run-time function
 ## call rather than a baked path. RCPPBANDICOOT_KERNEL_DIR_DEFAULT is the
 ## configure-time fallback used before .onLoad overrides it.
-PKG_CPPFLAGS = -I../inst/include -DCOOT_TARGET_OPENCL_VERSION=@OPENCL_TARGET_VERSION@ -DCOOT_KERNEL_SOURCE_DIR='rcppbandicoot_kernel_dir()' -DRCPPBANDICOOT_KERNEL_DIR_DEFAULT=\"@BANDICOOT_KERNELS_DIR@\"
+PKG_CPPFLAGS = -I../inst/include -DCOOT_TARGET_OPENCL_VERSION=@OPENCL_TARGET_VERSION@ -DCOOT_KERNEL_SOURCE_DIR='rcppbandicoot_kernel_dir()' -DRCPPBANDICOOT_KERNEL_DIR_DEFAULT='"@BANDICOOT_KERNELS_DIR@"'
 
 ## Compiler flags from configure.win
 PKG_CXXFLAGS = @BANDICOOT_CXXFLAGS@
