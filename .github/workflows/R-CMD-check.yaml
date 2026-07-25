@@ -128,6 +128,7 @@ jobs:
             opencl_runtime: 'auto'
             gpu_examples: 'true'
             opencl_version: ''
+            opencl_version_sha256: ''
             http_user_agent: ''
 
           # The CRAN configuration: OpenCL headers and an ICD loader, no
@@ -161,6 +162,7 @@ jobs:
             opencl_runtime: 'none'
             gpu_examples: ''
             opencl_version: ''
+            opencl_version_sha256: ''
             http_user_agent: ''
 
           # r-devel. This package has already had to absorb upstream
@@ -177,6 +179,7 @@ jobs:
             opencl_runtime: 'auto'
             gpu_examples: ''
             opencl_version: ''
+            opencl_version_sha256: ''
             http_user_agent: 'release'
 
           # xfail lists gpu_* operations skipped on that runner. On the nightly
@@ -237,6 +240,7 @@ jobs:
             opencl_runtime: 'auto'
             gpu_examples: ''
             opencl_version: ''
+            opencl_version_sha256: ''
             http_user_agent: ''
 
           # The LLVM 20 runtime pin this leg needs is currently unreachable.
@@ -251,15 +255,36 @@ jobs:
           # asset, and the action requires one. Fixing that belongs in the
           # action, not here; until then the hypothesis stays untested and the
           # whole list stands.
+          # Pinned to the last oclcpuexp release built on LLVM 20. The
+          # pre-migration workflow shipped Intel's official runtime, whose
+          # common_clang64.dll reports clang 20.0.0git, where the release this
+          # leg moved to reports 22.1.0 -- and failure tracks the LLVM
+          # generation across the whole matrix (PoCL on 16 works, PoCL on 21 is
+          # nondeterministic, this on 22 fails on every operation). So the
+          # runtime swap is the most likely thing the migration broke, and
+          # because the old CI never executed a kernel nobody could have seen it.
+          #
+          # The exclusions are CLEARED so the question actually gets asked. If
+          # the operations pass, the swap was the fault and the fix is this pin.
+          # If they still crash, Windows never worked, the runtime choice is
+          # irrelevant, and the list goes back. The leg is experimental either
+          # way, so a wrong guess costs a red mark on a non-blocking job.
+          #
+          # version-sha256 is required because the GitHub API reports no digest
+          # for this release's asset -- the exact gap that made this experiment
+          # impossible until setup-opencl grew the input. The value was computed
+          # from the downloaded archive, so it pins the artifact against later
+          # substitution; it does not independently authenticate it.
           - os: windows-2025
             r: 'release'
             experimental: true
-            xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu,gpu_session'
+            xfail: ''
             nightly_expect: 'gpu-element-square,gpu-eye,gpu-matrix-add,gpu-matrix-multiply,gpu-mean,gpu-randu,gpu-seed,gpu-session,gpu-sum,gpu-sum-multipass,gpu-sum-na,gpu-transpose'
             nightly_exact: 'true'
             opencl_runtime: 'auto'
             gpu_examples: ''
-            opencl_version: ''
+            opencl_version: '2025-WW13'
+            opencl_version_sha256: 'c4800a819d5ba19e483505360a96e858aac1abba550b8e96fbf7a2a0c91bf9cb'
             http_user_agent: ''
 
     env:
@@ -349,6 +374,7 @@ jobs:
           # means "the tested version for this runner". See the Windows entry
           # in the matrix for why that leg pins one.
           version: ${{ matrix.config.opencl_version }}
+          version-sha256: ${{ matrix.config.opencl_version_sha256 }}
           verify: 'true'
           require-fp64: 'true'
 
