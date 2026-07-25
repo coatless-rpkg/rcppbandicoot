@@ -34,15 +34,15 @@ jobs:
     # on a schedule without needing a second expression.
     continue-on-error: ${{ github.event_name != 'schedule' && matrix.config.experimental }}
 
-    # Only the Linux leg with a real device gates the build. Bandicoot's
-    # kernels are reliable on PoCL there, so its GPU tests run for real and a
-    # regression fails the job. macOS and Windows are best-effort:
-    # PoCL's LLVM JIT segfaults nondeterministically on macOS -- a different
-    # operation each run, so it is a code-generation bug in the JIT, not a
-    # specific broken op -- and Intel's Windows runtime crashes compiling the
-    # kernels. Both are upstream issues; until they are fixed those legs prove
-    # only that the package compiles, installs, and passes its device-free
-    # tests. They are NOT allowed to block a pull request, and they must not be
+    # The two Linux legs gate the build: one with a real device, where every
+    # operation runs for real and a regression fails the job, and one with no
+    # device, which is the configuration CRAN and r-universe actually ship.
+    # macOS and Windows are best-effort. PoCL's LLVM JIT segfaults
+    # nondeterministically on macOS and Intel's Windows runtime crashes on
+    # every compute kernel; measured rates are in the matrix comment below.
+    # Both are upstream defects, so until they are fixed those legs prove only
+    # that the package compiles, installs, and passes its device-free tests.
+    # They are NOT allowed to block a pull request, and they must not be
     # green-by-skipping-everything on a platform where the GPU genuinely works,
     # which is why only the two upstream-broken platforms carry an xfail list.
     strategy:
@@ -105,14 +105,28 @@ jobs:
 
           # xfail lists gpu_* operations skipped on that runner. On the nightly
           # schedule the list is cleared (see RCPPBANDICOOT_XFAIL below) so the
-          # real, unmitigated state is visible. Both legs below exclude
-          # every operation, for the same underlying reason -- the runtime's
-          # kernel compiler crashes with a hard access violation the R session
-          # cannot catch -- established differently on each. On macOS PoCL's
-          # LLVM JIT crash is nondeterministic, a different op each run. On
-          # Windows a per-op probe (each op in its own R process) showed Intel's
-          # runtime crashes on every compute op, even gpu_eye(3), while the
-          # device probes succeed. Both are upstream issues.
+          # real, unmitigated state is visible. Both legs below exclude every
+          # operation, for the same underlying reason -- the runtime's kernel
+          # compiler crashes hard enough that the R session cannot catch it, so
+          # one bad call takes the whole suite with it, not just its own test.
+          # Both lists were measured by running each operation in its own R
+          # process, so that a crash could not mask the operations after it.
+          #
+          # macOS, 20 runs per operation with the PoCL cbs workaround above:
+          #   gpu_transpose 4/20 crashed, gpu_element_square 3/20,
+          #   gpu_matrix_multiply 1/20, the other five 0/20.
+          # A 0/20 result is NOT evidence an operation is safe. An earlier pass
+          # at 3 runs put gpu_matrix_add at 3/3 crashed; at 20 runs it was
+          # 0/20. The crash moves between operations, which is what a code
+          # generation fault in the JIT looks like and is why no operation can
+          # be released from the list on its own. With zero failures in twenty
+          # runs the upper bound on the rate is still about 15%, indistinguish-
+          # able from gpu_matrix_multiply's measured 5%.
+          #
+          # Windows, 3 runs per operation: every operation crashed every time,
+          # while the device probes succeed. Unchanged with Intel's vectoriser
+          # disabled (CL_CONFIG_USE_VECTORIZER=False), so that lever is ruled
+          # out. Both platforms are upstream defects with no fix available here.
           - os: macos-latest
             r: 'release'
             experimental: true
@@ -245,45 +259,6 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
           needs: check
-
-      # TEMPORARY. Re-measures the xfail lists on the two upstream-broken
-      # platforms. The macOS list predates the PoCL cbs workaround above and
-      # has never been rechecked against it; the Windows list was measured with
-      # no Intel workaround applied at all. Each operation runs in its own R
-      # process so a hard crash cannot mask the ones after it, and three times
-      # each because the macOS JIT crash is nondeterministic. Windows is
-      # additionally re-run with Intel's vectoriser disabled, the most likely
-      # single lever on a crash inside its kernel compiler. Never fails the
-      # job; the check step below still decides the leg.
-      - name: Re-measure the known-failure list (diagnostic)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          set +e
-          R CMD INSTALL --no-multiarch . >probe-install.log 2>&1
-          if [ $? -ne 0 ]; then echo "install failed"; tail -30 probe-install.log; exit 0; fi
-          calls=(
-            "gpu_transpose(matrix(1:6,2))"
-            "gpu_matrix_add(matrix(c(1,2,3,4),2),matrix(c(5,6,7,8),2))"
-            "gpu_matrix_multiply(matrix(c(1,2,3,4),2),matrix(c(5,6,7,8),2))"
-            "gpu_element_square(matrix(c(1,2,3,4),2))"
-            "gpu_sum(matrix(1:6,2))"
-            "gpu_mean(matrix(1:6,2))"
-            "gpu_eye(3)"
-            "gpu_randu(4,3)"
-          )
-          run_matrix() {
-            echo "--- $1 ---"
-            for c in "${calls[@]}"; do
-              ok=0; crash=0
-              for rep in $(seq 1 20); do
-                out=$(Rscript -e "suppressMessages(library(RcppBandicoot)); invisible(${c}); cat('OK')" 2>&1)
-                if printf '%s' "$out" | grep -q OK; then ok=$((ok+1)); else crash=$((crash+1)); fi
-              done
-              printf 'PROBE %-12s ok=%2d crash=%2d :: %s\n' "$1" "$ok" "$crash" "${c%%(*}"
-            done
-          }
-          run_matrix "default"
 
       - uses: r-lib/actions/check-r-package@v2
         with:
