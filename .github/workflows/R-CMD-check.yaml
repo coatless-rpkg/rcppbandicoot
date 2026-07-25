@@ -112,56 +112,60 @@ jobs:
           # running each operation in its own R process, so a crash could not
           # mask the operations after it.
           #
-          # macOS, 20 runs per operation with the PoCL cbs workaround above:
-          #   gpu_transpose 4/20 crashed, gpu_element_square 3/20,
-          #   gpu_matrix_multiply 1/20, the other five 0/20.
-          # Those three are excluded and the rest now run for real, which is
-          # coverage the previous whole-list exclusion threw away. That is only
-          # affordable because each operation has its own tests/zz-gpu-<op>.R
-          # and therefore its own process: a crash fails one named script
-          # instead of taking the suite with it.
+          # macOS keeps the whole list, and the reason is worth reading before
+          # anyone shortens it again. A probe running each operation alone in a
+          # fresh process, 20 times, with the PoCL cbs workaround above, gave
+          # gpu_transpose 4/20 crashed, gpu_element_square 3/20,
+          # gpu_matrix_multiply 1/20 and the other five 0/20. Excluding only
+          # those three was tried, and in the very first CI run six of the ten
+          # operation scripts segfaulted -- including gpu_matrix_add, gpu_sum
+          # and gpu_randu, all of which had measured 0/20.
           #
-          # Expect this leg to be intermittently red, and read it carefully
-          # rather than papering over it. A 0/20 result is not proof an
-          # operation is safe -- the upper bound on its rate is still about
-          # 15%, indistinguishable from gpu_matrix_multiply's measured 5% --
-          # and an earlier 3-run pass had gpu_matrix_add failing 3/3 where 20
-          # runs gave 0/20. The crash moves between operations, which is what a
-          # code generation fault in the JIT looks like. A red run is only news
-          # when it names an operation outside the list below.
+          # So the isolated per-operation rate is a LOWER BOUND, not an
+          # estimate. One operation per fresh process is the most favourable
+          # case for a code generation fault; a real test script compiles
+          # several kernels in one session and the rate rises sharply. The
+          # crash is a property of the JIT, not of any operation, which is also
+          # why an earlier 3-run pass had gpu_matrix_add failing 3/3 where 20
+          # runs gave 0/20. No operation can be released on its own evidence.
           #
           # Windows, 3 runs per operation: every operation crashed every time,
           # while the device probes succeed. Unchanged with Intel's vectoriser
           # disabled (CL_CONFIG_USE_VECTORIZER=False), so that lever is ruled
-          # out. The whole list stands there pending the runtime pin below.
+          # out.
+          #
+          # Both lists therefore stay whole. What the per-operation split buys
+          # here is not a shorter list but a readable failure: the core
+          # device-free suite still completes on both platforms even when every
+          # GPU script dies, and each crash names its own operation.
           - os: macos-latest
             r: 'release'
             experimental: true
-            xfail: 'gpu_transpose,gpu_matrix_multiply,gpu_element_square'
+            xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu,gpu_session'
             opencl_runtime: 'auto'
             gpu_examples: ''
             opencl_version: ''
             http_user_agent: ''
 
-          # Windows keeps the whole list, but pins the runtime to the LLVM 20
-          # generation. The pre-migration workflow installed Intel's official
-          # runtime, whose common_clang64.dll reports clang 20.0.0git; the
-          # oclcpuexp release we moved to reports 22.1.0, and every operation
-          # crashes on it. Failure tracks the LLVM generation across all three
-          # platforms (Linux/PoCL on 16 works; macOS/PoCL on 21 is flaky;
-          # Windows on 22 fails outright), so the runtime swap is the most
-          # likely thing the migration broke -- and because the old CI never
-          # executed a kernel, nobody could have noticed. 2025-WW13 is the last
-          # oclcpuexp release on LLVM 20. If the operations pass, the exclusion
-          # list here is wrong and the fix is this pin; if they still crash,
-          # Windows never worked and the runtime choice is irrelevant.
+          # The LLVM 20 runtime pin this leg needs is currently unreachable.
+          # The pre-migration workflow shipped Intel's official runtime, whose
+          # common_clang64.dll reports clang 20.0.0git, where the oclcpuexp
+          # release we moved to reports 22.1.0 -- and failure tracks the LLVM
+          # generation across all three platforms (PoCL on 16 works, PoCL on 21
+          # is flaky, this on 22 fails outright), so the runtime swap is the
+          # most likely thing the migration broke. Pinning 2025-WW13, the last
+          # oclcpuexp release on LLVM 20, was tried: setup-opencl refuses it
+          # because the GitHub API reports no SHA-256 digest for that release's
+          # asset, and the action requires one. Fixing that belongs in the
+          # action, not here; until then the hypothesis stays untested and the
+          # whole list stands.
           - os: windows-2025
             r: 'release'
             experimental: true
-            xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu'
+            xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu,gpu_session'
             opencl_runtime: 'auto'
             gpu_examples: ''
-            opencl_version: '2025-WW13'
+            opencl_version: ''
             http_user_agent: ''
 
     env:
