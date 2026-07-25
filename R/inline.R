@@ -31,16 +31,26 @@
 #' # Rcpp::sourceCpp("test.cpp")
 #' }
 inlineCxxPlugin <- function() {
+  # include.before, not include.after: Rcpp.plugin.maker emits
+  # "<include.before>\n#include <Rcpp.h>\n<include.after>", and RcppBandicoot.h
+  # refuses to be included once Rcpp.h has been (the #error at the top of that
+  # header). Bandicoot has to be loaded before Rcpp so RcppBandicootForward.h
+  # can declare the wrap()/Exporter specialisations first, which is exactly what
+  # this ordering gives; swapping to include.after breaks the compile outright.
   plugin <- Rcpp::Rcpp.plugin.maker(
     include.before = "#include <RcppBandicoot.h>",
     libs = RcppBandicootLdFlags(),
     package = "RcppBandicoot"
   )
 
+  # Rcpp.plugin.maker populates env with PKG_LIBS and nothing else, so
+  # PKG_CXXFLAGS is NULL here and paste() would leave a stray trailing space.
+  # Concatenating the non-NULL parts avoids that while still deferring to Rcpp
+  # should it ever start contributing compiler flags of its own.
   settings <- plugin()
   settings$env$PKG_CXXFLAGS <- paste(
-    RcppBandicootCxxFlags(),
-    settings$env$PKG_CXXFLAGS
+    c(RcppBandicootCxxFlags(), settings$env$PKG_CXXFLAGS),
+    collapse = " "
   )
 
   # No USE_CXX14: `R CMD config CXX14` has been defunct since R 4.5, and R's

@@ -1,11 +1,16 @@
-test_that("bandicoot_version() prints the vendored Bandicoot version", {
-  out <- capture.output(res <- bandicoot_version())
-  expect_null(res)
-  expect_match(out[1], "^[0-9]+\\.[0-9]+\\.[0-9]+")
+test_that("bandicoot_version() returns the vendored Bandicoot version", {
+  res <- bandicoot_version()
+  expect_type(res, "character")
+  expect_length(res, 1L)
+  # Bare "major.minor.patch" with no release name, so that downstream code can
+  # feature-gate with package_version() -- coot_version::as_string() appends
+  # "(Bandwidth Glutton)", which package_version() rejects.
+  expect_match(res, "^[0-9]+\\.[0-9]+\\.[0-9]+$")
+  expect_s3_class(package_version(res), "package_version")
   # inst/version.txt is what the upstream-update workflow bumps; the compiled
   # constant and the file must not drift apart.
   expect_identical(
-    sub(" .*$", "", out[1]),
+    res,
     readLines(system.file("version.txt", package = "RcppBandicoot"))[1]
   )
 })

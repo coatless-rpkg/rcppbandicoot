@@ -8,6 +8,62 @@
 ## This file is generated from flags.R.in by the configure script
 ##
 
+## Drop -I/-L entries naming directories that are no longer there.
+##
+## Everything the configure script substituted below was frozen at build time,
+## and half of it is the build machine's SDK layout.  Those directories are not
+## guaranteed to survive: the OpenCL SDK on a CI runner is unpacked under
+## TMPDIR, which macOS purges on a schedule, and a binary package is installed
+## on machines that never had an SDK at all.  Handing a downstream package a
+## -I or -L that points at a deleted directory produces a compile or link
+## failure whose message says nothing about where the path came from, so drop
+## the dead entries and name them once instead.
+##
+## Both spellings are handled.  configure writes the joined form
+## (-I/usr/include), but OPENCL_CPPFLAGS, CLBLAST_CPPFLAGS and their _LIBS
+## counterparts are taken verbatim from the environment, where "-I /usr/include"
+## is equally legal.  Anything else -- -D, -l, -framework, -F, make variables
+## such as $(LAPACK_LIBS) on Windows -- is passed through untouched, in order.
+drop_missing_dirs <- function(flags, what) {
+  tokens <- strsplit(trimws(flags), "[[:space:]]+")[[1L]]
+  keep <- rep(TRUE, length(tokens))
+  gone <- character()
+
+  i <- 1L
+  while (i <= length(tokens)) {
+    span <- i
+    dir <- NA_character_
+    if (tokens[i] %in% c("-I", "-L") && i < length(tokens)) {
+      span <- c(i, i + 1L)
+      dir <- tokens[i + 1L]
+    } else if (grepl("^-[IL].", tokens[i])) {
+      dir <- substring(tokens[i], 3L)
+    }
+    if (!is.na(dir) && !dir.exists(dir)) {
+      keep[span] <- FALSE
+      gone <- c(gone, dir)
+    }
+    i <- max(span) + 1L
+  }
+
+  # Returning the argument itself, rather than a rejoin of its tokens, keeps
+  # the overwhelmingly common case byte-identical to what configure wrote --
+  # inspecting the flags must not reformat them.
+  if (length(gone) == 0L) {
+    return(flags)
+  }
+
+  warning("RcppBandicoot ", what, " recorded at build time name ",
+          if (length(gone) == 1L) "a directory that no longer exists"
+          else "directories that no longer exist",
+          ": ", paste(gone, collapse = ", "),
+          ". Those entries have been dropped. Reinstall RcppBandicoot if a ",
+          "build against it now fails to find the GPU SDK.",
+          call. = FALSE)
+
+  paste(tokens[keep], collapse = " ")
+}
+
 #' Get RcppBandicoot C++ compiler flags
 #'
 #' Returns the C++ compiler flags required for compiling code that uses RcppBandicoot.
@@ -46,7 +102,7 @@ RcppBandicootCxxFlags <- function() {
   paste0("-I", shQuote(path),
          " -DCOOT_TARGET_OPENCL_VERSION=@OPENCL_TARGET_VERSION@",
          sprintf(" -DCOOT_KERNEL_SOURCE_DIR='\"%s\"'", kernels),
-         " @BANDICOOT_CXXFLAGS@")
+         " ", drop_missing_dirs("@BANDICOOT_CXXFLAGS@", "compiler flags"))
 }
 
 #' Get RcppBandicoot linker flags
@@ -64,7 +120,7 @@ RcppBandicootCxxFlags <- function() {
 #' @examples
 #' RcppBandicootLdFlags()
 RcppBandicootLdFlags <- function() {
-  '@BANDICOOT_LIBS@'
+  drop_missing_dirs('@BANDICOOT_LIBS@', "linker flags")
 }
 
 ## =============================================================================
