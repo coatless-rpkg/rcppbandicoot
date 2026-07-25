@@ -20,6 +20,9 @@
 #ifndef RcppBandicoot__RcppBandicootAs__h
 #define RcppBandicoot__RcppBandicootAs__h
 
+#include <limits>
+#include <type_traits>
+
 namespace Rcpp {
     namespace traits {
 
@@ -48,6 +51,85 @@ namespace Rcpp {
             }
         };
 
+        // Whether the destination element type has room for a missing value.
+        // A floating-point element has NaN to spare, and so does a complex one
+        // built out of floating-point parts. An integral element does not: every
+        // bit pattern already means a number.
+        template <typename T>
+        struct bandicoot_na_traits {
+            static const bool has_nan = std::is_floating_point<T>::value;
+            static inline T na_value() { return std::numeric_limits<T>::quiet_NaN(); }
+        };
+
+        template <typename U>
+        struct bandicoot_na_traits< std::complex<U> > {
+            static const bool has_nan = std::is_floating_point<U>::value;
+            static inline std::complex<U> na_value() {
+                const U q = std::numeric_limits<U>::quiet_NaN();
+                return std::complex<U>(q, q);
+            }
+        };
+
+        // Copy an R vector's payload into a plain C++ buffer of element type T.
+        //
+        // R spells a missing integer or logical as INT_MIN, which to C++ is an
+        // ordinary int, so a bare static_cast turns NA into -2147483648 and every
+        // sum, mean or product computed downstream silently reports that number
+        // instead of NA. That is not a corner case: matrix(1:6, 2) is an INTEGER
+        // matrix, so it is what the documented example inputs go through.
+        //
+        // REALSXP needs no test on the way in when the destination is
+        // floating-point: NA_real_ is a NaN with a payload, so it propagates
+        // through arithmetic on its own. Narrowing it to float keeps it missing
+        // -- IEEE 754 turns a double NaN into a float NaN -- but drops the
+        // payload, so an NA that passes through an fmat comes back to R as NaN
+        // rather than NA. That is inherent to single precision, not something
+        // this conversion can preserve.
+        //
+        // An integral destination has nowhere to put a missing value, so any NA
+        // or NaN reaching one is refused instead of being quietly cast (which is
+        // also undefined behaviour for NaN).
+        template <typename T>
+        inline void bandicoot_copy_from_r(SEXP source, T* dest, coot::uword n_elem, const char* target) {
+            const int sexp_type = TYPEOF(source);
+
+            if (sexp_type == REALSXP) {
+                const double* src = REAL(source);
+                for (coot::uword i = 0; i < n_elem; ++i) {
+                    if (!bandicoot_na_traits<T>::has_nan && ISNAN(src[i])) {
+                        Rcpp::stop("Cannot convert NA/NaN to an integer-typed %s: "
+                                   "integer elements have no missing-value representation", target);
+                    }
+                    dest[i] = static_cast<T>(src[i]);
+                }
+            } else if (sexp_type == INTSXP || sexp_type == LGLSXP) {
+                // NA_LOGICAL and NA_INTEGER are both R_NaInt, so one test covers both
+                const int* src = (sexp_type == INTSXP) ? INTEGER(source) : LOGICAL(source);
+                for (coot::uword i = 0; i < n_elem; ++i) {
+                    if (src[i] == NA_INTEGER) {
+                        if (!bandicoot_na_traits<T>::has_nan) {
+                            Rcpp::stop("Cannot convert NA to an integer-typed %s: "
+                                       "integer elements have no missing-value representation", target);
+                        }
+                        dest[i] = bandicoot_na_traits<T>::na_value();
+                    } else {
+                        dest[i] = static_cast<T>(src[i]);
+                    }
+                }
+            } else if (sexp_type == CPLXSXP) {
+                const Rcomplex* src = COMPLEX(source);
+                for (coot::uword i = 0; i < n_elem; ++i) {
+                    if (!bandicoot_na_traits<T>::has_nan && ISNAN(src[i].r)) {
+                        Rcpp::stop("Cannot convert NA/NaN to an integer-typed %s: "
+                                   "integer elements have no missing-value representation", target);
+                    }
+                    dest[i] = complex_converter<T>::from_rcomplex(src[i]);
+                }
+            } else {
+                Rcpp::stop("Unsupported SEXP type for conversion to %s", target);
+            }
+        }
+
         // Exporter for coot::Mat<T> - convert R matrix to Bandicoot matrix
         template <typename T>
         class Exporter< coot::Mat<T> > {
@@ -71,7 +153,7 @@ namespace Rcpp {
 
                 // Copy data from R to CPU memory
                 std::vector<T> cpu_mem(n_rows * n_cols);
-                convert_to_cpp(cpu_mem.data(), n_rows * n_cols);
+                bandicoot_copy_from_r(data, cpu_mem.data(), n_rows * n_cols, "Bandicoot matrix");
 
                 // Copy from CPU to GPU
                 result.copy_into_dev_mem(cpu_mem.data(), n_rows * n_cols);
@@ -87,38 +169,10 @@ namespace Rcpp {
                 coot::Mat<T> result(n_elem, 1);
 
                 std::vector<T> cpu_mem(n_elem);
-                convert_to_cpp(cpu_mem.data(), n_elem);
+                bandicoot_copy_from_r(data, cpu_mem.data(), n_elem, "Bandicoot matrix");
                 result.copy_into_dev_mem(cpu_mem.data(), n_elem);
 
                 return result;
-            }
-
-            void convert_to_cpp(T* dest, coot::uword n_elem) {
-                int sexp_type = TYPEOF(data);
-
-                if (sexp_type == REALSXP) {
-                    const double* src = REAL(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else if (sexp_type == INTSXP) {
-                    const int* src = INTEGER(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else if (sexp_type == CPLXSXP) {
-                    const Rcomplex* src = COMPLEX(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = complex_converter<T>::from_rcomplex(src[i]);
-                    }
-                } else if (sexp_type == LGLSXP) {
-                    const int* src = LOGICAL(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else {
-                    Rcpp::stop("Unsupported SEXP type for conversion to Bandicoot matrix");
-                }
             }
         };
 
@@ -151,7 +205,7 @@ namespace Rcpp {
 
                 // Copy data from R to CPU memory
                 std::vector<T> cpu_mem(n_elem);
-                convert_to_cpp(cpu_mem.data(), n_elem);
+                bandicoot_copy_from_r(data, cpu_mem.data(), n_elem, "Bandicoot column vector");
 
                 // Copy from CPU to GPU
                 result.copy_into_dev_mem(cpu_mem.data(), n_elem);
@@ -161,34 +215,6 @@ namespace Rcpp {
 
         private:
             SEXP data;
-
-            void convert_to_cpp(T* dest, coot::uword n_elem) {
-                int sexp_type = TYPEOF(data);
-
-                if (sexp_type == REALSXP) {
-                    const double* src = REAL(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else if (sexp_type == INTSXP) {
-                    const int* src = INTEGER(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else if (sexp_type == CPLXSXP) {
-                    const Rcomplex* src = COMPLEX(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = complex_converter<T>::from_rcomplex(src[i]);
-                    }
-                } else if (sexp_type == LGLSXP) {
-                    const int* src = LOGICAL(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else {
-                    Rcpp::stop("Unsupported SEXP type for conversion to Bandicoot column vector");
-                }
-            }
         };
 
         // Exporter for coot::Row<T> - convert R vector to Bandicoot row vector
@@ -220,7 +246,7 @@ namespace Rcpp {
 
                 // Copy data from R to CPU memory
                 std::vector<T> cpu_mem(n_elem);
-                convert_to_cpp(cpu_mem.data(), n_elem);
+                bandicoot_copy_from_r(data, cpu_mem.data(), n_elem, "Bandicoot row vector");
 
                 // Copy from CPU to GPU
                 result.copy_into_dev_mem(cpu_mem.data(), n_elem);
@@ -230,34 +256,6 @@ namespace Rcpp {
 
         private:
             SEXP data;
-
-            void convert_to_cpp(T* dest, coot::uword n_elem) {
-                int sexp_type = TYPEOF(data);
-
-                if (sexp_type == REALSXP) {
-                    const double* src = REAL(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else if (sexp_type == INTSXP) {
-                    const int* src = INTEGER(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else if (sexp_type == CPLXSXP) {
-                    const Rcomplex* src = COMPLEX(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = complex_converter<T>::from_rcomplex(src[i]);
-                    }
-                } else if (sexp_type == LGLSXP) {
-                    const int* src = LOGICAL(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else {
-                    Rcpp::stop("Unsupported SEXP type for conversion to Bandicoot row vector");
-                }
-            }
         };
 
         // Exporter for coot::Cube<T> - convert R 3D array to Bandicoot cube
@@ -285,7 +283,7 @@ namespace Rcpp {
 
                 // Copy data from R to CPU memory
                 std::vector<T> cpu_mem(n_elem);
-                convert_to_cpp(cpu_mem.data(), n_elem);
+                bandicoot_copy_from_r(data, cpu_mem.data(), n_elem, "Bandicoot cube");
 
                 // Copy from CPU to GPU
                 result.copy_into_dev_mem(cpu_mem.data(), n_elem);
@@ -295,34 +293,6 @@ namespace Rcpp {
 
         private:
             SEXP data;
-
-            void convert_to_cpp(T* dest, coot::uword n_elem) {
-                int sexp_type = TYPEOF(data);
-
-                if (sexp_type == REALSXP) {
-                    const double* src = REAL(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else if (sexp_type == INTSXP) {
-                    const int* src = INTEGER(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else if (sexp_type == CPLXSXP) {
-                    const Rcomplex* src = COMPLEX(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = complex_converter<T>::from_rcomplex(src[i]);
-                    }
-                } else if (sexp_type == LGLSXP) {
-                    const int* src = LOGICAL(data);
-                    for (coot::uword i = 0; i < n_elem; ++i) {
-                        dest[i] = static_cast<T>(src[i]);
-                    }
-                } else {
-                    Rcpp::stop("Unsupported SEXP type for conversion to Bandicoot cube");
-                }
-            }
         };
 
     } // namespace traits
