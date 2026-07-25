@@ -82,7 +82,7 @@ skip_if_no_gpu <- function() {
 # gpu_element_square is the package's only double-precision entry point.
 # Asked directly of the runtime rather than by catching an error from
 # gpu_element_square itself, which currently fails for an unrelated upstream
-# reason (see test-gpu-elementwise.R).
+# reason (see test-gpu-op-element-square.R).
 skip_if_no_fp64 <- function() {
   skip_if_no_gpu()
   if (isTRUE(cached_gpu_device_info()$fp64)) {

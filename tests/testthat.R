@@ -9,4 +9,10 @@
 library(testthat)
 library(RcppBandicoot)
 
-test_check("RcppBandicoot")
+# Core suite only.  A failing GPU operation is an access violation
+# (SIGSEGV / 0xC0000005), not an R condition, so it kills the R process and
+# every result after it.  Each test-gpu-op-*.R therefore gets its own top-level
+# script (tests/zz-gpu-<op>.R), which R CMD check runs as a separate R CMD BATCH
+# process; the filter below keeps them out of this one so a crash in any single
+# operation cannot destroy the device-free results.
+test_check("RcppBandicoot", filter = "^(?!gpu-op-)", perl = TRUE)

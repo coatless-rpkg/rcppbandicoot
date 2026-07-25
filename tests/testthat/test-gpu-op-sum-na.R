@@ -6,6 +6,10 @@
 # gpu_sum(matrix(c(1L, NA), 1)) returned about -2.1e9 instead of a missing
 # value -- with no warning, on the integer matrices the help pages use as
 # their own examples.
+#
+# These run gpu_sum on the device, so they get their own R process
+# (tests/zz-gpu-sum-na.R) like every other device-touching file: a GPU fault is
+# an access violation, not an R condition, and would take the process down.
 
 test_that("NA in an integer matrix does not become a large negative number", {
   skip_if_no_gpu()

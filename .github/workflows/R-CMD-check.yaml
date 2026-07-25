@@ -58,6 +58,7 @@ jobs:
             xfail: ''
             opencl_runtime: 'auto'
             gpu_examples: 'true'
+            opencl_version: ''
             http_user_agent: ''
 
           # The CRAN configuration: OpenCL headers and an ICD loader, no
@@ -88,6 +89,7 @@ jobs:
             xfail: ''
             opencl_runtime: 'none'
             gpu_examples: ''
+            opencl_version: ''
             http_user_agent: ''
 
           # r-devel. This package has already had to absorb upstream
@@ -101,46 +103,65 @@ jobs:
             xfail: ''
             opencl_runtime: 'auto'
             gpu_examples: ''
+            opencl_version: ''
             http_user_agent: 'release'
 
           # xfail lists gpu_* operations skipped on that runner. On the nightly
           # schedule the list is cleared (see RCPPBANDICOOT_XFAIL below) so the
-          # real, unmitigated state is visible. Both legs below exclude every
-          # operation, for the same underlying reason -- the runtime's kernel
-          # compiler crashes hard enough that the R session cannot catch it, so
-          # one bad call takes the whole suite with it, not just its own test.
-          # Both lists were measured by running each operation in its own R
-          # process, so that a crash could not mask the operations after it.
+          # real, unmitigated state is visible. Both lists were measured by
+          # running each operation in its own R process, so a crash could not
+          # mask the operations after it.
           #
           # macOS, 20 runs per operation with the PoCL cbs workaround above:
           #   gpu_transpose 4/20 crashed, gpu_element_square 3/20,
           #   gpu_matrix_multiply 1/20, the other five 0/20.
-          # A 0/20 result is NOT evidence an operation is safe. An earlier pass
-          # at 3 runs put gpu_matrix_add at 3/3 crashed; at 20 runs it was
-          # 0/20. The crash moves between operations, which is what a code
-          # generation fault in the JIT looks like and is why no operation can
-          # be released from the list on its own. With zero failures in twenty
-          # runs the upper bound on the rate is still about 15%, indistinguish-
-          # able from gpu_matrix_multiply's measured 5%.
+          # Those three are excluded and the rest now run for real, which is
+          # coverage the previous whole-list exclusion threw away. That is only
+          # affordable because each operation has its own tests/zz-gpu-<op>.R
+          # and therefore its own process: a crash fails one named script
+          # instead of taking the suite with it.
+          #
+          # Expect this leg to be intermittently red, and read it carefully
+          # rather than papering over it. A 0/20 result is not proof an
+          # operation is safe -- the upper bound on its rate is still about
+          # 15%, indistinguishable from gpu_matrix_multiply's measured 5% --
+          # and an earlier 3-run pass had gpu_matrix_add failing 3/3 where 20
+          # runs gave 0/20. The crash moves between operations, which is what a
+          # code generation fault in the JIT looks like. A red run is only news
+          # when it names an operation outside the list below.
           #
           # Windows, 3 runs per operation: every operation crashed every time,
           # while the device probes succeed. Unchanged with Intel's vectoriser
           # disabled (CL_CONFIG_USE_VECTORIZER=False), so that lever is ruled
-          # out. Both platforms are upstream defects with no fix available here.
+          # out. The whole list stands there pending the runtime pin below.
           - os: macos-latest
             r: 'release'
             experimental: true
-            xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu'
+            xfail: 'gpu_transpose,gpu_matrix_multiply,gpu_element_square'
             opencl_runtime: 'auto'
             gpu_examples: ''
+            opencl_version: ''
             http_user_agent: ''
 
+          # Windows keeps the whole list, but pins the runtime to the LLVM 20
+          # generation. The pre-migration workflow installed Intel's official
+          # runtime, whose common_clang64.dll reports clang 20.0.0git; the
+          # oclcpuexp release we moved to reports 22.1.0, and every operation
+          # crashes on it. Failure tracks the LLVM generation across all three
+          # platforms (Linux/PoCL on 16 works; macOS/PoCL on 21 is flaky;
+          # Windows on 22 fails outright), so the runtime swap is the most
+          # likely thing the migration broke -- and because the old CI never
+          # executed a kernel, nobody could have noticed. 2025-WW13 is the last
+          # oclcpuexp release on LLVM 20. If the operations pass, the exclusion
+          # list here is wrong and the fix is this pin; if they still crash,
+          # Windows never worked and the runtime choice is irrelevant.
           - os: windows-2025
             r: 'release'
             experimental: true
             xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu'
             opencl_runtime: 'auto'
             gpu_examples: ''
+            opencl_version: '2025-WW13'
             http_user_agent: ''
 
     env:
@@ -172,6 +193,17 @@ jobs:
       # gating Linux leg sets it, being the only platform where every
       # operation actually works.
       RCPPBANDICOOT_RUN_GPU_EXAMPLES: ${{ matrix.config.gpu_examples }}
+
+      # Each GPU operation has its own top-level tests/zz-gpu-<op>.R, which
+      # R CMD check runs as its own R CMD BATCH process, so a hard crash --
+      # the failure mode on macOS and Windows, which no R handler can catch --
+      # fails one named script instead of destroying the whole run.
+      # tools:::.runPackageTests stops at the FIRST failing script unless this
+      # is set, which would throw away everything after the first crasher and
+      # defeat the split. Set on every leg: on the gating ones it means a real
+      # regression names every failing script rather than only the
+      # alphabetically first. The check still exits with an ERROR either way.
+      _R_CHECK_NO_STOP_ON_TEST_ERROR_: true
 
       # On push/PR, exclude the operations known to be broken on this runner.
       # On the nightly schedule, exclude nothing: the known-broken operations
@@ -211,6 +243,10 @@ jobs:
         uses: coatless-actions/setup-opencl@v1
         with:
           runtime: ${{ matrix.config.opencl_runtime }}
+          # Honoured only for the Intel runtime on Windows; empty elsewhere
+          # means "the tested version for this runner". See the Windows entry
+          # in the matrix for why that leg pins one.
+          version: ${{ matrix.config.opencl_version }}
           verify: 'true'
           require-fp64: 'true'
 

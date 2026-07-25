@@ -3,8 +3,8 @@ test_that("the device probes never throw and agree with one another", {
   # coot::coot_init() directly and are not safe to call more than once,
   # combined, in the same process -- see the long comment above
   # cached_gpu_device_info() in helper-gpu.R for the reproduced upstream
-  # cause. By the time this file runs, the gpu-*.R suites have already made
-  # the session's one safe call (through that cache), so this test reads the
+  # cause. cached_gpu_device_info() makes that single safe call per process
+  # and every caller in the suite shares its result, so this test reads the
   # same cached gpu_device_info() rather than issuing a fresh raw
   # gpu_available() + gpu_device_info() pair, which reliably disagree with
   # each other once other kernels are already warm.
@@ -58,5 +58,10 @@ test_that("a GPU call raises an R condition rather than crashing with no device"
   # Bandicoot throws std::runtime_error, which Rcpp's END_RCPP converts into a
   # normal R error.  Anything else (a segfault, an abort) would take the whole
   # session down and is the single worst outcome on a CRAN flavour.
+  #
+  # This block names gpu_eye but stays in the core suite rather than moving to
+  # test-gpu-op-eye.R: the skip above means the call is only ever reached when
+  # there is no device, so no kernel is compiled or launched and there is
+  # nothing that can fault.  It is a test of the no-device contract, not of eye.
   expect_error(gpu_eye(2))
 })

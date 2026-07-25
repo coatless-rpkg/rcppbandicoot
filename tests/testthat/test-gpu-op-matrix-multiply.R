@@ -1,3 +1,8 @@
+# One operation per file, run by tests/zz-gpu-matrix-multiply.R in its own R
+# process.  A GPU fault here is an access violation, not an R condition, so it
+# would take the whole process down; isolation keeps it from destroying every
+# other result.
+
 test_that("gpu_matrix_multiply() matches a known 2x2 product", {
   skip_if_no_gpu()
   skip_if_xfail("gpu_matrix_multiply", "")

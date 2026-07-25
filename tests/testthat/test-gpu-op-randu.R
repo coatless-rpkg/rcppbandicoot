@@ -1,3 +1,7 @@
+# One operation per file, run by tests/zz-gpu-randu.R in its own R process.
+# A GPU fault here is an access violation, not an R condition, so it would take
+# the whole process down; isolation keeps it from destroying every other result.
+
 test_that("gpu_randu() returns the requested shape within [0, 1]", {
   skip_if_no_gpu()
   skip_if_xfail("gpu_randu", "")

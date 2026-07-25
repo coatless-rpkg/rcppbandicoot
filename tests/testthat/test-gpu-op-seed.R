@@ -5,14 +5,12 @@
 # an N-process Monte Carlo run yielded zero independent information, silently.
 # gpu_randu() now seeds once per session from R's own stream, and
 # gpu_set_seed() overrides that explicitly for reproducibility.
-
-test_that("gpu_set_seed() rejects values that cannot be a seed", {
-  # Device-free: validation happens before the runtime is touched.
-  expect_error(gpu_set_seed(-1), "non-negative")
-  expect_error(gpu_set_seed(1.5), "whole number")
-  expect_error(gpu_set_seed(NA_real_), "whole number")
-  expect_error(gpu_set_seed(Inf), "finite")
-})
+#
+# One operation per file, run by tests/zz-gpu-seed.R in its own R process.
+# A GPU fault here is an access violation, not an R condition, so it would take
+# the whole process down; isolation keeps it from destroying every other result.
+# The device-free argument validation lives in test-seed-validation.R, which
+# stays in the core suite.
 
 test_that("gpu_set_seed() makes gpu_randu() reproducible within a session", {
   skip_if_no_gpu()
