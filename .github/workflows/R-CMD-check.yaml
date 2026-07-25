@@ -12,19 +12,31 @@ on:
 
 name: R-CMD-check
 
+permissions:
+  contents: read
+
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    # The device-free leg shares both its runner and its R version with the
+    # gating Linux leg, so it needs a distinguishing suffix. Only that leg is
+    # renamed: branch protection matches required checks by job name, and the
+    # names that already exist have to keep resolving.
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})${{ matrix.config.opencl_runtime == 'none' && ' device-free' || '' }}
 
-    # macOS and Windows are experimental: their failure does not fail the
-    # workflow, so a pull request gates on the Linux leg alone.
-    continue-on-error: ${{ matrix.config.experimental }}
+    # Everything except the gating Linux leg is experimental: its failure does
+    # not fail the workflow, so a pull request gates on that one leg alone.
+    # The nightly is the exception. It exists to show the unmitigated state,
+    # so no leg is excused there and a broken one turns the run red -- which
+    # is the only way GitHub notifies anyone. `false && anything` is false, so
+    # putting the event test first forces continue-on-error off for every leg
+    # on a schedule without needing a second expression.
+    continue-on-error: ${{ github.event_name != 'schedule' && matrix.config.experimental }}
 
-    # Only Linux gates the build. Bandicoot's kernels are reliable on PoCL
-    # there, so its GPU tests run for real and a regression fails the job.
-    # macOS and Windows are best-effort (experimental: continue-on-error):
+    # Only the Linux leg with a real device gates the build. Bandicoot's
+    # kernels are reliable on PoCL there, so its GPU tests run for real and a
+    # regression fails the job. macOS and Windows are best-effort:
     # PoCL's LLVM JIT segfaults nondeterministically on macOS -- a different
     # operation each run, so it is a code-generation bug in the JIT, not a
     # specific broken op -- and Intel's Windows runtime crashes compiling the
@@ -37,9 +49,56 @@ jobs:
       fail-fast: false
       matrix:
         config:
+          # The gating leg: a real PoCL device, no exclusions, every operation
+          # run for real. It is also the only leg that runs the examples,
+          # since it is the only platform where every operation works.
+          - os: ubuntu-24.04
+            r: 'release'
+            experimental: false
+            xfail: ''
+            opencl_runtime: 'auto'
+            gpu_examples: 'true'
+            http_user_agent: ''
+
+          # The CRAN configuration: OpenCL headers and an ICD loader, no
+          # runtime and so no device at all. That is exactly what CRAN and
+          # r-universe provision, and nothing else in this matrix exercises
+          # it -- skip_if_no_gpu() has never been observed running in the
+          # environment it was written for. This leg asserts that the package
+          # still compiles and links there, enumerates zero devices, and skips
+          # the device tests cleanly rather than erroring.
+          #
+          # A build with no backend at all cannot be tested: config.hpp
+          # #errors unless one of COOT_USE_OPENCL/CUDA/VULKAN is defined, so
+          # headers-plus-loader is as close to a GPU-free machine as this
+          # package can be compiled for. RCPPBANDICOOT_REQUIRE_GPU is unset
+          # here (see env below): with it set, zero devices would be a hard
+          # failure, the opposite of what this leg asserts. Experimental until
+          # it has been seen green; it should gate once it has.
+          - os: ubuntu-24.04
+            r: 'release'
+            experimental: true
+            xfail: ''
+            opencl_runtime: 'none'
+            gpu_examples: ''
+            http_user_agent: ''
+
+          # r-devel. This package has already had to absorb upstream
+          # compiler-warning breakage twice, and r-devel is where the next one
+          # surfaces first. http_user_agent follows r-lib's own example
+          # workflow: P3M serves no binaries to an R-devel user agent, so
+          # asking as 'release' avoids building every dependency from source.
+          - os: ubuntu-24.04
+            r: 'devel'
+            experimental: true
+            xfail: ''
+            opencl_runtime: 'auto'
+            gpu_examples: ''
+            http_user_agent: 'release'
+
           # xfail lists gpu_* operations skipped on that runner. On the nightly
           # schedule the list is cleared (see RCPPBANDICOOT_XFAIL below) so the
-          # real, unmitigated state is visible. Both experimental legs exclude
+          # real, unmitigated state is visible. Both legs below exclude
           # every operation, for the same underlying reason -- the runtime's
           # kernel compiler crashes with a hard access violation the R session
           # cannot catch -- established differently on each. On macOS PoCL's
@@ -47,9 +106,21 @@ jobs:
           # Windows a per-op probe (each op in its own R process) showed Intel's
           # runtime crashes on every compute op, even gpu_eye(3), while the
           # device probes succeed. Both are upstream issues.
-          - {os: ubuntu-24.04,  r: 'release', experimental: false, xfail: '', opencl_runtime: 'auto'}
-          - {os: macos-latest,  r: 'release', experimental: true,  xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu', opencl_runtime: 'auto'}
-          - {os: windows-2025,  r: 'release', experimental: true,  xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu', opencl_runtime: 'auto'}
+          - os: macos-latest
+            r: 'release'
+            experimental: true
+            xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu'
+            opencl_runtime: 'auto'
+            gpu_examples: ''
+            http_user_agent: ''
+
+          - os: windows-2025
+            r: 'release'
+            experimental: true
+            xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu'
+            opencl_runtime: 'auto'
+            gpu_examples: ''
+            http_user_agent: ''
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -60,13 +131,37 @@ jobs:
       # suite skips cleanly there, while here a runner that enumerates zero
       # devices fails the job instead of quietly reporting all-skips.  The
       # previous workflow was green whether or not OpenCL worked.
-      RCPPBANDICOOT_REQUIRE_GPU: 'true'
-      RCPPBANDICOOT_REQUIRE_FP64: 'true'
+      #
+      # Derived from the runtime rather than carried as its own matrix key so
+      # the two cannot drift apart: the device-free leg is the one that must
+      # not demand a device, and it is the leg that installs no runtime.  The
+      # 'false' it produces there reads as unset to env_true() in
+      # tests/testthat/helper-gpu.R, which honours only 1/true/yes/on.
+      RCPPBANDICOOT_REQUIRE_GPU: ${{ matrix.config.opencl_runtime != 'none' }}
+      RCPPBANDICOOT_REQUIRE_FP64: ${{ matrix.config.opencl_runtime != 'none' }}
+
+      # Every device-touching example is guarded by
+      # @examplesIf nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES")), so
+      # examples touch a device only where this is set.  They have to be
+      # guarded: an example that reaches coot_init() writes a compiled-kernel
+      # cache under $HOME (cache_meat.hpp), R CMD check runs examples in their
+      # own process, and the HOME redirect in tests/testthat/helper-00-cache.R
+      # covers the test process only -- so unguarded examples write outside
+      # the session temporary directory, which CRAN policy forbids.  Only the
+      # gating Linux leg sets it, being the only platform where every
+      # operation actually works.
+      RCPPBANDICOOT_RUN_GPU_EXAMPLES: ${{ matrix.config.gpu_examples }}
 
       # On push/PR, exclude the operations known to be broken on this runner.
       # On the nightly schedule, exclude nothing: the known-broken operations
       # run for real and the nightly stays red until upstream fixes them.
-      RCPPBANDICOOT_XFAIL: ${{ github.event_name == 'schedule' && '' || matrix.config.xfail }}
+      #
+      # The event test has to come first and produce the exclusion list, not
+      # the empty string.  GitHub treats '' as false, so writing it the other
+      # way round (`event_name == 'schedule' && '' || xfail`) makes the
+      # schedule branch fall straight through to the full exclusion list --
+      # the nightly then excludes precisely the operations it exists to run.
+      RCPPBANDICOOT_XFAIL: ${{ github.event_name != 'schedule' && matrix.config.xfail || '' }}
 
     steps:
       - uses: actions/checkout@v6
@@ -85,6 +180,11 @@ jobs:
       # configure.win already read and configure.ac now reads too -- plus
       # OpenCL_ROOT / OpenCL_LIBRARY, OCL_ICD_VENDORS or OCL_ICD_FILENAMES,
       # and SDKROOT on macOS.
+      #
+      # The device-free leg passes runtime 'none', which stops after the
+      # headers and the loader.  verify and require-fp64 are documented as
+      # never fatal for that runtime, so zero devices is reported there rather
+      # than failing the job, which is what that leg is asserting.
       - name: Set up OpenCL
         id: opencl
         uses: coatless-actions/setup-opencl@v1
@@ -117,10 +217,12 @@ jobs:
           echo "POCL_WORK_GROUP_METHOD=cbs" >> "$GITHUB_ENV"
           echo "POCL_CPU_MAX_CU_COUNT=1" >> "$GITHUB_ENV"
 
-      # Installs CLBlast and verifies a GEMM produces correct results.
-      # Exports CLBLAST_CPPFLAGS / CLBLAST_LIBS -- which configure.win
-      # already read and configure.ac now reads too -- plus CLBlast_DIR
-      # (unused by this package, exported for contract parity).
+      # Installs CLBlast and verifies a GEMM produces correct results; the
+      # verification is not fatal on the device-free leg, where there is
+      # nothing to run it on.  Exports CLBLAST_CPPFLAGS / CLBLAST_LIBS --
+      # which configure.win already read and configure.ac now reads too --
+      # plus CLBlast_DIR (unused by this package, exported for contract
+      # parity).
       - name: Set up CLBlast
         uses: coatless-actions/setup-clblast@v1
 
@@ -129,6 +231,7 @@ jobs:
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http_user_agent }}
           use-public-rspm: true
 
       - uses: r-lib/actions/setup-r-dependencies@v2
