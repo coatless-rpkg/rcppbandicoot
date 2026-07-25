@@ -15,19 +15,14 @@ n x n identity matrix on GPU
 \description{
 Create an identity matrix on the GPU
 }
+\section{Precision}{
+
+The matrix is created in single precision (\code{float}). Zero and one are both
+exact in \code{float}, so the result is exact.
+}
+
 \examples{
-# See gpu_available()'s example for why this probe is cached and reused
-# by every other example in this package.
-if (is.null(getOption("rcppbandicoot.ex_info"))) {
-  options(rcppbandicoot.ex_info = gpu_device_info())
-}
-.rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-.rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
-# RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
-# device (see tests/testthat/helper-gpu.R); examples honour it too so
-# R CMD check does not crash the R session running one.
-if (isTRUE(.rcppbandicoot_ex_info$available) &&
-    !("gpu_eye" \%in\% .rcppbandicoot_ex_xfail)) {
-  gpu_eye(3)
-}
+\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+gpu_eye(3)
+\dontshow{\}) # examplesIf}
 }

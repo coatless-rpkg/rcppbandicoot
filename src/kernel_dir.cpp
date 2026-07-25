@@ -58,3 +58,23 @@ void set_kernel_source_dir(std::string path)
   {
   kernel_dir_ref() = path;
   }
+
+//' Get the Bandicoot kernel source directory
+//'
+//' Internal. Reports the path the compiled code will actually hand to
+//' Bandicoot when it loads a kernel, which is the value \code{.onLoad} last
+//' wrote. It exists so the tests can assert on the compiled state directly:
+//' checking an independently recomputed \code{system.file()} path proves
+//' nothing about what the shared object holds, so a \code{.onLoad} regression
+//' would leave every GPU test skipping and the suite green.
+//'
+//' @return
+//' A length-one character vector holding the directory, with a trailing slash.
+//' Empty only if the package was built without a configure-time default and
+//' \code{.onLoad} has not run.
+//' @keywords internal
+// [[Rcpp::export]]
+std::string get_kernel_source_dir()
+  {
+  return kernel_dir_ref();
+  }

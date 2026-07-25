@@ -11,6 +11,16 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// bandicoot_version
+std::string bandicoot_version();
+RcppExport SEXP _RcppBandicoot_bandicoot_version() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(bandicoot_version());
+    return rcpp_result_gen;
+END_RCPP
+}
 // gpu_initialize
 bool gpu_initialize(bool print_info);
 RcppExport SEXP _RcppBandicoot_gpu_initialize(SEXP print_infoSEXP) {
@@ -40,15 +50,6 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     rcpp_result_gen = Rcpp::wrap(gpu_device_info());
     return rcpp_result_gen;
-END_RCPP
-}
-// bandicoot_version
-void bandicoot_version();
-RcppExport SEXP _RcppBandicoot_bandicoot_version() {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    bandicoot_version();
-    return R_NilValue;
 END_RCPP
 }
 // gpu_matrix_multiply
@@ -130,6 +131,16 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gpu_set_seed
+void gpu_set_seed(double seed);
+RcppExport SEXP _RcppBandicoot_gpu_set_seed(SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type seed(seedSEXP);
+    gpu_set_seed(seed);
+    return R_NilValue;
+END_RCPP
+}
 // gpu_randu
 coot::fmat gpu_randu(int n_rows, int n_cols);
 RcppExport SEXP _RcppBandicoot_gpu_randu(SEXP n_rowsSEXP, SEXP n_colsSEXP) {
@@ -152,12 +163,22 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
+// get_kernel_source_dir
+std::string get_kernel_source_dir();
+RcppExport SEXP _RcppBandicoot_get_kernel_source_dir() {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    rcpp_result_gen = Rcpp::wrap(get_kernel_source_dir());
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_RcppBandicoot_bandicoot_version", (DL_FUNC) &_RcppBandicoot_bandicoot_version, 0},
     {"_RcppBandicoot_gpu_initialize", (DL_FUNC) &_RcppBandicoot_gpu_initialize, 1},
     {"_RcppBandicoot_gpu_available", (DL_FUNC) &_RcppBandicoot_gpu_available, 0},
     {"_RcppBandicoot_gpu_device_info", (DL_FUNC) &_RcppBandicoot_gpu_device_info, 0},
-    {"_RcppBandicoot_bandicoot_version", (DL_FUNC) &_RcppBandicoot_bandicoot_version, 0},
     {"_RcppBandicoot_gpu_matrix_multiply", (DL_FUNC) &_RcppBandicoot_gpu_matrix_multiply, 2},
     {"_RcppBandicoot_gpu_transpose", (DL_FUNC) &_RcppBandicoot_gpu_transpose, 1},
     {"_RcppBandicoot_gpu_matrix_add", (DL_FUNC) &_RcppBandicoot_gpu_matrix_add, 2},
@@ -165,8 +186,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_RcppBandicoot_gpu_sum", (DL_FUNC) &_RcppBandicoot_gpu_sum, 1},
     {"_RcppBandicoot_gpu_mean", (DL_FUNC) &_RcppBandicoot_gpu_mean, 1},
     {"_RcppBandicoot_gpu_eye", (DL_FUNC) &_RcppBandicoot_gpu_eye, 1},
+    {"_RcppBandicoot_gpu_set_seed", (DL_FUNC) &_RcppBandicoot_gpu_set_seed, 1},
     {"_RcppBandicoot_gpu_randu", (DL_FUNC) &_RcppBandicoot_gpu_randu, 2},
     {"_RcppBandicoot_set_kernel_source_dir", (DL_FUNC) &_RcppBandicoot_set_kernel_source_dir, 1},
+    {"_RcppBandicoot_get_kernel_source_dir", (DL_FUNC) &_RcppBandicoot_get_kernel_source_dir, 0},
     {NULL, NULL, 0}
 };
 

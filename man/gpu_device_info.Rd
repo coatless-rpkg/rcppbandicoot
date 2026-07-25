@@ -16,11 +16,7 @@ reported as \code{FALSE}/zero.
 Report the selected GPU device's properties
 }
 \examples{
-# See gpu_available()'s example for why this probe is cached and reused
-# by every other example in this package.
-if (is.null(getOption("rcppbandicoot.ex_info"))) {
-  options(rcppbandicoot.ex_info = gpu_device_info())
-}
-.rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-str(.rcppbandicoot_ex_info)
+\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+str(gpu_device_info())
+\dontshow{\}) # examplesIf}
 }

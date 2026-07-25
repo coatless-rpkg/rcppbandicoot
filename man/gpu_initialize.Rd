@@ -20,12 +20,7 @@ against. Bandicoot also initialises lazily on the first GPU call, so this
 is only needed when you want the device chosen (and reported) up front.
 }
 \examples{
-# gpu_initialize() is not called directly here: see gpu_available()'s
-# example for why the GPU runtime may be probed at most once per R
-# session; gpu_device_info() is used for that one probe.
-if (is.null(getOption("rcppbandicoot.ex_info"))) {
-  options(rcppbandicoot.ex_info = gpu_device_info())
-}
-.rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-isTRUE(.rcppbandicoot_ex_info$available)
+\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+gpu_initialize()
+\dontshow{\}) # examplesIf}
 }

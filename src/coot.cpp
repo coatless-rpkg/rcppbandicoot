@@ -1,5 +1,35 @@
 #include <RcppBandicoot.h>
 
+#include <sstream>
+#include <string>
+
+//' Version of the vendored Bandicoot library
+//'
+//' Reports the version of the Bandicoot C++ headers this package was compiled
+//' against. The value is a compile-time constant, so no GPU device is touched
+//' and the runtime is not initialised.
+//'
+//' @return
+//' A length-one character vector holding the version as `"major.minor.patch"`.
+//' @export
+//' @examples
+//' bandicoot_version()
+//' package_version(bandicoot_version()) >= "4.0.0"
+// [[Rcpp::export]]
+std::string bandicoot_version() {
+  // Assembled from the three version macros rather than taken from
+  // coot::coot_version::as_string(), which appends the upstream release name
+  // ("4.0.2 (Bandwidth Glutton)").  A bare "major.minor.patch" is what
+  // package_version() and inst/version.txt both need; the release name would
+  // make package_version() throw.
+  std::stringstream ss;
+  ss << coot::coot_version::major << '.'
+     << coot::coot_version::minor << '.'
+     << coot::coot_version::patch;
+
+  return ss.str();
+}
+
 //' Initialise the Bandicoot GPU runtime
 //'
 //' Selects and initialises a device for the backend this package was built
@@ -13,14 +43,15 @@
 //' effect of initialising the runtime.
 //' @export
 //' @examples
-//' # gpu_initialize() is not called directly here: see gpu_available()'s
-//' # example for why the GPU runtime may be probed at most once per R
-//' # session; gpu_device_info() is used for that one probe.
-//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
-//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' # Not run: coot_init() releases and rebuilds the runtime's context on every
+//' # call without evicting the compiled-kernel cache, so calling any of
+//' # gpu_initialize(), gpu_available() or gpu_device_info() more than once in a
+//' # session leaves dangling kernel handles and every later GPU call fails with
+//' # cl_invalid_context. R CMD check runs all examples in ONE process, so only
+//' # gpu_available() is executed there; see its help page.
+//' \dontrun{
+//' gpu_initialize()
 //' }
-//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-//' isTRUE(.rcppbandicoot_ex_info$available)
 // [[Rcpp::export]]
 bool gpu_initialize(bool print_info = false) {
   // Deliberately the single-argument overload.  coot_init(const char*, bool,
@@ -43,18 +74,8 @@ bool gpu_initialize(bool print_info = false) {
 //' `TRUE` if a device is present and a kernel executed, `FALSE` otherwise.
 //' Never throws.
 //' @export
-//' @examples
-//' # gpu_available() re-initialises the GPU runtime every time it is
-//' # called, and Bandicoot's runtime must not be initialised more than once
-//' # per R session (a second init leaves already-compiled kernels dangling
-//' # and pointed at a freed context). Every example in this package
-//' # therefore probes the device via gpu_device_info() at most once per
-//' # session and reuses the cached result afterwards.
-//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
-//'   options(rcppbandicoot.ex_info = gpu_device_info())
-//' }
-//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-//' isTRUE(.rcppbandicoot_ex_info$available)
+//' @examplesIf nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))
+//' gpu_available()
 // [[Rcpp::export]]
 bool gpu_available() {
   try {
@@ -84,13 +105,12 @@ bool gpu_available() {
 //' reported as `FALSE`/zero.
 //' @export
 //' @examples
-//' # See gpu_available()'s example for why this probe is cached and reused
-//' # by every other example in this package.
-//' if (is.null(getOption("rcppbandicoot.ex_info"))) {
-//'   options(rcppbandicoot.ex_info = gpu_device_info())
+//' # Not run for the same single-initialisation reason given in
+//' # [gpu_initialize()]: this is the one example process, and gpu_available()
+//' # already spends the session's single permitted runtime initialisation.
+//' \dontrun{
+//' str(gpu_device_info())
 //' }
-//' .rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-//' str(.rcppbandicoot_ex_info)
 // [[Rcpp::export]]
 Rcpp::List gpu_device_info() {
   Rcpp::List out = Rcpp::List::create(

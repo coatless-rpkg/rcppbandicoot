@@ -4,9 +4,17 @@
 \name{RcppBandicoot-package}
 \alias{RcppBandicoot}
 \alias{RcppBandicoot-package}
-\title{RcppBandicoot: 'Rcpp' Integration for the `Bandicoot` Header-Only C++ GPU Accelerated Linear Algebra Library}
+\title{RcppBandicoot: 'Rcpp' Integration for the 'Bandicoot' Header-Only C++ GPU Accelerated Linear Algebra Library}
 \description{
-'Bandicoot' is a templated C++ GPU Linear Algebra library (by the 'Armadillo' team) that provides a simple set of abstractions for writing high performant code for graphics processing units. The 'RcppBandicoot' package includes the header files from the 'Bandicoot' library. Therefore, users do not need to install 'Bandicoot' to use 'RcppBandicoot'. Note that the 'Bandicoot' library is licensed under Apache License version 2.0 and 'RcppBandicoot' (the 'Rcpp' bindings/bridge to 'Bandicoot') is licensed under the GNU GPL version 2 or later. Note that 'Bandicoot' requires a compiler that supports 'OpenCL' (>= 1.2) or 'CUDA' (>= 9.8).
+'Bandicoot' is a templated C++ GPU Linear Algebra library (by the 'Armadillo' team) that provides a simple set of abstractions for writing high performant code for graphics processing units. The 'RcppBandicoot' package includes the header files from the 'Bandicoot' library. Therefore, users do not need to install 'Bandicoot' to use 'RcppBandicoot'. Note that the 'Bandicoot' library is licensed under Apache License version 2.0 and 'RcppBandicoot' (the 'Rcpp' bindings/bridge to 'Bandicoot') is licensed under the GNU GPL version 2 or later. Building 'RcppBandicoot' requires the development files for 'OpenCL' (>= 1.2) or 'CUDA'; running a computation on a device additionally requires a GPU with working vendor drivers.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/coatless-rpkg/rcppbandicoot}
+  \item Report bugs at \url{https://github.com/coatless-rpkg/rcppbandicoot/issues}
+}
+
 }
 \author{
 \strong{Maintainer}: James Joseph Balamuta \email{balamut2@illinois.edu} (\href{https://orcid.org/0000-0003-2826-8458}{ORCID}) [copyright holder]

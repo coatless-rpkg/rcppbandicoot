@@ -17,21 +17,18 @@ Product of A and B computed on GPU
 \description{
 Multiply two matrices on the GPU using Bandicoot
 }
+\section{Precision}{
+
+The product is computed in single precision (\code{float}). R's doubles are
+rounded on the way to the device and the result is widened back, so
+expect a relative error around \code{1e-7} against \code{A \%*\% B} in base R, growing
+with the shared inner dimension as the rounding accumulates.
+}
+
 \examples{
-# See gpu_available()'s example for why this probe is cached and reused
-# by every other example in this package.
-if (is.null(getOption("rcppbandicoot.ex_info"))) {
-  options(rcppbandicoot.ex_info = gpu_device_info())
-}
-.rcppbandicoot_ex_info <- getOption("rcppbandicoot.ex_info")
-.rcppbandicoot_ex_xfail <- strsplit(Sys.getenv("RCPPBANDICOOT_XFAIL"), ",", fixed = TRUE)[[1]]
-# RCPPBANDICOOT_XFAIL lists operations known broken on this runner's
-# device (see tests/testthat/helper-gpu.R); examples honour it too so
-# R CMD check does not crash the R session running one.
-if (isTRUE(.rcppbandicoot_ex_info$available) &&
-    !("gpu_matrix_multiply" \%in\% .rcppbandicoot_ex_xfail)) {
-  A <- matrix(c(1, 2, 3, 4), 2, 2)
-  B <- matrix(c(5, 6, 7, 8), 2, 2)
-  gpu_matrix_multiply(A, B)
-}
+\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+A <- matrix(c(1, 2, 3, 4), 2, 2)
+B <- matrix(c(5, 6, 7, 8), 2, 2)
+gpu_matrix_multiply(A, B)
+\dontshow{\}) # examplesIf}
 }
