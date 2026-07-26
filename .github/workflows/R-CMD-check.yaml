@@ -191,96 +191,46 @@ jobs:
 
           # xfail lists gpu_* operations skipped on that runner. On the nightly
           # schedule the list is cleared (see RCPPBANDICOOT_XFAIL below) so the
-          # real, unmitigated state is visible. A non-empty list is always
-          # measured, never predicted, by running each operation in its own R
-          # process so a crash cannot mask the operations after it. Only
-          # Windows carries one now; macOS is deliberately empty, below.
+          # real, unmitigated state is visible.
           #
-          # macOS is an EXPERIMENT as of this entry, and its xfail list is
-          # empty on every event. What is under test here is the PoCL build,
-          # not the package: pocl_source: 'conda-forge' asks setup-opencl for a
-          # PoCL that is not linked against LLVM 21, and this leg exists right
-          # now to find out what that is worth on a hosted runner.
+          # Both platforms now exclude ONE operation, and it is the same one on
+          # each: gpu_sum on its multi-pass reduction path. Everything else runs
+          # for real. That took two runtime changes, both measured rather than
+          # predicted -- Windows off oclcpuexp's LLVM 22 build onto its LLVM 20
+          # one, macOS off Homebrew's llvm@21 PoCL onto a conda-forge PoCL built
+          # against LLVM 19. Before those, every operation crashed on Windows
+          # and six of ten scripts segfaulted on macOS.
           #
-          # Every macOS crash this workflow has recorded -- gpu_transpose 4/20
-          # in isolation, gpu_element_square 3/20, gpu_matrix_multiply 1/20,
-          # and six of the ten operation scripts in a single CI run, including
-          # three that had measured 0/20 -- has one cause, and it is not any
-          # operation and not the package. It is an LLVM 21 Clang bug in the
-          # code generated for OpenCL kernel stubs (llvm#161077), fixed in
-          # LLVM 22 and never backported to 21.1.8, which is exactly what
-          # Homebrew's pocl 7.1 links. That explains the shape of the evidence:
-          # a fault in the JIT, hit once per kernel compiled, looks like a
-          # per-operation flake when each operation is run alone and like a
-          # massacre when one session compiles several kernels.
+          # gpu_sum's multi-pass path is not a crash and not a runtime quirk. It
+          # returns a WRONG NUMBER, differently on each platform -- 25040.2 on
+          # Windows and NaN on macOS, where the answer is 79993.0 -- while
+          # Linux/PoCL/LLVM 16 gets it right. Two independent implementations
+          # from different vendors, on different LLVM generations and different
+          # architectures, disagreeing with the correct answer in different ways
+          # is a defect in the reduction itself, not in either runtime. The
+          # suite catches it only because the test compares against sum(A)
+          # rather than checking the call returns, and it is the most dangerous
+          # failure this package has: a crash announces itself, this hands back
+          # a plausible number.
           #
-          # Measured on Apple silicon with the package's own suite, changing
-          # only OCL_ICD_VENDORS between the two runs: Homebrew pocl 7.1
-          # (LLVM 21.1.8) killed gpu-matrix-add, gpu-matrix-multiply and
-          # gpu-transpose outright (rc=139); conda-forge pocl 7.1, build
-          # h7e36c0b_2 for osx-arm64 (LLVM 19.1.7), ran all three and reached
-          # 35/39 over three passes with no POCL_* workarounds and no
-          # exclusions at all. This is a route others already take: PoCL's own
-          # README marks its CUDA backend broken on LLVM 21, and Arch pins pocl
-          # to clang20.
+          # Both lists are exact. Neither platform has a nondeterministic
+          # failure left, so an operation appearing or disappearing is news
+          # rather than noise -- including gpu_sum_multipass starting to pass,
+          # which is what an upstream fix would look like.
           #
-          # The list is CLEARED rather than shortened to what the local runs
-          # still failed, and that is deliberate. Those runs were on a 12-core
-          # machine with full Xcode; a hosted runner is neither, and writing a
-          # prediction into xfail as though it were data is precisely how the
-          # earlier three-operation exclusion went wrong -- it was measured,
-          # narrowly, and the next CI run failed six. So every operation runs,
-          # the per-operation split names whatever actually dies, and the next
-          # edit to this entry gets made from that run. The leg is
-          # experimental, so a red mark costs nothing and buys the measurement.
-          #
-          # For reading the run against, not for scoring it: the local runs
-          # still lost gpu-matrix-multiply on all three passes and
-          # gpu-sum-multipass on one, to a SECOND and unrelated PoCL defect --
-          # it cannot create the kernel-cache output directory for sf_fill at a
-          # 2x2x1 local size while mf_fill at the same size succeeds, and
-          # nothing moved it (POCL_CACHE_DIR, POCL_KERNEL_CACHE,
-          # POCL_CPU_MAX_CU_COUNT, POCL_MAX_PTHREAD_COUNT,
-          # POCL_WORK_GROUP_METHOD, SDKROOT were all tried). So roughly two
-          # failures is the expectation here, not zero.
-          #
-          # nightly_expect therefore keeps the full twelve-script list and
-          # nightly_exact stays empty, which is the one shape that cannot fire
-          # spuriously on a night whose answer nobody has yet. Non-exact
-          # asserts only two boundaries: nothing outside the list may fail,
-          # which a list of every script satisfies whatever the runner does,
-          # and the list may not empty out. Emptying out is the single
-          # remaining red transition and it is the one worth being woken for --
-          # every script passing means the LLVM 21 theory holds end to end and
-          # both of this entry's lists should be rewritten from that run.
-          # Clearing nightly_expect alongside xfail was the alternative and is
-          # the wrong one: it makes any failure "newly failing", so the
-          # residual defect above would paint the nightly red every night,
-          # which is the always-red-signal failure this machinery exists to
-          # prevent. Which subset died is tabulated either way, so the real set
-          # becomes readable from the summary without anything having to be
-          # guessed in advance.
-          #
-          # Windows, 3 runs per operation: every operation crashed every time,
-          # while the device probes succeed. Unchanged with Intel's vectoriser
-          # disabled (CL_CONFIG_USE_VECTORIZER=False), so that lever is ruled
-          # out. That is a deterministic failure, not a flaky one -- the
-          # runtime cannot compile a kernel at all -- so Windows does get an
-          # exact comparison, and one operation there starting to work is news
-          # rather than noise.
-          #
-          # What the per-operation split buys on both platforms is not a
-          # shorter list but a readable failure: the core device-free suite
-          # still completes even when every GPU script dies, and each crash
-          # names its own operation. That is what makes clearing the macOS
-          # list affordable -- with the split, an unmitigated run is a table of
-          # per-operation outcomes rather than one opaque segfault.
+          # What the per-operation split buys is a readable failure: the core
+          # device-free suite completes even when GPU scripts die, and each
+          # failure names its own operation. That is what made clearing these
+          # lists affordable enough to measure them honestly -- and measuring is
+          # what corrected a prediction that gpu_matrix_multiply would still
+          # fail on macOS. It passes on the runner; the local machine was the
+          # outlier.
           - os: macos-latest
             r: 'release'
             experimental: true
-            xfail: ''
-            nightly_expect: 'gpu-element-square,gpu-eye,gpu-matrix-add,gpu-matrix-multiply,gpu-mean,gpu-randu,gpu-seed,gpu-session,gpu-sum,gpu-sum-multipass,gpu-sum-na,gpu-transpose'
-            nightly_exact: ''
+            xfail: 'gpu_sum_multipass'
+            nightly_expect: 'gpu-sum-multipass'
+            nightly_exact: 'true'
             opencl_runtime: 'auto'
             gpu_examples: ''
             opencl_version: ''
