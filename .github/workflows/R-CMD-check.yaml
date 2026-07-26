@@ -64,14 +64,17 @@ jobs:
     # The two Linux legs gate the build: one with a real device, where every
     # operation runs for real and a regression fails the job, and one with no
     # device, which is the configuration CRAN and r-universe actually ship.
-    # macOS and Windows are best-effort. PoCL's LLVM JIT segfaults
-    # nondeterministically on macOS and Intel's Windows runtime crashes on
-    # every compute kernel; measured rates are in the matrix comment below.
-    # Both are upstream defects, so until they are fixed those legs prove only
-    # that the package compiles, installs, and passes its device-free tests.
-    # They are NOT allowed to block a pull request, and they must not be
+    # macOS and Windows are best-effort, and they are no longer in the same
+    # state as each other. Windows returns a wrong number from one reduction
+    # path and carries the only xfail list left. macOS is mid-experiment and
+    # carries none: it has just been moved onto a PoCL that is not built
+    # against the LLVM release whose code-generation bug accounts for every
+    # macOS crash this workflow has ever recorded, and the point of the leg
+    # right now is to find out what that changes on a hosted runner. Both
+    # stories, and what each leg is expected to do, are in the matrix comments
+    # below. Neither may block a pull request, and neither may be
     # green-by-skipping-everything on a platform where the GPU genuinely works,
-    # which is why only the two upstream-broken platforms carry an xfail list.
+    # which is why an xfail list is only ever written from a measured run.
     strategy:
       fail-fast: false
       matrix:
@@ -101,10 +104,11 @@ jobs:
           # nightly_exact: 'true' requires the observed set to equal this one,
           # and moving in either direction turns the run red -- something new
           # broke, or something started working, and the second is the upstream
-          # fix this package is waiting for. Empty means the leg's crash is
-          # nondeterministic, so equality is not a question that has an answer
-          # there and only the boundaries are asserted instead: nothing outside
-          # the list may fail, and the list may not empty out. See macOS below.
+          # fix this package is waiting for. Empty means equality is not a
+          # question that has an answer on that leg -- either the set varies
+          # run to run, or it has not been measured yet -- so only the
+          # boundaries are asserted instead: nothing outside the list may fail,
+          # and the list may not empty out. See macOS below.
           #
           # These lists live in the matrix rather than in a data file of their
           # own. A file would have had to go under .github/ -- ^\.github$ is
@@ -129,6 +133,7 @@ jobs:
             gpu_examples: 'true'
             opencl_version: ''
             opencl_version_sha256: ''
+            pocl_source: ''
             http_user_agent: ''
 
           # The CRAN configuration: OpenCL headers and an ICD loader, no
@@ -163,6 +168,7 @@ jobs:
             gpu_examples: ''
             opencl_version: ''
             opencl_version_sha256: ''
+            pocl_source: ''
             http_user_agent: ''
 
           # r-devel. This package has already had to absorb upstream
@@ -180,44 +186,80 @@ jobs:
             gpu_examples: ''
             opencl_version: ''
             opencl_version_sha256: ''
+            pocl_source: ''
             http_user_agent: 'release'
 
           # xfail lists gpu_* operations skipped on that runner. On the nightly
           # schedule the list is cleared (see RCPPBANDICOOT_XFAIL below) so the
-          # real, unmitigated state is visible. Both lists were measured by
-          # running each operation in its own R process, so a crash could not
-          # mask the operations after it.
+          # real, unmitigated state is visible. A non-empty list is always
+          # measured, never predicted, by running each operation in its own R
+          # process so a crash cannot mask the operations after it. Only
+          # Windows carries one now; macOS is deliberately empty, below.
           #
-          # macOS keeps the whole list, and the reason is worth reading before
-          # anyone shortens it again. A probe running each operation alone in a
-          # fresh process, 20 times, with the PoCL cbs workaround above, gave
-          # gpu_transpose 4/20 crashed, gpu_element_square 3/20,
-          # gpu_matrix_multiply 1/20 and the other five 0/20. Excluding only
-          # those three was tried, and in the very first CI run six of the ten
-          # operation scripts segfaulted -- including gpu_matrix_add, gpu_sum
-          # and gpu_randu, all of which had measured 0/20.
+          # macOS is an EXPERIMENT as of this entry, and its xfail list is
+          # empty on every event. What is under test here is the PoCL build,
+          # not the package: pocl_source: 'conda-forge' asks setup-opencl for a
+          # PoCL that is not linked against LLVM 21, and this leg exists right
+          # now to find out what that is worth on a hosted runner.
           #
-          # So the isolated per-operation rate is a LOWER BOUND, not an
-          # estimate. One operation per fresh process is the most favourable
-          # case for a code generation fault; a real test script compiles
-          # several kernels in one session and the rate rises sharply. The
-          # crash is a property of the JIT, not of any operation, which is also
-          # why an earlier 3-run pass had gpu_matrix_add failing 3/3 where 20
-          # runs gave 0/20. No operation can be released on its own evidence.
+          # Every macOS crash this workflow has recorded -- gpu_transpose 4/20
+          # in isolation, gpu_element_square 3/20, gpu_matrix_multiply 1/20,
+          # and six of the ten operation scripts in a single CI run, including
+          # three that had measured 0/20 -- has one cause, and it is not any
+          # operation and not the package. It is an LLVM 21 Clang bug in the
+          # code generated for OpenCL kernel stubs (llvm#161077), fixed in
+          # LLVM 22 and never backported to 21.1.8, which is exactly what
+          # Homebrew's pocl 7.1 links. That explains the shape of the evidence:
+          # a fault in the JIT, hit once per kernel compiled, looks like a
+          # per-operation flake when each operation is run alone and like a
+          # massacre when one session compiles several kernels.
           #
-          # That same nondeterminism is exactly why macOS carries an empty
-          # nightly_exact. A set that was three scripts under one measurement
-          # and six under the next cannot be compared for equality: the nightly
-          # would drift every night, be red every night, and be worth nothing
-          # every night -- which is the failure the nightly_expect machinery
-          # exists to remove, reintroduced by the back door. So the whole list
-          # is recorded as able to fail, and the only transition that turns the
-          # run red on macOS is the one actually worth waking up for: every
-          # script passing, meaning the JIT fault is gone. Which subset died is
-          # still tabulated every night, so the trend stays readable without
-          # being alarmed on. The cost is honest and worth stating: on this leg
-          # a single operation becoming reliable is invisible to the red/green
-          # verdict, because on this leg it is not distinguishable from luck.
+          # Measured on Apple silicon with the package's own suite, changing
+          # only OCL_ICD_VENDORS between the two runs: Homebrew pocl 7.1
+          # (LLVM 21.1.8) killed gpu-matrix-add, gpu-matrix-multiply and
+          # gpu-transpose outright (rc=139); conda-forge pocl 7.1, build
+          # h7e36c0b_2 for osx-arm64 (LLVM 19.1.7), ran all three and reached
+          # 35/39 over three passes with no POCL_* workarounds and no
+          # exclusions at all. This is a route others already take: PoCL's own
+          # README marks its CUDA backend broken on LLVM 21, and Arch pins pocl
+          # to clang20.
+          #
+          # The list is CLEARED rather than shortened to what the local runs
+          # still failed, and that is deliberate. Those runs were on a 12-core
+          # machine with full Xcode; a hosted runner is neither, and writing a
+          # prediction into xfail as though it were data is precisely how the
+          # earlier three-operation exclusion went wrong -- it was measured,
+          # narrowly, and the next CI run failed six. So every operation runs,
+          # the per-operation split names whatever actually dies, and the next
+          # edit to this entry gets made from that run. The leg is
+          # experimental, so a red mark costs nothing and buys the measurement.
+          #
+          # For reading the run against, not for scoring it: the local runs
+          # still lost gpu-matrix-multiply on all three passes and
+          # gpu-sum-multipass on one, to a SECOND and unrelated PoCL defect --
+          # it cannot create the kernel-cache output directory for sf_fill at a
+          # 2x2x1 local size while mf_fill at the same size succeeds, and
+          # nothing moved it (POCL_CACHE_DIR, POCL_KERNEL_CACHE,
+          # POCL_CPU_MAX_CU_COUNT, POCL_MAX_PTHREAD_COUNT,
+          # POCL_WORK_GROUP_METHOD, SDKROOT were all tried). So roughly two
+          # failures is the expectation here, not zero.
+          #
+          # nightly_expect therefore keeps the full twelve-script list and
+          # nightly_exact stays empty, which is the one shape that cannot fire
+          # spuriously on a night whose answer nobody has yet. Non-exact
+          # asserts only two boundaries: nothing outside the list may fail,
+          # which a list of every script satisfies whatever the runner does,
+          # and the list may not empty out. Emptying out is the single
+          # remaining red transition and it is the one worth being woken for --
+          # every script passing means the LLVM 21 theory holds end to end and
+          # both of this entry's lists should be rewritten from that run.
+          # Clearing nightly_expect alongside xfail was the alternative and is
+          # the wrong one: it makes any failure "newly failing", so the
+          # residual defect above would paint the nightly red every night,
+          # which is the always-red-signal failure this machinery exists to
+          # prevent. Which subset died is tabulated either way, so the real set
+          # becomes readable from the summary without anything having to be
+          # guessed in advance.
           #
           # Windows, 3 runs per operation: every operation crashed every time,
           # while the device probes succeed. Unchanged with Intel's vectoriser
@@ -227,20 +269,23 @@ jobs:
           # exact comparison, and one operation there starting to work is news
           # rather than noise.
           #
-          # Both lists therefore stay whole. What the per-operation split buys
-          # here is not a shorter list but a readable failure: the core
-          # device-free suite still completes on both platforms even when every
-          # GPU script dies, and each crash names its own operation.
+          # What the per-operation split buys on both platforms is not a
+          # shorter list but a readable failure: the core device-free suite
+          # still completes even when every GPU script dies, and each crash
+          # names its own operation. That is what makes clearing the macOS
+          # list affordable -- with the split, an unmitigated run is a table of
+          # per-operation outcomes rather than one opaque segfault.
           - os: macos-latest
             r: 'release'
             experimental: true
-            xfail: 'gpu_transpose,gpu_matrix_add,gpu_matrix_multiply,gpu_element_square,gpu_sum,gpu_sum_multipass,gpu_mean,gpu_eye,gpu_randu,gpu_session'
+            xfail: ''
             nightly_expect: 'gpu-element-square,gpu-eye,gpu-matrix-add,gpu-matrix-multiply,gpu-mean,gpu-randu,gpu-seed,gpu-session,gpu-sum,gpu-sum-multipass,gpu-sum-na,gpu-transpose'
             nightly_exact: ''
             opencl_runtime: 'auto'
             gpu_examples: ''
             opencl_version: ''
             opencl_version_sha256: ''
+            pocl_source: 'conda-forge'
             http_user_agent: ''
 
           # The LLVM 20 runtime pin this leg needs is currently unreachable.
@@ -294,6 +339,7 @@ jobs:
             gpu_examples: ''
             opencl_version: '2025-WW13'
             opencl_version_sha256: 'c4800a819d5ba19e483505360a96e858aac1abba550b8e96fbf7a2a0c91bf9cb'
+            pocl_source: ''
             http_user_agent: ''
 
     env:
@@ -384,6 +430,24 @@ jobs:
           # in the matrix for why that leg pins one.
           version: ${{ matrix.config.opencl_version }}
           version-sha256: ${{ matrix.config.opencl_version_sha256 }}
+          # Which PoCL to install where the action installs one. Only macOS
+          # needs a non-default here: on Linux the action takes the
+          # that is the distribution package, which has never shown the fault
+          # below, and on Windows no PoCL is installed at all. macOS asks for
+          # 'conda-forge' because the Homebrew bottle is built against LLVM 21,
+          # whose OpenCL kernel-stub codegen is broken -- see the macOS entry
+          # in the matrix.
+          #
+          # The `|| 'auto'` is required, not decoration. A runner applies an
+          # input's default only when the key is ABSENT from `with:`, never when
+          # it is present and empty, and this action rejects the empty string
+          # rather than treating it as unset -- so a blank matrix value fails
+          # every leg in the action's very first step. It would also fail
+          # confusingly: against the currently released v1 the input does not
+          # exist, so a blank one is only an "unexpected input" warning, and the
+          # breakage would surface when the action is retagged, looking as though
+          # the release broke CI.
+          pocl-source: ${{ matrix.config.pocl_source || 'auto' }}
           verify: 'true'
           require-fp64: 'true'
 
@@ -396,20 +460,22 @@ jobs:
           echo "count    : ${{ steps.opencl.outputs.device-count }}"
           echo "fp64     : ${{ steps.opencl.outputs.fp64 }}"
 
-      # Mitigates the PoCL JIT segfault described above. loopvec (PoCL's
-      # default kernel compilation method) runs LLVM's loop vectorizer,
-      # which is the most likely source of a code-generation bug that
-      # corrupts memory unpredictably; cbs (context-based switching) avoids
-      # that pass entirely. Serializing to one worker thread additionally
-      # rules out a compile-time race as a contributing cause. Both are
-      # PoCL-specific and a no-op for Intel's runtime on Windows, so this
-      # only needs to run on macOS.
-      - name: Work around a PoCL JIT crash (macOS)
-        if: runner.os == 'macOS'
-        shell: bash
-        run: |
-          echo "POCL_WORK_GROUP_METHOD=cbs" >> "$GITHUB_ENV"
-          echo "POCL_CPU_MAX_CU_COUNT=1" >> "$GITHUB_ENV"
+      # There is deliberately no PoCL workaround step here any more. macOS used
+      # to set POCL_WORK_GROUP_METHOD=cbs and POCL_CPU_MAX_CU_COUNT=1 --
+      # steering PoCL away from LLVM's loop vectorizer and serializing it to
+      # one worker thread -- as guesses at the LLVM 21 kernel-stub miscompile.
+      # This leg no longer installs a PoCL built against LLVM 21, so they have
+      # nothing left to mitigate, and keeping them would damage the very
+      # measurement the leg now exists to make. The runs that established the
+      # conda-forge build works ran with neither variable set, so leaving them
+      # in would mean CI was not testing the configuration that was verified.
+      # POCL_CPU_MAX_CU_COUNT=1 in particular changes how work-groups are sized
+      # and distributed, which is the exact dimension the one PoCL defect still
+      # expected here is sensitive to (a kernel-cache directory failure at a
+      # 2x2x1 local size), so it is a confound rather than a control. If a
+      # crash does come back, reintroduce them one at a time and record what
+      # each changed -- not as a pair, and not before the unmitigated run is on
+      # record.
 
       # Installs CLBlast and verifies a GEMM produces correct results; the
       # verification is not fatal on the device-free leg, where there is
@@ -573,11 +639,12 @@ jobs:
                 note_failure "newly passing: $(printf '%s' "$new_pass" | paste -sd, -)"
               fi
             else
-              # Nondeterministic leg: which subset dies varies run to run, so a
-              # shrinking set is not evidence of anything and is reported
-              # without a verdict. Only the fault disappearing entirely is.
+              # Leg with no exact expectation: which subset dies is either
+              # variable or not yet established, so a shrinking set is not
+              # evidence of anything and is reported without a verdict. Only
+              # the fault disappearing entirely is.
               if [ -n "$new_pass" ]; then
-                printf '\nPassed tonight, though recorded as able to fail: `%s`. This leg crashes nondeterministically, so that is not treated as a change.\n' \
+                printf '\nPassed tonight, though recorded as able to fail: `%s`. This leg is not compared for equality, so that is not treated as a change.\n' \
                   "$(printf '%s' "$new_pass" | paste -sd, -)" >> "$summary"
               fi
               if [ "$n_observed" -eq 0 ] && [ "$n_expected" -gt 0 ]; then
