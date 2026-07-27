@@ -153,6 +153,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// check_alloc_limit
+bool check_alloc_limit(double n_elem, int elem_size);
+RcppExport SEXP _RcppBandicoot_check_alloc_limit(SEXP n_elemSEXP, SEXP elem_sizeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type n_elem(n_elemSEXP);
+    Rcpp::traits::input_parameter< int >::type elem_size(elem_sizeSEXP);
+    rcpp_result_gen = Rcpp::wrap(check_alloc_limit(n_elem, elem_size));
+    return rcpp_result_gen;
+END_RCPP
+}
 // set_kernel_source_dir
 void set_kernel_source_dir(std::string path);
 RcppExport SEXP _RcppBandicoot_set_kernel_source_dir(SEXP pathSEXP) {
@@ -188,6 +200,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_RcppBandicoot_gpu_eye", (DL_FUNC) &_RcppBandicoot_gpu_eye, 1},
     {"_RcppBandicoot_gpu_set_seed", (DL_FUNC) &_RcppBandicoot_gpu_set_seed, 1},
     {"_RcppBandicoot_gpu_randu", (DL_FUNC) &_RcppBandicoot_gpu_randu, 2},
+    {"_RcppBandicoot_check_alloc_limit", (DL_FUNC) &_RcppBandicoot_check_alloc_limit, 2},
     {"_RcppBandicoot_set_kernel_source_dir", (DL_FUNC) &_RcppBandicoot_set_kernel_source_dir, 1},
     {"_RcppBandicoot_get_kernel_source_dir", (DL_FUNC) &_RcppBandicoot_get_kernel_source_dir, 0},
     {NULL, NULL, 0}

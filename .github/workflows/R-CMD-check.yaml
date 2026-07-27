@@ -467,6 +467,122 @@ jobs:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
 
+      # A green check does not mean the build contains what it was handed.
+      # configure.ac's CLBlast section has an arm --
+      # `elif test -n "${ENV_OPENCL_CPPFLAGS}" && test -n "${ENV_OPENCL_LIBS}"`
+      # -- that sets HAVE_CLBLAST=0 and -DCOOT_DONT_USE_CLBLAST whenever OpenCL
+      # arrives from the environment and a CLBlast pair does not. Bandicoot
+      # then falls back to its own kernels, every test file still passes, and
+      # the leg is green while exercising none of the library it was installed
+      # to exercise. That is the same shape as the three defects already found
+      # at the seam between these actions -- a header falling through to
+      # Apple's SDK, link flags pulling a different libc++, a reduction
+      # returning a plausible wrong number -- so it is asserted rather than
+      # assumed. Nothing else in the suite can catch it: test-config.R
+      # deliberately never asserts the VALUES in bandicoot_config(), because
+      # they are machine-specific there, and here they are not.
+      #
+      # The first two lines are diagnostics and never fail the step.
+      # sessionInfo()$BLAS names the BLAS R itself is linked against, so the
+      # reference-versus-optimised question is answerable from a log instead of
+      # from a rebuild. The cache count is how many compiled kernel binaries
+      # bandicoot left on disk -- cache_meat.hpp writes
+      # $HOME/.bandicoot/cache/<kernel>/<device>, or the APPDATA equivalent on
+      # Windows -- which is what tells a cold run from a warm one. It doubles
+      # as the only place an escape from the HOME redirect in
+      # tests/testthat/helper-00-cache.R would ever show up: the test processes
+      # redirect HOME into their own tempdir, so on a leg that does not run the
+      # GPU examples this should be zero, and a non-zero count means something
+      # wrote outside the session temporary directory.
+      #
+      # EXPECT_CLBLAST is derived from opencl_runtime rather than carried as a
+      # matrix key of its own, exactly as RCPPBANDICOOT_REQUIRE_GPU is above,
+      # so the two cannot drift apart. It excuses one leg, the device-free one:
+      # that leg is the CRAN and r-universe configuration, where nothing
+      # promises a CLBlast, and it is the leg whose entire claim is that the
+      # package works without a GPU stack. With no device its CLBlast is never
+      # called, so there is nothing there to protect. The other four legs all
+      # install a runtime, and all four are asserted.
+      #
+      # The branch is taken in R, against the string, and deliberately NOT as
+      # `if: ${{ env.EXPECT_CLBLAST }}`. An env value is a string, and the
+      # string 'false' is truthy, so an `if:` reading it would assert on every
+      # leg including the one this excuses -- the trap that has already cost
+      # this workflow three times (see RCPPBANDICOOT_XFAIL above).
+      - name: Assert the build kept the components it was handed
+        shell: Rscript {0}
+        env:
+          EXPECT_CLBLAST: ${{ matrix.config.opencl_runtime != 'none' }}
+        run: |
+          ## Diagnostics first, so they reach the log even when the assertion
+          ## below ends the step.
+          si <- sessionInfo()
+          cat("R BLAS: ", if (is.null(si$BLAS)) "(not reported)" else si$BLAS,
+              "\n", sep = "")
+
+          home <- Sys.getenv("HOME", unset = path.expand("~"))
+          appdata <- Sys.getenv("APPDATA")
+          roots <- unique(c(file.path(home, ".bandicoot", "cache"),
+                            if (nzchar(appdata))
+                              file.path(appdata, "bandicoot", "cache")))
+          for (root in roots) {
+            cat("compiled-kernel cache ", root, ": ",
+                if (dir.exists(root)) {
+                  format(length(list.files(root, recursive = TRUE,
+                                           all.files = TRUE)))
+                } else {
+                  "absent (nothing compiled a kernel through it)"
+                },
+                "\n", sep = "")
+          }
+
+          if (!identical(Sys.getenv("EXPECT_CLBLAST"), "true")) {
+            cat("No OpenCL runtime on this leg, so CLBlast is not asserted.\n")
+            quit(save = "no", status = 0)
+          }
+
+          ## The check directory is globbed and the package name read from
+          ## DESCRIPTION, for the reason the nightly step globs it too: a
+          ## rename must not turn this into a step that finds nothing and
+          ## therefore reports nothing wrong.
+          pkg <- read.dcf("DESCRIPTION", fields = "Package")[1L, 1L]
+          lib <- Sys.glob(file.path("check", "*.Rcheck"))
+          lib <- lib[dir.exists(file.path(lib, pkg))]
+          if (length(lib) == 0L) {
+            cat("::error title=build not inspectable::R CMD check left no",
+                " installed ", pkg, ", so the components of the build could",
+                " not be confirmed. Not treated as a pass.\n", sep = "")
+            quit(save = "no", status = 1)
+          }
+
+          suppressPackageStartupMessages(
+            library(pkg, lib.loc = lib[1L], character.only = TRUE))
+
+          ## Prints the whole configuration on its way past, which is worth
+          ## having in the log regardless of the outcome.
+          cfg <- bandicoot_config()
+
+          ## isTRUE, not a comparison: @HAVE_CLBLAST@ substituted empty makes
+          ## this NA, and an NA must fail here rather than be carried forward.
+          if (!isTRUE(cfg$clblast)) {
+            cat("::error title=CLBlast silently dropped::The installed build",
+                " reports clblast = ", format(cfg$clblast), " on a leg whose",
+                " Set up CLBlast step ran, and R CMD check passed anyway",
+                " because bandicoot falls back to its own kernels -- so this",
+                " leg tested no CLBlast at all. Responsible branch: the",
+                " 'elif test -n \"${ENV_OPENCL_CPPFLAGS}\" && test -n",
+                " \"${ENV_OPENCL_LIBS}\"' arm of the CLBlast section in",
+                " configure.ac, which sets HAVE_CLBLAST=0 and",
+                " -DCOOT_DONT_USE_CLBLAST when OpenCL comes from the",
+                " environment but CLBLAST_CPPFLAGS and CLBLAST_LIBS are",
+                " empty.\n", sep = "")
+            cat("CLBLAST_CPPFLAGS=", Sys.getenv("CLBLAST_CPPFLAGS"), "\n",
+                "CLBLAST_LIBS=", Sys.getenv("CLBLAST_LIBS"), "\n", sep = "")
+            quit(save = "no", status = 1)
+          }
+
+          cat("CLBlast is present in the installed build.\n")
+
       # The nightly's actual verdict, and the only step that reads
       # nightly_expect. It tabulates which per-operation test script died,
       # writes that to the run summary so the state is legible without opening

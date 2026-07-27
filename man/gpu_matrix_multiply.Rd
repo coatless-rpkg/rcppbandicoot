@@ -20,9 +20,16 @@ Multiply two matrices on the GPU using Bandicoot
 \section{Precision}{
 
 The product is computed in single precision (\code{float}). R's doubles are
-rounded on the way to the device and the result is widened back, so
-expect a relative error around \code{1e-7} against \code{A \%*\% B} in base R, growing
-with the shared inner dimension as the rounding accumulates.
+rounded on the way to the device and the result is widened back, so a
+relative error around \code{1e-7} against \code{A \%*\% B} in base R is the floor, not
+the ceiling.
+
+Every output element is a sum over the shared inner dimension, so the error
+grows with that dimension on the usual random-walk model: about
+\code{sqrt(k) * 1.19e-7} for an inner dimension of \code{k}. Measured on an Apple
+OpenCL device, worst of 10 \code{rnorm()} draws: \code{7.0e-8} at \code{k = 10}, \code{1.8e-7}
+at \code{k = 100}, \code{5.4e-7} at \code{k = 1000} and \code{1.1e-6} at \code{k = 4000}, which is
+between a seventh and a fifth of the model throughout.
 }
 
 \examples{

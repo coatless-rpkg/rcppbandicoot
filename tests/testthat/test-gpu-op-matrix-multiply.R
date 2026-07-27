@@ -52,3 +52,21 @@ test_that("gpu_matrix_multiply() rejects non-conformable operands", {
 
   expect_error(gpu_matrix_multiply(matrix(1, 2, 2), matrix(1, 3, 3)))
 })
+
+test_that("gpu_matrix_multiply() refuses a product past the 4 GiB limit", {
+  skip_if_no_gpu()
+  skip_if_xfail("gpu_matrix_multiply", "")
+  skip_unless_large_alloc()
+
+  # The rest of the 4 GiB refusal is in test-alloc-limit.R, which reaches no
+  # device at all. This case cannot join it: A.n_rows x B.n_cols is not known
+  # until both operands have been converted, so by the time the guard can run,
+  # two device buffers exist. They are small -- 256 KiB each -- and the product
+  # they describe is 16 GiB, which is the reason checking only the inputs would
+  # not have been enough.
+  a <- matrix(1, 65536, 1)
+  b <- matrix(1, 1, 65536)
+
+  expect_error(gpu_matrix_multiply(a, b),
+               "refuses any single device buffer of 2\\^32 bytes")
+})

@@ -1,4 +1,5 @@
-# R -> Bandicoot conversion edge cases.
+# R -> Bandicoot conversion edge cases: inputs that must survive the trip
+# intact, and inputs that must be refused outright.
 #
 # These guard the class of bug that is worst here: a silently wrong number.
 # Before NA handling was added to inst/include/RcppBandicootAs.h, R's
@@ -55,4 +56,48 @@ test_that("non-finite double input is preserved rather than truncated", {
   skip_if_xfail("gpu_sum", "reduction unavailable on this device")
 
   expect_true(is.infinite(gpu_sum(matrix(c(1, Inf), nrow = 1))))
+})
+
+# Complex input was the same defect wearing different clothes, and it survived
+# the NA fix by about thirty lines: the CPLXSXP branch of bandicoot_copy_from_r
+# kept the real part and threw the imaginary one away, so
+# gpu_sum(matrix(c(1+2i, 0+3i), 1, 2)) returned 1 where base R's sum() returns
+# 1+5i.  A plausible number, no warning, wrong.
+#
+# The package exports no complex-valued operation, so refusing is the entire
+# fix; these check that the refusal is a loud R error naming what went wrong and
+# not, say, a coercion warning followed by the same wrong answer.  They also
+# need no device -- the Exporter stops before it constructs anything -- but they
+# live here rather than in the core suite because a regression would put them
+# straight back on the GPU.
+
+test_that("complex input is refused rather than reduced to its real part", {
+  skip_if_no_gpu()
+  skip_if_xfail("gpu_sum", "reduction unavailable on this device")
+
+  expect_error(gpu_sum(matrix(c(1+2i, 0+3i), 1, 2)), "complex input")
+  # Not 1: that is what the old real-part fallback returned, and a test that
+  # only asked for "an error" would have been satisfied by a coercion warning
+  # plus the same number.
+  expect_error(gpu_sum(matrix(c(1+2i, 0+3i), 1, 2)), "no complex-valued operation")
+})
+
+test_that("complex refusal covers the vector and non-reduction paths too", {
+  skip_if_no_gpu()
+  skip_if_xfail("gpu_sum", "reduction unavailable on this device")
+
+  # A bare vector goes through the Exporter's vector_to_mat() branch, and
+  # gpu_transpose() reaches the same conversion without reducing anything, so
+  # neither can quietly keep working if the refusal is ever narrowed to one
+  # entry point.
+  expect_error(gpu_sum(c(1+2i, 2+0i)), "complex input")
+  expect_error(gpu_transpose(matrix(c(1+2i, 0+3i), 1, 2)), "complex input")
+})
+
+test_that("Re() is accepted, so the refusal is about the imaginary part only", {
+  skip_if_no_gpu()
+  skip_if_xfail("gpu_sum", "reduction unavailable on this device")
+
+  # The error tells the caller to do this; it had better work.
+  expect_equal(gpu_sum(Re(matrix(c(1+2i, 0+3i), 1, 2))), 1, tolerance = tol_f32_reduction)
 })

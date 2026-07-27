@@ -88,9 +88,16 @@ gpu_device_info <- function() {
 #' @return Product of A and B computed on GPU
 #' @section Precision:
 #' The product is computed in single precision (`float`). R's doubles are
-#' rounded on the way to the device and the result is widened back, so
-#' expect a relative error around `1e-7` against `A %*% B` in base R, growing
-#' with the shared inner dimension as the rounding accumulates.
+#' rounded on the way to the device and the result is widened back, so a
+#' relative error around `1e-7` against `A %*% B` in base R is the floor, not
+#' the ceiling.
+#'
+#' Every output element is a sum over the shared inner dimension, so the error
+#' grows with that dimension on the usual random-walk model: about
+#' `sqrt(k) * 1.19e-7` for an inner dimension of `k`. Measured on an Apple
+#' OpenCL device, worst of 10 `rnorm()` draws: `7.0e-8` at `k = 10`, `1.8e-7`
+#' at `k = 100`, `5.4e-7` at `k = 1000` and `1.1e-6` at `k = 4000`, which is
+#' between a seventh and a fifth of the model throughout.
 #' @export
 #' @examplesIf nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))
 #' A <- matrix(c(1, 2, 3, 4), 2, 2)
@@ -164,8 +171,18 @@ gpu_element_square <- function(A) {
 #' @section Precision:
 #' The matrix is held and accumulated in single precision (`float`) even
 #' though the value handed back to R is a double, so the sum carries about 7
-#' significant decimal digits rather than 16. Expect a relative error around
-#' `1e-7` against `sum(A)`, growing with the number of elements accumulated.
+#' significant decimal digits rather than 16.
+#'
+#' The accumulation is a tree reduction rather than a running total, so the
+#' error does not grow appreciably with the number of elements: the depth of
+#' the tree, not its width, is what accumulates rounding. Measured against
+#' `sum(A)` on `runif()` input, worst of 20 draws on an Apple OpenCL device,
+#' the relative error stayed at or below `1.0e-7` -- under one
+#' single-precision epsilon (`1.19e-7`) -- at every size from `1e3` to `1e7`
+#' elements.
+#'
+#' [gpu_mean()] is not built this way and does degrade with size; see its own
+#' Precision section before assuming the two behave alike.
 #' @export
 #' @examplesIf nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))
 #' gpu_sum(matrix(1:6, nrow = 2))
@@ -182,8 +199,28 @@ gpu_sum <- function(A) {
 #' @section Precision:
 #' The matrix is held and averaged in single precision (`float`) even though
 #' the value handed back to R is a double, so the mean carries about 7
-#' significant decimal digits rather than 16. Expect a relative error around
-#' `1e-7` against `mean(A)`.
+#' significant decimal digits rather than 16. Unlike [gpu_sum()], that is only
+#' the floor: the error grows with the number of **rows**, and by `1e5` rows it
+#' is already two orders of magnitude worse.
+#'
+#' The reason is the kernel this routes to. Column means are computed by
+#' `mean_colwise_conv_pre`, generated from `reduce_colwise.cl`, which gives
+#' each column one work item running a serial loop over the rows -- a running
+#' total, not a tree -- so the rounding errors of `n_rows` successive additions
+#' accumulate. The column count barely matters, because the second stage
+#' averages only `n_cols` values. Treating the `n_rows` roundings as
+#' independent gives a relative error of about `sqrt(n_rows) * 1.19e-7`.
+#'
+#' Measured against `mean(A)` on `runif()` input, worst of 20 draws on an
+#' Apple OpenCL device: `1.1e-6` at `1e3` rows, `1.2e-5` at `1e5` rows and
+#' `7.0e-5` at `1e7` rows, which is 0.29, 0.31 and 0.19 of the model in turn.
+#' A `10 x 1e5` matrix holds the same `1e6` values as a `1e6 x 1` one and comes
+#' back at `6.0e-8` against the taller matrix's `1.7e-5`: it is the reduced
+#' dimension that costs accuracy, not the amount of data.
+#'
+#' If those digits matter on a very tall matrix, `gpu_sum(A) / length(A)` keeps
+#' the tree reduction; [gpu_transpose()] first also works, at the cost of a
+#' full copy on the device.
 #' @export
 #' @examplesIf nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))
 #' gpu_mean(matrix(1:6, nrow = 2))
@@ -254,6 +291,31 @@ gpu_set_seed <- function(seed) {
 #' dim(gpu_randu(4, 3))
 gpu_randu <- function(n_rows, n_cols) {
     .Call(`_RcppBandicoot_gpu_randu`, n_rows, n_cols)
+}
+
+#' Exercise the device-buffer allocation guard
+#'
+#' Internal. Runs \code{Rcpp::traits::bandicoot_check_alloc} on a hypothetical
+#' buffer and returns invisibly if it is permitted, or throws the same error a
+#' real call would.
+#'
+#' This exists so the guard's boundary can be tested for what it is -- a
+#' predicate over a size -- rather than through its effect on an allocation.
+#' Testing it the other way means asking for a buffer of four gigabytes or more,
+#' which costs nothing while the guard works and, precisely when it has
+#' regressed and the test matters most, either exhausts the runner or hands the
+#' device a request it truncates. That is the failure this guard exists to
+#' prevent, so a test for it must not be the thing that triggers it. Here the
+#' arithmetic is reachable at any size, on any machine, with no device and no
+#' memory, so it runs everywhere on every push.
+#'
+#' @param n_elem Number of elements in the hypothetical buffer.
+#' @param elem_size Size of one element in bytes. Only 4 (\code{float}) and 8
+#'   (\code{double}) occur in this package.
+#' @return Invisibly \code{TRUE} when the size is permitted; otherwise an error.
+#' @keywords internal
+check_alloc_limit <- function(n_elem, elem_size) {
+    .Call(`_RcppBandicoot_check_alloc_limit`, n_elem, elem_size)
 }
 
 #' Set the Bandicoot kernel source directory

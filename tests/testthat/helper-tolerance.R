@@ -19,9 +19,31 @@ tol_f32_elementwise <- 1e-6
 # any real regression, which is O(1).
 tol_f32_reduction <- 1e-5
 
-# Multi-pass tree reduction over ~1.6e5 fp32 terms.  A random-walk error model
-# gives sqrt(n) * eps = 400 * 1.19e-7 = 4.8e-5; 1e-4 clears that with margin.
-tol_f32_reduction_large <- 1e-4
+# A reduction over n fp32 terms, where n is large enough that the flat number
+# above no longer holds.  Same random-walk error model as the note at the top:
+# n roundings of size eps, each independent of the last, accumulate as
+# sqrt(n) * eps.  The factor of 2 is headroom on the model, not a number fitted
+# to any measurement.
+f32_eps <- 2^-23  # 1.19e-7
+
+tol_f32_reduction_n <- function(n) 2 * sqrt(n) * f32_eps
+
+# Multi-pass tree reduction over ~1.6e5 fp32 terms.  Written as the model
+# rather than as the 1e-4 it used to be spelled: tol_f32_reduction_n(1.6e5) is
+# 9.5e-5, so the two agree, and the model now lives in exactly one place.
+tol_f32_reduction_large <- tol_f32_reduction_n(400 * 400)
+
+# The model is not decoration.  gpu_mean() reduces each column with a serial
+# per-column kernel (mean_colwise_conv_pre, generated from reduce_colwise.cl:
+# one work item per column running a loop over the rows), not a tree, so its
+# error tracks the ROW count and keeps growing with it.  Measured on an Apple
+# OpenCL device, worst of 20 runif() draws, as a fraction of sqrt(n_rows) * eps:
+# 0.29 at 1e3 rows, 0.25 at 1e4, 0.31 at 1e5, 0.14 at 1e6, 0.19 at 1e7.  The
+# model bounds the observation across four orders of magnitude, which is what
+# makes it usable as a tolerance rather than a curve fit.
+#
+# gpu_sum() reduces with a tree and stayed at or below 1.0e-7 -- under one eps
+# -- over that same range, so it needs no size-dependent term.
 
 # gpu_element_square is the only fp64 entry point; the testthat default is
 # appropriate there.

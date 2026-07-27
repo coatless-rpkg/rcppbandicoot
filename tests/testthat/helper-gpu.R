@@ -111,6 +111,29 @@ gpu_xfail_ops <- function() {
   trimws(strsplit(raw, ",", fixed = TRUE)[[1]])
 }
 
+# The 4 GiB device-buffer refusal (Rcpp::traits::bandicoot_check_alloc in
+# inst/include/RcppBandicootAs.h) is checked from two files, so the gate lives
+# here rather than in either of them: test-alloc-limit.R and
+# test-gpu-op-matrix-multiply.R run in different processes and share nothing
+# except the helpers.
+#
+# When the guard works, the cases it gates cost nothing -- the request is
+# refused from its dimensions before a byte is allocated, which is the property
+# under test.  The cost appears only if the guard has regressed, and then it is
+# the entire failure at once: gpu_sum() on a 2^30-row matrix would materialise
+# 4 GiB of R integers, 4 GiB of host floats and a 4 GiB device buffer before
+# returning its wrong answer.  A CI runner meeting that reports an OOM kill or a
+# dead container, not a test failure, which is a worse signal than the one it
+# replaced.  Hence opt-in, and set nowhere in this repository:
+#
+#   RCPPBANDICOOT_RUN_LARGE_ALLOC=true Rscript -e 'testthat::test_local()'
+skip_unless_large_alloc <- function() {
+  if (env_true("RCPPBANDICOOT_RUN_LARGE_ALLOC")) {
+    return(invisible(TRUE))
+  }
+  testthat::skip("set RCPPBANDICOOT_RUN_LARGE_ALLOC to exercise the 4 GiB allocation guard")
+}
+
 skip_if_xfail <- function(op, reason) {
   if (op %in% gpu_xfail_ops()) {
     testthat::skip(paste0("known failure excluded via RCPPBANDICOOT_XFAIL: ",
