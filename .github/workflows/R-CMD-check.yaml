@@ -468,42 +468,36 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          # No '|| exit 0' and no '|| true'. A diagnostic that swallows its own
-          # failure reports nothing and calls it success, which is the exact
-          # shape of the defects this workflow exists to catch -- and is what
-          # the first version of this step did on Windows.
-          set -x
+          # One measurement per process, for the same reason every GPU test
+          # has its own script: on Intel's runtime this crashes, and R's stdout
+          # is buffered, so a single process lost every line it had already
+          # produced -- the previous attempt returned an empty file and no
+          # indication of how far it got. A crash now costs one row.
+          set +e
           if ! R CMD INSTALL --no-multiarch . > install-diag.log 2>&1; then
             echo "DIAG install FAILED; last 30 lines follow"
             tail -30 install-diag.log
             exit 0
           fi
-          Rscript -e '
-            suppressMessages(library(RcppBandicoot))
-            i <- gpu_device_info()
-            cat(sprintf("DIAG device      : %s\n", i$backend))
-            cat(sprintf("DIAG subgroups   : %s  size=%s\n", i$subgroups, i$subgroup_size))
-            cat(sprintf("DIAG n_units     : %s  max_wg=%s\n", i$n_units, i$max_wg))
-            set.seed(7)
-            for (n in c(100, 200, 350, 400, 500, 800, 1200)) {
-              A <- matrix(runif(n * n), n, n)
-              r <- gpu_sum(A) / sum(A)
-              cat(sprintf("DIAG accu   %5d x %-5d n=%9d ratio=%.6f\n", n, n, n * n, r))
-            }
-            for (rows in c(2, 4, 8, 10, 16, 32, 64)) {
-              W <- matrix(runif(1e5), rows, 1e5 / rows)
-              r <- gpu_mean(W) / mean(W)
-              cat(sprintf("DIAG mean   %5d rows  ratio=%.6f\n", rows, r))
-            }
-          ' > diag-out.txt 2>&1 || echo "DIAG Rscript exited non-zero"
-          # Print the DIAG lines, and if there are none, print everything so the
-          # reason is visible rather than inferred from an empty section.
-          if grep -q "^DIAG" diag-out.txt; then
-            grep "^DIAG" diag-out.txt
-          else
-            echo "DIAG no diagnostic lines produced; full output follows"
-            cat diag-out.txt
-          fi
+
+          probe() {
+            out="$(Rscript -e "suppressMessages(library(RcppBandicoot)); $1" 2>&1)"
+            if [ $? -ne 0 ] || [ -z "${out}" ]; then
+              echo "DIAG $2 -> CRASHED (no value returned)"
+            else
+              echo "DIAG $2 -> ${out}"
+            fi
+          }
+
+          probe 'i <- gpu_device_info(); cat(sprintf("backend=%s subgroups=%s size=%s n_units=%s max_wg=%s", i$backend, i$subgroups, i$subgroup_size, i$n_units, i$max_wg))' "device"
+
+          for n in 100 200 350 400 500 800 1200; do
+            probe "set.seed(7); A <- matrix(runif(${n}*${n}), ${n}, ${n}); cat(sprintf(\"ratio=%.6f\", gpu_sum(A)/sum(A)))" "accu ${n}x${n}"
+          done
+
+          for rows in 2 4 8 10 16 32 64; do
+            probe "set.seed(7); W <- matrix(runif(1e5), ${rows}, 1e5/${rows}); cat(sprintf(\"ratio=%.6f\", gpu_mean(W)/mean(W)))" "mean ${rows} rows"
+          done
 
       - uses: r-lib/actions/check-r-package@v2
         id: check
