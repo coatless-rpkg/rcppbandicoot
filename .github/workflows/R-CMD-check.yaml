@@ -449,6 +449,45 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      # TEMPORARY diagnostic for the partial-reduction defect. Two operations
+      # return about a third of the correct value on Intel's runtime and only
+      # there -- gpu_sum's multi-pass path and gpu_mean on a wide matrix -- and
+      # the suspected mechanism is the subgroup size. Bandicoot queries it once
+      # (runtime_meat.hpp:523) for an NDRange of 32768 and bakes the answer into
+      # every kernel as SUBGROUP_SIZE; the reduction's tail then relies on
+      # implicit lockstep across exactly that many lanes, with no barrier
+      # (ks/opencl/oneway/accu.cl:41-53). If the value baked in is larger than
+      # the lanes that actually execute in lockstep at the local size the kernel
+      # is dispatched with, the tail sums a span that was never written and the
+      # result is short -- which is what a third looks like.
+      #
+      # This prints what each device reports and how the error scales, so the
+      # upstream report carries measurements rather than a hypothesis.
+      - name: Characterise the partial reduction (diagnostic)
+        if: runner.os != 'Linux' || matrix.config.opencl_runtime != 'none'
+        continue-on-error: true
+        shell: bash
+        run: |
+          R CMD INSTALL --no-multiarch . >/dev/null 2>&1 || exit 0
+          Rscript -e '
+            suppressMessages(library(RcppBandicoot))
+            i <- gpu_device_info()
+            cat(sprintf("DIAG device      : %s\n", i$backend))
+            cat(sprintf("DIAG subgroups   : %s  size=%s\n", i$subgroups, i$subgroup_size))
+            cat(sprintf("DIAG n_units     : %s  max_wg=%s\n", i$n_units, i$max_wg))
+            set.seed(7)
+            for (n in c(100, 200, 350, 400, 500, 800, 1200)) {
+              A <- matrix(runif(n * n), n, n)
+              r <- gpu_sum(A) / sum(A)
+              cat(sprintf("DIAG accu   %5d x %-5d n=%9d ratio=%.6f\n", n, n, n * n, r))
+            }
+            for (rows in c(2, 4, 8, 10, 16, 32, 64)) {
+              W <- matrix(runif(1e5), rows, 1e5 / rows)
+              r <- gpu_mean(W) / mean(W)
+              cat(sprintf("DIAG mean   %5d rows  ratio=%.6f\n", rows, r))
+            }
+          ' 2>&1 | grep "^DIAG" || true
+
       - uses: r-lib/actions/check-r-package@v2
         id: check
         # The one place the nightly diverges from push and pull_request. On a
