@@ -247,6 +247,47 @@ w <- matrix(runif(1e5), 10, 1e4)
 gpu_mean(w)   # 0.500170 on PoCL and Apple; about 0.16 on Intel's runtime
 ```
 
+## What a size sweep across the three implementations shows
+
+Measured per operation, each in its own R process (the runtime crashes, and a
+shared process loses every result already produced):
+
+| n | Linux, PoCL 5.0 / LLVM 16 | macOS, PoCL 7.1 / LLVM 19.1.7 |
+|---|---|---|
+| 100 x 100 | exact | exact |
+| 200 x 200 | exact | exact |
+| 350 x 350 | exact | exact |
+| 400 x 400 | exact | **NaN** |
+| 500 x 500 | exact | **NaN** |
+| 800 x 800 | exact | **NaN** |
+| 1200 x 1200 | exact | **NaN** |
+
+The macOS boundary sits exactly where the single-pass `_small` kernel gives way
+to the multi-pass one, and is clean: exact below it, NaN at and above. Linux is
+exact throughout, on the same source.
+
+`mean()` was swept over the same 1e5 values reshaped from 2 to 64 rows: exact at
+every shape on both PoCL builds. The wide-matrix failure is specific to Intel's
+runtime.
+
+## One thing that is NOT the cause
+
+The obvious suspect was the compiled-in subgroup size, since the reduction's
+tail relies on implicit lockstep across `SUBGROUP_SIZE` lanes with no barrier
+(`ks/opencl/oneway/accu.cl:41-53`). It is not the discriminator.
+
+Both implementations report **`subgroup_size = 32768`**, which is not a subgroup
+size at all -- it is the NDRange argument passed to the query at
+`opencl/runtime_meat.hpp:523` being echoed back. With `CL_DEVICE_MAX_WORK_GROUP_SIZE`
+at 4096, `get_local_size(0) / 2` never exceeds 2048, so the condition
+`s > SUBGROUP_SIZE` is false on the first iteration and **the tree loop never
+executes on any device**; every reduction falls straight through to the
+`SUBGROUP_SIZE_NAME = "other"` variant selected at `opencl/kernel_src.hpp:157`.
+
+That value is equally wrong on the implementation that produces correct results
+and on the two that do not, so it does not explain the divergence -- though a
+query that returns its own input argument looks worth checking independently.
+
 ## Severity
 
 This one is silent. Every other failure these platforms produced was a hard
