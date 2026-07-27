@@ -270,6 +270,63 @@ exact throughout, on the same source.
 every shape on both PoCL builds. The wide-matrix failure is specific to Intel's
 runtime.
 
+## Why the boundary sits where it does
+
+It is not an arbitrary size. `opencl/kernel_utils.hpp:25-48` decides the pass
+count:
+
+```cpp
+total_num_threads = ceil(n_elem / max(1.0, 2 * ceil(log2(n_elem))));
+pow2_num_threads  = next_pow2(total_num_threads);
+local_group_size  = min(min(max_wg_dim_size, kernel_wg_size), pow2_num_threads);
+```
+
+and `generic_reduce_meat.hpp:239` takes the single-pass branch only while
+`total_num_threads <= local_group_size`. With `CL_KERNEL_WORK_GROUP_SIZE` of
+4096 that gives:
+
+| n_elem | total_num_threads | local_group_size | pass |
+|---|---|---|---|
+| 350^2 = 122500 | 3603 | 4096 | single -- correct everywhere |
+| 384^2 = 147456 | 4096 | 4096 | single |
+| 385^2 = 148225 | 4097 | 4096 | **multi** -- first failing size |
+| 400^2 = 160000 | 4445 | 4096 | multi |
+| 1200^2 = 1440000 | 34286 | 4096 | multi |
+
+So the first size that fails is **n_elem = 148225**, and 400 x 400 is simply
+the first value past it in the sweep. Every correct result reported above is a
+single-pass reduction and every incorrect one is multi-pass: the defect is in
+the second pass, not in the arithmetic.
+
+The boundary moves with `CL_KERNEL_WORK_GROUP_SIZE`, so a device reporting a
+different value fails at a different size -- which is worth knowing before
+trying to reproduce on other hardware.
+
+## The two symptoms are consistent with one cause
+
+macOS returns `NaN` and Windows returns a short value from the same code path.
+Both are what reading auxiliary entries that were never written would produce,
+differing only in what the uninitialised memory happens to hold: a NaN bit
+pattern on one, zeros on the other. The aux buffer is sized at
+`generic_reduce_meat.hpp:170` with
+
+```cpp
+const uword first_aux_size = std::ceil((total_num_threads + (local_group_size - 1)) / local_group_size);
+```
+
+where both operands are `uword`, so the division is integer and `std::ceil`
+is applied to an already-truncated result -- the ceiling idiom is carried by
+the `+ (local_group_size - 1)` term and the `std::ceil` does nothing. That is
+harmless as written, but it is the kind of expression worth checking against
+the number of groups actually enqueued at
+`generic_reduce_meat.hpp:268`, which rounds to a multiple of
+`local_group_size` under a comment that says "round up to the next power of 2".
+Those two are not the same rounding, and the kernel's tree reduction does
+assume a power of two.
+
+I have not instrumented the kernel to confirm which of those is responsible;
+the above is where the reading points.
+
 ## One thing that is NOT the cause
 
 The obvious suspect was the compiled-in subgroup size, since the reduction's
