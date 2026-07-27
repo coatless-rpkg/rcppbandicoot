@@ -55,6 +55,16 @@ test_that("gpu_mean() accuracy tracks the row count, not the element count", {
   # this one has to stay inside the flat small-n tolerance that the 1e5-row
   # matrix is explicitly not held to.  That is the whole claim: the reduced
   # dimension is what costs accuracy, not the amount of data.
+  # Excluded separately from gpu_mean itself, because the narrow case works on
+  # the device this fails on. Intel's oclcpuexp returns about a third of the
+  # correct value here -- 0.16 where runif() averages 0.50 -- which is not a
+  # tolerance question but the same wrong answer gpu_sum's multi-pass path
+  # gives on that runtime, in the same proportion (0.32 against 0.313). Both
+  # are consistent with only some of the work-groups contributing. macOS/PoCL
+  # and Apple's own device both return it exactly.
+  skip_if_xfail("gpu_mean_wide",
+                "runtime returns a partial reduction across work-groups")
+
   set.seed(23)
   wide <- matrix(runif(1e5), 10, 1e4)
 

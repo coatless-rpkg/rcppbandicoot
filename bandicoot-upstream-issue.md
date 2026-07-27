@@ -218,6 +218,35 @@ gpu_sum(A) - sum(A)   # 0 on Linux/PoCL 5.0; ~-5.5e4 on Windows; NaN on macOS
 - Only CPU implementations tested; no real GPU.
 - Whether the Windows and macOS symptoms share one cause or are two.
 
+## A second operation shows the same proportion
+
+`mean()` over a wide matrix fails the same way on the same runtime, which is
+why this reads as one defect rather than two.
+
+A 10 x 1e4 matrix of `runif` values, seed 23, whose true mean is 0.500170:
+
+| Platform | OpenCL implementation | Result |
+|---|---|---|
+| Linux x86-64 | PoCL 5.0+debian / LLVM 16 | correct |
+| macOS arm64 | PoCL 7.1 / LLVM 19.1.7 | correct |
+| Apple (local, arm64 GPU) | Apple OpenCL | 0.500170 -- exact |
+| Windows x86-64 | Intel oclcpuexp 2025-WW13 / clang 20 | **0.16** |
+
+0.16 / 0.50 = 0.32, against 25040.2 / 79993.0 = 0.313 for the `accu()` case
+above. Two different reductions, two different entry points, the same runtime,
+and both land near a third of the correct value -- which is what only some of
+the work-groups contributing would look like. The narrow case of the same
+operation (`1e5 x 2`) is correct on that runtime, so it tracks the shape of the
+reduction rather than the operation.
+
+Reproducing, alongside the `accu()` case:
+
+```r
+set.seed(23)
+w <- matrix(runif(1e5), 10, 1e4)
+gpu_mean(w)   # 0.500170 on PoCL and Apple; about 0.16 on Intel's runtime
+```
+
 ## Severity
 
 This one is silent. Every other failure these platforms produced was a hard

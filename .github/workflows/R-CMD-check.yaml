@@ -282,8 +282,8 @@ jobs:
           - os: windows-2025
             r: 'release'
             experimental: true
-            xfail: 'gpu_sum_multipass'
-            nightly_expect: 'gpu-sum-multipass'
+            xfail: 'gpu_sum_multipass,gpu_mean_wide'
+            nightly_expect: 'gpu-sum-multipass,gpu-mean'
             nightly_exact: 'true'
             opencl_runtime: 'auto'
             gpu_examples: ''
