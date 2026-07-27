@@ -468,7 +468,16 @@ jobs:
         continue-on-error: true
         shell: bash
         run: |
-          R CMD INSTALL --no-multiarch . >/dev/null 2>&1 || exit 0
+          # No '|| exit 0' and no '|| true'. A diagnostic that swallows its own
+          # failure reports nothing and calls it success, which is the exact
+          # shape of the defects this workflow exists to catch -- and is what
+          # the first version of this step did on Windows.
+          set -x
+          if ! R CMD INSTALL --no-multiarch . > install-diag.log 2>&1; then
+            echo "DIAG install FAILED; last 30 lines follow"
+            tail -30 install-diag.log
+            exit 0
+          fi
           Rscript -e '
             suppressMessages(library(RcppBandicoot))
             i <- gpu_device_info()
@@ -486,7 +495,15 @@ jobs:
               r <- gpu_mean(W) / mean(W)
               cat(sprintf("DIAG mean   %5d rows  ratio=%.6f\n", rows, r))
             }
-          ' 2>&1 | grep "^DIAG" || true
+          ' > diag-out.txt 2>&1 || echo "DIAG Rscript exited non-zero"
+          # Print the DIAG lines, and if there are none, print everything so the
+          # reason is visible rather than inferred from an empty section.
+          if grep -q "^DIAG" diag-out.txt; then
+            grep "^DIAG" diag-out.txt
+          else
+            echo "DIAG no diagnostic lines produced; full output follows"
+            cat diag-out.txt
+          fi
 
       - uses: r-lib/actions/check-r-package@v2
         id: check
