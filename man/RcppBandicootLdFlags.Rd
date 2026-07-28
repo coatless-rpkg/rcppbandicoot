@@ -19,7 +19,5 @@ The flags are determined at package installation time by the configure script,
 ensuring they match the configuration used to build the package.
 }
 \examples{
-\dontrun{
 RcppBandicootLdFlags()
-}
 }

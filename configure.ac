@@ -25,6 +25,26 @@ AC_PROG_CC
 AC_PROG_CXX
 
 ## =============================================================================
+## Environment-provided flags
+## =============================================================================
+##
+## configure.win has always honoured these four variables; the Unix path did
+## not, and autodetected instead.  On macOS that meant hardcoding Apple's
+## OpenCL framework, which enumerates zero devices on hosted CI runners, so an
+## externally installed loader (e.g. the Khronos ICD loader plus PoCL) was
+## silently ignored.  Capture them here, before the defaults below reset the
+## same-named shell variables to the empty string.
+ENV_OPENCL_CPPFLAGS="${OPENCL_CPPFLAGS}"
+ENV_OPENCL_LIBS="${OPENCL_LIBS}"
+ENV_CLBLAST_CPPFLAGS="${CLBLAST_CPPFLAGS}"
+ENV_CLBLAST_LIBS="${CLBLAST_LIBS}"
+## clBLAS has no configure.win equivalent to mirror -- Windows always
+## disables clBLAS (CLBlast is preferred there). This pair exists solely to
+## gate the Homebrew clBLAS probe below; see the clBLAS Detection section.
+ENV_CLBLAS_CPPFLAGS="${CLBLAS_CPPFLAGS}"
+ENV_CLBLAS_LIBS="${CLBLAS_LIBS}"
+
+## =============================================================================
 ## Platform Detection (macOS vs Linux/Unix)
 ## =============================================================================
 
@@ -93,7 +113,22 @@ AC_MSG_CHECKING([for OpenCL])
 opencl_header_found=no
 
 ## Platform-specific OpenCL detection
-if test x"${is_macos}" = x"yes"; then
+if test -n "${ENV_OPENCL_CPPFLAGS}" && test -n "${ENV_OPENCL_LIBS}"; then
+    ## Both halves are required: enabling the backend with headers but no link
+    ## flags compiles and then fails to link.  Same rule configure.win uses.
+    AC_MSG_RESULT([using OPENCL_CPPFLAGS and OPENCL_LIBS from the environment])
+    opencl_header_found=yes
+    HAVE_OPENCL=1
+    OPENCL_CXXFLAGS="-DCOOT_USE_OPENCL ${ENV_OPENCL_CPPFLAGS}"
+    OPENCL_LIBS="${ENV_OPENCL_LIBS}"
+    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${OPENCL_CXXFLAGS}"
+    BANDICOOT_LIBS="${BANDICOOT_LIBS} ${OPENCL_LIBS}"
+    ## A loader supplied through the environment is a modern ICD loader, never
+    ## Apple's 1.2-only framework, and its headers are reachable through the
+    ## -I in OPENCL_CPPFLAGS -- including <OpenCL/opencl.h> on macOS, which
+    ## Homebrew's opencl-headers keg also provides.
+    OPENCL_TARGET_VERSION=300
+elif test x"${is_macos}" = x"yes"; then
     ## macOS: OpenCL is a system framework
     AC_MSG_RESULT([checking macOS OpenCL framework])
 
@@ -177,6 +212,17 @@ else
     fi
 fi
 
+if test "x${HAVE_OPENCL}" = x0; then
+  ## Explicitly disable OpenCL since bandicoot's config.hpp enables it by
+  ## default -- the same reason the CUDA section below emits
+  ## -DCOOT_DONT_USE_CUDA.  Without this a CUDA-only build lets config.hpp
+  ## self-define COOT_USE_OPENCL and the compile dies on a missing
+  ## <CL/opencl.h>.  CLBlast and clBLAS need no companion flag here: their
+  ## headers are only reached from inside the COOT_USE_OPENCL guard in
+  ## include_opencl.hpp, which this flag switches off.
+  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_OPENCL"
+fi
+
 ## =============================================================================
 ## CLBlast Detection (preferred for OpenCL)
 ## =============================================================================
@@ -184,44 +230,66 @@ fi
 if test "x${HAVE_OPENCL}" = x1; then
   AC_MSG_CHECKING([for CLBlast])
 
-  saved_LIBS="${LIBS}"
-  saved_LDFLAGS="${LDFLAGS}"
-  saved_CPPFLAGS="${CPPFLAGS}"
+  if test -n "${ENV_CLBLAST_CPPFLAGS}" && test -n "${ENV_CLBLAST_LIBS}"; then
+    HAVE_CLBLAST=1
+    CLBLAST_CXXFLAGS="-DCOOT_USE_CLBLAST ${ENV_CLBLAST_CPPFLAGS}"
+    CLBLAST_LIBS="${ENV_CLBLAST_LIBS}"
+    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CLBLAST_CXXFLAGS}"
+    BANDICOOT_LIBS="${CLBLAST_LIBS} ${BANDICOOT_LIBS}"
+    AC_MSG_RESULT([yes (from CLBLAST_CPPFLAGS and CLBLAST_LIBS)])
+  elif test -n "${ENV_OPENCL_CPPFLAGS}" && test -n "${ENV_OPENCL_LIBS}"; then
+    ## OpenCL came from the environment (e.g. the Khronos ICD loader plus
+    ## PoCL) but no CLBlast environment pair was supplied. Do not fall through
+    ## to the Homebrew CLBlast probe: the Homebrew clblast bottle links
+    ## Apple's OpenCL.framework, and loading it alongside an
+    ## environment-supplied ICD loader is a reproduced SIGSEGV -- the same
+    ## hazard the clBLAS section below guards against, for the same reason.
+    ## The probe is safe only when OpenCL itself was autodetected, since then
+    ## there is exactly one OpenCL implementation in play rather than two
+    ## racing to be loaded.
+    HAVE_CLBLAST=0
+    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAST"
+    AC_MSG_RESULT([no (skipping Homebrew probe: OpenCL supplied from environment; set CLBLAST_CPPFLAGS and CLBLAST_LIBS to enable)])
+  else
+    saved_LIBS="${LIBS}"
+    saved_LDFLAGS="${LDFLAGS}"
+    saved_CPPFLAGS="${CPPFLAGS}"
 
-  ## On macOS, check for Homebrew installation
-  if test x"${is_macos}" = x"yes"; then
-    BREW_PREFIX=$(brew --prefix 2>/dev/null)
-    if test -n "${BREW_PREFIX}" && test -d "${BREW_PREFIX}/opt/clblast"; then
-      CLBLAST_PREFIX="${BREW_PREFIX}/opt/clblast"
-      AC_MSG_NOTICE([Found Homebrew CLBlast at: ${CLBLAST_PREFIX}])
-      LDFLAGS="${LDFLAGS} -L${CLBLAST_PREFIX}/lib"
-      CPPFLAGS="${CPPFLAGS} -I${CLBLAST_PREFIX}/include"
+    ## On macOS, check for Homebrew installation
+    if test x"${is_macos}" = x"yes"; then
+      BREW_PREFIX=$(brew --prefix 2>/dev/null)
+      if test -n "${BREW_PREFIX}" && test -d "${BREW_PREFIX}/opt/clblast"; then
+        CLBLAST_PREFIX="${BREW_PREFIX}/opt/clblast"
+        AC_MSG_NOTICE([Found Homebrew CLBlast at: ${CLBLAST_PREFIX}])
+        LDFLAGS="${LDFLAGS} -L${CLBLAST_PREFIX}/lib"
+        CPPFLAGS="${CPPFLAGS} -I${CLBLAST_PREFIX}/include"
+      fi
     fi
+
+    LIBS="-lclblast ${BANDICOOT_LIBS} ${saved_LIBS}"
+
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern "C" void CLBlastSgemm();]],
+                                    [[CLBlastSgemm();]])],
+                   [HAVE_CLBLAST=1
+                    CLBLAST_CXXFLAGS="-DCOOT_USE_CLBLAST"
+                    if test -n "${CLBLAST_PREFIX}"; then
+                      CLBLAST_CXXFLAGS="${CLBLAST_CXXFLAGS} -I${CLBLAST_PREFIX}/include"
+                      CLBLAST_LIBS="-L${CLBLAST_PREFIX}/lib -lclblast"
+                    else
+                      CLBLAST_LIBS="-lclblast"
+                    fi
+                    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CLBLAST_CXXFLAGS}"
+                    BANDICOOT_LIBS="${CLBLAST_LIBS} ${BANDICOOT_LIBS}"
+                    AC_MSG_RESULT([yes])],
+                   [HAVE_CLBLAST=0
+                    ## Explicitly disable CLBlast since bandicoot's config.hpp enables it by default
+                    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAST"
+                    AC_MSG_RESULT([no])])
+
+    LIBS="${saved_LIBS}"
+    LDFLAGS="${saved_LDFLAGS}"
+    CPPFLAGS="${saved_CPPFLAGS}"
   fi
-
-  LIBS="-lclblast ${BANDICOOT_LIBS} ${saved_LIBS}"
-
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern "C" void CLBlastSgemm();]],
-                                  [[CLBlastSgemm();]])],
-                 [HAVE_CLBLAST=1
-                  CLBLAST_CXXFLAGS="-DCOOT_USE_CLBLAST"
-                  if test -n "${CLBLAST_PREFIX}"; then
-                    CLBLAST_CXXFLAGS="${CLBLAST_CXXFLAGS} -I${CLBLAST_PREFIX}/include"
-                    CLBLAST_LIBS="-L${CLBLAST_PREFIX}/lib -lclblast"
-                  else
-                    CLBLAST_LIBS="-lclblast"
-                  fi
-                  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CLBLAST_CXXFLAGS}"
-                  BANDICOOT_LIBS="${CLBLAST_LIBS} ${BANDICOOT_LIBS}"
-                  AC_MSG_RESULT([yes])],
-                 [HAVE_CLBLAST=0
-                  ## Explicitly disable CLBlast since bandicoot's config.hpp enables it by default
-                  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAST"
-                  AC_MSG_RESULT([no])])
-
-  LIBS="${saved_LIBS}"
-  LDFLAGS="${saved_LDFLAGS}"
-  CPPFLAGS="${saved_CPPFLAGS}"
 fi
 
 ## =============================================================================
@@ -233,44 +301,66 @@ fi
 if test "x${HAVE_OPENCL}" = x1; then
   AC_MSG_CHECKING([for clBLAS])
 
-  saved_LIBS="${LIBS}"
-  saved_LDFLAGS="${LDFLAGS}"
-  saved_CPPFLAGS="${CPPFLAGS}"
+  if test -n "${ENV_CLBLAS_CPPFLAGS}" && test -n "${ENV_CLBLAS_LIBS}"; then
+    HAVE_CLBLAS=1
+    CLBLAS_CXXFLAGS="-DCOOT_USE_CLBLAS ${ENV_CLBLAS_CPPFLAGS}"
+    CLBLAS_LIBS="${ENV_CLBLAS_LIBS}"
+    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CLBLAS_CXXFLAGS}"
+    BANDICOOT_LIBS="${CLBLAS_LIBS} ${BANDICOOT_LIBS}"
+    AC_MSG_RESULT([yes (from CLBLAS_CPPFLAGS and CLBLAS_LIBS)])
+  elif test -n "${ENV_OPENCL_CPPFLAGS}" && test -n "${ENV_OPENCL_LIBS}"; then
+    ## OpenCL came from the environment (e.g. the Khronos ICD loader plus
+    ## PoCL) but no clBLAS environment pair was supplied. Do not fall through
+    ## to the Homebrew clBLAS probe here: the same hazard documented above for
+    ## CLBlast applies -- the Homebrew clblas bottle links Apple's
+    ## OpenCL.framework, and loading it alongside an environment-supplied ICD
+    ## loader is a reproduced SIGSEGV. The probe below is safe only when
+    ## OpenCL itself was autodetected (macOS framework or Linux
+    ## CL/opencl.h), since then there is exactly one OpenCL implementation in
+    ## play, not two racing to be loaded.
+    HAVE_CLBLAS=0
+    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAS"
+    AC_MSG_RESULT([no (skipping Homebrew probe: OpenCL supplied from environment; set CLBLAS_CPPFLAGS and CLBLAS_LIBS to enable)])
+  else
+    saved_LIBS="${LIBS}"
+    saved_LDFLAGS="${LDFLAGS}"
+    saved_CPPFLAGS="${CPPFLAGS}"
 
-  ## On macOS, check for Homebrew installation
-  if test x"${is_macos}" = x"yes"; then
-    BREW_PREFIX=$(brew --prefix 2>/dev/null)
-    if test -n "${BREW_PREFIX}" && test -d "${BREW_PREFIX}/opt/clblas"; then
-      CLBLAS_PREFIX="${BREW_PREFIX}/opt/clblas"
-      AC_MSG_NOTICE([Found Homebrew clBLAS at: ${CLBLAS_PREFIX}])
-      LDFLAGS="${LDFLAGS} -L${CLBLAS_PREFIX}/lib"
-      CPPFLAGS="${CPPFLAGS} -I${CLBLAS_PREFIX}/include"
+    ## On macOS, check for Homebrew installation
+    if test x"${is_macos}" = x"yes"; then
+      BREW_PREFIX=$(brew --prefix 2>/dev/null)
+      if test -n "${BREW_PREFIX}" && test -d "${BREW_PREFIX}/opt/clblas"; then
+        CLBLAS_PREFIX="${BREW_PREFIX}/opt/clblas"
+        AC_MSG_NOTICE([Found Homebrew clBLAS at: ${CLBLAS_PREFIX}])
+        LDFLAGS="${LDFLAGS} -L${CLBLAS_PREFIX}/lib"
+        CPPFLAGS="${CPPFLAGS} -I${CLBLAS_PREFIX}/include"
+      fi
     fi
+
+    LIBS="-lclBLAS ${BANDICOOT_LIBS} ${saved_LIBS}"
+
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern "C" void clblasSetup();]],
+                                    [[clblasSetup();]])],
+                   [HAVE_CLBLAS=1
+                    CLBLAS_CXXFLAGS="-DCOOT_USE_CLBLAS"
+                    if test -n "${CLBLAS_PREFIX}"; then
+                      CLBLAS_CXXFLAGS="${CLBLAS_CXXFLAGS} -I${CLBLAS_PREFIX}/include"
+                      CLBLAS_LIBS="-L${CLBLAS_PREFIX}/lib -lclBLAS"
+                    else
+                      CLBLAS_LIBS="-lclBLAS"
+                    fi
+                    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CLBLAS_CXXFLAGS}"
+                    BANDICOOT_LIBS="${CLBLAS_LIBS} ${BANDICOOT_LIBS}"
+                    AC_MSG_RESULT([yes])],
+                   [HAVE_CLBLAS=0
+                    ## Explicitly disable clBLAS since bandicoot's config.hpp enables it by default
+                    BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAS"
+                    AC_MSG_RESULT([no])])
+
+    LIBS="${saved_LIBS}"
+    LDFLAGS="${saved_LDFLAGS}"
+    CPPFLAGS="${saved_CPPFLAGS}"
   fi
-
-  LIBS="-lclBLAS ${BANDICOOT_LIBS} ${saved_LIBS}"
-
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern "C" void clblasSetup();]],
-                                  [[clblasSetup();]])],
-                 [HAVE_CLBLAS=1
-                  CLBLAS_CXXFLAGS="-DCOOT_USE_CLBLAS"
-                  if test -n "${CLBLAS_PREFIX}"; then
-                    CLBLAS_CXXFLAGS="${CLBLAS_CXXFLAGS} -I${CLBLAS_PREFIX}/include"
-                    CLBLAS_LIBS="-L${CLBLAS_PREFIX}/lib -lclBLAS"
-                  else
-                    CLBLAS_LIBS="-lclBLAS"
-                  fi
-                  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} ${CLBLAS_CXXFLAGS}"
-                  BANDICOOT_LIBS="${CLBLAS_LIBS} ${BANDICOOT_LIBS}"
-                  AC_MSG_RESULT([yes])],
-                 [HAVE_CLBLAS=0
-                  ## Explicitly disable clBLAS since bandicoot's config.hpp enables it by default
-                  BANDICOOT_CXXFLAGS="${BANDICOOT_CXXFLAGS} -DCOOT_DONT_USE_CLBLAS"
-                  AC_MSG_RESULT([no])])
-
-  LIBS="${saved_LIBS}"
-  LDFLAGS="${saved_LDFLAGS}"
-  CPPFLAGS="${saved_CPPFLAGS}"
 fi
 
 ## Check if OpenCL has at least one BLAS implementation
@@ -364,17 +454,32 @@ For OpenCL support, install:
 
 For CUDA support, install:
   CUDA Toolkit from: https://developer.nvidia.com/cuda-downloads
-  Minimum version: CUDA 9.8
 
 After installation, ensure GPU drivers are properly installed and configured.
 ================================================================================
 ])
 fi
 
-## Installation directory
+## Installation directory for the OpenCL kernel sources.
+##
+## R exports R_LIBRARY_DIR during `R CMD INSTALL`; it names the *final*
+## library directory.  head(.libPaths(),1) does not: under a staged install
+## (the default since R 3.6, and what R CMD check uses) it is the transient
+## <lib>/00LOCK-RcppBandicoot/00new tree, which is renamed away before the
+## package is ever loaded.  Baking that path into COOT_KERNEL_SOURCE_DIR
+## makes every kernel compile fail at runtime with
+## "Cannot open required kernel source."
+##
 ## Note that we end on 'ks', not 'kernels', to shorten the path.
 ## Note also that we ensure a final trailing '/'
-BANDICOOT_KERNELS_DIR=$(${R_HOME}/bin/Rscript -e 'cat(paste(head(.libPaths(),1), "RcppBandicoot", "include", "bandicoot_bits", "ks", "", sep="/"))')
+if test -n "${R_LIBRARY_DIR}"; then
+    BANDICOOT_LIB_DIR="${R_LIBRARY_DIR}"
+else
+    BANDICOOT_LIB_DIR=$(${R_HOME}/bin/Rscript -e 'cat(head(.libPaths(),1))')
+fi
+## Belt and braces: strip a staging suffix should one ever reach us.
+BANDICOOT_LIB_DIR=$(echo "${BANDICOOT_LIB_DIR}" | sed -e 's|/00LOCK-[[^/]]*/00new$||')
+BANDICOOT_KERNELS_DIR="${BANDICOOT_LIB_DIR}/RcppBandicoot/include/bandicoot_bits/ks/"
 
 
 
@@ -391,6 +496,15 @@ fi
 AC_MSG_NOTICE([  CUDA:          ${HAVE_CUDA}])
 AC_MSG_NOTICE([  Default:       ${DEFAULT_BACKEND}])
 AC_MSG_NOTICE([  Kernels:       ${BANDICOOT_KERNELS_DIR}])
+if test -n "${ENV_OPENCL_CPPFLAGS}" && test -n "${ENV_OPENCL_LIBS}"; then
+  AC_MSG_NOTICE([  OpenCL flags:  from environment])
+fi
+if test -n "${ENV_CLBLAST_CPPFLAGS}" && test -n "${ENV_CLBLAST_LIBS}"; then
+  AC_MSG_NOTICE([  CLBlast flags: from environment])
+fi
+if test -n "${ENV_CLBLAS_CPPFLAGS}" && test -n "${ENV_CLBLAS_LIBS}"; then
+  AC_MSG_NOTICE([  clBLAS flags:  from environment])
+fi
 AC_MSG_NOTICE([])
 
 ## =============================================================================

@@ -5,28 +5,348 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  schedule:
+    # Nightly, with no known-failure exclusions (see RCPPBANDICOOT_XFAIL below)
+    # and a verdict of its own (see the last step in the job).
+    - cron: '17 5 * * *'
   workflow_dispatch:
+    # Defaults to false, so a plain manual run behaves exactly as it always
+    # has. It exists because a scheduled workflow only ever runs from the
+    # default branch: without this switch the nightly path could not be
+    # exercised even once before it is merged, and its first execution would
+    # be on main, unobserved, at 05:17. Set it to true on a manual run to get
+    # a nightly without waiting for one.
+    inputs:
+      nightly:
+        description: 'Run as the nightly: no exclusions, compare against nightly_expect'
+        type: boolean
+        default: false
 
 name: R-CMD-check
+
+permissions:
+  contents: read
 
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
 
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }})
+    # The device-free leg shares both its runner and its R version with the
+    # gating Linux leg, so it needs a distinguishing suffix. Only that leg is
+    # renamed: branch protection matches required checks by job name, and the
+    # names that already exist have to keep resolving.
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }})${{ matrix.config.opencl_runtime == 'none' && ' device-free' || '' }}
 
+    # Everything except the gating Linux leg is experimental: its failure does
+    # not fail the workflow, so a pull request gates on that one leg alone.
+    # The nightly is the exception, and no leg is excused there -- but note
+    # what it is that has to be able to turn the run red. It is no longer
+    # R CMD check exiting non-zero, which on a nightly it is *supposed* to do;
+    # it is the last step in this job, which compares the operations that
+    # failed against the ones recorded as already broken. That step needs a
+    # failing job to be heard, since a failing job is the only thing GitHub
+    # notifies anyone about.
+    #
+    # `false && anything` is false, so putting the event tests first forces
+    # continue-on-error off for every leg on a nightly without needing a
+    # second expression.
+    #
+    # The manual switch is read as github.event.inputs.nightly, a STRING,
+    # rather than as the typed inputs.nightly. Comparing a string to a boolean
+    # sends both through GitHub's numeric cast, where 'true' becomes NaN and
+    # the comparison is false however it is written -- so a dispatched nightly
+    # silently behaved like a normal run in some expressions and like a
+    # nightly in others. github.event.inputs.<name> is the raw string on
+    # workflow_dispatch and null everywhere else, so 'true' compares cleanly
+    # and null does not match.
+    continue-on-error: ${{ github.event_name != 'schedule' && github.event.inputs.nightly != 'true' && matrix.config.experimental }}
+
+    # The two Linux legs gate the build: one with a real device, where every
+    # operation runs for real and a regression fails the job, and one with no
+    # device, which is the configuration CRAN and r-universe actually ship.
+    # macOS and Windows are best-effort, and they are no longer in the same
+    # state as each other. Windows returns a wrong number from one reduction
+    # path and carries the only xfail list left. macOS is mid-experiment and
+    # carries none: it has just been moved onto a PoCL that is not built
+    # against the LLVM release whose code-generation bug accounts for every
+    # macOS crash this workflow has ever recorded, and the point of the leg
+    # right now is to find out what that changes on a hosted runner. Both
+    # stories, and what each leg is expected to do, are in the matrix comments
+    # below. Neither may block a pull request, and neither may be
+    # green-by-skipping-everything on a platform where the GPU genuinely works,
+    # which is why an xfail list is only ever written from a measured run.
     strategy:
       fail-fast: false
       matrix:
         config:
-          - {os: macos-latest,   r: 'release'}
-          - {os: ubuntu-latest,  r: 'release'}
-          - {os: windows-latest, r: 'release'}
+          # nightly_expect / nightly_exact are read only on a nightly and do
+          # nothing on push or pull_request. They are what stops the nightly
+          # from being red every single night.
+          #
+          # The nightly clears the exclusions, so the known-broken operations
+          # run for real and their failure is the point of the run rather than
+          # an accident. Failing the job on it made the nightly unconditionally
+          # red on two platforms at once, and a signal that is always red is
+          # not a signal -- nobody reads it, and the day macOS starts working
+          # nobody notices. So the nightly reports which operations died and
+          # goes red only when that set has MOVED away from nightly_expect.
+          #
+          # nightly_expect is a comma-separated list of test-script stems:
+          # tests/zz-gpu-transpose.R is `gpu-transpose`. That is deliberately
+          # not the vocabulary xfail uses, and the two lists cannot be merged.
+          # xfail holds gpu_* names that skip_if_xfail() consults from inside a
+          # test, and they are not in correspondence with the scripts: both
+          # zz-gpu-seed.R and zz-gpu-sum-na.R gate on another operation's key
+          # (gpu_randu and gpu_sum), so ten xfail names cover twelve scripts.
+          # What a crashed run leaves behind is a per-SCRIPT exit status, so
+          # per script is what can honestly be recorded and compared.
+          #
+          # nightly_exact: 'true' requires the observed set to equal this one,
+          # and moving in either direction turns the run red -- something new
+          # broke, or something started working, and the second is the upstream
+          # fix this package is waiting for. Empty means equality is not a
+          # question that has an answer on that leg -- either the set varies
+          # run to run, or it has not been measured yet -- so only the
+          # boundaries are asserted instead: nothing outside the list may fail,
+          # and the list may not empty out. See macOS below.
+          #
+          # These lists live in the matrix rather than in a data file of their
+          # own. A file would have had to go under .github/ -- ^\.github$ is
+          # already in .Rbuildignore, whereas a file at the repo root would NOT
+          # be and would ship inside the package tarball to CRAN. That was
+          # workable; the matrix wins anyway, because the day an operation
+          # starts working the fix is to shorten this list AND the xfail list
+          # three lines above it, and two lists that must be edited together
+          # are much likelier to be if they are read together.
+
+          # The gating leg: a real PoCL device, no exclusions, every operation
+          # run for real. It is also the only leg that runs the examples,
+          # since it is the only platform where every operation works.
+          # Nothing may fail here, on any event -- hence the empty expectation.
+          - os: ubuntu-24.04
+            r: 'release'
+            experimental: false
+            xfail: ''
+            nightly_expect: ''
+            nightly_exact: 'true'
+            opencl_runtime: 'auto'
+            gpu_examples: 'true'
+            opencl_version: ''
+            opencl_version_sha256: ''
+            pocl_source: ''
+            http_user_agent: ''
+
+          # The CRAN configuration: OpenCL headers and an ICD loader, no
+          # runtime and so no device at all. That is exactly what CRAN and
+          # r-universe provision, and nothing else in this matrix exercises
+          # it. This leg asserts that the package still compiles and links
+          # there, enumerates zero devices, and skips the device tests
+          # cleanly rather than erroring.
+          #
+          # It gates, for two reasons. It is the configuration almost every
+          # user of a binary install actually has, so a regression here is a
+          # regression for the majority. And it is the ONLY leg that can run
+          # the no-device error path: test-probe.R's "a GPU call raises an R
+          # condition rather than crashing" is unreachable wherever a device
+          # exists, so without this leg that assertion never executes at all.
+          # The two Linux legs are complements, not duplicates -- each covers
+          # the blind spot the other cannot reach.
+          #
+          # A build with no backend at all cannot be tested: config.hpp
+          # #errors unless one of COOT_USE_OPENCL/CUDA/VULKAN is defined, so
+          # headers-plus-loader is as close to a GPU-free machine as this
+          # package can be compiled for. RCPPBANDICOOT_REQUIRE_GPU is false
+          # here (see env below): with it set, zero devices would be a hard
+          # failure, the opposite of what this leg asserts.
+          - os: ubuntu-24.04
+            r: 'release'
+            experimental: false
+            xfail: ''
+            nightly_expect: ''
+            nightly_exact: 'true'
+            opencl_runtime: 'none'
+            gpu_examples: ''
+            opencl_version: ''
+            opencl_version_sha256: ''
+            pocl_source: ''
+            http_user_agent: ''
+
+          # r-devel. This package has already had to absorb upstream
+          # compiler-warning breakage twice, and r-devel is where the next one
+          # surfaces first. http_user_agent follows r-lib's own example
+          # workflow: P3M serves no binaries to an R-devel user agent, so
+          # asking as 'release' avoids building every dependency from source.
+          - os: ubuntu-24.04
+            r: 'devel'
+            experimental: true
+            xfail: ''
+            nightly_expect: ''
+            nightly_exact: 'true'
+            opencl_runtime: 'auto'
+            gpu_examples: ''
+            opencl_version: ''
+            opencl_version_sha256: ''
+            pocl_source: ''
+            http_user_agent: 'release'
+
+          # xfail lists gpu_* operations skipped on that runner. On the nightly
+          # schedule the list is cleared (see RCPPBANDICOOT_XFAIL below) so the
+          # real, unmitigated state is visible.
+          #
+          # Both platforms now exclude ONE operation, and it is the same one on
+          # each: gpu_sum on its multi-pass reduction path. Everything else runs
+          # for real. That took two runtime changes, both measured rather than
+          # predicted -- Windows off oclcpuexp's LLVM 22 build onto its LLVM 20
+          # one, macOS off Homebrew's llvm@21 PoCL onto a conda-forge PoCL built
+          # against LLVM 19. Before those, every operation crashed on Windows
+          # and six of ten scripts segfaulted on macOS.
+          #
+          # gpu_sum's multi-pass path is not a crash and not a runtime quirk. It
+          # returns a WRONG NUMBER, differently on each platform -- 25040.2 on
+          # Windows and NaN on macOS, where the answer is 79993.0 -- while
+          # Linux/PoCL/LLVM 16 gets it right. Two independent implementations
+          # from different vendors, on different LLVM generations and different
+          # architectures, disagreeing with the correct answer in different ways
+          # is a defect in the reduction itself, not in either runtime. The
+          # suite catches it only because the test compares against sum(A)
+          # rather than checking the call returns, and it is the most dangerous
+          # failure this package has: a crash announces itself, this hands back
+          # a plausible number.
+          #
+          # Both lists are exact. Neither platform has a nondeterministic
+          # failure left, so an operation appearing or disappearing is news
+          # rather than noise -- including gpu_sum_multipass starting to pass,
+          # which is what an upstream fix would look like.
+          #
+          # What the per-operation split buys is a readable failure: the core
+          # device-free suite completes even when GPU scripts die, and each
+          # failure names its own operation. That is what made clearing these
+          # lists affordable enough to measure them honestly -- and measuring is
+          # what corrected a prediction that gpu_matrix_multiply would still
+          # fail on macOS. It passes on the runner; the local machine was the
+          # outlier.
+          - os: macos-latest
+            r: 'release'
+            experimental: true
+            xfail: 'gpu_sum_multipass'
+            nightly_expect: 'gpu-sum-multipass'
+            nightly_exact: 'true'
+            opencl_runtime: 'auto'
+            gpu_examples: ''
+            opencl_version: ''
+            opencl_version_sha256: ''
+            pocl_source: 'conda-forge'
+            http_user_agent: ''
+
+          # The LLVM 20 runtime pin this leg needs is currently unreachable.
+          # The pre-migration workflow shipped Intel's official runtime, whose
+          # common_clang64.dll reports clang 20.0.0git, where the oclcpuexp
+          # release we moved to reports 22.1.0 -- and failure tracks the LLVM
+          # generation across all three platforms (PoCL on 16 works, PoCL on 21
+          # is flaky, this on 22 fails outright), so the runtime swap is the
+          # most likely thing the migration broke. Pinning 2025-WW13, the last
+          # oclcpuexp release on LLVM 20, was tried: setup-opencl refuses it
+          # because the GitHub API reports no SHA-256 digest for that release's
+          # asset, and the action requires one. Fixing that belongs in the
+          # action, not here; until then the hypothesis stays untested and the
+          # whole list stands.
+          # Pinned to the last oclcpuexp release built on LLVM 20, and the pin
+          # is load-bearing rather than precautionary.
+          #
+          # Migrating this leg swapped Intel's official runtime -- whose
+          # common_clang64.dll reports clang 20.0.0git -- for an oclcpuexp
+          # release reporting 22.1.0, and on that one EVERY operation died with
+          # 0xC0000005 inside the kernel compiler. Measured on the pinned
+          # runtime instead: no crash anywhere, and eleven of the twelve
+          # operation scripts pass. So the migration regressed this platform,
+          # and nobody could have noticed, because the CI it replaced never
+          # executed a kernel. Do not unpin without re-running the whole leg
+          # with the exclusions cleared.
+          #
+          # version-sha256 is required because the GitHub API publishes no
+          # digest for this release's asset -- the gap that made the pin
+          # impossible until setup-opencl grew the input. The value was
+          # computed from the downloaded archive, so it pins the artifact
+          # against later substitution; it does not independently authenticate
+          # it.
+          #
+          # The one exclusion is not a crash. gpu_sum on the multi-pass
+          # reduction path returns a wrong NUMBER on this runtime -- 25040.2
+          # where the answer is 79993.0, about a third of it -- which is the
+          # single-pass result being returned as if it were the whole
+          # reduction. The test suite caught it precisely because it compares
+          # against sum(A) rather than merely checking the call returns. It is
+          # an upstream correctness bug, not something this package can fix,
+          # and it is far more dangerous than the crashes: a crash announces
+          # itself, this quietly hands back a plausible number.
+          - os: windows-2025
+            r: 'release'
+            experimental: true
+            xfail: 'gpu_sum_multipass,gpu_mean_wide'
+            nightly_expect: 'gpu-sum-multipass,gpu-mean'
+            nightly_exact: 'true'
+            opencl_runtime: 'auto'
+            gpu_examples: ''
+            opencl_version: '2025-WW13'
+            opencl_version_sha256: 'c4800a819d5ba19e483505360a96e858aac1abba550b8e96fbf7a2a0c91bf9cb'
+            pocl_source: ''
+            http_user_agent: ''
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
-      INTEL_OPENCL_URL: "https://registrationcenter-download.intel.com/akdlm/IRC_NAS/b6dccdb7-b503-41ea-bd4b-a78e9c2d8dd6/w_opencl_runtime_p_2025.1.0.972.exe"
+
+      # Turns every skip_if_no_gpu() into a hard error.  This is the whole
+      # point of the migration: CRAN never sets this variable, so the same
+      # suite skips cleanly there, while here a runner that enumerates zero
+      # devices fails the job instead of quietly reporting all-skips.  The
+      # previous workflow was green whether or not OpenCL worked.
+      #
+      # Derived from the runtime rather than carried as its own matrix key so
+      # the two cannot drift apart: the device-free leg is the one that must
+      # not demand a device, and it is the leg that installs no runtime.  The
+      # 'false' it produces there reads as unset to env_true() in
+      # tests/testthat/helper-gpu.R, which honours only 1/true/yes/on.
+      RCPPBANDICOOT_REQUIRE_GPU: ${{ matrix.config.opencl_runtime != 'none' }}
+      RCPPBANDICOOT_REQUIRE_FP64: ${{ matrix.config.opencl_runtime != 'none' }}
+
+      # Every device-touching example is guarded by
+      # @examplesIf nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES")), so
+      # examples touch a device only where this is set.  They have to be
+      # guarded: an example that reaches coot_init() writes a compiled-kernel
+      # cache under $HOME (cache_meat.hpp), R CMD check runs examples in their
+      # own process, and the HOME redirect in tests/testthat/helper-00-cache.R
+      # covers the test process only -- so unguarded examples write outside
+      # the session temporary directory, which CRAN policy forbids.  Only the
+      # gating Linux leg sets it, being the only platform where every
+      # operation actually works.
+      RCPPBANDICOOT_RUN_GPU_EXAMPLES: ${{ matrix.config.gpu_examples }}
+
+      # Each GPU operation has its own top-level tests/zz-gpu-<op>.R, which
+      # R CMD check runs as its own R CMD BATCH process, so a hard crash --
+      # the failure mode on macOS and Windows, which no R handler can catch --
+      # fails one named script instead of destroying the whole run.
+      # tools:::.runPackageTests stops at the FIRST failing script unless this
+      # is set, which would throw away everything after the first crasher and
+      # defeat the split. Set on every leg: on the gating ones it means a real
+      # regression names every failing script rather than only the
+      # alphabetically first. The check still exits with an ERROR either way.
+      _R_CHECK_NO_STOP_ON_TEST_ERROR_: true
+
+      # On push/PR, exclude the operations known to be broken on this runner.
+      # On a nightly, exclude nothing: the known-broken operations run for
+      # real, and the last step in this job decides what their failing means.
+      #
+      # The event tests have to come first and produce the exclusion list, not
+      # the empty string.  GitHub treats '' as false, so writing it the other
+      # way round (`event_name == 'schedule' && '' || xfail`) makes the
+      # schedule branch fall straight through to the full exclusion list --
+      # the nightly then excludes precisely the operations it exists to run.
+      # The same trap is why the nightly condition is expressed here as its
+      # negation (`!= 'schedule'` and `!= true`) rather than hoisted into a
+      # shared env var: an env value is a string, and the string 'false' is
+      # truthy, so `env.X` would read as nightly on every event there is.
+      RCPPBANDICOOT_XFAIL: ${{ github.event_name != 'schedule' && github.event.inputs.nightly != 'true' && matrix.config.xfail || '' }}
 
     steps:
       - uses: actions/checkout@v6
@@ -39,86 +359,90 @@ jobs:
         # every run. chmod via MSYS bash lands in a form R's tar sees.
         run: chmod +x configure cleanup
 
+      # Installs headers, an ICD loader, and a real CPU device (PoCL on Linux
+      # and macOS, Intel's CPU runtime on Windows), then fails the job if no
+      # device enumerates.  Exports OPENCL_CPPFLAGS / OPENCL_LIBS -- which
+      # configure.win already read and configure.ac now reads too -- plus
+      # OpenCL_ROOT / OpenCL_LIBRARY, OCL_ICD_VENDORS or OCL_ICD_FILENAMES,
+      # and SDKROOT on macOS.
+      #
+      # The device-free leg passes runtime 'none', which stops after the
+      # headers and the loader.  verify and require-fp64 are documented as
+      # never fatal for that runtime, so zero devices is reported there rather
+      # than failing the job, which is what that leg is asserting.
+      - name: Set up OpenCL
+        id: opencl
+        uses: coatless-actions/setup-opencl@v1
+        with:
+          runtime: ${{ matrix.config.opencl_runtime }}
+          # Honoured only for the Intel runtime on Windows; empty elsewhere
+          # means "the tested version for this runner". See the Windows entry
+          # in the matrix for why that leg pins one.
+          version: ${{ matrix.config.opencl_version }}
+          version-sha256: ${{ matrix.config.opencl_version_sha256 }}
+          # Which PoCL to install where the action installs one. Only macOS
+          # needs a non-default here: on Linux the action takes the
+          # that is the distribution package, which has never shown the fault
+          # below, and on Windows no PoCL is installed at all. macOS asks for
+          # 'conda-forge' because the Homebrew bottle is built against LLVM 21,
+          # whose OpenCL kernel-stub codegen is broken -- see the macOS entry
+          # in the matrix.
+          #
+          # The `|| 'auto'` is required, not decoration. A runner applies an
+          # input's default only when the key is ABSENT from `with:`, never when
+          # it is present and empty, and this action rejects the empty string
+          # rather than treating it as unset -- so a blank matrix value fails
+          # every leg in the action's very first step. It would also fail
+          # confusingly: against the currently released v1 the input does not
+          # exist, so a blank one is only an "unexpected input" warning, and the
+          # breakage would surface when the action is retagged, looking as though
+          # the release broke CI.
+          pocl-source: ${{ matrix.config.pocl_source || 'auto' }}
+          verify: 'true'
+          require-fp64: 'true'
+
+      - name: Report the OpenCL device
+        shell: bash
+        run: |
+          echo "runtime  : ${{ steps.opencl.outputs.runtime-name }}"
+          echo "platform : ${{ steps.opencl.outputs.platform-version }}"
+          echo "device   : ${{ steps.opencl.outputs.device-name }}"
+          echo "count    : ${{ steps.opencl.outputs.device-count }}"
+          echo "fp64     : ${{ steps.opencl.outputs.fp64 }}"
+
+      # There is deliberately no PoCL workaround step here any more. macOS used
+      # to set POCL_WORK_GROUP_METHOD=cbs and POCL_CPU_MAX_CU_COUNT=1 --
+      # steering PoCL away from LLVM's loop vectorizer and serializing it to
+      # one worker thread -- as guesses at the LLVM 21 kernel-stub miscompile.
+      # This leg no longer installs a PoCL built against LLVM 21, so they have
+      # nothing left to mitigate, and keeping them would damage the very
+      # measurement the leg now exists to make. The runs that established the
+      # conda-forge build works ran with neither variable set, so leaving them
+      # in would mean CI was not testing the configuration that was verified.
+      # POCL_CPU_MAX_CU_COUNT=1 in particular changes how work-groups are sized
+      # and distributed, which is the exact dimension the one PoCL defect still
+      # expected here is sensitive to (a kernel-cache directory failure at a
+      # 2x2x1 local size), so it is a confound rather than a control. If a
+      # crash does come back, reintroduce them one at a time and record what
+      # each changed -- not as a pair, and not before the unmitigated run is on
+      # record.
+
+      # Installs CLBlast and verifies a GEMM produces correct results; the
+      # verification is not fatal on the device-free leg, where there is
+      # nothing to run it on.  Exports CLBLAST_CPPFLAGS / CLBLAST_LIBS --
+      # which configure.win already read and configure.ac now reads too --
+      # plus CLBlast_DIR (unused by this package, exported for contract
+      # parity).
+      - name: Set up CLBlast
+        uses: coatless-actions/setup-clblast@v1
+
       - uses: r-lib/actions/setup-pandoc@v2
 
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
-          http-user-agent: ${{ matrix.config.http-user-agent }}
+          http-user-agent: ${{ matrix.config.http_user_agent }}
           use-public-rspm: true
-
-      - name: Install clblast via Homebrew (macOS)
-        if: runner.os == 'macOS'
-        run: brew install clblast clblas clinfo
-
-      - name: Install clblast via apt (Ubuntu)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y opencl-headers ocl-icd-opencl-dev libclblast-dev
-
-      - name: Cache Intel OpenCL Runtime
-        if: runner.os == 'Windows'
-        id: cache-opencl-win
-        uses: actions/cache@v5
-        with:
-          # Default install location is x86 ...
-          path: C:\Program Files (x86)\Common Files\Intel\Shared Libraries
-          # Key is derived from INTEL_OPENCL_URL, so bumping the runtime
-          # URL above automatically invalidates the cache.
-          key: intel-opencl-runtime-${{ env.INTEL_OPENCL_URL }}
-          
-      - name: Install OpenCL SDK (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          vcpkg install opencl:x64-windows clblast:x64-windows
-          # Convert to forward slashes to avoid escaping issues in configure.win
-          $vcpkgPath = "$env:VCPKG_INSTALLATION_ROOT/installed/x64-windows" -replace '\\','/'
-
-          # Register OpenCL location
-          echo "OPENCL_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
-          echo "OPENCL_LIBS=-L$vcpkgPath/lib -lOpenCL" >> $env:GITHUB_ENV
-
-          # Register CLBlast location
-          echo "CLBLAST_CPPFLAGS=-I$vcpkgPath/include" >> $env:GITHUB_ENV
-          echo "CLBLAST_LIBS=-L$vcpkgPath/lib -lclblast" >> $env:GITHUB_ENV
-
-          # Add vcpkg bin to PATH so DLLs can be found at runtime
-          echo "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows\bin" >> $env:GITHUB_PATH
-          
-      - name: Install Intel CPU Runtime for OpenCL (Windows)
-        if: runner.os == 'Windows' && steps.cache-opencl-win.outputs.cache-hit != 'true'
-        shell: pwsh
-        run: |
-          # Download
-          curl -o opencl-installer.exe "${{ env.INTEL_OPENCL_URL }}"
-          
-          # Extract MSI from the self-extracting exe
-          $proc = Start-Process "./opencl-installer.exe" "-s -x -f extracted" -NoNewWindow -PassThru
-          $proc.WaitForExit()
-          
-          # Install via msiexec
-          $msi = Get-ChildItem ./extracted/*.msi | Select-Object -First 1
-          # Write the MSI log outside the repo so it doesn't end up in the
-          # package tarball (R CMD check flags it as a non-standard top-level file).
-          $logPath = "$env:RUNNER_TEMP\intel-opencl-install.log"
-          $proc = Start-Process "msiexec" "/i `"$msi`" /qn /l*! `"$logPath`"" -NoNewWindow -PassThru
-          $proc.WaitForExit()
-
-          if ($proc.ExitCode -ne 0) {
-            Get-Content $logPath
-            exit $proc.ExitCode
-          }
-          
-          Remove-Item -Recurse -Force extracted, opencl-installer.exe
-      
-      - name: Register Intel OpenCL ICD (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $dllPath = "C:\Program Files (x86)\Common Files\Intel\Shared Libraries\bin\OpenCL.dll"
-          REG ADD "HKLM\SOFTWARE\Khronos\OpenCL\Vendors" /v $dllPath /t REG_DWORD /d 0 /f
-          REG ADD "HKLM\SOFTWARE\Wow6432Node\Khronos\OpenCL\Vendors" /v $dllPath /t REG_DWORD /d 0 /f
-          Add-Content $env:GITHUB_PATH "C:\Program Files (x86)\Common Files\Intel\Shared Libraries\bin\"
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -126,6 +450,325 @@ jobs:
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
+        id: check
+        # The one place the nightly diverges from push and pull_request. On a
+        # nightly the check is EXPECTED to exit non-zero, because the excluded
+        # operations are running for real, so its result must not be the job's
+        # result -- the step below decides that instead, and it cannot decide
+        # anything if the job has already ended here. On every other event this
+        # evaluates to false, which is precisely the default, so push and
+        # pull_request keep gating exactly as before.
+        #
+        # This is a step-level continue-on-error, deliberately, not the
+        # job-level one above: the job-level flag would swallow the verdict
+        # step's failure too and the nightly could never go red at all.
+        continue-on-error: ${{ github.event_name == 'schedule' || github.event.inputs.nightly == 'true' }}
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+
+      # A green check does not mean the build contains what it was handed.
+      # configure.ac's CLBlast section has an arm --
+      # `elif test -n "${ENV_OPENCL_CPPFLAGS}" && test -n "${ENV_OPENCL_LIBS}"`
+      # -- that sets HAVE_CLBLAST=0 and -DCOOT_DONT_USE_CLBLAST whenever OpenCL
+      # arrives from the environment and a CLBlast pair does not. Bandicoot
+      # then falls back to its own kernels, every test file still passes, and
+      # the leg is green while exercising none of the library it was installed
+      # to exercise. That is the same shape as the three defects already found
+      # at the seam between these actions -- a header falling through to
+      # Apple's SDK, link flags pulling a different libc++, a reduction
+      # returning a plausible wrong number -- so it is asserted rather than
+      # assumed. Nothing else in the suite can catch it: test-config.R
+      # deliberately never asserts the VALUES in bandicoot_config(), because
+      # they are machine-specific there, and here they are not.
+      #
+      # The first two lines are diagnostics and never fail the step.
+      # sessionInfo()$BLAS names the BLAS R itself is linked against, so the
+      # reference-versus-optimised question is answerable from a log instead of
+      # from a rebuild. The cache count is how many compiled kernel binaries
+      # bandicoot left on disk -- cache_meat.hpp writes
+      # $HOME/.bandicoot/cache/<kernel>/<device>, or the APPDATA equivalent on
+      # Windows -- which is what tells a cold run from a warm one. It doubles
+      # as the only place an escape from the HOME redirect in
+      # tests/testthat/helper-00-cache.R would ever show up: the test processes
+      # redirect HOME into their own tempdir, so on a leg that does not run the
+      # GPU examples this should be zero, and a non-zero count means something
+      # wrote outside the session temporary directory.
+      #
+      # EXPECT_CLBLAST is derived from opencl_runtime rather than carried as a
+      # matrix key of its own, exactly as RCPPBANDICOOT_REQUIRE_GPU is above,
+      # so the two cannot drift apart. It excuses one leg, the device-free one:
+      # that leg is the CRAN and r-universe configuration, where nothing
+      # promises a CLBlast, and it is the leg whose entire claim is that the
+      # package works without a GPU stack. With no device its CLBlast is never
+      # called, so there is nothing there to protect. The other four legs all
+      # install a runtime, and all four are asserted.
+      #
+      # The branch is taken in R, against the string, and deliberately NOT as
+      # `if: ${{ env.EXPECT_CLBLAST }}`. An env value is a string, and the
+      # string 'false' is truthy, so an `if:` reading it would assert on every
+      # leg including the one this excuses -- the trap that has already cost
+      # this workflow three times (see RCPPBANDICOOT_XFAIL above).
+      - name: Assert the build kept the components it was handed
+        shell: Rscript {0}
+        env:
+          EXPECT_CLBLAST: ${{ matrix.config.opencl_runtime != 'none' }}
+        run: |
+          ## Diagnostics first, so they reach the log even when the assertion
+          ## below ends the step.
+          si <- sessionInfo()
+          cat("R BLAS: ", if (is.null(si$BLAS)) "(not reported)" else si$BLAS,
+              "\n", sep = "")
+
+          home <- Sys.getenv("HOME", unset = path.expand("~"))
+          appdata <- Sys.getenv("APPDATA")
+          roots <- unique(c(file.path(home, ".bandicoot", "cache"),
+                            if (nzchar(appdata))
+                              file.path(appdata, "bandicoot", "cache")))
+          for (root in roots) {
+            cat("compiled-kernel cache ", root, ": ",
+                if (dir.exists(root)) {
+                  format(length(list.files(root, recursive = TRUE,
+                                           all.files = TRUE)))
+                } else {
+                  "absent (nothing compiled a kernel through it)"
+                },
+                "\n", sep = "")
+          }
+
+          if (!identical(Sys.getenv("EXPECT_CLBLAST"), "true")) {
+            cat("No OpenCL runtime on this leg, so CLBlast is not asserted.\n")
+            quit(save = "no", status = 0)
+          }
+
+          ## The check directory is globbed and the package name read from
+          ## DESCRIPTION, for the reason the nightly step globs it too: a
+          ## rename must not turn this into a step that finds nothing and
+          ## therefore reports nothing wrong.
+          pkg <- read.dcf("DESCRIPTION", fields = "Package")[1L, 1L]
+          lib <- Sys.glob(file.path("check", "*.Rcheck"))
+          lib <- lib[dir.exists(file.path(lib, pkg))]
+          if (length(lib) == 0L) {
+            cat("::error title=build not inspectable::R CMD check left no",
+                " installed ", pkg, ", so the components of the build could",
+                " not be confirmed. Not treated as a pass.\n", sep = "")
+            quit(save = "no", status = 1)
+          }
+
+          suppressPackageStartupMessages(
+            library(pkg, lib.loc = lib[1L], character.only = TRUE))
+
+          ## Prints the whole configuration on its way past, which is worth
+          ## having in the log regardless of the outcome.
+          cfg <- bandicoot_config()
+
+          ## isTRUE, not a comparison: @HAVE_CLBLAST@ substituted empty makes
+          ## this NA, and an NA must fail here rather than be carried forward.
+          if (!isTRUE(cfg$clblast)) {
+            cat("::error title=CLBlast silently dropped::The installed build",
+                " reports clblast = ", format(cfg$clblast), " on a leg whose",
+                " Set up CLBlast step ran, and R CMD check passed anyway",
+                " because bandicoot falls back to its own kernels -- so this",
+                " leg tested no CLBlast at all. Responsible branch: the",
+                " 'elif test -n \"${ENV_OPENCL_CPPFLAGS}\" && test -n",
+                " \"${ENV_OPENCL_LIBS}\"' arm of the CLBlast section in",
+                " configure.ac, which sets HAVE_CLBLAST=0 and",
+                " -DCOOT_DONT_USE_CLBLAST when OpenCL comes from the",
+                " environment but CLBLAST_CPPFLAGS and CLBLAST_LIBS are",
+                " empty.\n", sep = "")
+            cat("CLBLAST_CPPFLAGS=", Sys.getenv("CLBLAST_CPPFLAGS"), "\n",
+                "CLBLAST_LIBS=", Sys.getenv("CLBLAST_LIBS"), "\n", sep = "")
+            quit(save = "no", status = 1)
+          }
+
+          cat("CLBlast is present in the installed build.\n")
+
+      # The nightly's actual verdict, and the only step that reads
+      # nightly_expect. It tabulates which per-operation test script died,
+      # writes that to the run summary so the state is legible without opening
+      # a log, and fails the job only when the set has moved.
+      #
+      # always(), because the step it interprets is allowed to fail: a plain
+      # `if` would skip this whenever there was something to report, leaving
+      # the nightly red with nothing to read, which is where this started.
+      - name: Compare the unmitigated GPU state against the recorded one
+        if: ${{ always() && (github.event_name == 'schedule' || github.event.inputs.nightly == 'true') }}
+        shell: bash
+        env:
+          EXPECTED: ${{ matrix.config.nightly_expect }}
+          EXACT: ${{ matrix.config.nightly_exact }}
+          CHECK_OUTCOME: ${{ steps.check.outcome }}
+          LEG: ${{ matrix.config.os }} (R ${{ matrix.config.r }}${{ matrix.config.opencl_runtime == 'none' && ', device-free' || '' }})
+        run: |
+          set -euo pipefail
+
+          # Set comparison is sort-order sensitive, so pin the collation rather
+          # than inherit whatever locale a given runner image ships with.
+          export LC_ALL=C
+
+          summary="${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+          rc=0
+
+          # ::error:: puts the reason on the run itself, which is the part a
+          # notification mail quotes; the summary line is for whoever then
+          # opens the run and wants the table underneath it.
+          note_failure() {
+            echo "::error title=nightly drift on ${LEG}::$1"
+            printf '\n> [!IMPORTANT]\n> %s\n' "$1" >> "$summary"
+            rc=1
+          }
+
+          printf '## %s\n\n' "$LEG" >> "$summary"
+
+          # r-lib/actions/check-r-package leaves <check-dir>/<pkg>.Rcheck and
+          # its check-dir input defaults to 'check'. Globbed rather than named
+          # so a package rename does not turn this into a step that silently
+          # finds nothing and reports everything as fixed.
+          check_dir=""
+          for d in check/*.Rcheck; do
+            if [ -d "$d" ]; then
+              check_dir="$d"
+              break
+            fi
+          done
+
+          if [ -z "$check_dir" ]; then
+            printf 'R CMD check left no results directory: nothing ran.\n' >> "$summary"
+            note_failure "the job failed before R CMD check produced any results"
+            exit 1
+          fi
+
+          tests_dir="$check_dir/tests"
+          tmp="$(mktemp -d)"
+          : > "$tmp/observed"
+          : > "$tmp/notrun"
+          total=0
+
+          printf '| operation | outcome |\n| --- | :-- |\n' >> "$summary"
+
+          # tests/zz-gpu-<op>.R is the unit, because it is the unit R CMD check
+          # can report on after a crash: tools:::.runPackageTests renames
+          # <script>.Rout to <script>.Rout.fail when the process exits
+          # non-zero, and an access violation exits non-zero. That rename is
+          # the only trace the failure mode on macOS and Windows leaves behind,
+          # since no R-level handler ever gets to run. The scripts are
+          # enumerated from the checkout rather than listed here, so a new
+          # operation is picked up the day it is added -- and shows up as drift
+          # against nightly_expect, which is the correct thing for it to do.
+          for script in tests/zz-gpu-*.R; do
+            [ -e "$script" ] || continue
+            base="$(basename "$script" .R)"
+            op="${base#zz-}"
+            total=$((total + 1))
+            if [ -f "$tests_dir/$base.Rout.fail" ]; then
+              printf '%s\n' "$op" >> "$tmp/observed"
+              printf '| `%s` | **failed** |\n' "$op" >> "$summary"
+            elif [ -f "$tests_dir/$base.Rout" ]; then
+              printf '| `%s` | passed |\n' "$op" >> "$summary"
+            else
+              printf '%s\n' "$op" >> "$tmp/notrun"
+              printf '| `%s` | did not run |\n' "$op" >> "$summary"
+            fi
+          done
+
+          sort -u -o "$tmp/observed" "$tmp/observed"
+          printf '%s\n' "${EXPECTED:-}" \
+            | tr ',' '\n' | tr -d '[:blank:]\r' | sed '/^$/d' | sort -u > "$tmp/expected"
+
+          n_observed="$(wc -l < "$tmp/observed" | tr -d '[:blank:]')"
+          n_expected="$(wc -l < "$tmp/expected" | tr -d '[:blank:]')"
+
+          printf '\n%s of %s operations failed; %s recorded as expected to be able to fail.\n' \
+            "$n_observed" "$total" "$n_expected" >> "$summary"
+
+          if [ -s "$tmp/notrun" ]; then
+            # Comparing now would report operations that never executed as
+            # having started working, which is the one thing this step must
+            # never say. Report the gap and make no claim about the rest.
+            note_failure "R CMD check did not reach every operation ($(paste -sd, "$tmp/notrun")); no comparison was made"
+          else
+            new_fail="$(comm -13 "$tmp/expected" "$tmp/observed")"
+            new_pass="$(comm -23 "$tmp/expected" "$tmp/observed")"
+
+            if [ -n "$new_fail" ]; then
+              note_failure "newly failing: $(printf '%s' "$new_fail" | paste -sd, -)"
+            fi
+
+            if [ "${EXACT:-}" = "true" ]; then
+              # An operation leaving the expected set on a deterministic leg is
+              # the upstream fix this package has been waiting for. It goes red
+              # so that somebody shortens this leg's nightly_expect AND its
+              # xfail, the second of which is what actually re-enables the
+              # operation on push and pull_request. Absorbing it silently would
+              # mean the fix arrived and nothing changed.
+              if [ -n "$new_pass" ]; then
+                note_failure "newly passing: $(printf '%s' "$new_pass" | paste -sd, -)"
+              fi
+            else
+              # Leg with no exact expectation: which subset dies is either
+              # variable or not yet established, so a shrinking set is not
+              # evidence of anything and is reported without a verdict. Only
+              # the fault disappearing entirely is.
+              if [ -n "$new_pass" ]; then
+                printf '\nPassed tonight, though recorded as able to fail: `%s`. This leg is not compared for equality, so that is not treated as a change.\n' \
+                  "$(printf '%s' "$new_pass" | paste -sd, -)" >> "$summary"
+              fi
+              if [ "$n_observed" -eq 0 ] && [ "$n_expected" -gt 0 ]; then
+                note_failure "every operation passed on a leg where $n_expected are recorded as able to fail -- the upstream fault may be gone"
+              fi
+            fi
+          fi
+
+          # A nightly that watched only the operation list would go green on a
+          # new compiler warning or a failed install, because neither is an
+          # operation -- and it would have been red for those before this step
+          # existed. So everything R CMD check flagged outside the tests
+          # section is reported too. 00check.log carries a status either on the
+          # '* checking ...' line itself, or, when the check printed output
+          # first, on a line of its own just below it with a single leading
+          # space; the indented excerpt blocks are two spaces in and so cannot
+          # be mistaken for one.
+          if [ -f "$check_dir/00check.log" ]; then
+            other="$(awk '
+              /^\* checking / {
+                line = $0
+                sub(/^\* checking /, "", line)
+                if (match(line, /\.\.\.[ ]*(ERROR|WARNING)$/)) {
+                  status = substr(line, RSTART)
+                  sub(/^\.\.\.[ ]*/, "", status)
+                  what = substr(line, 1, RSTART - 1)
+                  sub(/[ ]+$/, "", what)
+                  print status " " what
+                  section = ""
+                } else {
+                  sub(/[ ]*\.\.\.[ ]*$/, "", line)
+                  section = line
+                }
+                next
+              }
+              /^ (ERROR|WARNING)$/ { if (section != "") print $1 " " section }
+            ' "$check_dir/00check.log" | grep -vE '^(ERROR|WARNING) tests$' || true)"
+
+            if [ -n "$other" ]; then
+              printf '\nR CMD check also reported, outside the test scripts:\n\n' >> "$summary"
+              printf '%s\n' "$other" | sed 's/^/- /' >> "$summary"
+              note_failure "R CMD check reported a problem unrelated to the GPU operations"
+            fi
+          fi
+
+          # Backstop. The check step is allowed to fail on a nightly, so if it
+          # failed and nothing above accounts for it, report that rather than
+          # call the run green on a failure this step did not understand.
+          if [ "${CHECK_OUTCOME:-}" = "failure" ] && [ "$rc" -eq 0 ] && [ "$n_observed" -eq 0 ]; then
+            note_failure "R CMD check failed, but no operation failed and no other check problem was found -- read the log"
+          fi
+
+          # Printed on every nightly, passing or not, so that recording a new
+          # expectation is a copy and a paste rather than a transcription.
+          as_list() {
+            if [ -s "$1" ]; then paste -sd, "$1"; else printf '(none)'; fi
+          }
+          printf '\nRecorded (`nightly_expect`): `%s`\n' "$(as_list "$tmp/expected")" >> "$summary"
+          printf '\nObserved tonight: `%s`\n' "$(as_list "$tmp/observed")" >> "$summary"
+
+          exit "$rc"

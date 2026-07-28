@@ -15,5 +15,29 @@ gpu_randu(n_rows, n_cols)
 Random matrix on GPU
 }
 \description{
-Create a matrix with random values on the GPU
+Create a matrix with uniformly distributed random values on the GPU
+}
+\section{Seeding}{
+
+Bandicoot defaults the device generator's seed to \code{0} and never randomises
+it, so on its own this function would return the same matrix in every fresh
+R process. To avoid that, the \emph{first} GPU random draw in a session takes its
+seed from R's own random number stream; later draws continue from wherever
+the device generator left off. Two consequences follow: \code{set.seed()} before
+that first draw makes the whole session reproducible, and drawing that seed
+consumes two values from R's stream. Call \code{\link[=gpu_set_seed]{gpu_set_seed()}} to override the
+seed explicitly instead, at any point including before the first draw.
+}
+
+\section{Precision}{
+
+Values are generated in single precision (\code{float}) and widened to doubles on
+the way back to R. The draws therefore take roughly \code{2^24} distinct values
+in \verb{[0, 1)} rather than the far finer grid \code{runif()} produces.
+}
+
+\examples{
+\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+dim(gpu_randu(4, 3))
+\dontshow{\}) # examplesIf}
 }

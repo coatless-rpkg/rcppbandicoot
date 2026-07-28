@@ -15,3 +15,14 @@ n x n identity matrix on GPU
 \description{
 Create an identity matrix on the GPU
 }
+\section{Precision}{
+
+The matrix is created in single precision (\code{float}). Zero and one are both
+exact in \code{float}, so the result is exact.
+}
+
+\examples{
+\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+gpu_eye(3)
+\dontshow{\}) # examplesIf}
+}

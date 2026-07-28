@@ -15,3 +15,16 @@ Transposed matrix computed on GPU
 \description{
 Transpose a matrix on the GPU using Bandicoot
 }
+\section{Precision}{
+
+The matrix is held on the device in single precision (\code{float}).
+Transposition only moves elements, but the round trip through \code{float}
+rounds every one of them, so entries needing more than about 7 significant
+decimal digits do not come back bit-identical to the input.
+}
+
+\examples{
+\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+gpu_transpose(matrix(1:6, nrow = 2))
+\dontshow{\}) # examplesIf}
+}

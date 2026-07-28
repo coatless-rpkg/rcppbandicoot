@@ -20,21 +20,90 @@
 #ifndef RcppBandicoot__RcppBandicootWrap__h
 #define RcppBandicoot__RcppBandicootWrap__h
 
+#include <type_traits>
+
 namespace Rcpp {
     namespace traits {
-        // Helper template to get R SEXP type from C++ type
-        template <typename T> inline int bandicoot_get_sexptype();
 
-        template <> inline int bandicoot_get_sexptype<double>()                { return REALSXP; }
-        template <> inline int bandicoot_get_sexptype<float>()                 { return REALSXP; }
-        template <> inline int bandicoot_get_sexptype<int>()                   { return INTSXP; }
-        template <> inline int bandicoot_get_sexptype<unsigned int>()          { return INTSXP; }
-        template <> inline int bandicoot_get_sexptype<long>()                  { return REALSXP; }
-        template <> inline int bandicoot_get_sexptype<unsigned long>()         { return REALSXP; }
-        // Skip std::size_t as its specialized above (unsigned int, unsigned long, etc.)
-        template <> inline int bandicoot_get_sexptype<Rbyte>()                 { return RAWSXP; }
-        template <> inline int bandicoot_get_sexptype<std::complex<double>>()  { return CPLXSXP; }
-        template <> inline int bandicoot_get_sexptype<std::complex<float>>()   { return CPLXSXP; }
+        // Maps a Bandicoot element type onto the R vector type that holds it.
+        //
+        // The integral cases are decided from sizeof and signedness rather than
+        // from a specialization per spelling, because the spellings differ by
+        // platform. coot::uword is std::size_t (typedef_elem.hpp), which is
+        // 'unsigned long' on the LP64 Unixes but 'unsigned long long' on
+        // Windows x64 (LLP64) -- a distinct type there, since 'unsigned long'
+        // is only four bytes. Listing types by name therefore leaves
+        // coot::uvec/umat with no mapping on Windows, and because the primary
+        // template used to be declared but never defined that showed up as an
+        // unresolved symbol at link time rather than as a compile error.
+        template <typename T>
+        struct bandicoot_sexptype {
+            static_assert(std::is_integral<T>::value,
+                          "RcppBandicoot: this Bandicoot element type has no corresponding R "
+                          "vector type. Supported element types are float, double, "
+                          "std::complex<float>, std::complex<double>, Rbyte, and integral types.");
+
+            // R's only integer vector is INTSXP: 32-bit signed, with INT_MIN
+            // reserved for NA. So a signed type of at most four bytes round
+            // trips through it, and an unsigned type only if it is narrower
+            // than four bytes. Everything wider goes to REALSXP, which is how R
+            // itself carries integers it cannot fit in an integer vector; a
+            // double is exact for every value up to 2^53.
+            static const int value =
+                (std::is_signed<T>::value ? (sizeof(T) <= 4) : (sizeof(T) < 4)) ? INTSXP : REALSXP;
+        };
+
+        template <> struct bandicoot_sexptype<double>                { static const int value = REALSXP; };
+        template <> struct bandicoot_sexptype<float>                 { static const int value = REALSXP; };
+        template <> struct bandicoot_sexptype<Rbyte>                 { static const int value = RAWSXP;  };
+        template <> struct bandicoot_sexptype<std::complex<double> > { static const int value = CPLXSXP; };
+        template <> struct bandicoot_sexptype<std::complex<float> >  { static const int value = CPLXSXP; };
+
+        // Helper function to get R SEXP type from C++ type
+        template <typename T> inline int bandicoot_get_sexptype() { return bandicoot_sexptype<T>::value; }
+
+        // Element copy into the R vector that bandicoot_sexptype<T> selected.
+        //
+        // The destination has to be picked at compile time. Branching on the
+        // SEXP type at run time compiles every branch for every T, so the
+        // REALSXP branch -- std::copy from a std::complex<double> into a
+        // double* -- makes wrap() ill-formed for the complex element types even
+        // though a CPLXSXP mapping exists for them. Dispatching on a tag
+        // carrying the SEXP type instantiates only the branch valid for T.
+        template <int RTYPE> struct bandicoot_sexptype_tag {};
+
+        template <typename T>
+        inline void bandicoot_copy_to_r(const std::vector<T>& src, SEXP dest, bandicoot_sexptype_tag<REALSXP>) {
+            std::copy(src.begin(), src.end(), REAL(dest));
+        }
+
+        template <typename T>
+        inline void bandicoot_copy_to_r(const std::vector<T>& src, SEXP dest, bandicoot_sexptype_tag<INTSXP>) {
+            int* r_ptr = INTEGER(dest);
+            for (coot::uword i = 0; i < src.size(); ++i) {
+                r_ptr[i] = static_cast<int>(src[i]);
+            }
+        }
+
+        template <typename T>
+        inline void bandicoot_copy_to_r(const std::vector<T>& src, SEXP dest, bandicoot_sexptype_tag<RAWSXP>) {
+            std::copy(src.begin(), src.end(), RAW(dest));
+        }
+
+        template <typename T>
+        inline void bandicoot_copy_to_r(const std::vector<T>& src, SEXP dest, bandicoot_sexptype_tag<CPLXSXP>) {
+            Rcomplex* r_ptr = COMPLEX(dest);
+            for (coot::uword i = 0; i < src.size(); ++i) {
+                r_ptr[i].r = static_cast<double>(std::real(src[i]));
+                r_ptr[i].i = static_cast<double>(std::imag(src[i]));
+            }
+        }
+
+        template <typename T>
+        inline void bandicoot_copy_to_r(const std::vector<T>& src, SEXP dest) {
+            bandicoot_copy_to_r(src, dest, bandicoot_sexptype_tag<bandicoot_sexptype<T>::value>());
+        }
+
     } // namespace traits
 
     // wrap for coot::Mat<T> - matrix
@@ -53,22 +122,7 @@ namespace Rcpp {
         x.copy_from_dev_mem(cpu_mem.data(), n_rows * n_cols);
 
         // Copy to R object
-        if (RTYPE == REALSXP) {
-            std::copy(cpu_mem.begin(), cpu_mem.end(), REAL(res));
-        } else if (RTYPE == INTSXP) {
-            int* r_ptr = INTEGER(res);
-            for (coot::uword i = 0; i < cpu_mem.size(); ++i) {
-                r_ptr[i] = static_cast<int>(cpu_mem[i]);
-            }
-        } else if (RTYPE == CPLXSXP) {
-            Rcomplex* r_ptr = COMPLEX(res);
-            for (coot::uword i = 0; i < cpu_mem.size(); ++i) {
-                r_ptr[i].r = static_cast<double>(std::real(cpu_mem[i]));
-                r_ptr[i].i = static_cast<double>(std::imag(cpu_mem[i]));
-            }
-        } else if (RTYPE == RAWSXP) {
-            std::copy(cpu_mem.begin(), cpu_mem.end(), RAW(res));
-        }
+        traits::bandicoot_copy_to_r(cpu_mem, res);
 
         UNPROTECT(1);
         return res;
@@ -88,22 +142,7 @@ namespace Rcpp {
         x.copy_from_dev_mem(cpu_mem.data(), n_elem);
 
         // Copy to R object
-        if (RTYPE == REALSXP) {
-            std::copy(cpu_mem.begin(), cpu_mem.end(), REAL(res));
-        } else if (RTYPE == INTSXP) {
-            int* r_ptr = INTEGER(res);
-            for (coot::uword i = 0; i < n_elem; ++i) {
-                r_ptr[i] = static_cast<int>(cpu_mem[i]);
-            }
-        } else if (RTYPE == CPLXSXP) {
-            Rcomplex* r_ptr = COMPLEX(res);
-            for (coot::uword i = 0; i < n_elem; ++i) {
-                r_ptr[i].r = static_cast<double>(std::real(cpu_mem[i]));
-                r_ptr[i].i = static_cast<double>(std::imag(cpu_mem[i]));
-            }
-        } else if (RTYPE == RAWSXP) {
-            std::copy(cpu_mem.begin(), cpu_mem.end(), RAW(res));
-        }
+        traits::bandicoot_copy_to_r(cpu_mem, res);
 
         UNPROTECT(1);
         return res;
@@ -123,22 +162,7 @@ namespace Rcpp {
         x.copy_from_dev_mem(cpu_mem.data(), n_elem);
 
         // Copy to R object
-        if (RTYPE == REALSXP) {
-            std::copy(cpu_mem.begin(), cpu_mem.end(), REAL(res));
-        } else if (RTYPE == INTSXP) {
-            int* r_ptr = INTEGER(res);
-            for (coot::uword i = 0; i < n_elem; ++i) {
-                r_ptr[i] = static_cast<int>(cpu_mem[i]);
-            }
-        } else if (RTYPE == CPLXSXP) {
-            Rcomplex* r_ptr = COMPLEX(res);
-            for (coot::uword i = 0; i < n_elem; ++i) {
-                r_ptr[i].r = static_cast<double>(std::real(cpu_mem[i]));
-                r_ptr[i].i = static_cast<double>(std::imag(cpu_mem[i]));
-            }
-        } else if (RTYPE == RAWSXP) {
-            std::copy(cpu_mem.begin(), cpu_mem.end(), RAW(res));
-        }
+        traits::bandicoot_copy_to_r(cpu_mem, res);
 
         UNPROTECT(1);
         return res;
@@ -161,22 +185,7 @@ namespace Rcpp {
         x.copy_from_dev_mem(cpu_mem.data(), n_elem);
 
         // Copy to R object
-        if (RTYPE == REALSXP) {
-            std::copy(cpu_mem.begin(), cpu_mem.end(), REAL(res));
-        } else if (RTYPE == INTSXP) {
-            int* r_ptr = INTEGER(res);
-            for (coot::uword i = 0; i < n_elem; ++i) {
-                r_ptr[i] = static_cast<int>(cpu_mem[i]);
-            }
-        } else if (RTYPE == CPLXSXP) {
-            Rcomplex* r_ptr = COMPLEX(res);
-            for (coot::uword i = 0; i < n_elem; ++i) {
-                r_ptr[i].r = static_cast<double>(std::real(cpu_mem[i]));
-                r_ptr[i].i = static_cast<double>(std::imag(cpu_mem[i]));
-            }
-        } else if (RTYPE == RAWSXP) {
-            std::copy(cpu_mem.begin(), cpu_mem.end(), RAW(res));
-        }
+        traits::bandicoot_copy_to_r(cpu_mem, res);
 
         UNPROTECT(1);
         return res;

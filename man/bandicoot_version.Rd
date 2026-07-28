@@ -2,13 +2,19 @@
 % Please edit documentation in R/RcppExports.R
 \name{bandicoot_version}
 \alias{bandicoot_version}
-\title{Get Bandicoot version}
+\title{Version of the vendored Bandicoot library}
 \usage{
 bandicoot_version()
 }
+\value{
+A length-one character vector holding the version as \code{"major.minor.patch"}.
+}
 \description{
-Prints the current version of the Bandicoot library.
+Reports the version of the Bandicoot C++ headers this package was compiled
+against. The value is a compile-time constant, so no GPU device is touched
+and the runtime is not initialised.
 }
 \examples{
 bandicoot_version()
+package_version(bandicoot_version()) >= "4.0.0"
 }

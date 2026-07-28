@@ -15,3 +15,17 @@ Matrix with each element squared, computed on GPU
 \description{
 Apply element-wise square operation on GPU
 }
+\section{Precision}{
+
+This is the only operation in the package that runs in double precision
+(\code{double}), so the result matches \code{A^2} in base R to full double accuracy.
+It therefore needs a device with 64-bit floating point support: check
+\code{gpu_device_info()$fp64} before calling, as the OpenCL backend requires the
+\code{cl_khr_fp64} extension.
+}
+
+\examples{
+\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+gpu_element_square(matrix(c(1, 2, 3, 4), 2, 2))
+\dontshow{\}) # examplesIf}
+}

@@ -15,3 +15,36 @@ Mean of all elements
 \description{
 Calculate the mean of all elements in a matrix on GPU
 }
+\section{Precision}{
+
+The matrix is held and averaged in single precision (\code{float}) even though
+the value handed back to R is a double, so the mean carries about 7
+significant decimal digits rather than 16. Unlike \code{\link[=gpu_sum]{gpu_sum()}}, that is only
+the floor: the error grows with the number of \strong{rows}, and by \code{1e5} rows it
+is already two orders of magnitude worse.
+
+The reason is the kernel this routes to. Column means are computed by
+\code{mean_colwise_conv_pre}, generated from \code{reduce_colwise.cl}, which gives
+each column one work item running a serial loop over the rows -- a running
+total, not a tree -- so the rounding errors of \code{n_rows} successive additions
+accumulate. The column count barely matters, because the second stage
+averages only \code{n_cols} values. Treating the \code{n_rows} roundings as
+independent gives a relative error of about \code{sqrt(n_rows) * 1.19e-7}.
+
+Measured against \code{mean(A)} on \code{runif()} input, worst of 20 draws on an
+Apple OpenCL device: \code{1.1e-6} at \code{1e3} rows, \code{1.2e-5} at \code{1e5} rows and
+\code{7.0e-5} at \code{1e7} rows, which is 0.29, 0.31 and 0.19 of the model in turn.
+A \verb{10 x 1e5} matrix holds the same \code{1e6} values as a \verb{1e6 x 1} one and comes
+back at \code{6.0e-8} against the taller matrix's \code{1.7e-5}: it is the reduced
+dimension that costs accuracy, not the amount of data.
+
+If those digits matter on a very tall matrix, \code{gpu_sum(A) / length(A)} keeps
+the tree reduction; \code{\link[=gpu_transpose]{gpu_transpose()}} first also works, at the cost of a
+full copy on the device.
+}
+
+\examples{
+\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+gpu_mean(matrix(1:6, nrow = 2))
+\dontshow{\}) # examplesIf}
+}

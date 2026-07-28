@@ -1,12 +1,19 @@
-Bandicoot is written by a team of talented developers listed in the COPYRIGHTS.txt
-file:
+Bandicoot is written by a team of developers, whose attribution notices are
+reproduced verbatim from upstream in the NOTICE file installed alongside this
+one:
 
-  ensmallen: a flexible C++ library for efficient function optimization.
-  Copyright 2017-2023, Ryan Curtin <ryan@ratml.org>
-  Copyright 2017-2023, Marcus Edel <marcus.edel@fu-berlin.de>
-  Copyright 2017-2023, Conrad Sanderson
+  Copyright 2017-2026 Ryan Curtin (https://ratml.org)
+  Copyright 2017-2026 Marcus Edel (https://kurg.org)
+  Copyright 2017-2026 Conrad Sanderson (https://conradsanderson.id.au)
+  Copyright 2017-2026 Data61 / CSIRO
+  Copyright 2008-2016 National ICT Australia (NICTA)
+
+Per-file copyright and license details -- including the MAGMA and clMAGMA code
+in the OpenCL backend, which carries a 3-clause BSD license from the University
+of Tennessee in addition to the Apache License -- are in the COPYRIGHTS file.
 
 The RcppBandicoot package provides an integration of Bandicoot and its dependencies
 into R. RcppBandicoot accomplishes this by linking into Rcpp,
 establishing plugins, examples, and more. The R implementation was done by James
-Joseph Balamuta with additional contributions by contributors listed in the ChangeLog.
+Joseph Balamuta with additional contributions by contributors listed in NEWS.md
+and in the repository history at https://github.com/coatless-rpkg/rcppbandicoot.

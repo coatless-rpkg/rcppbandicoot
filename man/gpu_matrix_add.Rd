@@ -17,3 +17,15 @@ Sum of A and B computed on GPU
 \description{
 Add two matrices on the GPU using Bandicoot
 }
+\section{Precision}{
+
+The sum is computed in single precision (\code{float}). R's doubles are rounded
+on the way to the device and the result is widened back, so expect a
+relative error around \code{1e-7} against \code{A + B} in base R.
+}
+
+\examples{
+\dontshow{if (nzchar(Sys.getenv("RCPPBANDICOOT_RUN_GPU_EXAMPLES"))) withAutoprint(\{ # examplesIf}
+gpu_matrix_add(matrix(c(1, 2, 3, 4), 2, 2), matrix(c(5, 6, 7, 8), 2, 2))
+\dontshow{\}) # examplesIf}
+}

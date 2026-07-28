@@ -8,6 +8,76 @@
 ## This file is generated from flags.R.in by the configure script
 ##
 
+## Drop -I/-L entries naming directories that are no longer there.
+##
+## Everything the configure script substituted below was frozen at build time,
+## and half of it is the build machine's SDK layout.  Those directories are not
+## guaranteed to survive: the OpenCL SDK on a CI runner is unpacked under
+## TMPDIR, which macOS purges on a schedule, and a binary package is installed
+## on machines that never had an SDK at all.  Handing a downstream package a
+## -I or -L that points at a deleted directory produces a compile or link
+## failure whose message says nothing about where the path came from, so drop
+## the dead entries and name them once instead.
+##
+## Both spellings are handled.  configure writes the joined form
+## (-I/usr/include), but OPENCL_CPPFLAGS, CLBLAST_CPPFLAGS and their _LIBS
+## counterparts are taken verbatim from the environment, where "-I /usr/include"
+## is equally legal.  Anything else -- -D, -l, -framework, -F, make variables
+## such as $(LAPACK_LIBS) on Windows -- is passed through untouched, in order.
+drop_missing_dirs <- function(flags, what) {
+  tokens <- strsplit(trimws(flags), "[[:space:]]+")[[1L]]
+  keep <- rep(TRUE, length(tokens))
+  gone <- character()
+
+  i <- 1L
+  while (i <= length(tokens)) {
+    span <- i
+    dir <- NA_character_
+    if (tokens[i] %in% c("-I", "-L") && i < length(tokens)) {
+      span <- c(i, i + 1L)
+      dir <- tokens[i + 1L]
+    } else if (grepl("^-[IL].", tokens[i])) {
+      dir <- substring(tokens[i], 3L)
+    }
+    ## A value carrying quote characters cannot be tested by splitting on
+    ## whitespace: configure.win escapes quotes through to here, and a quoted
+    ## path containing a space -- the ordinary Windows spelling, e.g.
+    ## -I"C:/Program Files/Intel/include" -- is torn across several tokens.
+    ## Unquote a cleanly matched pair; leave anything still quoted strictly
+    ## alone, so a flag is never dropped on the strength of a partial path.
+    if (!is.na(dir)) {
+      if (grepl('^".*"$', dir) || grepl("^'.*'$", dir)) {
+        dir <- substring(dir, 2L, nchar(dir) - 1L)
+      }
+      if (!nzchar(dir) || grepl("[\"']", dir)) {
+        dir <- NA_character_
+      }
+    }
+    if (!is.na(dir) && !dir.exists(dir)) {
+      keep[span] <- FALSE
+      gone <- c(gone, dir)
+    }
+    i <- max(span) + 1L
+  }
+
+  # Returning the argument itself, rather than a rejoin of its tokens, keeps
+  # the overwhelmingly common case byte-identical to what configure wrote --
+  # inspecting the flags must not reformat them.
+  if (length(gone) == 0L) {
+    return(flags)
+  }
+
+  warning("RcppBandicoot ", what, " recorded at build time name ",
+          if (length(gone) == 1L) "a directory that no longer exists"
+          else "directories that no longer exist",
+          ": ", paste(gone, collapse = ", "),
+          ". Those entries have been dropped. Reinstall RcppBandicoot if a ",
+          "build against it now fails to find the GPU SDK.",
+          call. = FALSE)
+
+  paste(tokens[keep], collapse = " ")
+}
+
 #' Get RcppBandicoot C++ compiler flags
 #'
 #' Returns the C++ compiler flags required for compiling code that uses RcppBandicoot.
@@ -28,8 +98,25 @@ RcppBandicootCxxFlags <- function() {
     stop("RcppBandicoot package not found")
   }
 
-  # Combine include path with configure-time flags
-  paste0("-I", shQuote(path), " @BANDICOOT_CXXFLAGS@")
+  # Bandicoot reads its .cl kernel sources from disk at runtime, from the
+  # directory baked in as COOT_KERNEL_SOURCE_DIR.  Without it the header falls
+  # back to a __FILE__-relative "bandicoot_bits/kernels/opencl/", which this
+  # package does not ship (the directory is "ks/"), so every downstream GPU
+  # call throws "Cannot open required kernel source.".  Resolve it here rather
+  # than at configure time so it tracks wherever the package actually landed.
+  # The trailing slash is required: the header concatenates "opencl/<file>".
+  kernels <- paste0(file.path(path, "bandicoot_bits", "ks"), "/")
+
+  # Combine include path with configure-time flags.  COOT_TARGET_OPENCL_VERSION
+  # must match what the package itself was built with: src/Makevars adds it to
+  # PKG_CPPFLAGS separately from BANDICOOT_CXXFLAGS, so a downstream consumer
+  # that only picks up BANDICOOT_CXXFLAGS would compile the same headers against
+  # a different OpenCL API level than this package did, which fails to compile
+  # on some OpenCL header sets.  Emit it here, exactly as src/Makevars.in does.
+  paste0("-I", shQuote(path),
+         " -DCOOT_TARGET_OPENCL_VERSION=@OPENCL_TARGET_VERSION@",
+         sprintf(" -DCOOT_KERNEL_SOURCE_DIR='\"%s\"'", kernels),
+         " ", drop_missing_dirs("@BANDICOOT_CXXFLAGS@", "compiler flags"))
 }
 
 #' Get RcppBandicoot linker flags
@@ -45,11 +132,9 @@ RcppBandicootCxxFlags <- function() {
 #' A character string containing the linker flags
 #' @export
 #' @examples
-#' \dontrun{
 #' RcppBandicootLdFlags()
-#' }
 RcppBandicootLdFlags <- function() {
-  '@BANDICOOT_LIBS@'
+  drop_missing_dirs('@BANDICOOT_LIBS@', "linker flags")
 }
 
 ## =============================================================================
@@ -190,8 +275,11 @@ bandicoot_config <- function(verbose = FALSE) {
 #' @examples
 #' CxxFlags()
 CxxFlags <- function() {
-  cat(RcppBandicootCxxFlags())
-  invisible(RcppBandicootCxxFlags())
+  ## Resolved once: the accessor warns about SDK directories that have since
+  ## disappeared, and calling it twice would print that warning twice.
+  flags <- RcppBandicootCxxFlags()
+  cat(flags)
+  invisible(flags)
 }
 
 #' Print RcppBandicoot linker flags
@@ -205,6 +293,8 @@ CxxFlags <- function() {
 #' @examples
 #' LdFlags()
 LdFlags <- function() {
-  cat(RcppBandicootLdFlags())
-  invisible(RcppBandicootLdFlags())
+  ## Resolved once, for the same reason as CxxFlags().
+  flags <- RcppBandicootLdFlags()
+  cat(flags)
+  invisible(flags)
 }
