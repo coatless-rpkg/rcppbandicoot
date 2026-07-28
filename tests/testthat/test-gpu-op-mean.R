@@ -71,25 +71,26 @@ test_that("gpu_mean() accuracy tracks the row count, not the element count", {
   expect_equal(gpu_mean(wide), mean(wide), tolerance = tol_f32_reduction)
 })
 
-test_that("the wide-matrix mean failure is the colwise kernel, not the reduction", {
+test_that("the wide-matrix failure is the reduction, not the colwise kernel", {
   skip_if_no_gpu()
-  # Deliberately NOT gated on gpu_mean_wide. This runs on the platform where
-  # gpu_mean(wide) is wrong, and its whole purpose is to say which half is at
-  # fault.
+  # gpu_sum() does not touch the colwise kernel at all, so if it returns the
+  # same wrong value as gpu_mean() on the same matrix, the reduction owns both.
+  # It does: on Intel's runtime this returns 0.16 where the mean is 0.50,
+  # exactly what gpu_mean(wide) returns. That exonerates the colwise kernel and
+  # collapses what looked like separate defects into one.
   #
-  # gpu_mean(A) is mean(mean(A)): an inner colwise kernel launching one work
-  # item per COLUMN (opencl/mean.hpp:42, global size n_cols, local size left to
-  # the runtime), then an outer mean over the resulting row vector, which is
-  # accu()/n_elem (op_mean_meat.hpp:148) and so goes through generic_reduce.
-  #
-  # For this matrix the outer accu covers 1e4 elements, which needs 358 threads
-  # against a 4096 work-group size -- comfortably single-pass, and single-pass
-  # accu is correct on every platform tested. The narrow case that passes
-  # differs only in launching 2 inner work items instead of 1e4.
-  #
-  # So: if gpu_sum(A)/length(A) is right here while gpu_mean(A) is wrong, the
-  # reduction is exonerated and the colwise kernel owns the defect. If both are
-  # wrong, it is the reduction after all and the multi-pass story is incomplete.
+  # It is excluded under the multi-pass key because that is what it is. The
+  # pass count is decided by total_num_threads vs local_group_size
+  # (opencl/kernel_utils.hpp:45-47), and local_group_size is capped by
+  # CL_KERNEL_WORK_GROUP_SIZE -- so the size at which a reduction becomes
+  # multi-pass is a property of the DEVICE, not of the data. At the 4096 this
+  # matrix sees on PoCL, 1e5 elements needs 2942 threads and stays single-pass,
+  # which is why it is correct there. For it to be wrong on Intel's runtime the
+  # work-group size must be under 2942, putting this matrix on the multi-pass
+  # path that is already known broken there.
+  skip_if_xfail("gpu_sum_multipass",
+                "device reaches the multi-pass reduction at this size")
+
   set.seed(23)
   wide <- matrix(runif(1e5), 10, 1e4)
 

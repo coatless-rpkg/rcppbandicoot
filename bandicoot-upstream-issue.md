@@ -218,57 +218,46 @@ gpu_sum(A) - sum(A)   # 0 on Linux/PoCL 5.0; ~-5.5e4 on Windows; NaN on macOS
 - Only CPU implementations tested; no real GPU.
 - Whether the Windows and macOS symptoms share one cause or are two.
 
-## A second operation shows the same proportion
+## It is one defect, and the size at which it bites is a device property
 
-`mean()` over a wide matrix fails the same way on the same runtime, which is
-why this reads as one defect rather than two.
+`mean()` over a wide matrix appeared to be a second, separate fault: 0.16 where
+the mean is 0.500170, on a 10 x 1e4 matrix whose 1e5 elements should be well
+inside the single-pass path. It is not separate.
 
-A 10 x 1e4 matrix of `runif` values, seed 23, whose true mean is 0.500170:
+`accu()` on that same matrix returns the same wrong value -- `accu(A)/n_elem`
+is 0.16 too -- and `accu()` never touches the column-wise kernel that `mean()`
+uses. So the column-wise kernel is exonerated and both symptoms are the
+reduction.
 
-| Platform | OpenCL implementation | Result |
-|---|---|---|
-| Linux x86-64 | PoCL 5.0+debian / LLVM 16 | correct |
-| macOS arm64 | PoCL 7.1 / LLVM 19.1.7 | correct |
-| Apple (local, arm64 GPU) | Apple OpenCL | 0.500170 -- exact |
-| Windows x86-64 | Intel oclcpuexp 2025-WW13 / clang 20 | **0.16** |
+What made it look like two bugs is that the pass count is not a function of the
+data. From `opencl/kernel_utils.hpp:45-47`, `local_group_size` is capped by
+`CL_KERNEL_WORK_GROUP_SIZE`, so **the element count at which a reduction
+becomes multi-pass is a property of the device**:
 
-0.16 / 0.50 = 0.32, against 25040.2 / 79993.0 = 0.313 for the `accu()` case
-above. Two different reductions, two different entry points, the same runtime,
-and both land near a third of the correct value -- which is what only some of
-the work-groups contributing would look like. The narrow case of the same
-operation (`1e5 x 2`) is correct on that runtime, so it tracks the shape of the
-reduction rather than the operation.
+| CL_KERNEL_WORK_GROUP_SIZE | multi-pass from about |
+|---|---|
+| 128 | 3,100 elements |
+| 256 | 6,700 |
+| 512 | 14,400 |
+| 1,024 | 30,800 |
+| 2,048 | 69,700 |
+| 4,096 | 148,225 |
 
-Reproducing, alongside the `accu()` case:
+Both PoCL builds report 4096, which is why 1e5 elements stays single-pass and
+correct there, and why the failure only appears at 400 x 400. For the same
+matrix to be wrong on Intel's runtime, its work-group size must be **below
+2942** -- the thread count 1e5 elements requires -- putting that matrix on the
+multi-pass path at a size where PoCL is still single-pass.
 
-```r
-set.seed(23)
-w <- matrix(runif(1e5), 10, 1e4)
-gpu_mean(w)   # 0.500170 on PoCL and Apple; about 0.16 on Intel's runtime
-```
+So the three observations reduce to one statement: **the multi-pass reduction
+is wrong on PoCL 7.1/LLVM 19.1.7 and on Intel's oclcpuexp, and correct on
+PoCL 5.0/LLVM 16.** The platforms disagree about which inputs reach it, not
+about what happens once they do.
 
-## What a size sweep across the three implementations shows
-
-Measured per operation, each in its own R process (the runtime crashes, and a
-shared process loses every result already produced):
-
-| n | Linux, PoCL 5.0 / LLVM 16 | macOS, PoCL 7.1 / LLVM 19.1.7 |
-|---|---|---|
-| 100 x 100 | exact | exact |
-| 200 x 200 | exact | exact |
-| 350 x 350 | exact | exact |
-| 400 x 400 | exact | **NaN** |
-| 500 x 500 | exact | **NaN** |
-| 800 x 800 | exact | **NaN** |
-| 1200 x 1200 | exact | **NaN** |
-
-The macOS boundary sits exactly where the single-pass `_small` kernel gives way
-to the multi-pass one, and is clean: exact below it, NaN at and above. Linux is
-exact throughout, on the same source.
-
-`mean()` was swept over the same 1e5 values reshaped from 2 to 64 rows: exact at
-every shape on both PoCL builds. The wide-matrix failure is specific to Intel's
-runtime.
+That also means the failing size is not a useful way to describe this bug.
+Anyone reproducing it should query `CL_KERNEL_WORK_GROUP_SIZE` for the reduce
+kernel and pick an input above the corresponding row, rather than reusing
+400 x 400.
 
 ## Why the boundary sits where it does
 
