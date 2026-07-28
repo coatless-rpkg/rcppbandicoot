@@ -70,3 +70,29 @@ test_that("gpu_mean() accuracy tracks the row count, not the element count", {
 
   expect_equal(gpu_mean(wide), mean(wide), tolerance = tol_f32_reduction)
 })
+
+test_that("the wide-matrix mean failure is the colwise kernel, not the reduction", {
+  skip_if_no_gpu()
+  # Deliberately NOT gated on gpu_mean_wide. This runs on the platform where
+  # gpu_mean(wide) is wrong, and its whole purpose is to say which half is at
+  # fault.
+  #
+  # gpu_mean(A) is mean(mean(A)): an inner colwise kernel launching one work
+  # item per COLUMN (opencl/mean.hpp:42, global size n_cols, local size left to
+  # the runtime), then an outer mean over the resulting row vector, which is
+  # accu()/n_elem (op_mean_meat.hpp:148) and so goes through generic_reduce.
+  #
+  # For this matrix the outer accu covers 1e4 elements, which needs 358 threads
+  # against a 4096 work-group size -- comfortably single-pass, and single-pass
+  # accu is correct on every platform tested. The narrow case that passes
+  # differs only in launching 2 inner work items instead of 1e4.
+  #
+  # So: if gpu_sum(A)/length(A) is right here while gpu_mean(A) is wrong, the
+  # reduction is exonerated and the colwise kernel owns the defect. If both are
+  # wrong, it is the reduction after all and the multi-pass story is incomplete.
+  set.seed(23)
+  wide <- matrix(runif(1e5), 10, 1e4)
+
+  expect_equal(gpu_sum(wide) / length(wide), mean(wide),
+               tolerance = tol_f32_reduction_n(1e5))
+})
