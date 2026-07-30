@@ -1,4 +1,4 @@
-// Copyright 2026 Marcus Edel (http://www.kurg.org/)
+// Copyright 2026 Ryan Curtin (http://www.ratml.org/)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,24 +13,24 @@
 // ------------------------------------------------------------------------
 
 
+// Utility struct to represent a floating-point GPU type of the maximum precision
+// allowed by that GPU.
+//
+// This is important for OpenCL, where the device may only support 32-bit floats.
+//
+// This type is never used locally but only inside OpenCL kernels that need to up-cast to floating
+// point to perform an operation.  Therefore, the type holds nothing and is just a placeholder.
 
-R"(
-#version 450
-#ifdef COOT_USE_INT64
-#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
-#endif
+struct floatmax { };
 
-#define COOT_FN2(ARG1, ARG2) ARG1 ## ARG2
-#define COOT_FN(ARG1, ARG2) COOT_FN2(ARG1, ARG2)
-#define COOT_CONCAT(ARG1, ARG2) COOT_FN2(ARG1, ARG2)
+template<typename T>
+struct safe_type
+  {
+  typedef T result;
+  };
 
-#ifndef UWORD
-#define UWORD uint64_t
-#endif
-
-// NOTE: TODO: support for FP64 should be detected at kernel compilation time
-// and this typedef set accordingly
-#define floatmax double
-#define COOT_FLOATMAX_IS_DOUBLE
-
-)"
+template<>
+struct safe_type<double>
+  {
+  typedef floatmax result;
+  };

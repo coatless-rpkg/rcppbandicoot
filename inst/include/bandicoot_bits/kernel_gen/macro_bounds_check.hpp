@@ -266,6 +266,47 @@ struct bounds_check_str< subview_elem2< eT, subview_elem2_all_rows<eT, T2> >, i,
 
 
 //
+// subview_each2<T1, mode, TB>
+//
+// If mode == 0 (.each_col(TB)) then we check rows with the T1 and cols with the TB;
+// if mode == 1 (.each_row(TB)) then we check rows with the TB and cols with the T1.
+//
+// Note that we are guaranteed that T1 is either a subview or a Mat, so we can assume we have name_p_n_rows and name_p_n_cols available to us
+//
+
+template<typename arg_names>
+struct each2_col_args
+  {
+  using arg1 = typename arg_names::arg2; // col
+  using arg2 = typename arg_names::arg2; // col (should be unused!)
+  using arg3 = typename arg_names::arg3; // slice (should be unused!)
+  };
+
+template<typename T1, unsigned int mode, typename TB, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct bounds_check_str< subview_each2<T1, mode /* 0 */, TB>, i, backend, arg_name_prefix, arg_names > : public nested_concat_str
+  <
+  open_paren,
+  bounds_check_rows< concat_str<arg_name_prefix, each2_p_name>, arg_names>, // (row < name_p_n_rows)
+  spaced_and,
+  bounds_check_str< TB, i, backend, concat_str<arg_name_prefix, each2_i_name>, each2_col_args<arg_names> >,
+  close_paren
+  > { };
+
+
+
+template<typename T1, typename TB, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct bounds_check_str< subview_each2<T1, 1 /* each_row */, TB>, i, backend, arg_name_prefix, arg_names > : public nested_concat_str
+  <
+  open_paren,
+  bounds_check_str< TB, i, backend, concat_str<arg_name_prefix, each2_i_name>, arg_names >,
+  spaced_and,
+  bounds_check_cols< concat_str<arg_name_prefix, each2_p_name>, arg_names>, // (col < name_p_n_cols)
+  close_paren
+  > { };
+
+
+
+//
 // Cube<eT>
 //   COOT_OBJECT_i_BOUNDS_CHECK(name, row, col, slice)=(row < name_n_rows && col < name_n_cols && slice < name_n_slices)
 //
@@ -662,3 +703,44 @@ struct bounds_check_str< Op<T1, op_symmatu>, i, backend, arg_name_prefix, arg_na
 
 template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
 struct bounds_check_str< Op<T1, op_symmatl>, i, backend, arg_name_prefix, arg_names > : public bounds_check_str< T1, i, backend, arg_name_prefix, arg_names > { };
+
+
+
+//
+// Op<T1, op_repmat>: bounds check against the given kernel arguments that specify the dimension
+// The comparisons will be of the form:
+//    (row < (n_rows * copies_per_row)) && (col < (n_cols * copies_per_col))
+//
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct bounds_check_str< Op<T1, op_repmat>, i, backend, arg_name_prefix, arg_names > : public nested_concat_str
+  <
+  double_open_paren,        // ((
+  typename arg_names::arg1, // row
+  spaced_lt,                //  <
+  open_paren,               // (
+  coot_concat_name,         // COOT_CONCAT(name,
+  arg_name_prefix,          //
+  n_rows_name,              // _n_rows
+  close_paren,              // )
+  spaced_mul,               //  *
+  coot_concat_name,         // COOT_CONCAT(name,
+  arg_name_prefix,          //
+  copies_per_row_name,      // _copies_per_row
+  triple_close_paren,       // )))
+  spaced_and,               //  &&
+  open_paren,               // (
+  typename arg_names::arg2, // col
+  spaced_lt,                //  <
+  open_paren,               // (
+  coot_concat_name,         // COOT_CONCAT(name,
+  arg_name_prefix,          //
+  n_cols_name,              // _n_cols
+  close_paren,              // )
+  spaced_mul,               //  *
+  coot_concat_name,         // COOT_CONCAT(name,
+  arg_name_prefix,          //
+  copies_per_col_name,      // _copies_per_col
+  triple_close_paren,       // )))
+  close_paren               // )
+  > { };

@@ -1110,3 +1110,38 @@ struct has_nested_op_traits
 
   static constexpr bool value = ( sizeof(check<T>(0)) == sizeof(yes) );
   };
+
+
+
+//
+
+
+template<typename Target, typename T>
+struct list_has_type
+  {
+  static constexpr bool value = false;
+  };
+
+
+
+template<typename Target, typename T, typename... Ts>
+struct list_has_type<Target, std::tuple<T, Ts...> >
+  {
+  static constexpr bool value = is_same_type<Target, T>::yes || list_has_type<Target, std::tuple<Ts...> >::value;
+  };
+
+
+
+template<typename Target, typename T>
+struct list_has_type<Target, std::tuple<T> >
+  {
+  static constexpr bool value = is_same_type<Target, T>::yes;
+  };
+
+
+
+template<typename Target>
+struct list_has_type<Target, std::tuple<> >
+  {
+  static constexpr bool value = false;
+  };

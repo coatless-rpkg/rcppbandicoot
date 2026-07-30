@@ -74,3 +74,12 @@ struct elem_type_str< fp16, VULKAN_BACKEND >
   static inline constexpr size_t len() { return 9; }
   static inline constexpr char_array<10> str() { return char_array<10>{ "float16_t" }; }
   };
+
+
+
+template<>
+struct elem_type_str< floatmax, VULKAN_BACKEND >
+  {
+  static inline constexpr size_t len() { return 8; }
+  static inline constexpr char_array<9> str() { return char_array<9>{ "floatmax" }; }
+  };

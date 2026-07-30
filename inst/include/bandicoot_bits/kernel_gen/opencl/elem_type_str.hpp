@@ -33,3 +33,12 @@ struct elem_type_str< fp16, CL_BACKEND >
   static inline constexpr size_t len() { return 4; }
   static inline constexpr char_array<5> str() { return char_array<5>{ "half" }; }
   };
+
+
+
+template<>
+struct elem_type_str< floatmax, CL_BACKEND >
+  {
+  static inline constexpr size_t len() { return 8; }
+  static inline constexpr char_array<9> str() { return char_array<9>{ "floatmax" }; }
+  };

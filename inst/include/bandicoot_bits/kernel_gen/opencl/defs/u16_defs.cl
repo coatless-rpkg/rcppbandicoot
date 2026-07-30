@@ -40,6 +40,7 @@ inline ushort coot_to_ushort_cx_float(const   cx_float x) { return (ushort) x.x;
 inline ushort coot_to_ushort_double(const       double x) { return (ushort) x;   }
 inline ushort coot_to_ushort_cx_double(const cx_double x) { return (ushort) x.x; }
 #endif
+inline ushort coot_to_ushort_floatmax(const   floatmax x) { return (ushort) x;   }
 
 inline ushort coot_absdiff_ushort(const ushort x, const ushort y) { return (x > y) ? (x - y) : (y - x); }
 inline ushort coot_conj_ushort(const ushort x) { return x; }

@@ -45,13 +45,6 @@ runtime_t::init(const bool /* manual_selection */, const uword wanted_platform, 
   result = coot_wrapper(cuDeviceGet)(&cuDevice, wanted_device);
   coot_check_cuda_error(result, "coot::cuda_rt.init(): cuDeviceGet() failed");
 
-  #if CUDA_VERSION >= 13000
-  result = coot_wrapper(cuCtxCreate)(&context, NULL, 0, cuDevice);
-  #else
-  result = coot_wrapper(cuCtxCreate)(&context, 0, cuDevice);
-  #endif
-  coot_check_cuda_error(result, "coot::cuda_rt.init(): cuCtxCreate() failed");
-
   // NOTE: it seems size_t will have the same size on the device and host;
   // given the definition of uword, we will assume uword on the host is equivalent
   // to size_t on the device.
@@ -201,9 +194,9 @@ runtime_t::load_cached_kernel(const std::string& kernel_name, CUfunction& functi
     return false;
     }
 
-  CUresult result = coot_wrapper(cuInit)(0);
+  //CUresult result = coot_wrapper(cuInit)(0);
   CUmodule module;
-  result = coot_wrapper(cuModuleLoadDataEx)(&module, kernel_buffer, 0, 0, 0);
+  CUresult result = coot_wrapper(cuModuleLoadDataEx)(&module, kernel_buffer, 0, 0, 0);
   coot_check_cuda_error(result, "coot::cuda::load_cached_kernel(): cuModuleLoadDataEx() failed");
 
   result = coot_wrapper(cuModuleGetFunction)(&function, module, kernel_name.c_str());
@@ -477,6 +470,9 @@ inline
 CUfunction
 runtime_t::get_kernel()
   {
+  // Lock the mutex, in case this kernel is being compiled by another thread.
+  const std::lock_guard<std::mutex> l(gen_kernel_compile_mutex);
+
   const std::tuple<bool, CUfunction&> t = get_kernel<num, ProxyTypes...>(gen_kernels);
   if (std::get<0>(t) == true)
     {
@@ -498,6 +494,9 @@ inline
 const CUfunction&
 runtime_t::get_kernel(const zeroway_kernel_id::enum_id num)
   {
+  // Lock the mutex, in case this kernel is being compiled by another thread.
+  const std::lock_guard<std::mutex> l(zeroway_kernel_compile_mutex);
+
   const std::tuple<bool, CUfunction&> t = get_kernel(zeroway_kernels, num);
   if (std::get<0>(t) == true)
     {
@@ -521,6 +520,9 @@ inline
 const CUfunction&
 runtime_t::get_kernel(const oneway_kernel_id::enum_id num)
   {
+  // Lock the mutex, in case this kernel is being compiled by another thread.
+  const std::lock_guard<std::mutex> l(oneway_kernel_compile_mutex);
+
   const std::tuple<bool, CUfunction&> t = get_kernel<eT>(oneway_kernels, num);
   if (std::get<0>(t) == true)
     {
@@ -544,6 +546,9 @@ inline
 const CUfunction&
 runtime_t::get_kernel(const oneway_real_kernel_id::enum_id num)
   {
+  // Lock the mutex, in case this kernel is being compiled by another thread.
+  const std::lock_guard<std::mutex> l(oneway_real_kernel_compile_mutex);
+
   const std::tuple<bool, CUfunction&> t = get_kernel<eT>(oneway_real_kernels, num);
   if (std::get<0>(t) == true)
     {
@@ -567,6 +572,9 @@ inline
 const CUfunction&
 runtime_t::get_kernel(const oneway_integral_kernel_id::enum_id num)
   {
+  // Lock the mutex, in case this kernel is being compiled by another thread.
+  const std::lock_guard<std::mutex> l(oneway_integral_kernel_compile_mutex);
+
   const std::tuple<bool, CUfunction&> t = get_kernel<eT>(oneway_integral_kernels, num);
   if (std::get<0>(t) == true)
     {
@@ -590,6 +598,9 @@ inline
 const CUfunction&
 runtime_t::get_kernel(const twoway_kernel_id::enum_id num)
   {
+  // Lock the mutex, in case this kernel is being compiled by another thread.
+  const std::lock_guard<std::mutex> l(twoway_kernel_compile_mutex);
+
   const std::tuple<bool, CUfunction&> t = get_kernel<eT1, eT2>(twoway_kernels, num);
   if (std::get<0>(t) == true)
     {

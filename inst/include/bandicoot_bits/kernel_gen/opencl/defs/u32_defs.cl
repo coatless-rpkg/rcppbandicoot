@@ -40,6 +40,7 @@ inline uint coot_to_uint_cx_float(const   cx_float x) { return (uint) x.x; }
 inline uint coot_to_uint_double(const       double x) { return (uint) x;   }
 inline uint coot_to_uint_cx_double(const cx_double x) { return (uint) x.x; }
 #endif
+inline uint coot_to_uint_floatmax(const   floatmax x) { return (uint) x;   }
 
 inline uint coot_absdiff_uint(const uint x, const uint y) { return (x > y) ? (x - y) : (y - x); }
 inline uint coot_conj_uint(const uint x) { return x; }

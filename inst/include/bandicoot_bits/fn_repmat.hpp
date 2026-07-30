@@ -31,3 +31,21 @@ repmat(const T1& A, const uword r, const uword c)
 
   return Op<T1, op_repmat>(A, r, c);
   }
+
+
+
+template<typename T1>
+coot_warn_unused
+inline
+typename
+enable_if2
+  <
+  is_coot_type<T1>::value,
+  const Op<T1, op_repmat>
+  >::result
+repmat(const Op<T1, op_repmat>& A, const uword r, const uword c)
+  {
+  coot_debug_sigprint();
+
+  return Op<T1, op_repmat>(A.m, r * A.aux_uword_a, c * A.aux_uword_b);
+  }

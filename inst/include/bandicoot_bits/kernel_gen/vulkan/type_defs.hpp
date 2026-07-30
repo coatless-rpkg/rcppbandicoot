@@ -141,3 +141,13 @@ struct type_def<VULKAN_BACKEND, s64>
       #include "defs/s64_defs.glsl"
       ; }
   };
+
+
+
+template<>
+struct type_def<VULKAN_BACKEND, floatmax>
+  {
+  static inline constexpr auto& src_str() { return
+      #include "defs/fm_defs.glsl"
+      ; }
+  };

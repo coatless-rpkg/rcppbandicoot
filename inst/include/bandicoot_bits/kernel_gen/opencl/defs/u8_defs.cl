@@ -40,6 +40,7 @@ inline uchar coot_to_uchar_cx_float(const   cx_float x) { return (uchar) x.x; }
 inline uchar coot_to_uchar_double(const       double x) { return (uchar) x;   }
 inline uchar coot_to_uchar_cx_double(const cx_double x) { return (uchar) x.x; }
 #endif
+inline uchar coot_to_uchar_floatmax(const   floatmax x) { return (uchar) x;   }
 
 inline uchar coot_absdiff_uchar(const uchar x, const uchar y) { return (x > y) ? (x - y) : (y - x); }
 inline uchar coot_conj_uchar(const uchar x) { return x; }

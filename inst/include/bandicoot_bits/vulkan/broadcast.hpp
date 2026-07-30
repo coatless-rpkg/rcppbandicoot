@@ -48,13 +48,14 @@ broadcast_op(const twoway_kernel_id::enum_id num,
   pipeline_t* pipe_ptr = nullptr;
   switch (num)
     {
-    case twoway_kernel_id::broadcast_set:        pipe_ptr = &rt.get_gen_broadcast_set_pipeline<eT1, eT2>();        break;
-    case twoway_kernel_id::broadcast_plus:       pipe_ptr = &rt.get_gen_broadcast_plus_pipeline<eT1, eT2>();       break;
-    case twoway_kernel_id::broadcast_minus_pre:  pipe_ptr = &rt.get_gen_broadcast_minus_pre_pipeline<eT1, eT2>();  break;
-    case twoway_kernel_id::broadcast_minus_post: pipe_ptr = &rt.get_gen_broadcast_minus_post_pipeline<eT1, eT2>(); break;
-    case twoway_kernel_id::broadcast_schur:      pipe_ptr = &rt.get_gen_broadcast_schur_pipeline<eT1, eT2>();      break;
-    case twoway_kernel_id::broadcast_div_pre:    pipe_ptr = &rt.get_gen_broadcast_div_pre_pipeline<eT1, eT2>();    break;
-    case twoway_kernel_id::broadcast_div_post:   pipe_ptr = &rt.get_gen_broadcast_div_post_pipeline<eT1, eT2>();   break;
+    // These kernels have been removed and so this whole function should be able to be removed in the future.
+    // case twoway_kernel_id::broadcast_set:        pipe_ptr = &rt.get_gen_broadcast_set_pipeline<eT1, eT2>();        break;
+    // case twoway_kernel_id::broadcast_plus:       pipe_ptr = &rt.get_gen_broadcast_plus_pipeline<eT1, eT2>();       break;
+    // case twoway_kernel_id::broadcast_minus_pre:  pipe_ptr = &rt.get_gen_broadcast_minus_pre_pipeline<eT1, eT2>();  break;
+    // case twoway_kernel_id::broadcast_minus_post: pipe_ptr = &rt.get_gen_broadcast_minus_post_pipeline<eT1, eT2>(); break;
+    // case twoway_kernel_id::broadcast_schur:      pipe_ptr = &rt.get_gen_broadcast_schur_pipeline<eT1, eT2>();      break;
+    // case twoway_kernel_id::broadcast_div_pre:    pipe_ptr = &rt.get_gen_broadcast_div_pre_pipeline<eT1, eT2>();    break;
+    // case twoway_kernel_id::broadcast_div_post:   pipe_ptr = &rt.get_gen_broadcast_div_post_pipeline<eT1, eT2>();   break;
     default:
       coot_stop_runtime_error("coot::vulkan::broadcast_op(): unsupported operation");
       return;

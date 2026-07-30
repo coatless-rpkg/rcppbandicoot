@@ -40,6 +40,7 @@ inline float coot_to_float_cx_float(const   cx_float x) { return x.x;         }
 inline float coot_to_float_double(const       double x) { return (float) x;   }
 inline float coot_to_float_cx_double(const cx_double x) { return (float) x.x; }
 #endif
+inline float coot_to_float_floatmax(const   floatmax x) { return x;           }
 
 inline float coot_absdiff_float(const float x, const float y) { return fabs(x - y); }
 inline float coot_conj_float(const float x) { return x; }

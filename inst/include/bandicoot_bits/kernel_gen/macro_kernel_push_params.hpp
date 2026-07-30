@@ -126,6 +126,14 @@ struct vk_buffer_decl< subview_elem2<eT, subview_elem2_all_rows<eT, T2>>, start_
   vk_buffer_decl< typename elem_vectorised_arg_type<T2>::result, start_binding + 1, concat_str< arg_name_prefix, elem2_col_index_prefix > >
   > { };
 
+template<typename T1, unsigned int mode, typename TB, size_t start_binding, typename arg_name_prefix>
+struct vk_buffer_decl< subview_each2< T1, mode, TB >, start_binding, arg_name_prefix > : public nested_concat_str
+  <
+  vk_buffer_decl< typename elem_vectorised_arg_type<T1>::result, start_binding, concat_str< arg_name_prefix, each2_p_name > >,
+  concat_str< space_semicolon >,
+  vk_buffer_decl< typename elem_vectorised_arg_type<TB>::result, start_binding + 1, concat_str< arg_name_prefix, each2_i_name > >
+  > { };
+
 template<typename T1, size_t src_dims, bool proxy_uses_ref, size_t start_binding, typename arg_name_prefix>
 struct vk_buffer_decl< ProxyColCast<T1, src_dims, proxy_uses_ref>, start_binding, arg_name_prefix > : public vk_buffer_decl<T1, start_binding, arg_name_prefix> { };
 
@@ -231,6 +239,11 @@ struct vk_buffer_decl< Op<T1, op_symmatl>, start_binding, arg_name_prefix > : pu
 
 template<typename T1, size_t start_binding, typename arg_name_prefix>
 struct vk_buffer_decl< Op<T1, op_symmatu>, start_binding, arg_name_prefix > : public vk_buffer_decl<T1, start_binding, arg_name_prefix> { };
+
+
+
+template<typename T1, size_t start_binding, typename arg_name_prefix>
+struct vk_buffer_decl< Op<T1, op_repmat>, start_binding, arg_name_prefix > : public vk_buffer_decl<T1, start_binding, arg_name_prefix> { };
 
 
 

@@ -348,6 +348,38 @@ class SizeProxy< subview_elem2<eT, subview_elem2_all_rows<eT, T2>> >
 
 
 
+// subview_each2
+template<typename T1, unsigned int mode, typename TB>
+class SizeProxy< subview_each2<T1, mode, TB> >
+  {
+  public:
+
+  typedef typename T1::elem_type                   elem_type;
+  typedef typename get_pod_type<elem_type>::result pod_type;
+  typedef subview_each2<T1, mode, TB>              stored_type;
+
+  static constexpr bool is_row = T1::is_row;
+  static constexpr bool is_col = T1::is_col;
+
+  coot_aligned const subview_each2<T1, mode, TB>& Q;
+  coot_aligned const SizeProxy<T1> S1;
+  coot_aligned const SizeProxy<TB> S2;
+
+  inline explicit SizeProxy(const subview_each2<T1, mode, TB>& A)
+    : Q(A)
+    , S1(A.P)
+    , S2(A.base_indices.get_ref())
+    {
+    coot_debug_sigprint();
+    }
+
+  coot_inline uword get_n_rows() const { return (mode == 0) ? S1.get_n_rows() : S2.get_n_elem(); }
+  coot_inline uword get_n_cols() const { return (mode == 0) ? S2.get_n_elem() : S1.get_n_cols(); }
+  coot_inline uword get_n_elem() const { return get_n_rows() * get_n_cols();                     }
+  };
+
+
+
 // eOp
 template<typename T1, typename eop_type>
 class SizeProxy< eOp<T1, eop_type> >

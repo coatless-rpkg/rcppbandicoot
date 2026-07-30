@@ -321,6 +321,21 @@ struct kernel_param_str< subview_elem2< eT, subview_elem2_all_rows<eT, T2> >, i,
 
 
 //
+// subview_each2<T1, mode, TB>
+// Combined parameters of T1 and TB, under prefixes "_p" (parent) and "_i" (indices)
+//
+
+template<typename T1, unsigned int mode, typename TB, size_t i, coot_backend_t backend, typename arg_name_prefix, typename sep>
+struct kernel_param_str< subview_each2<T1, mode, TB>, i, backend, arg_name_prefix, sep > : public nested_concat_str
+  <
+  kernel_param_str< T1, i, backend, concat_str< arg_name_prefix, each2_p_name >, sep >,
+  concat_str< sep >,
+  kernel_param_str< TB, i, backend, concat_str< arg_name_prefix, each2_i_name >, sep >
+  > { };
+
+
+
+//
 // Cube<eT>
 // 4 parameters: pointer, n_rows, n_cols, n_slices
 //
@@ -600,3 +615,26 @@ struct kernel_param_str< Op<T1, op_symmatu>, i, backend, arg_name_prefix, sep > 
 
 template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename sep>
 struct kernel_param_str< Op<T1, op_symmatl>, i, backend, arg_name_prefix, sep > : public kernel_param_str_symmat< T1, i, backend, arg_name_prefix, sep > { };
+
+
+
+//
+// Op<T1, op_repmat>: four extra uword arguments for n_rows and n_cols of the T1, and then copies_per_row and copies_per_col
+//
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename sep>
+struct kernel_param_str< Op<T1, op_repmat>, i, backend, arg_name_prefix, sep > : public nested_concat_str
+  <
+  kernel_param_str< T1, i, backend, concat_str< arg_name_prefix, arg_prefix_name >, sep >,
+  concat_str
+    <
+    sep,
+    uword_arg<n_rows_name, arg_name_prefix>,         // UWORD name_n_rows
+    sep,
+    uword_arg<n_cols_name, arg_name_prefix>,         // UWORD name_n_cols
+    sep,
+    uword_arg<copies_per_row_name, arg_name_prefix>, // UWORD name_copies_per_row
+    sep,
+    uword_arg<copies_per_col_name, arg_name_prefix>  // UWORD name_copies_per_cols
+    >
+  > { };

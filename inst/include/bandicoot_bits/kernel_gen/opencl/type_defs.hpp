@@ -146,3 +146,13 @@ struct type_def<CL_BACKEND, std::complex<double> >
       #include "defs/z_defs.cl"
       ; }
   };
+
+
+
+template<>
+struct type_def<CL_BACKEND, floatmax>
+  {
+  static inline constexpr auto& src_str() { return
+      #include "defs/fm_defs.cl"
+      ; }
+  };

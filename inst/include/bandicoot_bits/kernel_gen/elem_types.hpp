@@ -215,6 +215,15 @@ struct elem_types_inner< subview_elem2< eT, subview_elem2_all_rows<eT, T2> > >
   typedef typename concat_types< typename expand_cx_type<eT>::result, typename elem_types_inner< T2 >::result >::result result;
   };
 
+template<typename T1, unsigned int mode, typename TB>
+struct elem_types_inner< subview_each2< T1, mode, TB > >
+  {
+  typedef typename concat_types<
+      typename elem_types_inner< T1 >::result,
+      typename elem_types_inner< TB >::result
+  >::result result;
+  };
+
 template<typename T1, size_t src_dims, bool proxy_uses_ref>
 struct elem_types_inner< ProxyColCast<T1, src_dims, proxy_uses_ref> >
   {
@@ -307,6 +316,12 @@ struct elem_types_inner< Op<T1, op_symmatu> >
 
 template<typename T1>
 struct elem_types_inner< Op<T1, op_symmatl> >
+  {
+  typedef typename elem_types_inner<T1>::result result;
+  };
+
+template<typename T1>
+struct elem_types_inner< Op<T1, op_repmat> >
   {
   typedef typename elem_types_inner<T1>::result result;
   };

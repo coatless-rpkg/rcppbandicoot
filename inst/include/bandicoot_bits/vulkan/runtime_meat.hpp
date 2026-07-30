@@ -603,6 +603,8 @@ inline
 pipeline_t&
 runtime_t::get_pipeline_from_source(const std::string& name, const std::string& glsl_source, const size_t push_constant_size, const uint32_t num_buffers)
   {
+  pipeline_mutex.lock();
+
   auto it = pipelines.find(name);
   if (it != pipelines.end())
     {
@@ -669,6 +671,7 @@ runtime_t::get_pipeline_from_source(const std::string& name, const std::string& 
   coot_check_vk_error(result, "coot::vulkan::runtime_t::get_pipeline_from_source(): vkCreateComputePipelines() failed for " + name);
 
   pipelines[name] = p;
+  pipeline_mutex.unlock();
   return pipelines[name];
   }
 
@@ -678,6 +681,8 @@ inline
 pipeline_t&
 runtime_t::get_pipeline_from_source(const std::string& name, const std::string& glsl_source, const std::vector<std::string>& macros, const size_t push_constant_size, const uint32_t num_buffers)
   {
+  pipeline_mutex.lock();
+
   auto it = pipelines.find(name);
   if (it != pipelines.end())
     {
@@ -744,6 +749,7 @@ runtime_t::get_pipeline_from_source(const std::string& name, const std::string& 
   coot_check_vk_error(result, "coot::vulkan::runtime_t::get_pipeline_from_source(): vkCreateComputePipelines() failed for " + name);
 
   pipelines[name] = p;
+  pipeline_mutex.unlock();
   return pipelines[name];
   }
 
@@ -771,7 +777,10 @@ runtime_t::get_kernel()
 
   const std::string name = std::string(&(kernel_gen::full_name<num, typename ProxyTypes::held_type...>::str()[0]));
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -1040,7 +1049,10 @@ runtime_t::get_gen_eye_pipeline()
   const std::string name =
       (is_float<eT>::value) ? "gen_eye_f32" : "gen_eye_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -1062,7 +1074,10 @@ runtime_t::get_gen_fill_pipeline()
   const std::string name =
       (is_float<eT>::value) ? "gen_fill_f32" : "gen_fill_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -1085,7 +1100,10 @@ runtime_t::get_gen_copy_pipeline()
   const std::string in_prefix = (is_float<eT_in>::value) ? "f32" : "f64";
   const std::string name = "gen_copy_" + out_prefix + "_" + in_prefix;
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -1107,7 +1125,10 @@ runtime_t::get_gen_copy_replace_pipeline()
   const std::string name =
       (is_float<eT>::value) ? "gen_copy_replace_f32" : "gen_copy_replace_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -1808,7 +1829,10 @@ runtime_t::get_gen_accu_pipeline()
 
   const std::string name = (is_float<eT>::value) ? (has_fp64() ? "gen_accu_f32_f64" : "gen_accu_f32") : "gen_accu_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -1829,7 +1853,10 @@ runtime_t::get_gen_accu_subview_pipeline()
 
   const std::string name = (is_float<eT>::value) ? (has_fp64() ? "gen_accu_subview_f32_f64" : "gen_accu_subview_f32") : "gen_accu_subview_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -1851,7 +1878,10 @@ runtime_t::get_gen_dot_pipeline()
   const std::string name =
       (is_float<eT>::value) ? (has_fp64() ? "gen_dot_f32_f64" : "gen_dot_f32") : "gen_dot_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -1872,7 +1902,10 @@ runtime_t::get_gen_rel_eq_scalar_pipeline()
 
   const std::string name = (is_float<eT>::value) ? "gen_rel_eq_scalar_f32" : "gen_rel_eq_scalar_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -1893,7 +1926,10 @@ runtime_t::get_gen_rel_neq_scalar_pipeline()
 
   const std::string name = (is_float<eT>::value) ? "gen_rel_neq_scalar_f32" : "gen_rel_neq_scalar_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     return it->second;
 
@@ -1912,7 +1948,10 @@ runtime_t::get_gen_rel_gt_scalar_pipeline()
 
   const std::string name = (is_float<eT>::value) ? "gen_rel_gt_scalar_f32" : "gen_rel_gt_scalar_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     return it->second;
 
@@ -1931,7 +1970,10 @@ runtime_t::get_gen_rel_lt_scalar_pipeline()
 
   const std::string name = (is_float<eT>::value) ? "gen_rel_lt_scalar_f32" : "gen_rel_lt_scalar_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     return it->second;
 
@@ -1950,7 +1992,10 @@ runtime_t::get_gen_rel_gteq_scalar_pipeline()
 
   const std::string name = (is_float<eT>::value) ? "gen_rel_gteq_scalar_f32" : "gen_rel_gteq_scalar_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     return it->second;
 
@@ -1969,7 +2014,10 @@ runtime_t::get_gen_rel_lteq_scalar_pipeline()
 
   const std::string name = (is_float<eT>::value) ? "gen_rel_lteq_scalar_f32" : "gen_rel_lteq_scalar_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     return it->second;
 
@@ -1988,7 +2036,10 @@ runtime_t::get_gen_all_neq_vec_pipeline()
 
   const std::string name = (is_uword<eT>::value) ? "gen_all_neq_vec_u64" : (is_float<eT>::value) ? "gen_all_neq_vec_f32" : "gen_all_neq_vec_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -2012,7 +2063,10 @@ runtime_t::get_gen_all_neq_pipeline(const bool colwise)
   const std::string dir_str = colwise ? "colwise" : "rowwise";
   const std::string name = "gen_all_neq_" + dir_str + "_" + type_str;
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -2327,7 +2381,10 @@ runtime_t::get_gen_min_vec_pipeline()
 
   const std::string name = is_float<eT>::value ? "gen_min_vec_f32" : "gen_min_vec_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -2348,7 +2405,10 @@ runtime_t::get_gen_max_vec_pipeline()
 
   const std::string name = is_float<eT>::value ? "gen_max_vec_f32" : "gen_max_vec_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -2369,7 +2429,10 @@ runtime_t::get_gen_min_colwise_pipeline()
 
   const std::string name = is_float<eT>::value ? "gen_min_colwise_f32" : "gen_min_colwise_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -2390,7 +2453,10 @@ runtime_t::get_gen_min_rowwise_pipeline()
 
   const std::string name = is_float<eT>::value ? "gen_min_rowwise_f32" : "gen_min_rowwise_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -2411,7 +2477,10 @@ runtime_t::get_gen_max_colwise_pipeline()
 
   const std::string name = is_float<eT>::value ? "gen_max_colwise_f32" : "gen_max_colwise_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -2432,7 +2501,10 @@ runtime_t::get_gen_max_rowwise_pipeline()
 
   const std::string name = is_float<eT>::value ? "gen_max_rowwise_f32" : "gen_max_rowwise_f64";
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     {
     return it->second;
@@ -2534,7 +2606,11 @@ pipeline_t&
 runtime_t::get_gen_rel_isfinite_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_rel_isfinite_f32" : "gen_rel_isfinite_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_rel_isfinite_kernel<eT>(), push_size<rel_scalar_push_t>(), 2);
   }
@@ -2547,7 +2623,11 @@ pipeline_t&
 runtime_t::get_gen_rel_isinf_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_rel_isinf_f32" : "gen_rel_isinf_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_rel_isinf_kernel<eT>(), push_size<rel_scalar_push_t>(), 2);
   }
@@ -2560,7 +2640,11 @@ pipeline_t&
 runtime_t::get_gen_rel_isnan_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_rel_isnan_f32" : "gen_rel_isnan_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_rel_isnan_kernel<eT>(), push_size<rel_scalar_push_t>(), 2);
   }
@@ -2605,7 +2689,11 @@ pipeline_t&
 runtime_t::get_gen_trans_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_trans_f32" : "gen_trans_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_trans_kernel<eT>(), push_size<trans_push_t>(), 2);
   }
@@ -2653,7 +2741,11 @@ pipeline_t&
 runtime_t::get_gen_reorder_cols_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_reorder_cols_f32" : "gen_reorder_cols_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_reorder_cols_kernel<eT>(), push_size<reorder_cols_push_t>(), 3);
   }
@@ -2776,7 +2868,11 @@ pipeline_t&
 runtime_t::get_gen_index_min_colwise_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_index_min_colwise_f32" : "gen_index_min_colwise_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_index_min_colwise_kernel<eT>(), push_size<index_reduce_push_t>(), 2);
   }
@@ -2789,7 +2885,11 @@ pipeline_t&
 runtime_t::get_gen_index_min_rowwise_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_index_min_rowwise_f32" : "gen_index_min_rowwise_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_index_min_rowwise_kernel<eT>(), push_size<index_reduce_push_t>(), 2);
   }
@@ -2802,7 +2902,11 @@ pipeline_t&
 runtime_t::get_gen_index_min_vec_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_index_min_vec_f32" : "gen_index_min_vec_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_index_min_vec_kernel<eT>(), push_size<index_vec_push_t>(), 3);
   }
@@ -2925,7 +3029,11 @@ pipeline_t&
 runtime_t::get_gen_index_max_colwise_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_index_max_colwise_f32" : "gen_index_max_colwise_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_index_max_colwise_kernel<eT>(), push_size<index_reduce_push_t>(), 2);
   }
@@ -2938,7 +3046,11 @@ pipeline_t&
 runtime_t::get_gen_index_max_rowwise_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_index_max_rowwise_f32" : "gen_index_max_rowwise_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_index_max_rowwise_kernel<eT>(), push_size<index_reduce_push_t>(), 2);
   }
@@ -2951,7 +3063,11 @@ pipeline_t&
 runtime_t::get_gen_index_max_vec_pipeline()
   {
   const std::string name = is_float<eT>::value ? "gen_index_max_vec_f32" : "gen_index_max_vec_f64";
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_index_max_vec_kernel<eT>(), push_size<index_vec_push_t>(), 3);
   }
@@ -3002,7 +3118,11 @@ runtime_t::generate_broadcast_kernel(const std::string& op_expr)
 template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_gen_broadcast_set_pipeline()
   {
   const std::string name = std::string("gen_broadcast_set_") + (is_float<eT_src>::value ? "f32" : "f64") + "_" + (is_float<eT_dest>::value ? "f32" : "f64");
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_broadcast_kernel<eT_src, eT_dest>("s"), push_size<broadcast_push_t>(), 2);
   }
@@ -3010,7 +3130,11 @@ template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_ge
 template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_gen_broadcast_plus_pipeline()
   {
   const std::string name = std::string("gen_broadcast_plus_") + (is_float<eT_src>::value ? "f32" : "f64") + "_" + (is_float<eT_dest>::value ? "f32" : "f64");
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_broadcast_kernel<eT_src, eT_dest>("d + s"), push_size<broadcast_push_t>(), 2);
   }
@@ -3018,7 +3142,11 @@ template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_ge
 template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_gen_broadcast_minus_pre_pipeline()
   {
   const std::string name = std::string("gen_broadcast_minus_pre_") + (is_float<eT_src>::value ? "f32" : "f64") + "_" + (is_float<eT_dest>::value ? "f32" : "f64");
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_broadcast_kernel<eT_src, eT_dest>("s - d"), push_size<broadcast_push_t>(), 2);
   }
@@ -3026,7 +3154,11 @@ template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_ge
 template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_gen_broadcast_minus_post_pipeline()
   {
   const std::string name = std::string("gen_broadcast_minus_post_") + (is_float<eT_src>::value ? "f32" : "f64") + "_" + (is_float<eT_dest>::value ? "f32" : "f64");
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_broadcast_kernel<eT_src, eT_dest>("d - s"), push_size<broadcast_push_t>(), 2);
   }
@@ -3034,7 +3166,11 @@ template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_ge
 template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_gen_broadcast_schur_pipeline()
   {
   const std::string name = std::string("gen_broadcast_schur_") + (is_float<eT_src>::value ? "f32" : "f64") + "_" + (is_float<eT_dest>::value ? "f32" : "f64");
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_broadcast_kernel<eT_src, eT_dest>("d * s"), push_size<broadcast_push_t>(), 2);
   }
@@ -3042,7 +3178,11 @@ template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_ge
 template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_gen_broadcast_div_pre_pipeline()
   {
   const std::string name = std::string("gen_broadcast_div_pre_") + (is_float<eT_src>::value ? "f32" : "f64") + "_" + (is_float<eT_dest>::value ? "f32" : "f64");
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_broadcast_kernel<eT_src, eT_dest>("s / d"), push_size<broadcast_push_t>(), 2);
   }
@@ -3050,7 +3190,11 @@ template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_ge
 template<typename eT_src, typename eT_dest> inline pipeline_t& runtime_t::get_gen_broadcast_div_post_pipeline()
   {
   const std::string name = std::string("gen_broadcast_div_post_") + (is_float<eT_src>::value ? "f32" : "f64") + "_" + (is_float<eT_dest>::value ? "f32" : "f64");
+
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end()) return it->second;
   return get_pipeline_from_source(name, generate_broadcast_kernel<eT_src, eT_dest>("d / s"), push_size<broadcast_push_t>(), 2);
   }
@@ -3181,7 +3325,10 @@ runtime_t::get_gen_gather_pipeline()
   const std::string out_str = is_float<eT_out>::value ? "f32" : "f64";
   const std::string name = "gen_gather_" + in_str + "_to_" + out_str;
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     return it->second;
 
@@ -3285,7 +3432,10 @@ runtime_t::get_gen_gemm_pipeline()
   const std::string tb_str = do_trans_B ? "t" : "f";
   const std::string name = "gen_gemm_" + type_str + "_" + ta_str + tb_str;
 
+  pipeline_mutex.lock();
   auto it = pipelines.find(name);
+  pipeline_mutex.unlock();
+
   if (it != pipelines.end())
     return it->second;
 

@@ -126,6 +126,13 @@ struct runtime_t
   std::string                           gpu_arch_str;
   std::string                           src_preamble;
 
+  coot_aligned std::mutex             gen_kernel_compile_mutex;
+  coot_aligned std::mutex         zeroway_kernel_compile_mutex;
+  coot_aligned std::mutex          oneway_kernel_compile_mutex;
+  coot_aligned std::mutex     oneway_real_kernel_compile_mutex;
+  coot_aligned std::mutex oneway_integral_kernel_compile_mutex;
+  coot_aligned std::mutex          twoway_kernel_compile_mutex;
+
   coot_aligned std::unordered_map<std::string, CUfunction>                                                           gen_kernels;
   coot_aligned std::unordered_map<zeroway_kernel_id::enum_id, CUfunction>                                            zeroway_kernels;
   coot_aligned rt_common::kernels_t<std::unordered_map<oneway_kernel_id::enum_id, CUfunction>>                       oneway_kernels;
@@ -134,7 +141,6 @@ struct runtime_t
   coot_aligned rt_common::kernels_t<rt_common::kernels_t<std::unordered_map<twoway_kernel_id::enum_id, CUfunction>>> twoway_kernels;
 
   coot_aligned CUdevice cuDevice;
-  coot_aligned CUcontext context;
   };
 
 

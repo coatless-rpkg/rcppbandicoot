@@ -40,6 +40,7 @@ inline ulong coot_to_ulong_cx_float(const   cx_float x) { return (ulong) x.x; }
 inline ulong coot_to_ulong_double(const       double x) { return (ulong) x;   }
 inline ulong coot_to_ulong_cx_double(const cx_double x) { return (ulong) x.x; }
 #endif
+inline ulong coot_to_ulong_floatmax(const   floatmax x) { return (ulong) x;   }
 
 inline ulong coot_absdiff_ulong(const ulong x, const ulong y) { return (x > y) ? (x - y) : (y - x); }
 inline ulong coot_conj_ulong(const ulong x) { return x; }

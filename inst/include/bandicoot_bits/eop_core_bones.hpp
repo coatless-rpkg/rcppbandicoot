@@ -266,7 +266,7 @@ struct eop_fp_cast_func_body_helper<eT, fp_eT, fp_func_name, backend, true> : pu
   kernel_gen::paren_x
   > { };
 
-template<typename eT, typename fp_func_name, coot_backend_t backend, typename fp_eT = typename promote_fp_type<eT>::result>
+template<typename eT, typename fp_func_name, coot_backend_t backend, typename fp_eT =  typename promote_safe_fp_type<eT>::result>
 struct eop_fp_cast_func_body : public eop_fp_cast_func_body_helper<eT, fp_eT, fp_func_name, backend, is_real<eT>::value> { };
 
 class eop_sqrt              : public eop_core<eop_sqrt>
@@ -277,7 +277,7 @@ class eop_sqrt              : public eop_core<eop_sqrt>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type >::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_sqrt(const eT x) { return sqrt(x); }
@@ -339,7 +339,7 @@ class eop_log               : public eop_core<eop_log>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_log(const eT x) { return log(x); }
@@ -361,7 +361,7 @@ class eop_log2              : public eop_core<eop_log2>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_log2(const eT x) { return log2(x); }
@@ -383,7 +383,7 @@ class eop_log10             : public eop_core<eop_log10>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_log10(const eT x) { return log10(x); }
@@ -423,24 +423,34 @@ struct eop_trunc_log_func : public kernel_gen::concat_str
   eop_trunc_log_func_inner5
   > { };
 
-struct eop_trunc_log_func_inner6 { static inline constexpr auto& str() { return "(x) <= 0) ? log(DBL_MIN) : (coot_isinf"; } };
-struct eop_trunc_log_func_inner7 { static inline constexpr auto& str() { return "(x)) ? log(DBL_MAX) : log(";             } };
-struct eop_trunc_log_func_inner8 { static inline constexpr auto& str() { return "(x)))";                                  } };
+struct eop_trunc_log_func_inner6 { static inline constexpr auto& str() { return "(x) <= 0) ? log(coot_type_minpos"; } };
+struct eop_trunc_log_func_inner7 { static inline constexpr auto& str() { return "(0))) : (coot_isinf";              } };
+struct eop_trunc_log_func_inner8 { static inline constexpr auto& str() { return "(x)) ? log(coot_type_max";         } };
+struct eop_trunc_log_func_inner9 { static inline constexpr auto& str() { return "(0))) : log(";                     } };
+struct eop_trunc_log_func_inner10 { static inline constexpr auto& str() { return "(x))))";                          } };
 
 template<typename eT, coot_backend_t backend>
 struct eop_trunc_log_func<false, eT, backend> : public kernel_gen::concat_str
   <
-  // eT((double(x) <= 0) ? eT(log(DBL_MIN)) : (coot_isinf(double(x)) ? log(DBL_MAX) : log(double(x))))
-  kernel_gen::conv_elem_type_str<eT, double, backend>,
-  kernel_gen::open_paren,
-  kernel_gen::conv_elem_type_str<double, eT, backend>,
+  // eT((double(x) <= 0) ? log(coot_type_minpos(eT(0))) : (coot_isinf(double(x)) ? log(coot_type_max(eT(0))) : log(double(x))))
+  kernel_gen::conv_elem_type_str<eT, safe_type<double>::result, backend>,
+  kernel_gen::double_open_paren,
+  kernel_gen::conv_elem_type_str<safe_type<double>::result, eT, backend>,
   eop_trunc_log_func_inner6,
-  kernel_gen::func_name_suffix<double, backend>,
+  kernel_gen::func_name_suffix<safe_type<double>::result, backend>,
   kernel_gen::open_paren,
-  kernel_gen::conv_elem_type_str<double, eT, backend>,
+  kernel_gen::conv_elem_type_str<safe_type<double>::result, int, backend>,
   eop_trunc_log_func_inner7,
-  kernel_gen::conv_elem_type_str<double, eT, backend>,
-  eop_trunc_log_func_inner8
+  kernel_gen::func_name_suffix<safe_type<double>::result, backend>,
+  kernel_gen::open_paren,
+  kernel_gen::conv_elem_type_str<safe_type<double>::result, eT, backend>,
+  eop_trunc_log_func_inner8,
+  kernel_gen::func_name_suffix<safe_type<double>::result, backend>,
+  kernel_gen::open_paren,
+  kernel_gen::conv_elem_type_str<safe_type<double>::result, int, backend>,
+  eop_trunc_log_func_inner9,
+  kernel_gen::conv_elem_type_str<safe_type<double>::result, eT, backend>,
+  eop_trunc_log_func_inner10
   > { };
 
 
@@ -453,7 +463,7 @@ class eop_trunc_log         : public eop_core<eop_trunc_log>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< double >;
+  using extra_kernel_types = std::tuple< typename safe_type< double >::result >;
 
   // coot_trunc_log
   struct prefix    { static inline constexpr auto& str() { return "trl";            } };
@@ -474,7 +484,7 @@ class eop_exp               : public eop_core<eop_exp>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_exp(const eT x) { return exp(x); }
@@ -496,7 +506,7 @@ class eop_exp2              : public eop_core<eop_exp2>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_exp2(const eT x) { return exp2(x); }
@@ -518,7 +528,7 @@ class eop_exp10             : public eop_core<eop_exp10>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_exp10(const eT x) { return exp10(x); }
@@ -551,19 +561,29 @@ struct eop_trunc_exp_func : public kernel_gen::concat_str
   eop_trunc_exp_func_inner3
   > { };
 
-struct eop_trunc_exp_func_inner4 { static inline constexpr auto& str() { return "(x) >= log(DBL_MAX)) ? DBL_MAX : exp("; } };
-struct eop_trunc_exp_func_inner5 { static inline constexpr auto& str() { return "(x)))";                                 } };
+struct eop_trunc_exp_func_inner4 { static inline constexpr auto& str() { return "(x) >= log(coot_type_max"; } };
+struct eop_trunc_exp_func_inner5 { static inline constexpr auto& str() { return "(0)) : exp("; } };
+struct eop_trunc_exp_func_inner6 { static inline constexpr auto& str() { return "(x)))";        } };
 
 template<typename eT, coot_backend_t backend>
 struct eop_trunc_exp_func<false, eT, backend> : public kernel_gen::concat_str
   <
-  // eT((double(x) >= log(DBL_MAX)) ? DBL_MAX : exp(double(x)))
-  kernel_gen::conv_elem_type_str<eT, double, backend>,
+  // eT((double(x) >= log(coot_type_max(double(0)))) ? coot_type_max(double(0)) : exp(double(x)))
+  // (note that the type used may not be double; it may be a safe version for backends that don't support fp64)
+  kernel_gen::conv_elem_type_str<eT, safe_type<double>::result, backend>,
   kernel_gen::double_open_paren,
-  kernel_gen::conv_elem_type_str<double, eT, backend>,
+  kernel_gen::conv_elem_type_str<safe_type<double>::result, eT, backend>,
   eop_trunc_exp_func_inner4,
-  kernel_gen::conv_elem_type_str<double, eT, backend>,
-  eop_trunc_exp_func_inner5
+  kernel_gen::func_name_suffix<safe_type<double>::result, backend>,
+  kernel_gen::open_paren,
+  kernel_gen::conv_elem_type_str<safe_type<double>::result, eT, backend>,
+  eop_trunc_exp_func_inner2,
+  kernel_gen::func_name_suffix<safe_type<double>::result, backend>,
+  kernel_gen::open_paren,
+  kernel_gen::conv_elem_type_str<safe_type<double>::result, eT, backend>,
+  eop_trunc_exp_func_inner5,
+  kernel_gen::conv_elem_type_str<safe_type<double>::result, eT, backend>,
+  eop_trunc_exp_func_inner6
   > { };
 
 class eop_trunc_exp         : public eop_core<eop_trunc_exp>
@@ -574,7 +594,7 @@ class eop_trunc_exp         : public eop_core<eop_trunc_exp>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< double >;
+  using extra_kernel_types = std::tuple< typename safe_type< double >::result >;
 
   // coot_trunc_exp
   struct prefix    { static inline constexpr auto& str() { return "tre";            } };
@@ -595,7 +615,8 @@ class eop_cos               : public eop_core<eop_cos>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
+
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_cos(const eT x) { return cos(x); }
@@ -617,7 +638,7 @@ class eop_sin               : public eop_core<eop_sin>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_sin(const eT x) { return sin(x); }
@@ -639,7 +660,7 @@ class eop_tan               : public eop_core<eop_tan>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_tan(const eT x) { return tan(x); }
@@ -661,7 +682,7 @@ class eop_acos              : public eop_core<eop_acos>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_acos(const eT x) { return acos(x); }
@@ -683,7 +704,7 @@ class eop_asin              : public eop_core<eop_asin>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_asin(const eT x) { return asin(x); }
@@ -705,7 +726,7 @@ class eop_atan              : public eop_core<eop_atan>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_atan(const eT x) { return atan(x); }
@@ -727,7 +748,7 @@ class eop_cosh              : public eop_core<eop_cosh>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_cosh(const eT x) { return cosh(x); }
@@ -749,7 +770,7 @@ class eop_sinh              : public eop_core<eop_sinh>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_sinh(const eT x) { return sinh(x); }
@@ -771,7 +792,7 @@ class eop_tanh              : public eop_core<eop_tanh>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_tanh(const eT x) { return tanh(x); }
@@ -793,7 +814,7 @@ class eop_acosh             : public eop_core<eop_acosh>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_acosh(const eT x) { return acosh(x); }
@@ -815,7 +836,7 @@ class eop_asinh             : public eop_core<eop_asinh>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_asinh(const eT x) { return asinh(x); }
@@ -837,7 +858,7 @@ class eop_atanh             : public eop_core<eop_atanh>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_atanh(const eT x) { return atanh(x); }
@@ -871,6 +892,7 @@ struct eop_sinc_func_body_inner6 { static inline constexpr auto& str() { return 
 struct eop_sinc_func_body_inner7 { static inline constexpr auto& str() { return "(x) * COOT_PI)))";   } };
 
 // ((x == eT(0)) ? eT(1) : eT(sin(double(x) * COOT_PI) / (double(x) * COOT_PI)))
+// (note that the type used may not be double, for backends that might not support fp64)
 template<typename eT, coot_backend_t backend>
 struct eop_sinc_func_body_inner<eT, backend, false> : public kernel_gen::concat_str
   <
@@ -879,11 +901,11 @@ struct eop_sinc_func_body_inner<eT, backend, false> : public kernel_gen::concat_
   eop_sinc_func_body_inner2,
   kernel_gen::conv_elem_type_str<eT, int, backend>,
   eop_sinc_func_body_inner4,
-  kernel_gen::conv_elem_type_str<eT, double, backend>,
+  kernel_gen::conv_elem_type_str<eT, safe_type< double >::result, backend>,
   eop_sinc_func_body_inner5,
-  kernel_gen::conv_elem_type_str<double, eT, backend>,
+  kernel_gen::conv_elem_type_str<safe_type< double >::result, eT, backend>,
   eop_sinc_func_body_inner6,
-  kernel_gen::conv_elem_type_str<double, eT, backend>,
+  kernel_gen::conv_elem_type_str<safe_type< double >::result, eT, backend>,
   eop_sinc_func_body_inner7
   > { };
 
@@ -898,7 +920,7 @@ class eop_sinc              : public eop_core<eop_sinc>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< double >;
+  using extra_kernel_types = std::tuple< safe_type< double >::result >;
 
   // coot_sinc
   struct prefix    { static inline constexpr auto& str() { return "sc";        } };
@@ -969,7 +991,7 @@ struct eop_pow_func_body_inner<eT, fp_eT, backend, false> : public kernel_gen::c
   > { };
 
 template<typename eT, coot_backend_t backend>
-struct eop_pow_func_body : public eop_pow_func_body_inner< eT, typename promote_fp_type<eT>::result, backend, is_real<eT>::value > { };
+struct eop_pow_func_body : public eop_pow_func_body_inner< eT, typename promote_safe_fp_type<eT>::result, backend, is_real<eT>::value > { };
 
 class eop_pow               : public eop_core<eop_pow>
   {
@@ -979,7 +1001,7 @@ class eop_pow               : public eop_core<eop_pow>
   const static size_t num_args = 1;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // coot_pow
   struct prefix    { static inline constexpr auto& str() { return "P";        } };
@@ -1003,7 +1025,7 @@ class eop_floor             : public eop_core<eop_floor>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_floor(const eT x) { return floor(x); }
@@ -1025,7 +1047,7 @@ class eop_ceil              : public eop_core<eop_ceil>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_ceil(const eT x) { return ceil(x); }
@@ -1047,7 +1069,7 @@ class eop_round             : public eop_core<eop_round>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_round(const eT x) { return round(x); }
@@ -1072,7 +1094,7 @@ class eop_trunc             : public eop_core<eop_trunc>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // coot_trunc
   struct prefix    { static inline constexpr auto& str() { return "tr";         } };
@@ -1097,7 +1119,7 @@ class eop_sign              : public eop_core<eop_sign>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // no need for a definition---this is already in the basic definitions for the type
   struct prefix    { static inline constexpr auto& str() { return "s";         } };
@@ -1118,7 +1140,7 @@ class eop_erf               : public eop_core<eop_erf>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_erf(const eT x) { return erf(x); }
@@ -1140,7 +1162,7 @@ class eop_erfc              : public eop_core<eop_erfc>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_erfc(const eT x) { return erfc(x); }
@@ -1162,7 +1184,7 @@ class eop_lgamma            : public eop_core<eop_lgamma>
   const static size_t num_args = 0;
 
   template<typename T1>
-  using extra_kernel_types = std::tuple< typename promote_fp_type<typename T1::elem_type>::result >;
+  using extra_kernel_types = std::tuple< typename promote_safe_fp_type<typename T1::elem_type>::result >;
 
   // for floating-point types: (more complicated for other types)
   // inline eT coot_lgamma(const eT x) { return lgamma(x); }

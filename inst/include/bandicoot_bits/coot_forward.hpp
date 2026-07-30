@@ -135,6 +135,8 @@ class op_det;
 class op_symmatu;
 class op_symmatl;
 class op_pinv;
+class op_fliplr;
+class op_flipud;
 
 class op_row_as_mat;
 class op_col_as_mat;

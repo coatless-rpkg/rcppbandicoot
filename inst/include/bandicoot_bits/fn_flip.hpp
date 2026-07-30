@@ -1,4 +1,6 @@
-// Copyright 2026 Marcus Edel (http://www.kurg.org/)
+// SPDX-License-Identifier: Apache-2.0
+//
+// Copyright 2026 Andrew Furey (https://andrew.industries)
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,23 +16,24 @@
 
 
 
-R"(
-#version 450
-#ifdef COOT_USE_INT64
-#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
-#endif
+template<typename T1>
+coot_warn_unused
+inline
+const Op<T1, op_fliplr>
+fliplr(const T1& X)
+  {
+  coot_debug_sigprint();
 
-#define COOT_FN2(ARG1, ARG2) ARG1 ## ARG2
-#define COOT_FN(ARG1, ARG2) COOT_FN2(ARG1, ARG2)
-#define COOT_CONCAT(ARG1, ARG2) COOT_FN2(ARG1, ARG2)
+  return Op<T1, op_fliplr>(X.get_ref());
+  }
 
-#ifndef UWORD
-#define UWORD uint64_t
-#endif
+template<typename T1>
+coot_warn_unused
+inline
+const Op<T1, op_flipud>
+flipud(const T1& X)
+  {
+  coot_debug_sigprint();
 
-// NOTE: TODO: support for FP64 should be detected at kernel compilation time
-// and this typedef set accordingly
-#define floatmax double
-#define COOT_FLOATMAX_IS_DOUBLE
-
-)"
+  return Op<T1, op_flipud>(X.get_ref());
+  }

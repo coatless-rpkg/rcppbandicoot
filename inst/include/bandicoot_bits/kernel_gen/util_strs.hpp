@@ -91,6 +91,10 @@ struct eglue_arg1_name        { static inline constexpr auto& str() { return "_a
 struct eglue_arg2_name        { static inline constexpr auto& str() { return "_b";              } };
 struct eop_scalar_arg_name    { static inline constexpr auto& str() { return "a";               } };
 struct do_conj_name           { static inline constexpr auto& str() { return "_do_conj";        } };
+struct copies_per_row_name    { static inline constexpr auto& str() { return "_copies_per_row"; } };
+struct copies_per_col_name    { static inline constexpr auto& str() { return "_copies_per_col"; } };
+struct each2_p_name           { static inline constexpr auto& str() { return "_p";              } };
+struct each2_i_name           { static inline constexpr auto& str() { return "_i";              } };
 
 
 
