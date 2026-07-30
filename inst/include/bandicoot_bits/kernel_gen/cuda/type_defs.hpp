@@ -148,3 +148,14 @@ struct type_def<CUDA_BACKEND, std::complex<double> >
       #include "defs/z_defs.cu"
       ; }
   };
+
+
+
+template<>
+struct type_def<CUDA_BACKEND, floatmax>
+  {
+  // CUDA has no need for a floatmax type, so, all CUDA uses of the floatmax type will be 'double'.
+  static inline constexpr auto& src_str() { return
+      #include "defs/d_defs.cu"
+      ; }
+  };

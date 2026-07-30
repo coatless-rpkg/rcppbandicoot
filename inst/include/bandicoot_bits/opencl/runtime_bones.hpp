@@ -88,10 +88,10 @@ class runtime_t
   inline void release_memory(coot_cl_mem dev_mem);
 
   template<typename eT>
-  inline constexpr bool is_supported_type(const typename enable_if<is_supported_elem_type<eT>::value && !is_double<eT>::value && !is_fp16<eT>::value>::result* junk = 0) const { coot_ignore(junk); return true; }
+  inline constexpr bool is_supported_type(const typename enable_if<is_supported_elem_type<eT>::value && !is_double<eT>::value && !is_cx_double<eT>::value && !is_fp16<eT>::value>::result* junk = 0) const { coot_ignore(junk); return true; }
 
   template<typename eT>
-  inline bool is_supported_type(const typename enable_if<is_double<eT>::value>::result* junk = 0) { coot_ignore(junk); return has_float64(); }
+  inline bool is_supported_type(const typename enable_if<is_double<eT>::value || is_cx_double<eT>::value>::result* junk = 0) { coot_ignore(junk); return has_float64(); }
 
   template<typename eT>
   inline bool is_supported_type(const typename enable_if<is_fp16<eT>::value>::result* junk = 0) { coot_ignore(junk); return has_float16(); }
@@ -167,6 +167,14 @@ class runtime_t
   coot_aligned std::string      unique_host_device_id;
   coot_aligned std::string      src_preamble;
   coot_aligned std::string      src_prelims;
+
+  coot_aligned std::mutex             gen_kernel_compile_mutex;
+  coot_aligned std::mutex         zeroway_kernel_compile_mutex;
+  coot_aligned std::mutex          oneway_kernel_compile_mutex;
+  coot_aligned std::mutex     oneway_real_kernel_compile_mutex;
+  coot_aligned std::mutex oneway_integral_kernel_compile_mutex;
+  coot_aligned std::mutex          twoway_kernel_compile_mutex;
+  coot_aligned std::mutex      magma_real_kernel_compile_mutex;
 
   coot_aligned std::unordered_map<std::string, cl_kernel>                                                           gen_kernels;
   coot_aligned std::unordered_map<zeroway_kernel_id::enum_id, cl_kernel>                                            zeroway_kernels;

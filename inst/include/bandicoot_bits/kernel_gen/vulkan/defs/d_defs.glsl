@@ -12,6 +12,10 @@
 // limitations under the License.
 // ------------------------------------------------------------------------
 R"(
+
+#ifndef COOT_HAS_D_DEFS
+#define COOT_HAS_D_DEFS
+
 bool coot_is_fp(const double x)                     { return true; }
 bool coot_is_signed(const double x)                 { return true; }
 bool coot_isnan(const double x)                     { return isnan(x); }
@@ -45,4 +49,7 @@ double coot_plus(const double x, const double y)    { return x + y; }
 double coot_minus(const double x, const double y)   { return x - y; }
 double coot_times(const double x, const double y)   { return x * y; }
 double coot_div(const double x, const double y)     { return x / y; }
+
+#endif
+
 )"

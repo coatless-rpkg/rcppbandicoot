@@ -1103,6 +1103,14 @@ runtime_t::generate_kernel()
   {
   coot_debug_sigprint();
 
+  // Check for types that the runtime doesn't support.
+  typedef typename kernel_gen::elem_types< typename ProxyTypes::held_type... >::result eTs;
+  coot_check_runtime_error( !is_supported_type<double>() && (list_has_type<double, eTs>::value || list_has_type<cx_double, eTs>::value),
+      "opencl::generate_kernel(): kernel '" + std::string(kernel_gen::macro_kernel_name<num, typename ProxyTypes::held_type...>::str().data) + "' requires float64 support but this device does not support it; make sure you are not using vec/mat/cube, and instead use fvec/fmat/fcube!" );
+
+  coot_check_runtime_error( !is_supported_type<fp16>() && list_has_type<fp16, eTs>::value,
+      "opencl::generate_kernel(): kernel '" + std::string(kernel_gen::macro_kernel_name<num, typename ProxyTypes::held_type...>::str().data) + "' requires fp16 support but this device does not support it; make sure you are not using hvec/hmat/hcube in your code!");
+
   // Assemble the list of definitions necessary for the kernel.  This is a one-argument kernel so we just need:
   //  - COOT_KERNEL_NAME
   //  - COOT_OBJECT0
@@ -1242,6 +1250,9 @@ inline
 cl_kernel
 runtime_t::get_kernel()
   {
+  // Lock the mutex in case another thread requests this kernel while we are compiling.
+  const std::lock_guard<std::mutex> l(gen_kernel_compile_mutex);
+
   const std::tuple<bool, cl_kernel&> t = get_kernel<num, ProxyTypes...>(gen_kernels);
   if (std::get<0>(t) == true)
     {
@@ -1264,6 +1275,9 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const zeroway_kernel_id::enum_id num)
   {
+  // Lock the mutex in case another thread requests this kernel while we are compiling.
+  const std::lock_guard<std::mutex> l(zeroway_kernel_compile_mutex);
+
   const std::tuple<bool, cl_kernel&> t = get_kernel(zeroway_kernels, num);
   if (std::get<0>(t) == true)
     {
@@ -1287,6 +1301,9 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const oneway_kernel_id::enum_id num)
   {
+  // Lock the mutex in case another thread requests this kernel while we are compiling.
+  const std::lock_guard<std::mutex> l(oneway_kernel_compile_mutex);
+
   const std::tuple<bool, cl_kernel&> t = get_kernel<eT>(oneway_kernels, num);
   if (std::get<0>(t) == true)
     {
@@ -1310,6 +1327,9 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const oneway_real_kernel_id::enum_id num)
   {
+  // Lock the mutex in case another thread requests this kernel while we are compiling.
+  const std::lock_guard<std::mutex> l(oneway_real_kernel_compile_mutex);
+
   const std::tuple<bool, cl_kernel&> t = get_kernel<eT>(oneway_real_kernels, num);
   if (std::get<0>(t) == true)
     {
@@ -1333,6 +1353,9 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const oneway_integral_kernel_id::enum_id num)
   {
+  // Lock the mutex in case another thread requests this kernel while we are compiling.
+  const std::lock_guard<std::mutex> l(oneway_integral_kernel_compile_mutex);
+
   const std::tuple<bool, cl_kernel&> t = get_kernel<eT>(oneway_integral_kernels, num);
   if (std::get<0>(t) == true)
     {
@@ -1356,6 +1379,9 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const twoway_kernel_id::enum_id num)
   {
+  // Lock the mutex in case another thread requests this kernel while we are compiling.
+  const std::lock_guard<std::mutex> l(twoway_kernel_compile_mutex);
+
   const std::tuple<bool, cl_kernel&> t = get_kernel<eT1, eT2>(twoway_kernels, num);
   if (std::get<0>(t) == true)
     {
@@ -1379,6 +1405,9 @@ inline
 const cl_kernel&
 runtime_t::get_kernel(const magma_real_kernel_id::enum_id num)
   {
+  // Lock the mutex in case another thread requests this kernel while we are compiling.
+  const std::lock_guard<std::mutex> l(magma_real_kernel_compile_mutex);
+
   const std::tuple<bool, cl_kernel&> t = get_kernel<eT>(magma_real_kernels, num);
   if (std::get<0>(t) == true)
     {

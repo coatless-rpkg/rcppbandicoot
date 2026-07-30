@@ -38,6 +38,7 @@ inline half coot_to_half_cx_float(const   cx_float x) { return (half) x.x; }
 inline half coot_to_half_double(const       double x) { return (half) x;   }
 inline half coot_to_half_cx_double(const cx_double x) { return (half) x.x; }
 #endif
+inline half coot_to_half_floatmax(const   floatmax x) { return (half) x;   }
 
 inline half coot_absdiff_half(const half x, const half y) { return fabs(x - y); }
 inline half coot_conj_half(const half x) { return x; }

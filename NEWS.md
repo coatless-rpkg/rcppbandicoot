@@ -1,3 +1,9 @@
+# RcppBandicoot 4.0.3.1
+
+- Upgraded to bandicoot 4.0.3: "Bandwidth Glutton" (2026-07-29)
+  - Fix OpenCL kernel compilation for devices that do not support FP64.
+  - Bugfixes for kernel compilation under OpenMP.
+
 # RcppBandicoot 4.0.2.1
 
 - Upgraded to bandicoot 4.0.2: "Bandwidth Glutton" (2026-07-13)

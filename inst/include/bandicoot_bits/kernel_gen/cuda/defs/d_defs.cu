@@ -13,6 +13,11 @@
 // ------------------------------------------------------------------------
 R"(
 
+// On CUDA, the 'floatmax' type may just be double, so, if the floatmax defs
+// were already included, we don't need to include them a second time.
+#ifndef COOT_HAVE_D_DEFS
+#define COOT_HAVE_D_DEFS
+
 // Utility functions for double elements.
 __device__ inline bool   coot_is_fp(const double)       { return true; }
 __device__ inline bool   coot_is_signed(const double)   { return true; }
@@ -53,5 +58,7 @@ __device__ inline double coot_plus(const double x, const double y)  { return x +
 __device__ inline double coot_minus(const double x, const double y) { return x - y; }
 __device__ inline double coot_times(const double x, const double y) { return x * y; }
 __device__ inline double coot_div(const double x, const double y)   { return x / y; }
+
+#endif
 
 )"

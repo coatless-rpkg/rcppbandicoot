@@ -271,3 +271,12 @@ template<> struct promote_fp_type<s8 > { typedef float  result; };
 template<> struct promote_fp_type<s16> { typedef float  result; };
 template<> struct promote_fp_type<s32> { typedef float  result; };
 template<> struct promote_fp_type<s64> { typedef double result; };
+
+
+
+// promote integral types to a backend-safe floating-point representation
+// (e.g. "floatmax" instead of "double" for backends that don't support double)
+template<typename eT> struct promote_safe_fp_type
+  {
+  typedef typename safe_type< typename promote_fp_type<eT>::result >::result result;
+  };

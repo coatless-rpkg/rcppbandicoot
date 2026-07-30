@@ -29,53 +29,22 @@ subview_each_common<parent, mode>::subview_each_common(const parent& in_P)
 
 
 template<typename parent, unsigned int mode>
-coot_inline
-const Mat<typename parent::elem_type>&
-subview_each_common<parent, mode>::get_mat_ref_helper(const Mat<typename parent::elem_type>& X) const
-  {
-  return X;
-  }
-
-
-
-template<typename parent, unsigned int mode>
-coot_inline
-const Mat<typename parent::elem_type>&
-subview_each_common<parent, mode>::get_mat_ref_helper(const subview<typename parent::elem_type>& X) const
-  {
-  return X.m;
-  }
-
-
-
-template<typename parent, unsigned int mode>
-coot_inline
-const Mat<typename parent::elem_type>&
-subview_each_common<parent, mode>::get_mat_ref() const
-  {
-  return get_mat_ref_helper(P);
-  }
-
-
-
-template<typename parent, unsigned int mode>
-template<typename T2>
 inline
 void
-subview_each_common<parent, mode>::check_size(const T2& A) const
+subview_each_common<parent, mode>::check_size(const uword p_n_rows, const uword p_n_cols, const uword copies_per_row, const uword copies_per_col, const uword in_n_rows, const uword in_n_cols)
   {
   if(mode == 0)
     {
-    if( (A.n_rows != P.n_rows) || (A.n_cols != 1) )
+    if( (copies_per_row * in_n_rows != p_n_rows) || (in_n_cols != 1) )
       {
-      coot_stop_logic_error( incompat_size_string(A) );
+      coot_stop_logic_error( incompat_size_string(p_n_rows, p_n_cols, in_n_rows, in_n_cols) );
       }
     }
   else
     {
-    if( (A.n_rows != 1) || (A.n_cols != P.n_cols) )
+    if( (in_n_rows != 1) || (copies_per_col * in_n_cols != p_n_cols) )
       {
-      coot_stop_logic_error( incompat_size_string(A) );
+      coot_stop_logic_error( incompat_size_string(p_n_rows, p_n_cols, in_n_rows, in_n_cols) );
       }
     }
   }
@@ -83,20 +52,19 @@ subview_each_common<parent, mode>::check_size(const T2& A) const
 
 
 template<typename parent, unsigned int mode>
-template<typename T2>
 inline
 const std::string
-subview_each_common<parent, mode>::incompat_size_string(const T2& A) const
+subview_each_common<parent, mode>::incompat_size_string(const uword p_n_rows, const uword p_n_cols, const uword in_n_rows, const uword in_n_cols)
   {
   std::ostringstream tmp;
 
   if(mode == 0)
     {
-    tmp << "each_col(): incompatible size; expected " << P.n_rows << "x1" << ", got " << A.n_rows << 'x' << A.n_cols;
+    tmp << "each_col(): incompatible size; expected " << p_n_rows << "x1" << ", got " << in_n_rows << 'x' << in_n_cols;
     }
   else
     {
-    tmp << "each_row(): incompatible size; expected 1x" << P.n_cols << ", got " << A.n_rows << 'x' << A.n_cols;
+    tmp << "each_row(): incompatible size; expected 1x" << p_n_cols << ", got " << in_n_rows << 'x' << in_n_cols;
     }
 
   return tmp.str();
@@ -133,40 +101,70 @@ template<typename parent, unsigned int mode>
 template<typename T1>
 inline
 void
-subview_each1<parent, mode>::inplace_op(twoway_kernel_id::enum_id op,
-                                        const Base<eT, T1>& in)
+subview_each1<parent, mode>::operator=(const Base<elem_type, T1>& in)
   {
-  parent& p = access::rw(subview_each_common<parent, mode>::P);
+  coot_debug_sigprint();
 
-  // This will provide an interface to get the offsets for a subview, if parent is a subview.
-  const quasi_unwrap<parent> PU(p);
-  const no_conv_quasi_unwrap<T1> U(in.get_ref());
-  alias_wrapper<parent, typename no_conv_quasi_unwrap<T1>::stored_type> W(p, U.M);
+  parent& P_ref = access::rw(subview_each_common<parent, mode>::P);
 
-  const uword copies_per_row = (mode == 1) ? p.n_rows : 1;
-  const uword copies_per_col = (mode == 0) ? p.n_cols : 1;
+  // Convert the RHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_ref.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? P_ref.n_cols : 1;
+  const Op<T1, op_repmat> op(in.get_ref(), copies_per_row, copies_per_col);
+  const Proxy<Op<T1, op_repmat>> P(op);
 
-  if (U.M.n_rows == 0 || U.M.n_cols == 0 || copies_per_row == 0 || copies_per_col == 0)
+  subview_each_common<parent, mode>::check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P.get_n_rows(), P.P.get_n_cols());
+  if (P.is_empty())
     {
     return;
     }
 
-  subview_each_common<parent, mode>::check_size(U.M);
-
-  // If we are using an alias, make sure it contains the same data as the
-  // parent, if the operation is not just overwriting.
-  if (op != twoway_kernel_id::broadcast_set && W.using_aux)
+  alias_wrapper<parent, Proxy<Op<T1, op_repmat>>> A(P_ref, P);
+  if (A.using_aux)
     {
-    W.aux = p;
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(P_ref), P);
+    }
+  }
+
+
+
+
+template<typename parent, unsigned int mode>
+template<typename T1>
+inline
+void
+subview_each1<parent, mode>::operator+=(const Base<elem_type, T1>& in)
+  {
+  coot_debug_sigprint();
+
+  parent& P_ref = access::rw(subview_each_common<parent, mode>::P);
+
+  const uword copies_per_row = (mode == 1) ? P_ref.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? P_ref.n_cols : 1;
+
+  const Op<T1, op_repmat> op_inner(in.get_ref(), copies_per_row, copies_per_col);
+  const eGlue<parent, Op<T1, op_repmat>, eglue_plus> glue(P_ref, op_inner);
+  const Proxy<eGlue<parent, Op<T1, op_repmat>, eglue_plus>> P(glue);
+
+  subview_each_common<parent, mode>::check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P2.P.get_n_rows(), P.P2.P.get_n_cols());
+  if (P.is_empty())
+    {
+    return;
     }
 
-  coot_rt_t::broadcast_op(op,
-                          W.get_dev_mem(false), W.get_dev_mem(false), U.get_dev_mem(false),
-                          U.M.n_rows, U.M.n_cols,
-                          copies_per_row, copies_per_col,
-                          W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
-                          W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
-                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+  alias_wrapper<parent, Proxy<eGlue<parent, Op<T1, op_repmat>, eglue_plus>>> A(P_ref, P);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(P_ref), P);
+    }
   }
 
 
@@ -175,51 +173,34 @@ template<typename parent, unsigned int mode>
 template<typename T1>
 inline
 void
-subview_each1<parent, mode>::operator=(const Base<eT, T1>& in)
+subview_each1<parent, mode>::operator-=(const Base<elem_type, T1>& in)
   {
   coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::broadcast_set, in);
-  }
+  parent& P_ref = access::rw(subview_each_common<parent, mode>::P);
 
+  const uword copies_per_row = (mode == 1) ? P_ref.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? P_ref.n_cols : 1;
 
+  const Op<T1, op_repmat> op_inner(in.get_ref(), copies_per_row, copies_per_col);
+  const eGlue<parent, Op<T1, op_repmat>, eglue_minus> glue(P_ref, op_inner);
+  const Proxy<eGlue<parent, Op<T1, op_repmat>, eglue_minus>> P(glue);
 
+  subview_each_common<parent, mode>::check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P2.P.get_n_rows(), P.P2.P.get_n_cols());
+  if (P.is_empty())
+    {
+    return;
+    }
 
-template<typename parent, unsigned int mode>
-template<typename T1>
-inline
-void
-subview_each1<parent, mode>::operator+=(const Base<eT, T1>& in)
-  {
-  coot_debug_sigprint();
-
-  inplace_op(twoway_kernel_id::broadcast_plus, in);
-  }
-
-
-
-template<typename parent, unsigned int mode>
-template<typename T1>
-inline
-void
-subview_each1<parent, mode>::operator-=(const Base<eT, T1>& in)
-  {
-  coot_debug_sigprint();
-
-  inplace_op(twoway_kernel_id::broadcast_minus_post, in);
-  }
-
-
-
-template<typename parent, unsigned int mode>
-template<typename T1>
-inline
-void
-subview_each1<parent, mode>::operator%=(const Base<eT, T1>& in)
-  {
-  coot_debug_sigprint();
-
-  inplace_op(twoway_kernel_id::broadcast_schur, in);
+  alias_wrapper<parent, Proxy<eGlue<parent, Op<T1, op_repmat>, eglue_minus>>> A(P_ref, P);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(P_ref), P);
+    }
   }
 
 
@@ -228,11 +209,70 @@ template<typename parent, unsigned int mode>
 template<typename T1>
 inline
 void
-subview_each1<parent, mode>::operator/=(const Base<eT, T1>& in)
+subview_each1<parent, mode>::operator%=(const Base<elem_type, T1>& in)
   {
   coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::broadcast_div_post, in);
+  parent& P_ref = access::rw(subview_each_common<parent, mode>::P);
+
+  const uword copies_per_row = (mode == 1) ? P_ref.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? P_ref.n_cols : 1;
+
+  const Op<T1, op_repmat> op_inner(in.get_ref(), copies_per_row, copies_per_col);
+  const eGlue<parent, Op<T1, op_repmat>, eglue_schur> glue(P_ref, op_inner);
+  const Proxy<eGlue<parent, Op<T1, op_repmat>, eglue_schur>> P(glue);
+
+  subview_each_common<parent, mode>::check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P2.P.get_n_rows(), P.P2.P.get_n_cols());
+  if (P.is_empty())
+    {
+    return;
+    }
+
+  alias_wrapper<parent, Proxy<eGlue<parent, Op<T1, op_repmat>, eglue_schur>>> A(P_ref, P);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(P_ref), P);
+    }
+  }
+
+
+
+template<typename parent, unsigned int mode>
+template<typename T1>
+inline
+void
+subview_each1<parent, mode>::operator/=(const Base<elem_type, T1>& in)
+  {
+  coot_debug_sigprint();
+
+  parent& P_ref = access::rw(subview_each_common<parent, mode>::P);
+
+  const uword copies_per_row = (mode == 1) ? P_ref.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? P_ref.n_cols : 1;
+
+  const Op<T1, op_repmat> op_inner(in.get_ref(), copies_per_row, copies_per_col);
+  const eGlue<parent, Op<T1, op_repmat>, eglue_div> glue(P_ref, op_inner);
+  const Proxy<eGlue<parent, Op<T1, op_repmat>, eglue_div>> P(glue);
+
+  subview_each_common<parent, mode>::check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P2.P.get_n_rows(), P.P2.P.get_n_cols());
+  if (P.is_empty())
+    {
+    return;
+    }
+
+  alias_wrapper<parent, Proxy<eGlue<parent, Op<T1, op_repmat>, eglue_div>>> A(P_ref, P);
+  if (A.using_aux)
+    {
+    coot_rt_t::copy(make_proxy(A.aux), P);
+    }
+  else
+    {
+    coot_rt_t::copy(make_proxy(P_ref), P);
+    }
   }
 
 
@@ -284,43 +324,79 @@ template<typename parent, unsigned int mode, typename TB>
 template<typename T1>
 inline
 void
-subview_each2<parent, mode, TB>::inplace_op(twoway_kernel_id::enum_id op,
-                                            const Base<eT, T1>& in)
+subview_each2<parent, mode, TB>::operator=(const Base<elem_type, T1>& in)
   {
-  parent& p = access::rw(subview_each_common<parent, mode>::P);
+  coot_debug_sigprint();
 
-  // This will provide an interface to get the offsets for a subview, if parent is a subview.
-  const quasi_unwrap<parent> PU(p);
-  const quasi_unwrap<TB> IU(base_indices.get_ref());
-  const no_conv_quasi_unwrap<T1> U(in.get_ref());
-  alias_wrapper<parent, typename no_conv_quasi_unwrap<T1>::stored_type, typename quasi_unwrap<TB>::stored_type> W(p, U.M, IU.M);
+  // Make a proxy for the LHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_lhs(*this);
 
-  const uword copies_per_row = (mode == 1) ? IU.M.n_elem : 1;
-  const uword copies_per_col = (mode == 0) ? IU.M.n_elem : 1;
+  // Convert the RHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_lhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_lhs.get_n_cols() : 1;
+  const Op<T1, op_repmat> op(in.get_ref(), copies_per_row, copies_per_col);
+  const Proxy<Op<T1, op_repmat>> P_op(op);
 
-  if (U.M.n_rows == 0 || U.M.n_cols == 0 || copies_per_row == 0 || copies_per_col == 0)
+  subview_each_common<parent, mode>::check_size(P_lhs.get_n_rows(), P_lhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+  if (P_op.is_empty())
     {
     return;
     }
 
-  subview_each_common<parent, mode>::check_size(U.M);
-
-  // If we need the original values for the operation to be computed correctly,
-  // and we are using a temporary result, then copy the parent to the temporary
-  // matrix.
-  if (W.using_aux)
+  if (P_op.is_alias(subview_each_common<parent, mode>::P))
     {
-    W.aux = p;
+    // alias_wrapper does not set the size correctly for a subview_elem2, so create the temporary matrix manually.
+    Mat<typename parent::elem_type> tmp(P_op.get_n_rows(), P_op.get_n_cols());
+    coot_rt_t::copy(make_proxy(tmp), P_op);
+    coot_rt_t::copy(P_lhs, make_proxy(tmp));
+    }
+  else
+    {
+    coot_rt_t::copy(P_lhs, P_op);
+    }
+  }
+
+
+
+template<typename parent, unsigned int mode, typename TB>
+template<typename T1>
+inline
+void
+subview_each2<parent, mode, TB>::operator+=(const Base<elem_type, T1>& in)
+  {
+  coot_debug_sigprint();
+
+  // Make a proxy for the LHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_lhs(*this);
+
+  // Convert the RHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_lhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_lhs.get_n_cols() : 1;
+  const Op<T1, op_repmat> op(in.get_ref(), copies_per_row, copies_per_col);
+
+  // We will create the eGlue Proxy manually so as to not make P_lhs twice...
+  // but in order to do that, we need to ensure that we have the right type for the Op proxy.
+  typedef typename Proxy_glue_type< Op<T1, op_repmat>, subview_each2<parent, mode, TB> >::result Proxy_op_type;
+  const Proxy< Proxy_op_type > P_op(op);
+  const Proxy<eGlue<subview_each2<parent, mode, TB>, Op<T1, op_repmat>, eglue_plus>> P_glue(P_lhs, P_op);
+
+  subview_each_common<parent, mode>::check_size(P_lhs.get_n_rows(), P_lhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+  if (P_glue.is_empty())
+    {
+    return;
     }
 
-  coot_rt_t::broadcast_subset_op(op,
-                                 W.get_dev_mem(false), W.get_dev_mem(false), U.get_dev_mem(false), IU.get_dev_mem(false),
-                                 mode, U.M.n_rows, U.M.n_cols,
-                                 copies_per_row, copies_per_col,
-                                 W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
-                                 W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
-                                 U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows(),
-                                 IU.get_row_offset() + IU.get_col_offset() * IU.get_M_n_rows(), (IU.M.n_rows == 1) ? IU.get_M_n_rows() : 1);
+  if (P_op.is_alias(subview_each_common<parent, mode>::P))
+    {
+    // alias_wrapper does not set the size correctly for a subview_elem2, so create the temporary matrix manually.
+    Mat<typename parent::elem_type> tmp(P_op.get_n_rows(), P_op.get_n_cols());
+    coot_rt_t::copy(make_proxy(tmp), P_glue);
+    coot_rt_t::copy(P_lhs, make_proxy(tmp));
+    }
+  else
+    {
+    coot_rt_t::copy(P_lhs, P_glue);
+    }
   }
 
 
@@ -329,11 +405,41 @@ template<typename parent, unsigned int mode, typename TB>
 template<typename T1>
 inline
 void
-subview_each2<parent, mode, TB>::operator=(const Base<eT,T1>& in)
+subview_each2<parent, mode, TB>::operator-=(const Base<elem_type, T1>& in)
   {
   coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::broadcast_subset_set, in);
+  // Make a proxy for the LHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_lhs(*this);
+
+  // Convert the RHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_lhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_lhs.get_n_cols() : 1;
+  const Op<T1, op_repmat> op(in.get_ref(), copies_per_row, copies_per_col);
+
+  // We will create the eGlue Proxy manually so as to not make P_lhs twice...
+  // but in order to do that, we need to ensure that we have the right type for the Op proxy.
+  typedef typename Proxy_glue_type< Op<T1, op_repmat>, subview_each2<parent, mode, TB> >::result Proxy_op_type;
+  const Proxy< Proxy_op_type > P_op(op);
+  const Proxy<eGlue<subview_each2<parent, mode, TB>, Op<T1, op_repmat>, eglue_minus>> P_glue(P_lhs, P_op);
+
+  subview_each_common<parent, mode>::check_size(P_lhs.get_n_rows(), P_lhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+  if (P_glue.is_empty())
+    {
+    return;
+    }
+
+  if (P_op.is_alias(subview_each_common<parent, mode>::P))
+    {
+    // alias_wrapper does not set the size correctly for a subview_elem2, so create the temporary matrix manually.
+    Mat<typename parent::elem_type> tmp(P_op.get_n_rows(), P_op.get_n_cols());
+    coot_rt_t::copy(make_proxy(tmp), P_glue);
+    coot_rt_t::copy(P_lhs, make_proxy(tmp));
+    }
+  else
+    {
+    coot_rt_t::copy(P_lhs, P_glue);
+    }
   }
 
 
@@ -342,11 +448,41 @@ template<typename parent, unsigned int mode, typename TB>
 template<typename T1>
 inline
 void
-subview_each2<parent, mode, TB>::operator+=(const Base<eT,T1>& in)
+subview_each2<parent, mode, TB>::operator%=(const Base<elem_type, T1>& in)
   {
   coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::broadcast_subset_plus, in);
+  // Make a proxy for the LHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_lhs(*this);
+
+  // Convert the RHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_lhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_lhs.get_n_cols() : 1;
+  const Op<T1, op_repmat> op(in.get_ref(), copies_per_row, copies_per_col);
+
+  // We will create the eGlue Proxy manually so as to not make P_lhs twice...
+  // but in order to do that, we need to ensure that we have the right type for the Op proxy.
+  typedef typename Proxy_glue_type< Op<T1, op_repmat>, subview_each2<parent, mode, TB> >::result Proxy_op_type;
+  const Proxy< Proxy_op_type > P_op(op);
+  const Proxy<eGlue<subview_each2<parent, mode, TB>, Op<T1, op_repmat>, eglue_schur>> P_glue(P_lhs, P_op);
+
+  subview_each_common<parent, mode>::check_size(P_lhs.get_n_rows(), P_lhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+  if (P_glue.is_empty())
+    {
+    return;
+    }
+
+  if (P_op.is_alias(subview_each_common<parent, mode>::P))
+    {
+    // alias_wrapper does not set the size correctly for a subview_elem2, so create the temporary matrix manually.
+    Mat<typename parent::elem_type> tmp(P_op.get_n_rows(), P_op.get_n_cols());
+    coot_rt_t::copy(make_proxy(tmp), P_glue);
+    coot_rt_t::copy(P_lhs, make_proxy(tmp));
+    }
+  else
+    {
+    coot_rt_t::copy(P_lhs, P_glue);
+    }
   }
 
 
@@ -355,37 +491,41 @@ template<typename parent, unsigned int mode, typename TB>
 template<typename T1>
 inline
 void
-subview_each2<parent, mode, TB>::operator-=(const Base<eT,T1>& in)
+subview_each2<parent, mode, TB>::operator/=(const Base<elem_type, T1>& in)
   {
   coot_debug_sigprint();
 
-  inplace_op(twoway_kernel_id::broadcast_subset_minus_post, in);
-  }
+  // Make a proxy for the LHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_lhs(*this);
 
+  // Convert the RHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_lhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_lhs.get_n_cols() : 1;
+  const Op<T1, op_repmat> op(in.get_ref(), copies_per_row, copies_per_col);
 
+  // We will create the eGlue Proxy manually so as to not make P_lhs twice...
+  // but in order to do that, we need to ensure that we have the right type for the Op proxy.
+  typedef typename Proxy_glue_type< Op<T1, op_repmat>, subview_each2<parent, mode, TB> >::result Proxy_op_type;
+  const Proxy< Proxy_op_type > P_op(op);
+  const Proxy<eGlue<subview_each2<parent, mode, TB>, Op<T1, op_repmat>, eglue_div>> P_glue(P_lhs, P_op);
 
-template<typename parent, unsigned int mode, typename TB>
-template<typename T1>
-inline
-void
-subview_each2<parent, mode, TB>::operator%=(const Base<eT,T1>& in)
-  {
-  coot_debug_sigprint();
+  subview_each_common<parent, mode>::check_size(P_lhs.get_n_rows(), P_lhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+  if (P_glue.is_empty())
+    {
+    return;
+    }
 
-  inplace_op(twoway_kernel_id::broadcast_subset_schur, in);
-  }
-
-
-
-template<typename parent, unsigned int mode, typename TB>
-template<typename T1>
-inline
-void
-subview_each2<parent, mode, TB>::operator/=(const Base<eT,T1>& in)
-  {
-  coot_debug_sigprint();
-
-  inplace_op(twoway_kernel_id::broadcast_subset_div_post, in);
+  if (P_op.is_alias(subview_each_common<parent, mode>::P))
+    {
+    // alias_wrapper does not set the size correctly for a subview_elem2, so create the temporary matrix manually.
+    Mat<typename parent::elem_type> tmp(P_op.get_n_rows(), P_op.get_n_cols());
+    coot_rt_t::copy(make_proxy(tmp), P_glue);
+    coot_rt_t::copy(P_lhs, make_proxy(tmp));
+    }
+  else
+    {
+    coot_rt_t::copy(P_lhs, P_glue);
+    }
   }
 
 
@@ -399,51 +539,31 @@ subview_each2<parent, mode, TB>::operator/=(const Base<eT,T1>& in)
 template<typename parent, unsigned int mode, typename T2>
 inline
 Mat<typename parent::elem_type>
-subview_each1_aux::call_op
-  (
-  const twoway_kernel_id::enum_id op,
-  const subview_each1<parent, mode>& X,
-  const Base<typename parent::elem_type, T2>& Y
-  )
-  {
-  // This will provide an interface to get the offsets for a subview, if parent is a subview.
-  const quasi_unwrap<parent> PU(X.P);
-  const no_conv_quasi_unwrap<T2> U(Y.get_ref());
-
-  const uword copies_per_row = (mode == 1) ? X.P.n_rows : 1;
-  const uword copies_per_col = (mode == 0) ? X.P.n_cols : 1;
-
-  if (U.M.n_rows == 0 || U.M.n_cols == 0 || copies_per_row == 0 || copies_per_col == 0)
-    {
-    return Mat<typename parent::elem_type>(U.M.n_rows * copies_per_row, U.M.n_cols * copies_per_col);
-    }
-
-  X.check_size(U.M);
-
-  Mat<typename parent::elem_type> out;
-  out.set_size(U.M.n_rows * copies_per_row, U.M.n_cols * copies_per_col);
-
-  coot_rt_t::broadcast_op(op,
-                          out.get_dev_mem(false), PU.get_dev_mem(false), U.get_dev_mem(false),
-                          U.M.n_rows, U.M.n_cols,
-                          copies_per_row, copies_per_col,
-                          0, 0, out.n_rows,
-                          PU.get_row_offset(), PU.get_col_offset(), PU.get_M_n_rows(),
-                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
-
-  return out;
-  }
-
-
-
-template<typename parent, unsigned int mode, typename T2>
-inline
-Mat<typename parent::elem_type>
 subview_each1_aux::operator_plus(const subview_each1<parent, mode>& X, const Base<typename parent::elem_type, T2>& Y)
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_plus, X, Y);
+  const uword copies_per_row = (mode == 1) ? X.P.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? X.P.n_cols : 1;
+
+  parent& P_ref = access::rw(X.P);
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(X.P.n_rows, X.P.n_cols);
+
+  const Op<T2, op_repmat> op(Y.get_ref(), copies_per_row, copies_per_col);
+  const eGlue<parent, Op<T2, op_repmat>, eglue_plus> glue(P_ref, op);
+  const Proxy<eGlue<parent, Op<T2, op_repmat>, eglue_plus>> P(glue);
+
+  X.check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P2.P.get_n_rows(), P.P2.P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+
+  return out;
   }
 
 
@@ -455,7 +575,27 @@ subview_each1_aux::operator_minus(const subview_each1<parent, mode>& X, const Ba
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_minus_post, X, Y);
+  const uword copies_per_row = (mode == 1) ? X.P.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? X.P.n_cols : 1;
+
+  parent& P_ref = access::rw(X.P);
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(X.P.n_rows, X.P.n_cols);
+
+  const Op<T2, op_repmat> op(Y.get_ref(), copies_per_row, copies_per_col);
+  const eGlue<parent, Op<T2, op_repmat>, eglue_minus> glue(P_ref, op);
+  const Proxy<eGlue<parent, Op<T2, op_repmat>, eglue_minus>> P(glue);
+
+  X.check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P2.P.get_n_rows(), P.P2.P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+
+  return out;
   }
 
 
@@ -467,7 +607,27 @@ subview_each1_aux::operator_minus(const Base<typename parent::elem_type, T1>& X,
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_minus_pre, Y, X);
+  const uword copies_per_row = (mode == 1) ? Y.P.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? Y.P.n_cols : 1;
+
+  parent& P_ref = access::rw(Y.P);
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(Y.P.n_rows, Y.P.n_cols);
+
+  const Op<T1, op_repmat> op(X.get_ref(), copies_per_row, copies_per_col);
+  const eGlue<Op<T1, op_repmat>, parent, eglue_minus> glue(op, P_ref);
+  const Proxy<eGlue<Op<T1, op_repmat>, parent, eglue_minus>> P(glue);
+
+  Y.check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P1.P.get_n_rows(), P.P1.P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+
+  return out;
   }
 
 
@@ -479,7 +639,27 @@ subview_each1_aux::operator_schur(const subview_each1<parent, mode>& X, const Ba
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_schur, X, Y);
+  const uword copies_per_row = (mode == 1) ? X.P.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? X.P.n_cols : 1;
+
+  parent& P_ref = access::rw(X.P);
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(X.P.n_rows, X.P.n_cols);
+
+  const Op<T2, op_repmat> op(Y.get_ref(), copies_per_row, copies_per_col);
+  const eGlue<parent, Op<T2, op_repmat>, eglue_schur> glue(P_ref, op);
+  const Proxy<eGlue<parent, Op<T2, op_repmat>, eglue_schur>> P(glue);
+
+  X.check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P2.P.get_n_rows(), P.P2.P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+
+  return out;
   }
 
 
@@ -491,7 +671,27 @@ subview_each1_aux::operator_div(const subview_each1<parent, mode>& X, const Base
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_div_post, X, Y);
+  const uword copies_per_row = (mode == 1) ? X.P.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? X.P.n_cols : 1;
+
+  parent& P_ref = access::rw(X.P);
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(X.P.n_rows, X.P.n_cols);
+
+  const Op<T2, op_repmat> op(Y.get_ref(), copies_per_row, copies_per_col);
+  const eGlue<parent, Op<T2, op_repmat>, eglue_div> glue(P_ref, op);
+  const Proxy<eGlue<parent, Op<T2, op_repmat>, eglue_div>> P(glue);
+
+  X.check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P2.P.get_n_rows(), P.P2.P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+
+  return out;
   }
 
 
@@ -503,46 +703,25 @@ subview_each1_aux::operator_div(const Base<typename parent::elem_type, T1>& X, c
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_div_pre, Y, X);
-  }
+  const uword copies_per_row = (mode == 1) ? Y.P.n_rows : 1;
+  const uword copies_per_col = (mode == 0) ? Y.P.n_cols : 1;
 
+  parent& P_ref = access::rw(Y.P);
 
+  Mat<typename parent::elem_type> out;
+  out.set_size(Y.P.n_rows, Y.P.n_cols);
 
-template<typename parent, unsigned int mode, typename TB, typename T2>
-inline
-Mat<typename parent::elem_type>
-subview_each2_aux::call_op
-  (
-  const twoway_kernel_id::enum_id op,
-  const subview_each2<parent, mode, TB>& X,
-  const Base<typename parent::elem_type, T2>& Y
-  )
-  {
-  // This will provide an interface to get the offsets for a subview, if parent is a subview.
-  const quasi_unwrap<parent> PU(X.P);
-  const quasi_unwrap<TB> IU(X.base_indices.get_ref());
-  const no_conv_quasi_unwrap<T2> U(Y.get_ref());
+  const Op<T1, op_repmat> op(X.get_ref(), copies_per_row, copies_per_col);
+  const eGlue<Op<T1, op_repmat>, parent, eglue_div> glue(op, P_ref);
+  const Proxy<eGlue<Op<T1, op_repmat>, parent, eglue_div>> P(glue);
 
-  const uword copies_per_row = (mode == 1) ? IU.M.n_elem : 1;
-  const uword copies_per_col = (mode == 0) ? IU.M.n_elem : 1;
-
-  if (U.M.n_rows == 0 || U.M.n_cols == 0 || copies_per_row == 0 || copies_per_col == 0)
+  Y.check_size(P_ref.n_rows, P_ref.n_cols, copies_per_row, copies_per_col, P.P1.P.get_n_rows(), P.P1.P.get_n_cols());
+  if (P.is_empty())
     {
-    return Mat<typename parent::elem_type>(U.M.n_rows * copies_per_row, U.M.n_cols * copies_per_col);
+    return out;
     }
 
-  X.check_size(U.M);
-
-  Mat<typename parent::elem_type> out(U.M.n_rows * copies_per_row, U.M.n_cols * copies_per_col);
-
-  coot_rt_t::broadcast_subset_op(op,
-                                 out.get_dev_mem(false), PU.get_dev_mem(false), U.get_dev_mem(false), IU.get_dev_mem(false),
-                                 mode + 2, U.M.n_rows, U.M.n_cols,
-                                 copies_per_row, copies_per_col,
-                                 0, 0, out.n_rows,
-                                 PU.get_row_offset(), PU.get_col_offset(), PU.get_M_n_rows(),
-                                 U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows(),
-                                 IU.get_row_offset() + IU.get_col_offset() * IU.get_M_n_rows(), (IU.M.n_rows == 1) ? IU.get_M_n_rows() : 1);
+  coot_rt_t::copy(make_proxy(out), P);
 
   return out;
   }
@@ -556,7 +735,29 @@ subview_each2_aux::operator_plus(const subview_each2<parent, mode, TB>& X, const
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_subset_plus, X, Y);
+  // Make a proxy for the LHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_lhs(X);
+
+  // Convert the RHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_lhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_lhs.get_n_cols() : 1;
+  const Op<T2, op_repmat> op(Y.get_ref(), copies_per_row, copies_per_col);
+  const Proxy<Op<T2, op_repmat>> P_op(op);
+
+  // Create the eGlue Proxy manually so as to not make P_lhs twice.
+  const Proxy<eGlue<subview_each2<parent, mode, TB>, Op<T2, op_repmat>, eglue_plus>> P(P_lhs, P_op);
+
+  subview_each_common<parent, mode>::check_size(P_lhs.get_n_rows(), P_lhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(P.get_n_rows(), P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+  return out;
   }
 
 
@@ -568,7 +769,29 @@ subview_each2_aux::operator_minus(const subview_each2<parent, mode, TB>& X, cons
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_subset_minus_post, X, Y);
+  // Make a proxy for the LHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_lhs(X);
+
+  // Convert the RHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_lhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_lhs.get_n_cols() : 1;
+  const Op<T2, op_repmat> op(Y.get_ref(), copies_per_row, copies_per_col);
+  const Proxy<Op<T2, op_repmat>> P_op(op);
+
+  // Create the eGlue Proxy manually so as to not make P_lhs twice.
+  const Proxy<eGlue<subview_each2<parent, mode, TB>, Op<T2, op_repmat>, eglue_minus>> P(P_lhs, P_op);
+
+  subview_each_common<parent, mode>::check_size(P_lhs.get_n_rows(), P_lhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(P.get_n_rows(), P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+  return out;
   }
 
 
@@ -580,7 +803,29 @@ subview_each2_aux::operator_minus(const Base<typename parent::elem_type, T1>& X,
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_subset_minus_pre, Y, X);
+  // Make a proxy for the RHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_rhs(Y);
+
+  // Convert the LHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_rhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_rhs.get_n_cols() : 1;
+  const Op<T1, op_repmat> op(X.get_ref(), copies_per_row, copies_per_col);
+  const Proxy<Op<T1, op_repmat>> P_op(op);
+
+  // Create the eGlue Proxy manually so as to not make P_lhs twice.
+  const Proxy<eGlue<Op<T1, op_repmat>, subview_each2<parent, mode, TB>, eglue_minus>> P(P_op, P_rhs);
+
+  subview_each_common<parent, mode>::check_size(P_rhs.get_n_rows(), P_rhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(P.get_n_rows(), P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+  return out;
   }
 
 
@@ -592,7 +837,29 @@ subview_each2_aux::operator_schur(const subview_each2<parent, mode, TB>& X, cons
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_subset_schur, X, Y);
+  // Make a proxy for the LHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_lhs(X);
+
+  // Convert the RHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_lhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_lhs.get_n_cols() : 1;
+  const Op<T2, op_repmat> op(Y.get_ref(), copies_per_row, copies_per_col);
+  const Proxy<Op<T2, op_repmat>> P_op(op);
+
+  // Create the eGlue Proxy manually so as to not make P_lhs twice.
+  const Proxy<eGlue<subview_each2<parent, mode, TB>, Op<T2, op_repmat>, eglue_schur>> P(P_lhs, P_op);
+
+  subview_each_common<parent, mode>::check_size(P_lhs.get_n_rows(), P_lhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(P.get_n_rows(), P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+  return out;
   }
 
 
@@ -604,7 +871,29 @@ subview_each2_aux::operator_div(const subview_each2<parent, mode, TB>& X, const 
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_subset_div_post, X, Y);
+  // Make a proxy for the LHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_lhs(X);
+
+  // Convert the RHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_lhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_lhs.get_n_cols() : 1;
+  const Op<T2, op_repmat> op(Y.get_ref(), copies_per_row, copies_per_col);
+  const Proxy<Op<T2, op_repmat>> P_op(op);
+
+  // Create the eGlue Proxy manually so as to not make P_lhs twice.
+  const Proxy<eGlue<subview_each2<parent, mode, TB>, Op<T2, op_repmat>, eglue_div>> P(P_lhs, P_op);
+
+  subview_each_common<parent, mode>::check_size(P_lhs.get_n_rows(), P_lhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(P.get_n_rows(), P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+  return out;
   }
 
 
@@ -616,5 +905,27 @@ subview_each2_aux::operator_div(const Base<typename parent::elem_type, T1>& X, c
   {
   coot_debug_sigprint();
 
-  return call_op(twoway_kernel_id::broadcast_subset_div_pre, Y, X);
+  // Make a proxy for the RHS so we can compute the necessary number of copies.
+  const Proxy<subview_each2<parent, mode, TB>> P_rhs(Y);
+
+  // Convert the LHS into a repmat operation that broadcasts it to the right size.
+  const uword copies_per_row = (mode == 1) ? P_rhs.get_n_rows() : 1;
+  const uword copies_per_col = (mode == 0) ? P_rhs.get_n_cols() : 1;
+  const Op<T1, op_repmat> op(X.get_ref(), copies_per_row, copies_per_col);
+  const Proxy<Op<T1, op_repmat>> P_op(op);
+
+  // Create the eGlue Proxy manually so as to not make P_lhs twice.
+  const Proxy<eGlue<Op<T1, op_repmat>, subview_each2<parent, mode, TB>, eglue_div>> P(P_op, P_rhs);
+
+  subview_each_common<parent, mode>::check_size(P_rhs.get_n_rows(), P_rhs.get_n_cols(), copies_per_row, copies_per_col, P_op.P.get_n_rows(), P_op.P.get_n_cols());
+
+  Mat<typename parent::elem_type> out;
+  out.set_size(P.get_n_rows(), P.get_n_cols());
+  if (P.is_empty())
+    {
+    return out;
+    }
+
+  coot_rt_t::copy(make_proxy(out), P);
+  return out;
   }

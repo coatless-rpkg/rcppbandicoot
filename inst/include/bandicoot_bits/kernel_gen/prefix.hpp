@@ -224,6 +224,24 @@ struct prefix< subview_elem2< eT, subview_elem2_all_rows<eT, T2> > > : public co
 
 
 
+// subview_each2<T1, mode, TB> -> "e2<mode><T1><TB>"
+
+struct each2_prefix { static inline constexpr auto& str() { return "e2"; } };
+
+template<unsigned int mode /* 0 */> struct each2_mode_prefix    { static inline constexpr auto& str() { return "0"; } };
+template<>                          struct each2_mode_prefix<1> { static inline constexpr auto& str() { return "1"; } };
+
+template<typename T1, unsigned int mode, typename TB>
+struct prefix< subview_each2< T1, mode, TB > > : public concat_str
+  <
+  each2_prefix,
+  each2_mode_prefix< mode >,
+  prefix< T1 >,
+  prefix< TB >
+  > { };
+
+
+
 // ProxyColCast<T1> -> "P1" then T1 prefix
 
 struct proxy_col_cast_prefix { static inline constexpr auto& str() { return "P1"; } };
@@ -407,5 +425,18 @@ template<typename T1>
 struct prefix< Op<T1, op_symmatl> > : public concat_str
   <
   op_symmatl_prefix,
+  prefix<T1>
+  > { };
+
+
+
+// Op<T1, op_repmat> -> "r_" then T1 prefix
+
+struct op_repmat_prefix { static inline constexpr auto& str() { return "r_"; } };
+
+template<typename T1>
+struct prefix< Op<T1, op_repmat> > : public concat_str
+  <
+  op_repmat_prefix,
   prefix<T1>
   > { };

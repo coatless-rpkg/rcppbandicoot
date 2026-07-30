@@ -23,89 +23,19 @@ op_repmat::apply(Mat<out_eT>& out, const Op<T1, op_repmat>& in)
   {
   coot_debug_sigprint();
 
-  const uword copies_per_row = in.aux_uword_a;
-  const uword copies_per_col = in.aux_uword_b;
+  Proxy<Op<T1, op_repmat>> P_in(in);
 
-  const quasi_unwrap<T1> U(in.m);
-
-  alias_wrapper<Mat<out_eT>, typename quasi_unwrap<T1>::stored_type> W(out, U.M);
+  alias_wrapper<Mat<out_eT>, Proxy<Op<T1, op_repmat>> > W(out, P_in);
 
   // Skip if there is nothing to do.
-  if (W.using_aux && copies_per_row == 1 && copies_per_col == 1 && is_same_type<out_eT, typename T1::elem_type>::yes)
+  if (W.using_aux && in.aux_uword_a == 1 && in.aux_uword_b == 1 && is_same_type<out_eT, typename T1::elem_type>::yes)
     {
     W.using_aux = false; // disable steal_mem() in destructor
     return;
     }
 
-  const uword new_n_rows = U.M.n_rows * copies_per_row;
-  const uword new_n_cols = U.M.n_cols * copies_per_col;
-
-  W.use.set_size(new_n_rows, new_n_cols);
-
-  if (new_n_rows == 0 || new_n_cols == 0)
-    {
-    W.using_aux = false; // disable steal_mem() in destructor
-    return;
-    }
-
-  coot_rt_t::broadcast_op(twoway_kernel_id::broadcast_set,
-                          W.get_dev_mem(false),
-                          W.get_dev_mem(false),
-                          U.get_dev_mem(false),
-                          U.M.n_rows,
-                          U.M.n_cols,
-                          copies_per_row,
-                          copies_per_col,
-                          W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
-                          W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
-                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
-  }
-
-
-
-template<typename out_eT, typename T1>
-inline
-void
-op_repmat::apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_repmat>& in)
-  {
-  coot_debug_sigprint();
-
-  const uword copies_per_row = in.aux_uword_a;
-  const uword copies_per_col = in.aux_uword_b;
-
-  const quasi_unwrap<T1> U(in.m.q);
-
-  alias_wrapper<Mat<out_eT>, typename quasi_unwrap<T1>::stored_type> W(out, U.M);
-
-  // Skip if there is nothing to do.
-  if (W.using_aux && copies_per_row == 1 && copies_per_col == 1 && is_same_type<out_eT, typename T1::elem_type>::yes)
-    {
-    W.using_aux = false; // disable steal_mem() in destructor
-    return;
-    }
-
-  const uword new_n_rows = U.M.n_rows * copies_per_row;
-  const uword new_n_cols = U.M.n_cols * copies_per_col;
-
-  W.use.set_size(new_n_rows, new_n_cols);
-
-  if (new_n_rows == 0 || new_n_cols == 0)
-    {
-    W.using_aux = false; // disable steal_mem() in destructor
-    return;
-    }
-
-  coot_rt_t::broadcast_op(twoway_kernel_id::broadcast_set,
-                          W.get_dev_mem(false),
-                          W.get_dev_mem(false),
-                          U.get_dev_mem(false),
-                          U.M.n_rows,
-                          U.M.n_cols,
-                          copies_per_row,
-                          copies_per_col,
-                          W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
-                          W.get_row_offset(), W.get_col_offset(), W.get_M_n_rows(),
-                          U.get_row_offset(), U.get_col_offset(), U.get_M_n_rows());
+  W.use.set_size(P_in.get_n_rows(), P_in.get_n_cols());
+  coot_rt_t::copy(make_proxy(W.use), P_in);
   }
 
 

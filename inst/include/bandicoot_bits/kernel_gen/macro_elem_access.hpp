@@ -310,6 +310,76 @@ struct elem_access_str< subview_elem2<eT, subview_elem2_all_rows<eT, T2>>, i, ba
 
 
 //
+// subview_each2<T1, mode, TB>: indirect access to a row or column (depending on mode), direct access to the other dimension
+//
+// if mode == 0 (.each_col(TB)):
+//
+//    COOT_OBJECT_i_AT(name, row, col, slice)=COOT_CONCAT(name,_p_ptr)[row + COOT_CONCAT(name,_i_ptr)[col] * COOT_CONCAT(name,_p_n_rows)]
+//
+// if mode == 1 (.each_row(TB)):
+//
+//    COOT_OBJECT_i_AT(name, row, col, slice)=COOT_CONCAT(name,_p_ptr)[COOT_CONCAT(name,_i_ptr)[row] + col * COOT_CONCAT(name,_p_n_rows)]
+//
+
+template<unsigned int mode /* 0 */, typename arg_names>
+struct each2_tb_child_arg_names
+  {
+  using arg1 = typename arg_names::arg2;
+  using arg2 = typename arg_names::arg2; // should not be used
+  using arg3 = typename arg_names::arg3;
+  };
+
+template<typename arg_names>
+struct each2_tb_child_arg_names<1, arg_names>
+  {
+  using arg1 = typename arg_names::arg1;
+  using arg2 = typename arg_names::arg2;
+  using arg3 = typename arg_names::arg3;
+  };
+
+template<typename arg_names, unsigned int mode /* 0 */, typename TB_elem_access_str>
+struct each2_arg_names
+  {
+  // .each_col(TB): just use 'row' unmodified, and instead of 'col', use an access to the TB at element 'col'
+  using arg1 = typename arg_names::arg1;
+  using arg2 = TB_elem_access_str;
+  using arg3 = typename arg_names::arg3;
+  };
+
+template<typename arg_names, typename TB_elem_access_str>
+struct each2_arg_names<arg_names, 1, TB_elem_access_str>
+  {
+  // .each_row(TB): instead of 'row', use an access to the TB at element 'row', and just use 'col' unmodified
+  using arg1 = TB_elem_access_str;
+  using arg2 = typename arg_names::arg2;
+  using arg3 = typename arg_names::arg3;
+  };
+
+template<typename T1, unsigned int mode, typename TB, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct elem_access_str< subview_each2< T1, mode, TB >, i, backend, arg_name_prefix, arg_names > : public elem_access_str
+  <
+  T1,
+  i,
+  backend,
+  concat_str< arg_name_prefix, each2_p_name >,
+  each2_arg_names
+    <
+    arg_names,
+    mode,
+    elem_access_str
+      <
+      TB,
+      i,
+      backend,
+      concat_str< arg_name_prefix, each2_i_name >,
+      each2_tb_child_arg_names<mode, arg_names>
+      >
+    >
+  > { };
+
+
+
+//
 // Cube<eT>: uses 3 parameters
 //
 
@@ -782,3 +852,41 @@ struct elem_access_str< Op<T1, op_symmatl>, i, backend, arg_name_prefix, arg_nam
     >,
   concat_str< close_paren >
   > { };
+
+
+
+//
+// Op<T1, op_repmat>: repeat the matrix by modulo'ing the indexes down;
+// instead of passing 'row' and 'col', pass 'row % n_rows' and 'col % n_cols'
+//
+
+template<typename arg_names, typename arg_name_prefix>
+struct repmat_arg_names
+  {
+  // (row % COOT_CONCAT(name,_n_rows))
+  using arg1 = concat_str<
+    open_paren,               // (
+    typename arg_names::arg1, // row
+    spaced_mod,               //  %
+    coot_concat_name,         // COOT_CONCAT(name,
+    arg_name_prefix,          //
+    n_rows_name,              // _n_rows
+    double_close_paren        // ))
+    >;
+
+  // (col % COOT_CONCAT(name,_n_cols))
+  using arg2 = concat_str<
+    open_paren,               // (
+    typename arg_names::arg2, // col
+    spaced_mod,               //  %
+    coot_concat_name,         // COOT_CONCAT(name,
+    arg_name_prefix,          //
+    n_cols_name,              // _n_cols
+    double_close_paren        // ))
+    >;
+
+  using arg3 = typename arg_names::arg3;
+  };
+
+template<typename T1, size_t i, coot_backend_t backend, typename arg_name_prefix, typename arg_names>
+struct elem_access_str< Op<T1, op_repmat>, i, backend, arg_name_prefix, arg_names > : public elem_access_str< T1, i, backend, concat_str< arg_name_prefix, arg_prefix_name >, repmat_arg_names< arg_names, arg_name_prefix > > { };

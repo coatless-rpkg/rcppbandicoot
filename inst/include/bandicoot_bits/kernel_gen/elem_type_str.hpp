@@ -130,3 +130,13 @@ struct elem_type_str< std::complex<double>, backend >
   static inline constexpr size_t len() { return 9; }
   static inline constexpr char_array<len() + 1> str() { return char_array<len() + 1>{ "cx_double" }; }
   };
+
+
+
+// by default, assume double is available
+template<coot_backend_t backend>
+struct elem_type_str< floatmax, backend >
+  {
+  static inline constexpr size_t len() { return 6; }
+  static inline constexpr char_array<len() + 1> str() { return char_array<len() + 1>{ "double" }; }
+  };

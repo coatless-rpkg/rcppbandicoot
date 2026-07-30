@@ -703,6 +703,65 @@ struct Proxy< subview_elem2< eT, subview_elem2_all_rows<eT, T2> > >
 
 
 
+template<typename T1, unsigned int mode, typename TB>
+struct Proxy< subview_each2< T1, mode, TB > >
+  {
+  typedef subview_each2<typename Proxy<T1>::held_type, mode, typename proxy_col_type<TB>::type::held_type> held_type;
+  typedef typename T1::elem_type                                                            elem_type;
+
+  const subview_each2< T1, mode, TB >&    Q;
+  const Proxy<T1>                         P1;
+  const typename proxy_col_type<TB>::type PB;
+
+  inline Proxy(const subview_each2< T1, mode, TB >& in_Q)
+    : Q(in_Q)
+    , P1(in_Q.P.get_ref())
+    , PB(in_Q.base_indices.get_ref())
+    {
+    // Perform bounds checks.  This is the only way we can give a user an error because we can't check this on the GPU.
+    coot_conform_check
+      (
+      PB.get_n_rows() != 1 && PB.get_n_cols() != 1,
+      ((is_Mat<T1>::value) ? std::string("Mat::") : std::string("subview::")) +
+      ((mode == 0) ? std::string("each_col(X)") : std::string("each_row(X)")) +
+      ": argument X must resolve to a vector"
+      );
+
+    coot_conform_check_bounds
+      (
+      (PB.get_n_elem() > 0) &&
+      ((mode == 0 && proxy_max_shim(PB) >= P1.get_n_cols()) ||
+       (mode == 1 && proxy_max_shim(PB) >= P1.get_n_rows())),
+      ((is_Mat<T1>::value) ? std::string("Mat::") : std::string("subview::")) +
+      ((mode == 0) ? std::string("each_col(X)") : std::string("each_row(X)")) +
+      ": elements of X must not exceed the number of " +
+      ((mode == 0) ? std::string("columns") : std::string("rows")) +
+      " in the matrix"
+      );
+    }
+
+  static constexpr const size_t num_args = Proxy<T1>::num_args + proxy_col_type<TB>::type::num_args;
+  static constexpr const size_t num_dims = Proxy<T1>::num_dims;
+
+  typedef typename merge_tuple< typename Proxy<T1>::arg_types, typename proxy_col_type<TB>::type::arg_types >::result arg_types;
+
+  inline arg_types args() const { return std::tuple_cat( P1.args(), PB.args() ); }
+
+  // We have to check both the main object and the indices in the TB.
+  template<typename T2> inline bool         is_alias(const T2& t) const { return coot::is_alias(t, Q.m) || PB.is_alias(t);                   }
+  template<typename T2> inline bool is_inexact_alias(const T2& t) const { return coot::is_inexact_alias(t, Q.m) || PB.is_inexact_alias(t); }
+
+  inline uword get_n_rows() const   { return (mode == 0) ? P1.get_n_rows() : PB.get_n_elem(); }
+  inline uword get_M_n_rows() const { return get_n_rows();                                    }
+  inline uword get_n_cols() const   { return (mode == 0) ? PB.get_n_elem() : P1.get_n_cols(); }
+  inline uword get_n_slices() const { return 1;                                               }
+  inline uword get_n_elem() const   { return get_n_rows() * get_n_cols();                     }
+
+  inline bool is_empty() const { return get_n_rows() == 0 || get_n_cols() == 0; }
+  };
+
+
+
 template<typename eT>
 struct Proxy< Cube<eT> >
   {
@@ -1225,9 +1284,10 @@ struct Proxy< eGlue<T1, T2, eglue_type> >
 
   const Proxy<P1_type> P1;
   const Proxy<P2_type> P2;
-  const eGlue<T1, T2, eglue_type>& Q;
 
-  inline Proxy(const eGlue<T1, T2, eglue_type>& in_Q) : P1(in_Q.A.Q), P2(in_Q.B.Q), Q(in_Q) { }
+  inline Proxy(const eGlue<T1, T2, eglue_type>& in_Q) : P1(in_Q.A.Q), P2(in_Q.B.Q) { }
+  // manual constructor to avoid duplicating a Proxy
+  inline Proxy(const Proxy<P1_type>& in_P1, const Proxy<P2_type>& in_P2) : P1(in_P1), P2(in_P2) { }
 
   // no extra arguments
   static constexpr const size_t num_args = Proxy<P1_type>::num_args + Proxy<P2_type>::num_args;
@@ -1798,4 +1858,49 @@ struct Proxy< Op<T1, op_symmatl> >
   inline uword get_n_elem() const   { return P.get_n_elem();   }
 
   inline bool is_empty() const { return P.is_empty(); }
+  };
+
+
+
+//
+// op_repmat
+//
+
+template<typename T1>
+struct Proxy< Op<T1, op_repmat> >
+  {
+  // The T1 *must* be addressed two-dimensionally.
+  typedef typename Proxy_glue_helper<T1, Proxy<T1>::num_dims, 2>::result Proxy_type;
+  typedef Op<typename Proxy< Proxy_type >::held_type, op_repmat>         held_type;
+  typedef typename Proxy_type::elem_type                                 elem_type;
+
+  const Proxy< Proxy_type > P;
+  const Op<T1, op_repmat>&  Q;
+  const uword               P_n_rows;
+  const uword               P_n_cols;
+
+  inline Proxy(const Op<T1, op_repmat>& in_Q) : P(in_Q.m), Q(in_Q), P_n_rows(P.get_n_rows()), P_n_cols(P.get_n_cols()) { }
+
+  // extra arguments: _n_rows, _n_cols, copies_per_row, copies_per_col
+  static constexpr const size_t num_args = Proxy< Proxy_type >::num_args + 4;
+  static constexpr const size_t num_dims = Proxy< Proxy_type >::num_dims;
+
+  typedef typename merge_tuple
+    <
+    typename Proxy< Proxy_type >::arg_types,
+    std::tuple<const uword&, const uword&, const uword&, const uword&>
+    >::result arg_types;
+
+  inline arg_types args() const { return std::tuple_cat( P.args(), std::tie< const uword&, const uword&, const uword&, const uword& >(P_n_rows, P_n_cols, Q.aux_uword_a, Q.aux_uword_b) ); }
+
+  template<typename T2> inline bool         is_alias(const T2& t) const { return P.is_alias(t);         }
+  template<typename T2> inline bool is_inexact_alias(const T2& t) const { return P.is_inexact_alias(t); }
+
+  inline uword get_n_rows() const   { return P_n_rows * Q.aux_uword_a;    }
+  inline uword get_M_n_rows() const { return get_n_rows();                }
+  inline uword get_n_cols() const   { return P_n_cols * Q.aux_uword_b;    }
+  inline uword get_n_slices() const { return P.get_n_slices();            }
+  inline uword get_n_elem() const   { return get_n_rows() * get_n_cols(); }
+
+  inline bool is_empty() const { return get_n_rows() == 0 || get_n_cols() == 0; }
   };

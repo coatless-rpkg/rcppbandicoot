@@ -38,6 +38,7 @@ inline cx_double coot_to_cx_double_float(const         float x) { return (cx_dou
 inline cx_double coot_to_cx_double_cx_float(const   cx_float x) { return (cx_double)((double) x.x, (double) x.y); }
 inline cx_double coot_to_cx_double_double(const       double x) { return (cx_double)(x, (double) 0);              }
 inline cx_double coot_to_cx_double_cx_double(const cx_double x) { return x;                                       }
+inline cx_double coot_to_cx_double_floatmax(const   floatmax x) { return (cx_double)((double) x, (double) 0);     }
 
 inline cx_double coot_absdiff_cx_double(const cx_double x, const cx_double y) { return (cx_double)(fabs(x.x - y.x), fabs(x.y - y.y)); }
 // semi-hack: use squared norm instead of norm for magnitude check

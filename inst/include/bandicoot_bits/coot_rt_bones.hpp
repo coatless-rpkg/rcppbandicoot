@@ -91,6 +91,12 @@ class coot_rt_t
   static inline void trans(dev_mem_t<eT> dest, const dev_mem_t<eT> src, const uword n_rows, const uword n_cols);
 
   template<typename eT>
+  static inline void fliplr(dev_mem_t<eT> dest, const dev_mem_t<eT> src, const uword n_rows, const uword n_cols, const uword src_M_n_rows, const uword aux_row1, const uword aux_col1);
+
+  template<typename eT>
+  static inline void flipud(dev_mem_t<eT> dest, const dev_mem_t<eT> src, const uword n_rows, const uword n_cols, const uword src_M_n_rows, const uword aux_row1, const uword aux_col1);
+
+  template<typename eT>
   static inline void fill_randu(dev_mem_t<eT> dest, const uword n);
 
   template<typename eT>
@@ -339,50 +345,6 @@ class coot_rt_t
 
   template<typename eT1, typename eT2>
   static inline typename promote_type<eT1, eT2>::result dot(const dev_mem_t<eT1> mem1, const dev_mem_t<eT2> mem2, const uword n_elem);
-
-  template<typename eT1, typename eT2>
-  static inline void broadcast_op(const twoway_kernel_id::enum_id num,
-                                  dev_mem_t<eT2> dest,
-                                  const dev_mem_t<eT2> dest_in,
-                                  const dev_mem_t<eT1> src,
-                                  const uword src_n_rows,
-                                  const uword src_n_cols,
-                                  const uword copies_per_row,
-                                  const uword copies_per_col,
-                                  // subview arguments
-                                  const uword dest_row_offset,
-                                  const uword dest_col_offset,
-                                  const uword dest_M_n_rows,
-                                  const uword dest_in_row_offset,
-                                  const uword dest_in_col_offset,
-                                  const uword dest_in_M_n_rows,
-                                  const uword src_row_offset,
-                                  const uword src_col_offset,
-                                  const uword src_M_n_rows);
-
-  template<typename eT1, typename eT2>
-  static inline void broadcast_subset_op(const twoway_kernel_id::enum_id num,
-                                         dev_mem_t<eT2> dest,
-                                         const dev_mem_t<eT2> dest_in,
-                                         const dev_mem_t<eT1> src,
-                                         const dev_mem_t<uword> indices,
-                                         const uword mode, // 0 => src_n_rows == indices.n_elem
-                                         const uword src_n_rows,
-                                         const uword src_n_cols,
-                                         const uword copies_per_row,
-                                         const uword copies_per_col,
-                                         // subview arguments
-                                         const uword dest_row_offset,
-                                         const uword dest_col_offset,
-                                         const uword dest_M_n_rows,
-                                         const uword dest_in_row_offset,
-                                         const uword dest_in_col_offset,
-                                         const uword dest_in_M_n_rows,
-                                         const uword src_row_offset,
-                                         const uword src_col_offset,
-                                         const uword src_M_n_rows,
-                                         const uword indices_offset,
-                                         const uword indices_incr);
 
   template<typename eT>
   static inline void linspace(dev_mem_t<eT> mem,

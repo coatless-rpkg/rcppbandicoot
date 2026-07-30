@@ -125,6 +125,7 @@ namespace coot
   #include "bandicoot_bits/enable_if.hpp"
   #include "bandicoot_bits/merge_tuple.hpp"
   #include "bandicoot_bits/fp16_shim.hpp"
+  #include "bandicoot_bits/floatmax.hpp"
   #include "bandicoot_bits/typedef_elem.hpp"
   #include "bandicoot_bits/typedef_mat.hpp"
   #include "bandicoot_bits/coot_str.hpp"
@@ -414,6 +415,7 @@ namespace coot
   #include "bandicoot_bits/op_shuffle_bones.hpp"
   #include "bandicoot_bits/op_row_as_mat_bones.hpp"
   #include "bandicoot_bits/op_col_as_mat_bones.hpp"
+  #include "bandicoot_bits/op_flip_bones.hpp"
 
   #include "bandicoot_bits/mtop_conv_to_bones.hpp"
   #include "bandicoot_bits/mtop_all_bones.hpp"
@@ -577,7 +579,6 @@ namespace coot
       #include "bandicoot_bits/opencl/min.hpp"
       #include "bandicoot_bits/opencl/max.hpp"
       #include "bandicoot_bits/opencl/max_abs.hpp"
-      #include "bandicoot_bits/opencl/broadcast.hpp"
       #include "bandicoot_bits/opencl/linspace.hpp"
       #include "bandicoot_bits/opencl/logspace.hpp"
       #include "bandicoot_bits/opencl/regspace.hpp"
@@ -608,6 +609,7 @@ namespace coot
       #include "bandicoot_bits/opencl/index_min.hpp"
       #include "bandicoot_bits/opencl/index_max.hpp"
       #include "bandicoot_bits/opencl/extract_cx.hpp"
+      #include "bandicoot_bits/opencl/flip.hpp"
       }
   #endif
 
@@ -635,7 +637,6 @@ namespace coot
     #include "bandicoot_bits/cuda/min.hpp"
     #include "bandicoot_bits/cuda/max.hpp"
     #include "bandicoot_bits/cuda/max_abs.hpp"
-    #include "bandicoot_bits/cuda/broadcast.hpp"
     #include "bandicoot_bits/cuda/linspace.hpp"
     #include "bandicoot_bits/cuda/logspace.hpp"
     #include "bandicoot_bits/cuda/regspace.hpp"
@@ -667,6 +668,7 @@ namespace coot
     #include "bandicoot_bits/cuda/index_min.hpp"
     #include "bandicoot_bits/cuda/index_max.hpp"
     #include "bandicoot_bits/cuda/extract_cx.hpp"
+    #include "bandicoot_bits/cuda/flip.hpp"
     }
   #endif
 
@@ -792,6 +794,7 @@ namespace coot
   #include "bandicoot_bits/fn_shuffle.hpp"
   #include "bandicoot_bits/fn_index_min.hpp"
   #include "bandicoot_bits/fn_index_max.hpp"
+  #include "bandicoot_bits/fn_flip.hpp"
 
 
   //
@@ -866,6 +869,7 @@ namespace coot
   #include "bandicoot_bits/op_shuffle_meat.hpp"
   #include "bandicoot_bits/op_row_as_mat_meat.hpp"
   #include "bandicoot_bits/op_col_as_mat_meat.hpp"
+  #include "bandicoot_bits/op_flip_meat.hpp"
 
   #include "bandicoot_bits/mtop_conv_to_meat.hpp"
   #include "bandicoot_bits/mtop_all_meat.hpp"

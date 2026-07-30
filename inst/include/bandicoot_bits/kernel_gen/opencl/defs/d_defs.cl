@@ -38,6 +38,7 @@ inline double coot_to_double_float(const         float x) { return (double) x;  
 inline double coot_to_double_cx_float(const   cx_float x) { return (double) x.x; }
 inline double coot_to_double_double(const       double x) { return x;            }
 inline double coot_to_double_cx_double(const cx_double x) { return x.x;          }
+inline double coot_to_double_floatmax(const   floatmax x) { return (double) x;   }
 
 inline double coot_absdiff_double(const double x, const double y) { return fabs(x - y); }
 inline double coot_conj_double(const double x) { return x; }

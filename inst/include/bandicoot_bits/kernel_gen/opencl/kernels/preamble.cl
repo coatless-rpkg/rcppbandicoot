@@ -38,4 +38,10 @@ typedef double2 cx_double;
   #define ARMA_FP_MIN FLT_MIN
 #endif
 
+#ifdef COOT_HAVE_FP64
+typedef double floatmax;
+#else
+typedef float floatmax;
+#endif
+
 )"

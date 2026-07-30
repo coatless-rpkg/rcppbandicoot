@@ -21,14 +21,7 @@ class op_repmat
   {
   public:
 
-  template<typename out_eT, typename T1> inline static void apply_noalias(Mat<out_eT>& out, const T1& X, const uword copies_per_row, const uword copies_per_col);
-
-  // repmat() with optional combined conversion
   template<typename out_eT, typename T1> inline static void apply(Mat<out_eT>& out, const Op<T1, op_repmat>& in);
-
-  // Catch conversions directly before a repmat (we can combine these with the repmat operation).
-  // (The other way around, with conversions directly after a repmat, is caught by mtOp handling.)
-  template<typename out_eT, typename T1> inline static void apply(Mat<out_eT>& out, const Op<mtOp<out_eT, T1, mtop_conv_to>, op_repmat>& in);
 
   template<typename T1> static inline uword compute_n_rows(const Op<T1, op_repmat>& op, const uword in_n_rows, const uword in_n_cols);
   template<typename T1> static inline uword compute_n_cols(const Op<T1, op_repmat>& op, const uword in_n_rows, const uword in_n_cols);

@@ -339,6 +339,8 @@ class runtime_t
   VkDeviceSize mem_pool_used = 0;
   void* mem_pool_mapped = nullptr;
 
+  std::mutex pipeline_mutex;
+
   std::unordered_map<std::string, pipeline_t> pipelines;
   std::vector<std::pair<VkDeviceSize, VkDeviceSize>> free_list;
   };

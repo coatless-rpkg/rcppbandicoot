@@ -615,7 +615,71 @@ coot_rt_t::trans(dev_mem_t<eT> dest, const dev_mem_t<eT> src, const uword n_rows
     }
   }
 
+template<typename eT>
+inline
+void
+coot_rt_t::fliplr(dev_mem_t<eT> dest, const dev_mem_t<eT> src, const uword n_rows, const uword n_cols, const uword src_M_n_rows, const uword aux_row1, const uword aux_col1)
+  {
+  coot_debug_sigprint();
 
+  if (get_rt().backend == CUDA_BACKEND)
+    {
+    #if defined(COOT_USE_CUDA)
+    cuda::fliplr(dest, src, n_rows, n_cols, src_M_n_rows, aux_row1, aux_col1);
+    #else
+    coot_stop_runtime_error("coot_rt::fliplr(): CUDA backend not enabled");
+    #endif
+    }
+  else if (get_rt().backend == CL_BACKEND)
+    {
+    #if defined(COOT_USE_OPENCL)
+    opencl::fliplr(dest, src, n_rows, n_cols, src_M_n_rows, aux_row1, aux_col1);
+    #else
+    coot_stop_runtime_error("coot_rt::fliplr(): OpenCL backend not enabled");
+    #endif
+    }
+  else if (get_rt().backend == VULKAN_BACKEND)
+    {
+    coot_stop_runtime_error("coot_rt::fliplr(): Vulkan fliplr not implemented.");
+    }
+  else
+    {
+    coot_stop_runtime_error("coot_rt::fliplr(): unknown backend");
+    }
+  }
+
+template<typename eT>
+inline
+void
+coot_rt_t::flipud(dev_mem_t<eT> dest, const dev_mem_t<eT> src, const uword n_rows, const uword n_cols, const uword src_M_n_rows, const uword aux_row1, const uword aux_col1)
+  {
+  coot_debug_sigprint();
+
+  if (get_rt().backend == CUDA_BACKEND)
+    {
+    #if defined(COOT_USE_CUDA)
+    cuda::flipud(dest, src, n_rows, n_cols, src_M_n_rows, aux_row1, aux_col1);
+    #else
+    coot_stop_runtime_error("coot_rt::flipud(): CUDA backend not enabled");
+    #endif
+    }
+  else if (get_rt().backend == CL_BACKEND)
+    {
+    #if defined(COOT_USE_OPENCL)
+    opencl::flipud(dest, src, n_rows, n_cols, src_M_n_rows, aux_row1, aux_col1);
+    #else
+    coot_stop_runtime_error("coot_rt::flipud(): OpenCL backend not enabled");
+    #endif
+    }
+  else if (get_rt().backend == VULKAN_BACKEND)
+    {
+    coot_stop_runtime_error("coot_rt::flipud(): Vulkan flipud not implemented.");
+    }
+  else
+    {
+    coot_stop_runtime_error("coot_rt::flipud(): unknown backend");
+    }
+  }
 
 template<typename eT>
 inline
@@ -2392,141 +2456,6 @@ coot_rt_t::dot(const dev_mem_t<eT1> mem1, const dev_mem_t<eT2> mem2, const uword
     }
 
   return typename promote_type<eT1, eT2>::result(0); // fix warning
-  }
-
-
-
-template<typename eT1, typename eT2>
-inline
-void
-coot_rt_t::broadcast_op(const twoway_kernel_id::enum_id num,
-                        dev_mem_t<eT2> dest,
-                        const dev_mem_t<eT2> dest_in,
-                        const dev_mem_t<eT1> src,
-                        const uword src_n_rows,
-                        const uword src_n_cols,
-                        const uword copies_per_row,
-                        const uword copies_per_col,
-                        // subview arguments
-                        const uword dest_row_offset,
-                        const uword dest_col_offset,
-                        const uword dest_M_n_rows,
-                        const uword dest_in_row_offset,
-                        const uword dest_in_col_offset,
-                        const uword dest_in_M_n_rows,
-                        const uword src_row_offset,
-                        const uword src_col_offset,
-                        const uword src_M_n_rows)
-  {
-  coot_debug_sigprint();
-
-  if (get_rt().backend == CL_BACKEND)
-    {
-    #if defined(COOT_USE_OPENCL)
-    opencl::broadcast_op(num, dest, dest_in, src,
-                         src_n_rows, src_n_cols,
-                         copies_per_row, copies_per_col,
-                         dest_row_offset, dest_col_offset, dest_M_n_rows,
-                         dest_in_row_offset, dest_in_col_offset, dest_in_M_n_rows,
-                         src_row_offset, src_col_offset, src_M_n_rows);
-    #else
-    coot_stop_runtime_error("coot_rt::broadcast_op(): OpenCL backend not enabled");
-    #endif
-    }
-  else if (get_rt().backend == CUDA_BACKEND)
-    {
-    #if defined(COOT_USE_CUDA)
-    cuda::broadcast_op(num, dest, dest_in, src,
-                       src_n_rows, src_n_cols,
-                       copies_per_row, copies_per_col,
-                       dest_row_offset, dest_col_offset, dest_M_n_rows,
-                       dest_in_row_offset, dest_in_col_offset, dest_in_M_n_rows,
-                       src_row_offset, src_col_offset, src_M_n_rows);
-    #else
-    coot_stop_runtime_error("coot_rt::broadcast_op(): CUDA backend not enabled");
-    #endif
-    }
-  else if (get_rt().backend == VULKAN_BACKEND)
-    {
-    #if defined(COOT_USE_VULKAN)
-    vulkan::broadcast_op(num, dest, dest_in, src,
-                         src_n_rows, src_n_cols,
-                         copies_per_row, copies_per_col,
-                         dest_row_offset, dest_col_offset, dest_M_n_rows,
-                         dest_in_row_offset, dest_in_col_offset, dest_in_M_n_rows,
-                         src_row_offset, src_col_offset, src_M_n_rows);
-    #else
-    coot_stop_runtime_error("coot_rt::broadcast_op(): Vulkan backend not enabled");
-    #endif
-    }
-  else
-    {
-    coot_stop_runtime_error("coot_rt::broadcast_op(): unknown backend");
-    }
-  }
-
-
-
-template<typename eT1, typename eT2>
-inline
-void
-coot_rt_t::broadcast_subset_op(const twoway_kernel_id::enum_id num,
-                               dev_mem_t<eT2> dest,
-                               const dev_mem_t<eT2> dest_in,
-                               const dev_mem_t<eT1> src,
-                               const dev_mem_t<uword> indices,
-                               const uword mode,
-                               const uword src_n_rows,
-                               const uword src_n_cols,
-                               const uword copies_per_row,
-                               const uword copies_per_col,
-                               // subview arguments
-                               const uword dest_row_offset,
-                               const uword dest_col_offset,
-                               const uword dest_M_n_rows,
-                               const uword dest_in_row_offset,
-                               const uword dest_in_col_offset,
-                               const uword dest_in_M_n_rows,
-                               const uword src_row_offset,
-                               const uword src_col_offset,
-                               const uword src_M_n_rows,
-                               const uword indices_offset,
-                               const uword indices_incr)
-  {
-  coot_debug_sigprint();
-
-  if (get_rt().backend == CL_BACKEND)
-    {
-    #if defined(COOT_USE_OPENCL)
-    opencl::broadcast_subset_op(num, dest, dest_in, src, indices, mode,
-                                src_n_rows, src_n_cols,
-                                copies_per_row, copies_per_col,
-                                dest_row_offset, dest_col_offset, dest_M_n_rows,
-                                dest_in_row_offset, dest_in_col_offset, dest_in_M_n_rows,
-                                src_row_offset, src_col_offset, src_M_n_rows,
-                                indices_offset, indices_incr);
-    #else
-    coot_stop_runtime_error("coot_rt::broadcast_subset_op(): OpenCL backend not enabled");
-    #endif
-    }
-  else if (get_rt().backend == CUDA_BACKEND)
-    {
-    #if defined(COOT_USE_CUDA)
-    cuda::broadcast_subset_op(num, dest, dest_in, src, indices, mode,
-                              src_n_rows, src_n_cols,
-                              copies_per_row, copies_per_col,
-                              dest_row_offset, dest_col_offset, dest_M_n_rows,
-                              dest_in_row_offset, dest_in_col_offset, dest_in_M_n_rows,
-                              src_row_offset, src_col_offset, src_M_n_rows,
-                              indices_offset, indices_incr);
-    #else
-    coot_stop_runtime_error("coot_rt::broadcast_subset_op(): CUDA backend not enabled");
-    #endif
-    }
-  else
-    {
-    coot_stop_runtime_error("coot_rt::broadcast_subset_op(): unknown backend");
-    }
   }
 
 

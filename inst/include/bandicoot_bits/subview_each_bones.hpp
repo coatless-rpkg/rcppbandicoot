@@ -23,26 +23,18 @@ class subview_each_common
   {
   public:
 
-  typedef typename parent::elem_type eT;
+  typedef typename parent::elem_type elem_type;
 
   const parent& P;
 
-  template<typename T2>
-  inline void check_size(const T2& A) const;
+  inline static void check_size(const uword p_n_rows, const uword p_n_cols, const uword copies_per_row, const uword copies_per_col, const uword in_n_rows, const uword in_n_cols);
+  inline static const std::string incompat_size_string(const uword p_n_rows, const uword p_n_cols, const uword in_n_rows, const uword in_n_cols);
 
 
   protected:
 
   coot_inline subview_each_common(const parent& in_P);
        inline subview_each_common() = delete;
-
-  coot_inline const Mat<typename parent::elem_type>& get_mat_ref_helper(const Mat    <typename parent::elem_type>& X) const;
-  coot_inline const Mat<typename parent::elem_type>& get_mat_ref_helper(const subview<typename parent::elem_type>& X) const;
-
-  coot_inline const Mat<typename parent::elem_type>& get_mat_ref() const;
-
-  template<typename T2>
-  coot_cold inline const std::string incompat_size_string(const T2& A) const;
   };
 
 
@@ -58,24 +50,21 @@ class subview_each1 : public subview_each_common<parent, mode>
 
   public:
 
-  typedef typename parent::elem_type eT;
+  typedef typename parent::elem_type elem_type;
 
   inline ~subview_each1();
   inline  subview_each1() = delete;
 
-  template<typename T1>
-  inline void inplace_op(twoway_kernel_id::enum_id op, const Base<eT, T1>& x);
-
   // deliberately returning void
-  template<typename T1> inline void operator=  (const Base<eT, T1>& x);
-  template<typename T1> inline void operator+= (const Base<eT, T1>& x);
-  template<typename T1> inline void operator-= (const Base<eT, T1>& x);
-  template<typename T1> inline void operator%= (const Base<eT, T1>& x);
-  template<typename T1> inline void operator/= (const Base<eT, T1>& x);
+  template<typename T1> inline void operator=  (const Base<elem_type, T1>& x);
+  template<typename T1> inline void operator+= (const Base<elem_type, T1>& x);
+  template<typename T1> inline void operator-= (const Base<elem_type, T1>& x);
+  template<typename T1> inline void operator%= (const Base<elem_type, T1>& x);
+  template<typename T1> inline void operator/= (const Base<elem_type, T1>& x);
 
 
-  friend class Mat<eT>;
-  friend class subview<eT>;
+  friend class Mat<elem_type>;
+  friend class subview<elem_type>;
   };
 
 
@@ -93,26 +82,23 @@ class subview_each2 : public subview_each_common<parent, mode>
 
   const Base<uword, TB>& base_indices;
 
-  typedef typename parent::elem_type eT;
+  typedef typename parent::elem_type elem_type;
 
   inline void check_indices(const Mat<uword>& indices) const;
 
   inline ~subview_each2();
   inline  subview_each2() = delete;
 
-  template<typename T1>
-  inline void inplace_op(twoway_kernel_id::enum_id op, const Base<eT, T1>& x);
-
   // deliberately returning void
-  template<typename T1> inline void operator=  (const Base<eT, T1>& x);
-  template<typename T1> inline void operator+= (const Base<eT, T1>& x);
-  template<typename T1> inline void operator-= (const Base<eT, T1>& x);
-  template<typename T1> inline void operator%= (const Base<eT, T1>& x);
-  template<typename T1> inline void operator/= (const Base<eT, T1>& x);
+  template<typename T1> inline void operator=  (const Base<elem_type, T1>& x);
+  template<typename T1> inline void operator+= (const Base<elem_type, T1>& x);
+  template<typename T1> inline void operator-= (const Base<elem_type, T1>& x);
+  template<typename T1> inline void operator%= (const Base<elem_type, T1>& x);
+  template<typename T1> inline void operator/= (const Base<elem_type, T1>& x);
 
 
-  friend class Mat<eT>;
-  friend class subview<eT>;
+  friend class Mat<elem_type>;
+  friend class subview<elem_type>;
   };
 
 
@@ -120,9 +106,6 @@ class subview_each2 : public subview_each_common<parent, mode>
 class subview_each1_aux
   {
   public:
-
-  template<typename parent, unsigned int mode, typename T2>
-  static inline Mat<typename parent::elem_type> call_op(const twoway_kernel_id::enum_id op, const subview_each1<parent, mode>& X, const Base<typename parent::elem_type, T2>& Y);
 
   template<typename parent, unsigned int mode, typename T2>
   static inline Mat<typename parent::elem_type> operator_plus(const subview_each1<parent, mode>& X, const Base<typename parent::elem_type, T2>& Y);
@@ -148,9 +131,6 @@ class subview_each1_aux
 class subview_each2_aux
   {
   public:
-
-  template<typename parent, unsigned int mode, typename TB, typename T2>
-  static inline Mat<typename parent::elem_type> call_op(const twoway_kernel_id::enum_id op, const subview_each2<parent, mode, TB>& X, const Base<typename parent::elem_type, T2>& Y);
 
   template<typename parent, unsigned int mode, typename TB, typename T2>
   static inline Mat<typename parent::elem_type> operator_plus(const subview_each2<parent, mode, TB>& X, const Base<typename parent::elem_type, T2>& Y);

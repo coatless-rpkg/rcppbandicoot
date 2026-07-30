@@ -40,6 +40,7 @@ inline short coot_to_short_cx_float(const   cx_float x) { return (short) x.x; }
 inline short coot_to_short_double(const       double x) { return (short) x;   }
 inline short coot_to_short_cx_double(const cx_double x) { return (short) x.x; }
 #endif
+inline short coot_to_short_floatmax(const   floatmax x) { return (short) x;   }
 
 inline short coot_absdiff_short(const short x, const short y) { return abs(x - y); }
 inline short coot_conj_short(const short x) { return x; }

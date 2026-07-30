@@ -195,6 +195,9 @@ struct oneway_kernel_id
     approx_equal_cube,
     approx_equal_cube_small,
     //
+    fliplr,
+    flipud,
+    //
     invalid_kernel
     };
 
@@ -291,6 +294,9 @@ struct oneway_kernel_id
     names.push_back("approx_equal_small");
     names.push_back("approx_equal_cube");
     names.push_back("approx_equal_cube_small");
+
+    names.push_back("fliplr");
+    names.push_back("flipud");
 
     return names;
     }
@@ -586,21 +592,6 @@ struct twoway_kernel_id
     dot,
     dot_small,
     //
-    broadcast_set,
-    broadcast_plus,
-    broadcast_minus_pre,
-    broadcast_minus_post,
-    broadcast_schur,
-    broadcast_div_pre,
-    broadcast_div_post,
-    broadcast_subset_set,
-    broadcast_subset_plus,
-    broadcast_subset_minus_pre,
-    broadcast_subset_minus_post,
-    broadcast_subset_schur,
-    broadcast_subset_div_pre,
-    broadcast_subset_div_post,
-    //
     rel_all_neq,
     rel_all_neq_small,
     rel_all_neq_colwise,
@@ -647,21 +638,6 @@ struct twoway_kernel_id
 
     names.push_back("dot");
     names.push_back("dot_small");
-
-    names.push_back("broadcast_set");
-    names.push_back("broadcast_plus");
-    names.push_back("broadcast_minus_pre");
-    names.push_back("broadcast_minus_post");
-    names.push_back("broadcast_schur");
-    names.push_back("broadcast_div_pre");
-    names.push_back("broadcast_div_post");
-    names.push_back("broadcast_subset_set");
-    names.push_back("broadcast_subset_plus");
-    names.push_back("broadcast_subset_minus_pre");
-    names.push_back("broadcast_subset_minus_post");
-    names.push_back("broadcast_subset_schur");
-    names.push_back("broadcast_subset_div_pre");
-    names.push_back("broadcast_subset_div_post");
 
     names.push_back("rel_all_neq");
     names.push_back("rel_all_neq_small");
